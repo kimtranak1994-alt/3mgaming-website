@@ -219,6 +219,10 @@ const AdminPanel = {
                   <span class="m-label">Độ Lớn Hiện Tại</span>
                   <span class="m-val highlight" id="vitals-p-growth">--%</span>
                 </div>
+                <div class="modal-info-col">
+                  <span class="m-label">📍 Tọa độ X Y Z (Tự động)</span>
+                  <span class="m-val highlight" id="vitals-p-coords" style="font-family: monospace; color: #38bdf8;">--</span>
+                </div>
               </div>
 
               <!-- Grid Các Bảng Điều Khiển Chỉ Số -->
@@ -1039,6 +1043,19 @@ const AdminPanel = {
       sliderGrowth.value = player.growth || 1.0;
       document.getElementById('lbl-v-growth').textContent = `${growthPct}%`;
     }
+
+    // Tự động cập nhật Tọa độ X Y Z của người chơi được chọn
+    const coordsEl = document.getElementById('vitals-p-coords');
+    if (coordsEl) {
+      if (player.position && (player.position.x !== undefined || player.position.y !== undefined)) {
+        const mX = Math.round((player.position.x || 0) * 0.01);
+        const mY = Math.round((player.position.y || 0) * 0.01);
+        const mZ = Math.round((player.position.z || 0) * 0.01);
+        coordsEl.innerHTML = `<span style="color: #38bdf8;">X: ${mX}, Y: ${mY}, Z: ${mZ}</span> <button type="button" class="btn-copy-mini" onclick="navigator.clipboard.writeText('${mX}, ${mY}, ${mZ}'); window.App.showToast('📋 Đã sao chép X Y Z: ${mX}, ${mY}, ${mZ}');" title="Sao chép X Y Z" style="background: none; border: none; cursor: pointer; color: #fbbf24; font-size: 0.85rem; padding: 0 4px;">📋</button>`;
+      } else {
+        coordsEl.textContent = player.online ? 'Đang cập nhật...' : '⚪ Offline (Chưa có tọa độ)';
+      }
+    }
   },
 
   onVitalsManualSid(sid) {
@@ -1052,7 +1069,9 @@ const AdminPanel = {
       document.getElementById('vitals-p-name').textContent = steamId;
       document.getElementById('vitals-p-species').textContent = 'Thủ công';
       document.getElementById('vitals-p-status').textContent = 'Nhập trực tiếp';
-      document.getElementById('vitals-p-growth').textContent = '--%';
+      document.getElementById('vitals-p-growth').textContent = '--%';
+      const coordsEl = document.getElementById('vitals-p-coords');
+      if (coordsEl) coordsEl.textContent = '--';
     }
   },
 
@@ -2304,7 +2323,7 @@ const AdminPanel = {
                 <div class="mod-activity-row"><span>Last seen</span> <b>${lastSeen}</b></div>
                 <div class="mod-activity-row"><span>Last join</span> <b>${lastJoin}</b></div>
                 <div class="mod-activity-row"><span>Play time</span> <b>${playHours} giờ</b></div>
-                <div class="mod-activity-row"><span>Tọa độ</span> <b style="font-family: monospace; font-size: 0.78rem;">X:${Math.round(pos.x)} Y:${Math.round(pos.y)} Z:${Math.round(pos.z)}</b></div>
+                <div class="mod-activity-row"><span>Tọa độ X Y Z</span> <b style="font-family: monospace; font-size: 0.82rem; color: #38bdf8;">X: ${Math.round((pos.x || 0) * 0.01)}, Y: ${Math.round((pos.y || 0) * 0.01)}, Z: ${Math.round((pos.z || 0) * 0.01)} <button type="button" onclick="navigator.clipboard.writeText('${Math.round((pos.x || 0) * 0.01)}, ${Math.round((pos.y || 0) * 0.01)}, ${Math.round((pos.z || 0) * 0.01)}'); window.App.showToast('📋 Đã sao chép X Y Z: ${Math.round((pos.x || 0) * 0.01)}, ${Math.round((pos.y || 0) * 0.01)}, ${Math.round((pos.z || 0) * 0.01)}');" style="background:none;border:none;cursor:pointer;color:#fbbf24;font-size:0.85rem;" title="Sao chép X Y Z">📋</button></b></div>
                 ${discord ? `
                   <div class="mod-activity-row" style="margin-top: 6px; padding-top: 6px; border-top: 1px dashed rgba(255,255,255,0.1);">
                     <span>Discord</span> <b style="color: #818cf8;">@${discord.username || discord.id}</b>

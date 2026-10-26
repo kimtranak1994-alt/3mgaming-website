@@ -43,6 +43,37 @@ const GatewayMap = {
     };
   },
 
+  // Ước tính độ cao địa hình (Z) tự động của Gateway theo tọa độ in-game (mét)
+  getElevationZ(ingameX, ingameY) {
+    const dist = Math.sqrt(ingameX * ingameX + ingameY * ingameY);
+    if (dist > 6500) return 0; // Ngoài biển
+
+    // 1. Vùng Cao nguyên Đông Bắc (Highlands Sanctuary): Đỉnh núi cao
+    const distNorthHighlands = Math.hypot(ingameX - 2200, ingameY + 2500);
+    let peakBonus = 0;
+    if (distNorthHighlands < 2600) {
+      peakBonus += Math.cos((distNorthHighlands / 2600) * (Math.PI / 2)) * 260;
+    }
+
+    // 2. Vách đá & Rặng núi Nam
+    const distSouthRidge = Math.hypot(ingameX - 1000, ingameY - 3500);
+    if (distSouthRidge < 2200) {
+      peakBonus += Math.cos((distSouthRidge / 2200) * (Math.PI / 2)) * 165;
+    }
+
+    // 3. Vùng Đầm lầy phía Tây (Swamp Lowlands): Trũng sát mực nước biển
+    const distWestSwamp = Math.hypot(ingameX + 3000, ingameY - 1500);
+    let swampReduction = 0;
+    if (distWestSwamp < 2000) {
+      swampReduction = 25;
+    }
+
+    // 4. Độ cao nền thoai thoải từ bờ biển (0m) vào lõi thung lũng (~40m)
+    const baseElev = Math.max(0, Math.min(45, (1 - dist / 6200) * 45));
+    let z = Math.round(baseElev + peakBonus - swampReduction);
+    return Math.max(0, Math.min(420, z));
+  },
+
   // Cấu hình Sự kiện Đại Di Cư (Great Migration)
   greatMigration: {
     active: true,
@@ -419,7 +450,7 @@ const GatewayMap = {
         this.applyTransform();
       }
 
-      // 2. Tính toán tọa độ chuột theo hệ tọa độ Ingame của Gateway (-800 đến +800)
+      // 2. Tính toán tọa độ chuột theo hệ tọa độ Ingame của Gateway (X, Y, Z tự động)
       const rect = viewport.getBoundingClientRect();
       if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
         const surfaceX = (e.clientX - rect.left - this.panX) / this.zoom;
@@ -431,9 +462,10 @@ const GatewayMap = {
         const world = this.normalizedToWorld(pctX / 100, pctY / 100);
         const ingameX = Math.round(world.worldX * 0.01);
         const ingameY = Math.round(world.worldY * 0.01);
+        const ingameZ = this.getElevationZ(ingameX, ingameY);
 
         if (coordText) {
-          coordText.textContent = `X: ${ingameX}, Y: ${ingameY}`;
+          coordText.textContent = `X: ${ingameX}, Y: ${ingameY}, Z: ${ingameZ}`;
         }
       }
     });
@@ -466,7 +498,7 @@ const GatewayMap = {
       this.applyTransform();
     }, { passive: false });
 
-    // 4. Click trên bản đồ để copy tọa độ
+    // 4. Click trên bản đồ để copy tọa độ X, Y, Z
     surface.addEventListener('click', (e) => {
       if (e.target.closest('.map-pin')) return;
       const rect = viewport.getBoundingClientRect();
@@ -479,11 +511,12 @@ const GatewayMap = {
       const world = this.normalizedToWorld(pctX / 100, pctY / 100);
       const ingameX = Math.round(world.worldX * 0.01);
       const ingameY = Math.round(world.worldY * 0.01);
+      const ingameZ = this.getElevationZ(ingameX, ingameY);
 
-      navigator.clipboard.writeText(`${ingameX}, ${ingameY}`).then(() => {
-        App.showToast(`📍 Đã sao chép tọa độ: X: ${ingameX}, Y: ${ingameY}`);
+      navigator.clipboard.writeText(`${ingameX}, ${ingameY}, ${ingameZ}`).then(() => {
+        App.showToast(`📍 Đã sao chép tọa độ: X: ${ingameX}, Y: ${ingameY}, Z: ${ingameZ}`);
       }).catch(() => {
-        App.showToast(`Tọa độ: X: ${ingameX}, Y: ${ingameY}`);
+        App.showToast(`Tọa độ: X: ${ingameX}, Y: ${ingameY}, Z: ${ingameZ}`);
       });
     });
 
@@ -556,19 +589,20 @@ const GatewayMap = {
   searchCoords() {
     const input = document.getElementById('map-search-input');
     if (!input || !input.value.trim()) {
-      App.showToast("⚠️ Vui lòng nhập tọa độ (Ví dụ: -200, 150)!");
+      App.showToast("⚠️ Vui lòng nhập tọa độ (Ví dụ: -200, 150, 45)!");
       return;
     }
 
     const val = input.value.trim();
     const parts = val.split(/[,\s]+/).map(Number);
     if (parts.length < 2 || isNaN(parts[0]) || isNaN(parts[1])) {
-      App.showToast("⚠️ Định dạng tọa độ không hợp lệ! Hãy nhập dạng: X, Y (Ví dụ: -150, 220)");
+      App.showToast("⚠️ Định dạng tọa độ không hợp lệ! Hãy nhập dạng: X, Y, Z hoặc X, Y (Ví dụ: -150, 220, 35)");
       return;
     }
 
     const ingameX = parts[0];
     const ingameY = parts[1];
+    const ingameZ = (!isNaN(parts[2]) && parts[2] !== undefined) ? parts[2] : this.getElevationZ(ingameX, ingameY);
 
     let worldX = ingameX;
     let worldY = ingameY;
@@ -595,7 +629,7 @@ const GatewayMap = {
       <div class="pin-icon">🎯</div>
       <div class="map-tooltip" style="opacity: 1; bottom: 42px;">
         <strong style="color: var(--accent);">Vị trí đã tìm kiếm</strong><br>
-        Tọa độ: X: ${ingameX}, Y: ${ingameY}
+        Tọa độ X Y Z: X: ${ingameX}, Y: ${ingameY}, Z: ${ingameZ}
       </div>
     `;
 
@@ -604,7 +638,7 @@ const GatewayMap = {
 
     // Bay tới vị trí và zoom 2.0x
     this.flyTo(pctX, pctY, 2.0);
-    App.showToast(`🎯 Đã định vị thành công: X: ${ingameX}, Y: ${ingameY}`);
+    App.showToast(`🎯 Đã định vị thành công: X: ${ingameX}, Y: ${ingameY}, Z: ${ingameZ}`);
   },
 
   render() {
@@ -639,6 +673,7 @@ const GatewayMap = {
       const world = this.normalizedToWorld(pt.x / 100, pt.y / 100);
       const ingameX = Math.round(world.worldX * 0.01);
       const ingameY = Math.round(world.worldY * 0.01);
+      const ingameZ = this.getElevationZ(ingameX, ingameY);
 
       let extraInfo = '';
       if (pt.diets) {
@@ -652,13 +687,17 @@ const GatewayMap = {
           <span style="color: var(--text-muted);">${pt.desc}</span><br>
           <span style="color: var(--accent);">Nguy hiểm: ${pt.danger}</span>
           ${extraInfo}<br>
-          <span style="color: #60a5fa;">Tọa độ Ingame: X: ${ingameX}, Y: ${ingameY}</span>
+          <span style="color: #60a5fa;">Tọa độ Ingame: X: ${ingameX}, Y: ${ingameY}, Z: ${ingameZ}</span>
         </div>
       `;
 
       pin.addEventListener('click', (e) => {
         e.stopPropagation();
-        App.showToast(`📌 ${pt.name} (Tọa độ: X: ${ingameX}, Y: ${ingameY})`);
+        navigator.clipboard.writeText(`${ingameX}, ${ingameY}, ${ingameZ}`).then(() => {
+          App.showToast(`📌 ${pt.name} (Đã sao chép X: ${ingameX}, Y: ${ingameY}, Z: ${ingameZ})`);
+        }).catch(() => {
+          App.showToast(`📌 ${pt.name} (Tọa độ: X: ${ingameX}, Y: ${ingameY}, Z: ${ingameZ})`);
+        });
       });
 
       layer.appendChild(pin);
@@ -840,15 +879,19 @@ const GatewayMap = {
           <div class="map-tooltip">
             <strong style="color: #38bdf8; font-size: 0.9rem;">${isMe ? "⭐ Vị Trí Của Bạn: " : "🦖 "} ${playerName}</strong><br>
             <span style="color: #fff;">Loài: <b>${speciesName}</b></span> | Trạng thái: <b style="color: #00f076;">Đang Online</b><br>
-            <span style="color: #60a5fa;">Tọa độ Ingame: X: ${coords.mX}, Y: ${coords.mY}</span><br>
-            <span style="color: #94a3b8;">Độ cao (Z): ${coords.alt}m | Hướng nhìn (Yaw): ${Math.round(coords.yaw)}°</span>
+            <span style="color: #60a5fa; font-family: monospace;">Tọa độ X Y Z: X: ${coords.mX}, Y: ${coords.mY}, Z: ${coords.alt}</span><br>
+            <span style="color: #94a3b8;">Hướng nhìn (Yaw): ${Math.round(coords.yaw)}°</span>
           </div>
         `;
 
         pin.addEventListener('click', (e) => {
           e.stopPropagation();
           this.flyTo(coords.pctX, coords.pctY, 2.2);
-          App.showToast(`🎯 ${isMe ? 'Vị trí của bạn' : 'Người chơi'}: ${playerName} (${speciesName}) - Tọa độ: X: ${coords.mX}, Y: ${coords.mY}`);
+          navigator.clipboard.writeText(`${coords.mX}, ${coords.mY}, ${coords.alt}`).then(() => {
+            App.showToast(`🎯 ${isMe ? 'Vị trí của bạn' : 'Người chơi'}: ${playerName} - Đã sao chép X: ${coords.mX}, Y: ${coords.mY}, Z: ${coords.alt}`);
+          }).catch(() => {
+            App.showToast(`🎯 ${isMe ? 'Vị trí của bạn' : 'Người chơi'}: ${playerName} (${speciesName}) - Tọa độ: X: ${coords.mX}, Y: ${coords.mY}, Z: ${coords.alt}`);
+          });
         });
 
         layer.appendChild(pin);
@@ -867,8 +910,8 @@ const GatewayMap = {
           tooltip.innerHTML = `
             <strong style="color: #38bdf8; font-size: 0.9rem;">${isMe ? "⭐ Vị Trí Của Bạn: " : "🦖 "} ${playerName}</strong><br>
             <span style="color: #fff;">Loài: <b>${speciesName}</b></span> | Trạng thái: <b style="color: #00f076;">Đang Online</b><br>
-            <span style="color: #60a5fa;">Tọa độ Ingame: X: ${coords.mX}, Y: ${coords.mY}</span><br>
-            <span style="color: #94a3b8;">Độ cao (Z): ${coords.alt}m | Hướng nhìn (Yaw): ${Math.round(coords.yaw)}°</span>
+            <span style="color: #60a5fa; font-family: monospace;">Tọa độ X Y Z: X: ${coords.mX}, Y: ${coords.mY}, Z: ${coords.alt}</span><br>
+            <span style="color: #94a3b8;">Hướng nhìn (Yaw): ${Math.round(coords.yaw)}°</span>
           `;
         }
       }
