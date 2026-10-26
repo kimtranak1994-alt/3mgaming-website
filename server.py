@@ -173,6 +173,24 @@ def save_custom_name(dino_id, name):
 
         pass
 
+CLAIMED_QUESTS_FILE = os.path.join(os.path.dirname(__file__), "claimed_quests.json")
+
+def load_claimed_quests():
+    if os.path.exists(CLAIMED_QUESTS_FILE):
+        try:
+            with open(CLAIMED_QUESTS_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except:
+            pass
+    return {}
+
+def save_claimed_quests(data):
+    try:
+        with open(CLAIMED_QUESTS_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"Error saving claimed_quests: {e}")
+
 def srgb_byte_to_linear(b):
 
     t = max(0.0, min(1.0, float(b) / 255.0))
@@ -840,6 +858,12 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         elif self.path == "/api/server/skins/apply":
 
             self.handle_apply_skin()
+
+            return
+
+        elif self.path == "/api/server/quests/claim" or self.path.startswith("/api/server/quests/claim"):
+
+            self.handle_claim_quest()
 
             return
 
@@ -3515,11 +3539,128 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
         if remote and "quests" in remote:
 
+            claimed_db = load_claimed_quests()
+
+            user_claimed = claimed_db.get(steam_id, [])
+
+            for q in remote["quests"]:
+
+                q_id = q.get("id")
+
+                prog_id = q.get("progressId")
+
+                if (q_id in user_claimed or (prog_id and prog_id in user_claimed)) and not q.get("claimedAt"):
+
+                    q["claimedAt"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+
             self.send_json_response(remote)
 
             return
 
         self.send_json_response({"quests": []})
+
+    def handle_claim_quest(self):
+
+        try:
+
+            content_length = int(self.headers.get("Content-Length", 0))
+
+            body = self.rfile.read(content_length).decode("utf-8") if content_length > 0 else "{}"
+
+            payload = json.loads(body) if body else {}
+
+            steam_id = str(payload.get("steam_id") or self.get_active_steam_id()).strip()
+
+            quest_id = str(payload.get("quest_id") or "").strip()
+
+            progress_id = str(payload.get("progress_id") or "").strip()
+
+            amount = int(payload.get("amount", 0))
+
+            quest_name = str(payload.get("quest_name") or "Nhiệm vụ").strip()
+
+            if not quest_id:
+
+                self.send_json_response({"ok": False, "message": "Thiếu mã nhiệm vụ!"}, 400)
+
+                return
+
+            claimed_db = load_claimed_quests()
+
+            user_claimed = claimed_db.get(steam_id, [])
+
+            if quest_id in user_claimed or (progress_id and progress_id in user_claimed):
+
+                self.send_json_response({"ok": False, "message": "Nhiệm vụ này đã nhận thưởng trước đó!"}, 400)
+
+                return
+
+            # 1. Thử gọi API IslePilot /quests/claim nếu có progressId
+            if progress_id:
+
+                try:
+
+                    self.fetch_islepilot(f"/players/{steam_id}/quests/claim", method="POST", body_data={"progressId": progress_id})
+
+                except Exception as e:
+
+                    print(f"[Quest Claim IslePilot Notice] {e}")
+
+            # 2. Cộng tiền Xu trực tiếp vào ví người chơi trên IslePilot qua /currency (Scope: currency:grant)
+            new_balance = None
+
+            if amount > 0:
+
+                cur_res = self.fetch_islepilot(
+
+                    f"/players/{steam_id}/currency",
+
+                    method="POST",
+
+                    body_data={"amount": amount, "reason": f"Thưởng hoàn thành nhiệm vụ: {quest_name}"}
+
+                )
+
+                if cur_res and "balance" in cur_res:
+
+                    new_balance = cur_res.get("balance")
+
+            # 3. Lưu lại tiến trình đã nhận thưởng vào cache
+            if steam_id not in claimed_db:
+
+                claimed_db[steam_id] = []
+
+            if quest_id not in claimed_db[steam_id]:
+
+                claimed_db[steam_id].append(quest_id)
+
+            if progress_id and progress_id not in claimed_db[steam_id]:
+
+                claimed_db[steam_id].append(progress_id)
+
+            save_claimed_quests(claimed_db)
+
+            self.send_json_response({
+
+                "ok": True,
+
+                "success": True,
+
+                "message": f"Nhận thành công +{amount} Xu!",
+
+                "reward_amount": amount,
+
+                "balance": new_balance,
+
+                "quest_id": quest_id
+
+            })
+
+        except Exception as e:
+
+            print(f"[Quest Claim Error] {e}")
+
+            self.send_json_response({"ok": False, "message": f"Lỗi xử lý nhận thưởng: {e}"}, 500)
 
     def handle_player_skins(self):
 
