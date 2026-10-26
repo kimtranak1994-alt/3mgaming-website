@@ -1,0 +1,28 @@
+{
+  "76561199175571899": {
+    "active": [
+      "Osteosclerosis",
+      "Epidermal Fibrosis",
+      "Hematophagy",
+      "Hemomania"
+    ],
+    "parent": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderA": [
+      "Hemomania",
+      "Osteosclerosis",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  }
+}

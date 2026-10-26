@@ -1,0 +1,2 @@
+# 3MGAMING Portal utilizes Python Standard Library
+# No external pip dependencies required

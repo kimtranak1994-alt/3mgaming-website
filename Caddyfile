@@ -1,0 +1,13 @@
+# Cau hinh Caddy cho 3MGAMING chay truc tiep tren may 192.168.1.2
+# Dat file nay tai thu muc Caddy tren may 192.168.1.2
+
+3mgaming.vn, www.3mgaming.vn {
+    # Tu dong cap chung chi SSL HTTPS Let's Encrypt mien phi
+    # Chuyen tiep truc tiep vao web server dang chay tren cung may (port 8000)
+    reverse_proxy localhost:8000 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+}

@@ -1,0 +1,226 @@
+{
+  "76561199175571899": [
+    {
+      "id": "gift_1792946189541",
+      "species": "Spinosaurus",
+      "gender": "Female",
+      "growth": 1.0,
+      "health": 1.0,
+      "maxHealth": 15000,
+      "weight": 15000,
+      "weight_label": "15.0 Tấn (15,000 kg)",
+      "hunger": 1.0,
+      "thirst": 1.0,
+      "stamina": 1.0,
+      "isPrimeElder": true,
+      "mutations": [
+        "Wader",
+        "Cellular Regeneration",
+        "Efficient Digestion",
+        "Featherweight"
+      ],
+      "mutationSlots": {
+        "active": [
+          "Wader",
+          "Cellular Regeneration",
+          "Efficient Digestion",
+          "Featherweight"
+        ]
+      },
+      "parkedAt": "2026-10-25T16:36:29.541298+00:00",
+      "source": "admin_granted"
+    },
+    {
+      "id": "gift_1792950969861",
+      "species": "Spinosaurus",
+      "gender": "Male",
+      "growth": 1.0,
+      "health": 1.0,
+      "maxHealth": 15000,
+      "weight": 15000,
+      "weight_label": "15.0 Tấn (15,000 kg)",
+      "hunger": 1.0,
+      "thirst": 1.0,
+      "stamina": 1.0,
+      "isPrimeElder": true,
+      "mutations": [
+        "Wader",
+        "Cellular Regeneration",
+        "Efficient Digestion",
+        "Efficient Digestion"
+      ],
+      "mutationSlots": {
+        "active": [
+          "Wader",
+          "Cellular Regeneration",
+          "Efficient Digestion",
+          "Efficient Digestion"
+        ]
+      },
+      "parkedAt": "2026-10-25T17:56:09.861406+00:00",
+      "source": "admin_granted"
+    },
+    {
+      "id": "gift_1792951194430",
+      "species": "Tyrannosaurus",
+      "gender": "Female",
+      "growth": 0.8,
+      "health": 1.0,
+      "maxHealth": 12274,
+      "weight": 12274,
+      "weight_label": "12.2 Tấn (12,274 kg)",
+      "hunger": 1.0,
+      "thirst": 1.0,
+      "stamina": 1.0,
+      "isPrimeElder": true,
+      "mutations": [
+        "Hematophagy",
+        "Congenital Hypoalgesia",
+        "Photosynthetic Tissue",
+        "Photosynthetic Tissue"
+      ],
+      "mutationSlots": {
+        "active": [
+          "Hematophagy",
+          "Congenital Hypoalgesia",
+          "Photosynthetic Tissue",
+          "Photosynthetic Tissue"
+        ]
+      },
+      "parkedAt": "2026-10-25T17:59:54.430534+00:00",
+      "source": "admin_granted"
+    },
+    {
+      "id": "gift_1792952309883",
+      "species": "Tyrannosaurus",
+      "gender": "Female",
+      "growth": 0.8,
+      "health": 1.0,
+      "maxHealth": 12274,
+      "weight": 12274,
+      "weight_label": "12.2 Tấn (12,274 kg)",
+      "hunger": 1.0,
+      "thirst": 1.0,
+      "stamina": 1.0,
+      "isPrimeElder": true,
+      "mutations": [
+        "Efficient Digestion",
+        "Featherweight",
+        "Cannibalistic",
+        "Wader"
+      ],
+      "mutationSlots": {
+        "active": [
+          "Efficient Digestion",
+          "Featherweight",
+          "Cannibalistic",
+          "Wader"
+        ]
+      },
+      "parkedAt": "2026-10-25T18:18:29.883820+00:00",
+      "source": "admin_granted"
+    },
+    {
+      "id": "gift_1792954435991",
+      "species": "Ankylosaurus",
+      "gender": "Female",
+      "growth": 0.6,
+      "health": 1.0,
+      "maxHealth": 5000,
+      "weight": 5000,
+      "weight_label": "5.0 Tấn (5,000 kg)",
+      "hunger": 1.0,
+      "thirst": 1.0,
+      "stamina": 1.0,
+      "isPrimeElder": false,
+      "mutations": [],
+      "mutationSlots": {
+        "active": []
+      },
+      "parkedAt": "2026-10-25T18:53:55.991620+00:00",
+      "source": "admin_granted"
+    }
+  ],
+  "76561199062270730": [
+    {
+      "id": "gift_1792933799720",
+      "species": "Tyrannosaurus",
+      "gender": "Female",
+      "growth": 1.0,
+      "health": 1.0,
+      "hunger": 1.0,
+      "thirst": 1.0,
+      "stamina": 1.0,
+      "isPrimeElder": false,
+      "mutations": [],
+      "parkedAt": "2026-10-25T13:09:59.720239+00:00",
+      "source": "admin_granted"
+    },
+    {
+      "id": "gift_1792933830603",
+      "species": "Spinosaurus",
+      "gender": "Female",
+      "growth": 0.89,
+      "health": 1.0,
+      "hunger": 1.0,
+      "thirst": 1.0,
+      "stamina": 1.0,
+      "isPrimeElder": true,
+      "mutations": [],
+      "parkedAt": "2026-10-25T13:10:30.603066+00:00",
+      "source": "admin_granted",
+      "weight": 15000,
+      "maxHealth": 15000,
+      "weight_label": "15.0 Tấn (15,000 kg)"
+    },
+    {
+      "id": "gift_1792933874845",
+      "species": "Spinosaurus",
+      "gender": "Female",
+      "growth": 0.89,
+      "health": 1.0,
+      "hunger": 1.0,
+      "thirst": 1.0,
+      "stamina": 1.0,
+      "isPrimeElder": true,
+      "mutations": [],
+      "parkedAt": "2026-10-25T13:11:14.845882+00:00",
+      "source": "admin_granted",
+      "weight": 15000,
+      "maxHealth": 15000,
+      "weight_label": "15.0 Tấn (15,000 kg)"
+    }
+  ],
+  "76561199483156684": [
+    {
+      "id": "gift_1792943701019",
+      "species": "Spinosaurus",
+      "gender": "Female",
+      "growth": 1.0,
+      "health": 1.0,
+      "maxHealth": 15000,
+      "weight": 15000,
+      "weight_label": "15.0 Tấn (15,000 kg)",
+      "hunger": 1.0,
+      "thirst": 1.0,
+      "stamina": 1.0,
+      "isPrimeElder": true,
+      "mutations": [
+        "Cache Propensity",
+        "Heightened Ghrelin",
+        "Gastronomic Regeneration",
+        "Stereopsis"
+      ],
+      "mutationSlots": {
+        "active": [
+          "Cache Propensity",
+          "Heightened Ghrelin",
+          "Gastronomic Regeneration",
+          "Stereopsis"
+        ]
+      },
+      "parkedAt": "2026-10-25T15:55:01.019798+00:00",
+      "source": "admin_granted"
+    }
+  ]
+}

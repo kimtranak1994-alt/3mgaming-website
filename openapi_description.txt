@@ -1,0 +1,168 @@
+## Authentication and limits
+
+Send the key with every request as Authorization: Bearer ipa_... (or an X-Api-Key header). Keep keys on your server. A key with write scopes can spend any player's balance.
+
+Each key may make 120 requests per minute. Above that the API answers 429 with Retry-After, X-RateLimit-Limit, X-RateLimit-Remaining and X-RateLimit-Reset (Unix seconds) headers and retryAfterSec in the body.
+
+A scope only works while the server's plan includes the feature behind it. Otherwise the endpoint answers 403 with code PLAN_NO_FEATURE and the feature name.
+
+## Scopes
+
+Read scopes (…:read) never change anything. Write scopes (…:write) change data. For players most of them do what the overlay does, with the same prices, limits and checks. commands:write, tokens:write, outcast:write, settings:write and the staff actions on tickets and applications are moderation tools.
+
+Admin scopes split money and skin powers off the player scopes: currency:grant adds or removes any balance, skinshop:admin applies any skin without the server's locks and costs and sets skin expiry, skintokens:admin credits, debits and tops up skin tokens and unlocks the editor. Keys created before the split received the matching admin scope automatically, so they keep working.
+
+## Errors
+
+Every error has the shape { "error": "<message>", "code": "<CODE>" } plus extra fields where noted (scope, feature, retryAfterSec). Program against code, show error to people. Action endpoints keep ok: false in the body.
+
+Status codes: 400 invalid input or a failed action, 401 key problem, 403 scope or plan, 404 NOT_FOUND, 409 ALREADY_CLAIMED, ALREADY_OWNED, ACTION_PENDING and IDEMPOTENCY_IN_PROGRESS, 422 IDEMPOTENCY_MISMATCH, 429 RATE_LIMITED.
+
+```
+AUTH_MISSING             No API key sent, or it does not start with ipa_.
+AUTH_INVALID             The API key is unknown or revoked.
+PLAN_NO_API              The server's plan does not include the API.
+SCOPE_MISSING            The key lacks the scope this endpoint needs (see `scope`).
+PLAN_NO_FEATURE          The plan lacks the feature behind the scope (see `feature`).
+RATE_LIMITED             Too many requests for this key. Wait `retryAfterSec` seconds.
+BAD_REQUEST              The request is malformed or a field is invalid.
+INVALID_STEAM_ID         The Steam ID is not a 17-digit 7656119... ID.
+NOT_FOUND                The player, item or record does not exist.
+FORBIDDEN                The action is not allowed for this player or key.
+FEATURE_DISABLED         The feature is switched off on this server.
+INSUFFICIENT_FUNDS       The player cannot afford it.
+ALREADY_CLAIMED          This reward was already claimed.
+ALREADY_OWNED            The player already owns or has done this.
+ACTION_PENDING           The same action is still running for this player.
+CONFLICT                 The request conflicts with the current state.
+LIMIT_REACHED            A daily, weekly or usage limit is used up.
+EXPIRED                  The item, code or offer has expired.
+COOLDOWN                 Try again later.
+PLAYER_OFFLINE           The player must be online with a dino for this.
+LOCKED                   A requirement is not met yet (level, pass, unlock).
+IDEMPOTENCY_IN_PROGRESS  A request with this Idempotency-Key is still running.
+IDEMPOTENCY_MISMATCH     This Idempotency-Key was used with a different request.
+ACTION_FAILED            The action failed. The message says why.
+INTERNAL_ERROR           Unexpected server error.
+```
+
+## Idempotency-Key
+
+Endpoints that spend or grant something (marked idempotent) accept an Idempotency-Key header, any string up to 128 characters, for example a UUID per user action.
+
+A retry with the same key and the same body within 24 hours returns the stored answer with the header Idempotent-Replay: true and books nothing. The same key with a different body or path answers 422 IDEMPOTENCY_MISMATCH. While the first request is still running a retry answers 409 IDEMPOTENCY_IN_PROGRESS. Server errors (5xx) are not stored, so the retry runs again. Without the header nothing changes.
+
+## Polling
+
+killfeed, combat-log, chat-logs and crashes take ?after=<last id> and return only newer rows.
+
+tickets, events and giveaways take ?updatedSince=<ISO 8601 time> and return only rows changed since then (for events also new or changed RSVPs, for giveaways also new entries). Every row has updatedAt; pass the newest one you saw next time. Removed RSVPs are not reported, reload the event list now and then.
+
+market/listings and market/sales take ?updatedSince= as well. Listings never change, so it returns listings created since then plus activeIds, the ids of every open listing: a known id missing there was sold, withdrawn or expired. killfeed takes ?updatedSince= next to ?after=.
+
+## Selling a parked dino (listPrice)
+
+POST /players/{steamId}/garage/{garageDinoId}/sell takes an optional body { listPrice, currencyId }. listPrice is a whole number of currency units, decimals are rounded.
+
+currencyId is the id of an extra server currency; leave it out or send null for the main currency. In the main currency the price is clamped to the server's marketplace bounds (minimum, maximum, per-species rules) without an error. In an extra currency the price must be 1 to 10,000,000, the bounds do not apply.
+
+Without listPrice the dino is sold back to the server by its sell rule if quick sell is on. With the marketplace on and quick sell off a missing listPrice answers "Set a price to list this dino."
+
+```
+{"listPrice": 2500, "currencyId": null}
+```
+
+## Marketplace listing price
+
+POST /players/{steamId}/market/listings takes { garageDinoId, listPrice, currencyId? } and always lists, it never sells back to the server. listPrice and currencyId follow the same rules as the sell endpoint above. The answer's amount is the price the listing got after clamping.
+
+The buyer pays listPrice, the seller gets sellerPayout (listPrice minus the server's feePct) when the dino sells. GET /market/listings shows minPrice, maxPrice, feePct, maxListingsPerPlayer, buyDelaySec and maxListingHours of the server.
+
+```
+{"garageDinoId": "GARAGE_DINO_ID", "listPrice": 2500, "currencyId": null}
+```
+
+## Event status
+
+GET /events has status scheduled (not started or no start date), running (between startsAt and endsAt) or over.
+
+When the admin set no end, endsAt is startsAt plus 24 hours and endsAtEstimated is true, so the time is a guess. With a real end endsAtEstimated is false.
+
+## Mutation slots
+
+mutationSlots on players, garage dinos, market listings and sales has four groups: active, parent, elderA and elderB. Each group is an array of four slot names in slot order.
+
+"None" means the slot is empty. null for a whole group means unknown: the dino was stored by a plugin build that did not report it. The live dino on GET /players/{steamId} has mutationSlots null when the player has no dino.
+
+## skin/apply payload
+
+POST /players/{steamId}/skin/apply takes { payload }, the export JSON of the skin editor (op: "export" on skin-editor/action returns it).
+
+Required: class (blueprint class, e.g. BP_Tyrannosaurus_C), variation and pattern (numbers) and an RGBA array of at least three numbers for body, markings, flank, underbelly, detail1, eyes and male_display. Colors are linear 0 to 1, not sRGB. Optional: female, teeth, mouth, claws, theme, gore, glitch, anim.
+
+This endpoint ignores the server's species locks, color limits and token costs (scope skinshop:admin). For player actions use skin-editor/action with op: "apply", which charges and checks like the overlay.
+
+```
+{"payload":{"class":"BP_Tyrannosaurus_C","female":false,"variation":0,"pattern":1,
+  "body":[0.2,0.1,0.05,1],"markings":[0.8,0.8,0.7,1],"flank":[0.3,0.2,0.1,1],
+  "underbelly":[0.9,0.85,0.7,1],"detail1":[0.1,0.1,0.1,1],"eyes":[1,0.6,0,1],
+  "male_display":[0.6,0,0,1]}}
+```
+
+## Preset variation and pattern
+
+POST /players/{steamId}/skins/{presetId}/apply takes { variation?, pattern? }. Both are the raw game values and start at 0. Allowed is 0 up to the preset's variationMax or patternMax, inclusive.
+
+They only apply when the preset allows a choice (max above 0). Values outside the range are ignored without an error and the preset's own value stays.
+
+## Clearing an outcast
+
+DELETE /players/{steamId}/outcast (scope outcast:write) clears the status for free and answers { ok, cleared }. The paid player reset exists only in the overlay and portal.
+
+## Casino and wheels
+
+POST /players/{steamId}/casino/play takes the same body as the overlay. slots and coinflip need bet. blackjack needs action: start (with bet), then hit, stand or double; the running hand comes back as view and also in GET /players/{steamId}/casino under lobby.blackjack. wheel needs wheelId, or use POST /players/{steamId}/wheels/{wheelId}/spin.
+
+bet must be within minBet and maxBet from GET /casino/catalog. Role rules can change payouts and daily limits per player, GET /players/{steamId}/casino shows the values that apply under limits. A daily limit that is used up answers LIMIT_REACHED. Wheel chances in GET /casino/wheels are rounded to 0.1 %.
+
+```
+{"game":"blackjack","action":"start","bet":100}
+{"game":"blackjack","action":"hit"}
+{"game":"wheel","wheelId":"WHEEL_ID"}
+```
+
+## PvP over the API
+
+The API plays the turn based games rps, tictactoe and connect4. Quick play joins the oldest waiting match of the game at that match's stake, otherwise the player waits in the queue. A challenge waits only for opponentSteamId and is skipped by quick play. Both sides pay the stake when they start or join, the winner gets both, a draw refunds both.
+
+There is no push for websites. Poll GET /players/{steamId}/pvp/{matchId} every one or two seconds while a match runs; yourTurn says when to move. A player who does not move within turnLimitSec loses, for rps both get their stake back. The state only shows what that player may see (in rps the opponent's pick stays hidden until the round ends).
+
+Your website acts for both players. Only send moves for a player who is signed in on your side.
+
+```
+rps        {"move":{"pick":"rock"}}
+tictactoe  {"move":{"cell":4}}      // 0-8, row by row
+connect4   {"move":{"col":3}}       // 0-6
+```
+
+## Cases and dino packs
+
+Opening a case or pack uses a free open (a reward) first and only charges when there is none. Buying a pack and opening it is one step, there is no separate buy. Send expectedPrice with the price you showed the player; if a role discount or the price changed meanwhile the call fails and books nothing.
+
+opens and weekOpens on a case are { used, max } or null without a limit. The weekly limit starts Monday in the server's currency timezone and counts paid opens only. When used reaches max the open answers LIMIT_REACHED.
+
+## Voice status
+
+GET /voice lists the players connected to the ingame voice with muted, range and viaBridge. Whether someone is speaking right now is not known on the server: audio and voice detection run directly between the players' clients. available is false when the voice service does not answer.
+
+## Growth scale
+
+growth in the swap and setstats commands is a fraction from 0.01 to 1.0, where 1.0 is fully grown. Values are clamped, not rejected: 75 becomes 1.0, send 0.75 for 75 %.
+
+## Battlepass premium
+
+premium is true when the player bought premium, an admin granted it or he has one of the season's premiumRoleIds on Discord right now. premiumSource says which (purchase, admin, role). Role premium needs a linked Discord account and is checked live, it is false while Discord cannot be reached. Premium includes the pass, so passOwned is then true as well.
+
+## Quest species
+
+Every quest from GET /players/{steamId}/quests has speciesRestriction { species, killerSpecies, victimSpecies }, the same names as in the quest config. species is the dino to play (for AI hunts the animal to hunt), killerSpecies the dino the player must be when killing, victimSpecies the allowed victims. An empty list means any species.

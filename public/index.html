@@ -1,0 +1,2462 @@
+<!DOCTYPE html>
+
+<html lang="vi">
+
+<head>
+  <script>
+    try {
+      if (localStorage.getItem('admin_view_mode') === 'guest') {
+        document.documentElement.classList.add('guest-mode-active');
+      }
+    } catch(e) {}
+  </script>
+
+  <meta charset="utf-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+  <title>3MGAMING - Server The Isle: Evrima Cho Người Việt</title>
+
+  <meta name="description" content="Server The Isle: Evrima cho người Việt. Tích hợp IslePilot, bản đồ Gateway tương tác, Gara cất dino, bảng xếp hạng, voice chat khoảng cách.">
+
+  <meta name="theme-color" content="#08070b">
+
+  <link rel="icon" type="image/jpeg" href="assets/images/logo.jpg">
+
+  <link rel="apple-touch-icon" href="assets/images/logo.jpg">
+
+  <!-- Font chữ tiếng Việt Be Vietnam Pro chuẩn phong cách Dino4VN -->
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/style.css?v=3.1">
+
+  <link rel="stylesheet" href="css/map.css?v=2.2">
+
+</head>
+
+<body>
+
+  <!-- Header & Thanh điều hướng 2 Hàng Cân Bằng -->
+
+  <header class="app-header">
+
+    <!-- Hàng trên: Logo Thương Hiệu & Nút Hành Động (Discord, Steam Login) -->
+
+    <div class="header-inner">
+
+      <a href="#home" class="brand">
+
+        <img src="assets/images/logo.jpg" alt="3MGAMING EVRIMA Logo" class="brand-logo-img">
+
+        <div>
+
+          <span class="server-name-text">3MGAMING</span>
+
+          <span class="brand-badge">EVRIMA</span>
+
+        </div>
+
+      </a>
+
+      <!-- Hành động bên phải -->
+
+      <div class="header-actions">
+
+        <a href="https://discord.gg/f3R9mMAfms" target="_blank" class="btn-discord discord-link">
+
+          <span>Discord</span>
+
+        </a>
+
+        <a href="/api/player/steam/login?redirect=%2F" class="btn-steam" id="btn-steam-login">
+
+          <span>🎮</span> <span id="steam-btn-text">Đăng nhập Steam</span>
+
+        </a>
+
+        <!-- Số xu hiện có của người chơi (bên phải tên user) -->
+
+        <div id="user-balance-badge" style="display: none; align-items: center; gap: 6px; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.35); color: #fbbf24; padding: 7px 14px; border-radius: 8px; font-weight: 700; font-size: 0.88rem; box-shadow: 0 0 12px rgba(245, 158, 11, 0.1);">
+
+          <span style="font-size: 1.05rem;">🪙</span>
+
+          <span id="user-balance-text">0 Xu</span>
+
+        </div>
+
+        <button type="button" class="btn-secondary" id="btn-steam-logout" style="display: none; padding: 8px 12px; font-size: 0.85rem;" onclick="App.logoutSteam()">
+          Đăng xuất
+        </button>
+
+        <!-- Bộ chuyển đổi chế độ xem cho Admin (Admin / Khách) -->
+        <div id="admin-mode-toggle" class="admin-mode-toggle-pill" style="display: none;">
+          <button type="button" id="btn-mode-admin" class="btn-mode-opt active" onclick="App.setAdminViewMode('admin')" title="Xem với quyền Quản trị viên">
+            👑 Admin
+          </button>
+          <button type="button" id="btn-mode-guest" class="btn-mode-opt" onclick="App.setAdminViewMode('guest')" title="Xem với tư cách Khách / Người chơi">
+            👤 Khách
+          </button>
+        </div>
+
+        <button type="button" class="menu-toggle" id="menu-toggle" aria-label="Mở menu">☰</button>
+
+      </div>
+
+    </div>
+
+    <!-- Hàng dưới: Thanh Menu 15 Mục Cân Bằng Hài Hòa -->
+
+    <nav class="subnav-container">
+
+      <div class="subnav-inner">
+
+        <ul class="nav-links" id="nav-links">
+          <li id="nav-item-home"><a href="#home" class="nav-btn active" data-tab="home">Trang chủ</a></li>
+          <li id="nav-item-bxh"><a href="#bxh" class="nav-btn" data-tab="bxh">Bảng xếp hạng</a></li>
+          <li class="nav-item-player"><a href="#garage" class="nav-btn" data-tab="garage">Gara Dino</a></li>
+          <li class="nav-item-player"><a href="#skinshop" class="nav-btn" data-tab="skinshop">Shop skin</a></li>
+          <li class="nav-item-player"><a href="#skins" class="nav-btn" data-tab="skins">Garage skin</a></li>
+          <li class="nav-item-player"><a href="#skineditor" class="nav-btn" data-tab="skineditor">Chỉnh sửa skin</a></li>
+          <li class="nav-item-player"><a href="#referral" class="nav-btn" data-tab="referral">Mời bạn bè</a></li>
+          <li class="nav-item-player"><a href="#teleport" class="nav-btn" data-tab="teleport">Dịch chuyển</a></li>
+          <li class="nav-item-player"><a href="#quests" class="nav-btn" data-tab="quests">Nhiệm vụ</a></li>
+          <li class="nav-item-player"><a href="#buydino" class="nav-btn" data-tab="buydino">Mua dino</a></li>
+          <li class="nav-item-player"><a href="#carcass" class="nav-btn" data-tab="carcass">Thả xác</a></li>
+          <li id="nav-item-map"><a href="#map" class="nav-btn" data-tab="map">Bản đồ Gateway</a></li>
+          <li class="nav-item-player"><a href="#guide" class="nav-btn" data-tab="guide">Hướng dẫn</a></li>
+          <li class="nav-item-player"><a href="#rules" class="nav-btn" data-tab="rules">Nội quy</a></li>
+          <li class="nav-item-player"><a href="#donate" class="nav-btn" data-tab="donate">Ủng hộ</a></li>
+          <li id="nav-item-admin" style="display: none;"><a href="#admin" class="nav-btn" data-tab="admin" style="border-color: rgba(255, 42, 133, 0.4);"><span style="color: #ff2a85;">👑</span> Quản Trị</a></li>
+        </ul>
+
+      </div>
+
+    </nav>
+
+  </header>
+
+  <!-- Thanh thông báo chạy chữ (Phong cách Dino4VN) -->
+
+  <div class="ticker-bar">
+
+    <div class="ticker-inner">
+
+      <div class="ticker-content">
+
+        <span class="ticker-tag">Thông Báo</span>
+
+        <span class="server-motd-text">Server The Isle: Evrima dành cho cộng đồng Việt Nam. Luật rõ ràng. Xử nhanh. Không thiên vị.</span>
+
+      </div>
+
+      <div>
+
+        <a href="#donate" style="color: var(--accent); font-weight: 600; font-size: 0.8rem;">Ủng hộ Server &rarr;</a>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Thân trang chính -->
+
+  <main class="main-wrapper">
+
+    <!-- TAB 1: TRANG CHỦ -->
+
+    <section id="view-home" class="view-section active">
+
+      <!-- Hero Banner -->
+
+      <div class="hero-card">
+
+        <h1 class="hero-title server-name-text">3MGAMING</h1>
+
+        <p class="hero-sub server-motd-text">
+
+          Map Gateway, Proximity Voice Chat, không mật khẩu, không Whitelist. Hệ thống Gara lưu Dino tự động bảo lưu qua IslePilot!
+
+        </p>
+
+        <!-- Trạng thái server live -->
+
+        <div class="status-grid">
+
+          <div class="status-box">
+
+            <span class="label">Người chơi Online</span>
+
+            <div class="value">
+
+              <span class="pulse-dot"></span>
+
+              <span id="status-players">-- / 100</span>
+
+            </div>
+
+          </div>
+
+          <div class="status-box">
+
+            <span class="label">Tickrate / FPS</span>
+
+            <div class="value" id="status-fps" style="color: var(--accent);">60.0 FPS</div>
+
+          </div>
+
+          <div class="status-box">
+
+            <span class="label">Bản đồ</span>
+
+            <div class="value" id="status-map" style="font-size: 1.25rem;">Gateway</div>
+
+          </div>
+
+          <div class="status-box">
+
+            <span class="label">Khởi động lại sau</span>
+
+            <div class="value" id="status-restart" style="color: var(--accent-gold);">--</div>
+
+          </div>
+
+        </div>
+
+        <div class="hero-cta">
+
+          <a href="#guide" class="btn-primary">
+
+            <span>🚀</span> Hướng Dẫn Vào Game
+
+          </a>
+
+          <a href="https://discord.gg/f3R9mMAfms" target="_blank" class="btn-secondary discord-link">
+
+            <span>💬</span> Tham gia Discord Server
+
+          </a>
+
+        </div>
+
+      </div>
+
+      <!-- Dashboard 2 cột: Podium Bảng Xếp Hạng & Killfeed -->
+
+      <div class="dashboard-grid">
+
+        <!-- Cột trái: Bục vinh danh Top 3 (Dino4VN style) -->
+
+        <div class="card">
+
+          <div class="card-header">
+
+            <h2 class="card-title">🏆 Top Thợ Săn Server</h2>
+
+            <a href="#bxh" style="font-size: 0.85rem;">Xem tất cả &rarr;</a>
+
+          </div>
+
+          <div class="podium-container">
+
+            <!-- Hạng 2 -->
+
+            <div class="podium-slot">
+
+              <div class="podium-player" id="podium-2-name">Player_2</div>
+
+              <div class="podium-score" id="podium-2-score">-- Kills</div>
+
+              <div class="podium-bar podium-2">2</div>
+
+            </div>
+
+            <!-- Hạng 1 -->
+
+            <div class="podium-slot">
+
+              <div class="podium-player" id="podium-1-name" style="color: var(--accent-gold);">Player_1</div>
+
+              <div class="podium-score" id="podium-1-score">-- Kills</div>
+
+              <div class="podium-bar podium-1">👑 1</div>
+
+            </div>
+
+            <!-- Hạng 3 -->
+
+            <div class="podium-slot">
+
+              <div class="podium-player" id="podium-3-name">Player_3</div>
+
+              <div class="podium-score" id="podium-3-score">-- Kills</div>
+
+              <div class="podium-bar podium-3">3</div>
+
+            </div>
+
+          </div>
+
+          <p style="text-align: center; font-size: 0.85rem; color: var(--text-muted);">
+
+            Điểm số được tính tự động từ số lần hạ gục, thời gian sinh tồn và loài khủng long.
+
+          </p>
+
+        </div>
+
+        <!-- Cột phải: Live Killfeed thời gian thực -->
+
+        <div class="card">
+
+          <div class="card-header">
+
+            <h2 class="card-title">⚔️ Nhật Ký Chiến Trận (Killfeed)</h2>
+
+            <span style="font-size: 0.8rem; color: var(--accent);">● Trực tiếp</span>
+
+          </div>
+
+          <div class="killfeed-list" id="killfeed-container">
+
+            <p style="color: var(--text-muted); text-align: center; padding: 20px;">Đang tải nhật ký chiến đấu...</p>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- TAB 2: BẢNG XẾP HẠNG & CHI TIẾT -->
+
+    <section id="view-bxh" class="view-section">
+
+      <div class="card">
+
+        <div class="card-header">
+
+          <h2 class="card-title">📊 Bảng Xếp Hạng Toàn Server (Leaderboards)</h2>
+
+          <span style="font-size: 0.85rem; color: var(--text-muted);">Dữ liệu đồng bộ trực tiếp từ IslePilot</span>
+
+        </div>
+
+        <div class="table-container">
+
+          <table class="bxh-table">
+
+            <thead>
+
+              <tr>
+
+                <th>Hạng</th>
+
+                <th>Người chơi</th>
+
+                <th>Khủng long yêu thích</th>
+
+                <th>Kills</th>
+
+                <th>Deaths</th>
+
+                <th>K/D</th>
+
+                <th>Thời gian sống</th>
+
+                <th>Tổng Điểm</th>
+
+              </tr>
+
+            </thead>
+
+            <tbody id="bxh-table-body">
+
+              <tr>
+
+                <td colspan="8" style="text-align: center; padding: 30px; color: var(--text-muted);">
+
+                  Đang tải bảng xếp hạng...
+
+                </td>
+
+              </tr>
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- TAB 3: GARA KHỦNG LONG (ISLEPILOT DINO GARAGE) -->
+
+    <section id="view-garage" class="view-section">
+
+      <div class="card" style="margin-bottom: 24px;">
+
+        <div class="card-header" style="border: none; margin-bottom: 0; padding-bottom: 0;">
+
+          <div>
+
+            <h2 class="card-title">🦕 Gara Khủng Long Của Bạn</h2>
+
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">
+
+              Quản lý khủng long đã lưu khi an toàn. Bạn có thể rút dino vào game hoặc lưu dino trước khi thoát game.
+
+            </p>
+
+          </div>
+
+          <div>
+
+            <span class="growth-badge" id="garage-slots-badge" style="font-size: 0.9rem; padding: 6px 14px;">
+
+              Đang tải slot...
+
+            </span>
+
+          </div>
+
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; align-items: center;" id="garage-filter-buttons">
+
+          <button type="button" class="map-filter-btn active" onclick="Garage.filter('all', this)">Tất cả loài</button>
+
+          <button type="button" class="map-filter-btn" onclick="Garage.filter('carnivore', this)">🍖 Khủng long ăn thịt</button>
+
+          <button type="button" class="map-filter-btn" onclick="Garage.filter('herbivore', this)">🌿 Khủng long ăn cỏ</button>
+
+        </div>
+
+      </div>
+
+      <!-- Khung hiển thị Khủng Long Đang Chơi Trong Game -->
+
+      <div id="garage-active-dino-banner" class="card" style="margin-bottom: 24px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); padding: 18px 22px; border-radius: 12px; display: none; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+
+        <div style="display: flex; align-items: center; gap: 16px;">
+
+          <img id="garage-active-dino-img" src="/assets/images/Tyrannosaurus.webp" style="width: 58px; height: 58px; border-radius: 8px; object-fit: contain; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); padding: 4px;" alt="Dino">
+
+          <div>
+
+            <div style="display: flex; align-items: center; gap: 8px;">
+
+              <span style="font-size: 0.78rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Khủng Long Đang Chơi (In-Game)</span>
+
+              <span id="garage-active-dino-status" style="font-size: 0.72rem; padding: 2px 8px; border-radius: 4px; font-weight: 600;"></span>
+
+            </div>
+
+            <div style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 3px;" id="garage-active-dino-title">
+
+              Đang tải...
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;" id="garage-active-dino-actions">
+
+          <button type="button" class="btn-primary btn-garage-store" id="garage-btn-store" style="padding: 8px 18px; font-size: 0.88rem; font-weight: 600;" onclick="Garage.actionStore()">
+
+            📥 Cất Vào Gara
+
+          </button>
+
+          <button type="button" class="btn-primary" id="garage-btn-cancel-store" style="display: none; background: rgba(148, 163, 184, 0.2); border-color: rgba(148, 163, 184, 0.4); color: #cbd5e1; padding: 8px 16px; font-size: 0.88rem; font-weight: 600;" onclick="Garage.cancelStore()">
+
+            ❌ Hủy Cất
+
+          </button>
+
+          <button type="button" class="btn-primary" id="garage-btn-slay" style="background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.5); color: #fca5a5; padding: 8px 18px; font-size: 0.88rem; font-weight: 600;" onclick="Garage.actionSlay()">
+
+            💀 Giết Dino Của Tôi
+
+          </button>
+
+        </div>
+
+      </div>
+
+      <!-- Danh sách thẻ bài khủng long -->
+
+      <div class="garage-grid" id="garage-container">
+
+        <!-- Render tự động bởi garage.js -->
+
+      </div>
+
+    </section>
+
+    <!-- TAB: SHOP SKIN -->
+
+    <section id="view-skinshop" class="view-section">
+
+      <div class="card" style="margin-bottom: 20px;">
+
+        <div class="card-header" style="border: none; margin-bottom: 0; padding-bottom: 0;">
+
+          <div>
+
+            <h2 class="card-title">🛍️ Cửa Hàng Skin Khủng Long (Skin Shop)</h2>
+
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">
+
+              Khám phá và sở hữu các bộ Skin hoa văn độc quyền dành cho các loài khủng long trên server 3MGAMING.
+
+            </p>
+
+          </div>
+
+        </div>
+
+        <div style="display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap;" id="skinshop-filters">
+
+          <button type="button" class="map-filter-btn active" onclick="SkinShop.filter('all', this)">Tất cả</button>
+
+          <button type="button" class="map-filter-btn" onclick="SkinShop.filter('Tyrannosaurus', this)">Tyrannosaurus</button>
+
+          <button type="button" class="map-filter-btn" onclick="SkinShop.filter('Carnotaurus', this)">Carnotaurus</button>
+
+          <button type="button" class="map-filter-btn" onclick="SkinShop.filter('Ceratosaurus', this)">Ceratosaurus</button>
+
+          <button type="button" class="map-filter-btn" onclick="SkinShop.filter('Stegosaurus', this)">Stegosaurus</button>
+
+        </div>
+
+      </div>
+
+      <div class="garage-grid" id="skinshop-container"></div>
+
+    </section>
+
+    <!-- TAB: GARAGE SKIN (KHO SKIN ĐÃ SỞ HỮU) -->
+
+    <section id="view-skins" class="view-section">
+
+      <div class="card" style="margin-bottom: 20px;">
+
+        <div class="card-header" style="border: none; margin-bottom: 0; padding-bottom: 0;">
+
+          <div>
+
+            <h2 class="card-title">🎒 Kho Skin Khủng Long (Garage Skins)</h2>
+
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">
+
+              Quản lý các mẫu Skin bạn đã sở hữu và chọn để áp dụng trực tiếp cho khủng long trong game.
+
+            </p>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="garage-grid" id="skins-container"></div>
+
+    </section>
+
+    <!-- TAB: CHỈNH SỬA SKIN -->
+
+    <section id="view-skineditor" class="view-section">
+
+      <div class="card" style="margin-bottom: 20px;">
+
+        <div class="card-header" style="border: none; margin-bottom: 0; padding-bottom: 0;">
+
+          <div>
+
+            <h2 class="card-title">🎨 Trình Thiết Kế & Chỉnh Sửa Skin 3D</h2>
+
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">
+
+              Phối màu 3D trực quan theo thời gian thực, xoay đa chiều 360°, xuất Evrima Game Code và áp dụng trực tiếp lên server 3MGAMING.
+
+            </p>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="skineditor-layout">
+
+        <!-- Cột Trái: 3D Stage Xem Trước Khủng Long & Bản Lưu Cá Nhân (Saved Presets) -->
+
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+
+          <div class="skineditor-stage" id="skineditor-stage-container">
+
+            <!-- Huy hiệu thông tin loài & giới tính -->
+
+            <div style="position: absolute; top: 14px; left: 14px; display: flex; flex-direction: column; gap: 6px; z-index: 5;">
+
+              <div style="display: flex; gap: 8px;">
+
+                <span class="badge" id="skineditor-badge-species" style="background: rgba(255, 42, 133, 0.2); color: var(--accent); border: 1px solid rgba(255, 42, 133, 0.4); font-size: 0.8rem; font-weight: 700; padding: 4px 10px; border-radius: 6px;">
+
+                  Tyrannosaurus
+
+                </span>
+
+                <span class="badge" id="skineditor-badge-sex" style="background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); font-size: 0.8rem; font-weight: 700; padding: 4px 10px; border-radius: 6px;">
+
+                  ♂ Đực (Male)
+
+                </span>
+
+              </div>
+
+              <div id="skineditor-angle-readout" style="font-size: 0.72rem; color: #94a3b8; font-family: monospace; background: rgba(15, 23, 42, 0.75); padding: 3px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1); width: fit-content;">
+
+                Góc X: 0° | Y: 0° | Zoom: 100%
+
+              </div>
+
+            </div>
+
+            <!-- Nút điều khiển khung nhìn Camera 3D -->
+
+            <div class="skineditor-viewport-controls">
+
+              <button class="skineditor-tool-btn" title="Phóng to (Zoom In)" onclick="SkinEditor.zoomIn()">➕</button>
+
+              <button class="skineditor-tool-btn" title="Thu nhỏ (Zoom Out)" onclick="SkinEditor.zoomOut()">➖</button>
+
+              <button class="skineditor-tool-btn" id="skineditor-btn-autorotate" title="Bật/Tắt tự động xoay 360°" onclick="SkinEditor.toggleAutoRotate()">🔄</button>
+
+              <button class="skineditor-tool-btn" title="Góc nhìn ngang sườn" onclick="SkinEditor.setPresetView('side')">↔️</button>
+
+              <button class="skineditor-tool-btn" title="Góc nhìn trực diện" onclick="SkinEditor.setPresetView('front')">👁️</button>
+
+              <button class="skineditor-tool-btn" title="Đặt lại camera chuẩn" onclick="SkinEditor.resetCamera()">🎯</button>
+
+            </div>
+
+            <!-- Vùng Render Khủng Long 3D Tương Tác Đa Chiều -->
+
+            <div class="skineditor-canvas-wrapper" id="skineditor-stage-wrapper">
+
+              <!-- 3D WebGL Canvas Layer -->
+
+              <canvas id="skineditor-3d-canvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2;"></canvas>
+
+              
+
+              <!-- 2D High-Res Fallback & Multi-axis Rig Layer -->
+
+              <div id="skineditor-dino-3d-rig" style="position: relative; z-index: 1; transform-style: preserve-3d; display: flex; align-items: center; justify-content: center; pointer-events: none;">
+
+                <canvas id="skineditor-tint-canvas" width="500" height="340" style="max-width: 90%; max-height: 330px; object-fit: contain; pointer-events: none; border-radius: 8px; filter: drop-shadow(0 15px 25px rgba(0,0,0,0.6));"></canvas>
+
+                <img id="skineditor-img" src="https://islepilot.eu/cdn/dino-art/render/Tyrannosaurus.webp" alt="Dino Preview" class="skineditor-dino-render" style="display: none;" crossorigin="anonymous">
+
+              </div>
+
+              <!-- Bàn Xoay Pedestal -->
+
+              <div class="skineditor-pedestal" id="skineditor-pedestal"></div>
+
+              <!-- Floating IslePilot Viewport Control Pill -->
+
+              <div class="skineditor-hint-pill">
+
+                Nhấp và kéo để xoay · Cuộn để thu phóng
+
+              </div>
+
+            </div>
+
+            <!-- Chân Stage: Thanh Tăng Trưởng (Growth) & Mã Evrima Game Code -->
+
+            <div class="skineditor-stage-footer">
+
+              <div class="skineditor-growth-row">
+
+                <span style="font-size: 0.82rem; color: #94a3b8;">Tăng trưởng:</span>
+
+                <input type="range" id="skineditor-growth-slider" min="10" max="100" value="100" class="skineditor-growth-slider" oninput="SkinEditor.setGrowth(this.value)">
+
+                <span id="skineditor-growth-label" style="font-family: monospace; font-weight: 700; width: 45px; text-align: right; color: #ff2a85;">100%</span>
+
+              </div>
+
+              <div class="skineditor-code-box">
+
+                <input type="text" id="skineditor-code" class="map-coord-input" style="flex: 1; font-family: monospace; font-size: 0.85rem;" readonly value="Đang tạo mã skin...">
+
+                <button class="btn-primary" style="padding: 9px 18px; font-size: 0.85rem;" onclick="SkinEditor.copySkinCode()">
+
+                  📋 Sao Chép
+
+                </button>
+
+              </div>
+
+              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+
+                <button class="btn-secondary" style="flex: 1; font-size: 0.82rem; padding: 8px 10px;" onclick="SkinEditor.promptImportCode()">
+
+                  📥 Nhập Mã Game
+
+                </button>
+
+                <button class="btn-secondary" style="flex: 1; font-size: 0.82rem; padding: 8px 10px;" onclick="SkinEditor.pasteSkinCode()">
+
+                  📋 Dán Skin
+
+                </button>
+
+                <button class="btn-secondary" style="flex: 1; font-size: 0.82rem; padding: 8px 10px;" onclick="SkinEditor.saveDraftPrompt()">
+
+                  💾 Lưu Bản Nháp
+
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- Card: Bản Lưu Cá Nhân (Saved Presets) NẰM NGAY DƯỚI STAGE FOOTER -->
+
+          <div class="card skineditor-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.08);">
+
+              <h3 style="font-size: 0.92rem; font-weight: 700; color: #fff; margin: 0; display: flex; align-items: center; gap: 8px;">
+
+                <span>🎒</span> <span>Bản Lưu Cá Nhân (Saved Presets)</span>
+
+              </h3>
+
+              <button type="button" class="btn-secondary" style="font-size: 0.78rem; padding: 4px 10px; display: flex; align-items: center; gap: 5px; font-weight: 600;" onclick="SkinEditor.pasteSkinCode()" title="Dán mã skin từ bộ nhớ tạm">
+
+                <span>📥</span> <span>Dán skin</span>
+
+              </button>
+
+            </div>
+
+            <!-- 3 Ô: Nhập mã game, Dán skin, Lưu bản nháp -->
+
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px;">
+
+              <!-- Ô 1: Nhập mã game -->
+
+              <div>
+
+                <label style="font-size: 0.75rem; color: #94a3b8; display: block; margin-bottom: 4px; font-weight: 600;">Nhập mã game (Evrima Code):</label>
+
+                <div style="display: flex; gap: 6px;">
+
+                  <input type="text" id="skineditor-quick-import-input" placeholder="Dán mã skin game vào đây..." class="map-coord-input" style="flex: 1; font-size: 0.8rem; font-family: monospace;">
+
+                  <button type="button" class="btn-secondary" style="padding: 6px 12px; font-size: 0.8rem; font-weight: 600; white-space: nowrap;" onclick="SkinEditor.importFromInput()">Nhập mã</button>
+
+                </div>
+
+              </div>
+
+              <!-- Ô 2: Lưu bản nháp -->
+
+              <div>
+
+                <label style="font-size: 0.75rem; color: #94a3b8; display: block; margin-bottom: 4px; font-weight: 600;">Lưu bản nháp:</label>
+
+                <div style="display: flex; gap: 6px;">
+
+                  <input type="text" id="skineditor-preset-name-input" placeholder="Nhập tên bản nháp..." class="map-coord-input" style="flex: 1; font-size: 0.82rem;">
+
+                  <button type="button" class="btn-primary" style="font-size: 0.82rem; padding: 6px 14px; font-weight: 700; white-space: nowrap; background: linear-gradient(135deg, #ff2a85, #d91b6e); color: #fff; border: none; border-radius: 6px;" onclick="SkinEditor.savePresetFromInput()">
+
+                    💾 Lưu bản nháp
+
+                  </button>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <div id="skineditor-drafts-container"></div>
+
+          </div>
+
+        </div>
+
+        <!-- Cột Phải: Bảng Điều Khiển Chuẩn 100% IslePilot -->
+
+        <div>
+
+          <!-- Card 1: Cài Đặt Chung (Loài, Giới Tính, Biến Thể, Hoa Văn, Chế Độ) -->
+
+          <div class="card skineditor-card">
+
+            <div style="margin-bottom: 12px;">
+
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+
+                <label style="font-size: 0.82rem; color: #94a3b8; font-weight: 600; margin: 0;">Loài Khủng Long (Species):</label>
+
+                <span id="skineditor-active-dino-status" style="display: none; font-size: 0.75rem; background: rgba(255, 42, 133, 0.12); color: #ff2a85; border: 1px solid rgba(255, 42, 133, 0.3); border-radius: 4px; padding: 2px 8px; font-weight: 600;"></span>
+
+              </div>
+
+              <select id="skineditor-select-species" class="map-poi-select" style="width: 100%; max-width: 100%; padding: 8px 12px;" onchange="SkinEditor.setSpecies(this.value)">
+
+                <optgroup label="Khủng Long Ăn Thịt (Carnivores)">
+
+                  <option value="Tyrannosaurus">Tyrannosaurus Rex</option>
+
+                  <option value="Allosaurus">Allosaurus</option>
+
+                  <option value="Carnotaurus">Carnotaurus</option>
+
+                  <option value="Ceratosaurus">Ceratosaurus</option>
+
+                  <option value="Deinosuchus">Deinosuchus</option>
+
+                  <option value="Dilophosaurus">Dilophosaurus</option>
+
+                  <option value="Herrerasaurus">Herrerasaurus</option>
+
+                  <option value="Omniraptor">Omniraptor</option>
+
+                  <option value="Troodon">Troodon</option>
+
+                  <option value="Spinosaurus">Spinosaurus</option>
+
+                  <option value="Giganotosaurus">Giganotosaurus</option>
+
+                  <option value="Baryonyx">Baryonyx</option>
+
+                  <option value="IndoRex">Indominus Rex (IndoRex)</option>
+
+                </optgroup>
+
+                <optgroup label="Khủng Long Ăn Cỏ (Herbivores)">
+
+                  <option value="Triceratops">Triceratops</option>
+
+                  <option value="Stegosaurus">Stegosaurus</option>
+
+                  <option value="Diabloceratops">Diabloceratops</option>
+
+                  <option value="Tenontosaurus">Tenontosaurus</option>
+
+                  <option value="Pachycephalosaurus">Pachycephalosaurus</option>
+
+                  <option value="Gallimimus">Gallimimus</option>
+
+                  <option value="Hypsilophodon">Hypsilophodon</option>
+
+                  <option value="Dryosaurus">Dryosaurus</option>
+
+                  <option value="Beipiaosaurus">Beipiaosaurus</option>
+
+                  <option value="Maiasaura">Maiasaura</option>
+
+                  <option value="Ankylosaurus">Ankylosaurus</option>
+
+                  <option value="Puerta">Puertasaurus</option>
+
+                  <option value="Therizinosaurus">Therizinosaurus</option>
+
+                </optgroup>
+
+                <optgroup label="Khủng Long Bay (Flyers)">
+
+                  <option value="Pteranodon">Pteranodon</option>
+
+                </optgroup>
+
+              </select>
+
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+
+              <div>
+
+                <label style="font-size: 0.78rem; color: #94a3b8; display: block; margin-bottom: 4px; font-weight: 600;">Giới Tính (Sex):</label>
+
+                <div class="skineditor-segmented">
+
+                  <button type="button" class="skineditor-seg-btn active" id="skineditor-btn-male" onclick="SkinEditor.setSex('male')">
+
+                    ♂ Đực
+
+                  </button>
+
+                  <button type="button" class="skineditor-seg-btn" id="skineditor-btn-female" onclick="SkinEditor.setSex('female')">
+
+                    ♀ Cái
+
+                  </button>
+
+                </div>
+
+              </div>
+
+              <div>
+
+                <label style="font-size: 0.78rem; color: #94a3b8; display: block; margin-bottom: 4px; font-weight: 600;">Chế Độ (Mode):</label>
+
+                <div class="skineditor-segmented">
+
+                  <button type="button" class="skineditor-seg-btn active" id="skineditor-btn-mode-std" onclick="SkinEditor.setRenderMode('standard')">
+
+                    Chuẩn
+
+                  </button>
+
+                  <button type="button" class="skineditor-seg-btn" id="skineditor-btn-mode-glitch" onclick="SkinEditor.setRenderMode('glitched')">
+
+                    Glitch Lab
+
+                  </button>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <!-- Ẩn Biến Thể (Variation), Hoa Văn (Pattern), Chủ Đề (Theme) -->
+
+            <input type="hidden" id="skineditor-input-variation" value="0">
+
+            <input type="hidden" id="skineditor-input-pattern" value="0">
+
+            <input type="hidden" id="skineditor-input-theme" value="0">
+
+          </div>
+
+          <!-- Card 2: Bảng Phân Vùng Màu Sắc (Color Zones) -->
+
+          <div class="card skineditor-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.08);">
+
+              <span style="font-size: 0.95rem; font-weight: 700; color: #fff;">🎨 Màu Sắc (Colors)</span>
+
+              <div style="display: flex; gap: 6px;">
+
+                <button type="button" class="skineditor-icon-btn" title="Phối màu ngẫu nhiên (Randomize)" onclick="SkinEditor.randomize()">🎲</button>
+
+                <button type="button" class="skineditor-icon-btn" title="Sao chép skin" onclick="SkinEditor.copySkinCode()">📋</button>
+
+                <button type="button" class="skineditor-icon-btn" title="Dán skin" onclick="SkinEditor.pasteSkinCode()">📥</button>
+
+                <button type="button" class="skineditor-icon-btn" title="Khôi phục mặc định" onclick="SkinEditor.resetAll()">🔄</button>
+
+              </div>
+
+            </div>
+
+            <!-- Danh Sách Vùng Màu Sắc Dynamic -->
+
+            <div id="skineditor-zones-container"></div>
+
+          </div>
+
+          <!-- Card 3: Áp Dụng Lên Server 3MGAMING -->
+
+          <div class="card skineditor-card">
+
+            <!-- Ẩn Target Steam ID và Tên Nhân Vật -->
+
+            <input type="hidden" id="skineditor-target-steamid" value="76561199175571899">
+
+            <input type="hidden" id="skineditor-target-player" value="Người chơi">
+
+            <button type="button" class="btn-primary" style="width: 100%; padding: 13px; font-size: 0.95rem; font-weight: 800; background: linear-gradient(135deg, #ff2a85, #d91b6e); color: #fff; box-shadow: 0 4px 16px rgba(255,42,133,0.4); border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px;" onclick="SkinEditor.applyToServer()">
+
+              <span>⚡</span> <span>ÁP DỤNG TRONG GAME</span>
+
+            </button>
+
+            <div style="display: flex; justify-content: center; gap: 12px;">
+
+              <button type="button" class="btn-secondary" style="font-size: 0.78rem; padding: 6px 12px;" onclick="SkinEditor.copySkinJson()">
+
+                📋 Sao chép mã JSON
+
+              </button>
+
+              <button type="button" class="btn-secondary" style="font-size: 0.78rem; padding: 6px 12px;" onclick="SkinEditor.downloadSkinFile()">
+
+                📥 Tải xuống tệp skin (.json)
+
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- TAB: MỜI BẠN BÈ (ISLEPILOT REFERRAL) -->
+
+    <section id="view-referral" class="view-section">
+
+      <style>
+
+        .referral-container {
+
+          max-width: 980px;
+
+          margin: 0 auto;
+
+        }
+
+        .referral-header {
+
+          margin-bottom: 24px;
+
+        }
+
+        .referral-title {
+
+          font-size: 1.65rem;
+
+          font-weight: 700;
+
+          color: #ffffff;
+
+          margin: 0 0 6px 0;
+
+          letter-spacing: -0.01em;
+
+        }
+
+        .referral-subtitle {
+
+          font-size: 0.88rem;
+
+          color: #94a3b8;
+
+          margin: 0;
+
+          line-height: 1.5;
+
+        }
+
+        .referral-main-card {
+
+          background: #070d0a;
+
+          border: 1px solid rgba(255, 42, 133, 0.4);
+
+          border-radius: 12px;
+
+          padding: 24px;
+
+          margin-bottom: 20px;
+
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+
+        }
+
+        .referral-top-section {
+
+          padding: 0;
+
+          display: flex;
+
+          justify-content: space-between;
+
+          align-items: flex-start;
+
+          gap: 24px;
+
+          margin-bottom: 24px;
+
+          flex-wrap: wrap;
+
+        }
+
+        .referral-code-col {
+
+          flex: 1;
+
+          min-width: 280px;
+
+        }
+
+        .referral-field-label {
+
+          font-size: 0.75rem;
+
+          font-weight: 600;
+
+          text-transform: uppercase;
+
+          letter-spacing: 0.06em;
+
+          color: #94a3b8;
+
+          margin-bottom: 12px;
+
+        }
+
+        .referral-code-boxes {
+
+          display: flex;
+
+          gap: 8px;
+
+          margin-bottom: 18px;
+
+          flex-wrap: wrap;
+
+        }
+
+        .referral-char-box {
+
+          width: 44px;
+
+          height: 48px;
+
+          border: 1.5px solid #16a34a;
+
+          border-radius: 8px;
+
+          background: rgba(0, 0, 0, 0.5);
+
+          display: flex;
+
+          align-items: center;
+
+          justify-content: center;
+
+          font-family: monospace, sans-serif;
+
+          font-size: 1.35rem;
+
+          font-weight: 800;
+
+          color: #ffffff;
+
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+
+        }
+
+        .referral-action-btns {
+
+          display: flex;
+
+          gap: 10px;
+
+          flex-wrap: wrap;
+
+        }
+
+        .referral-btn {
+
+          background: transparent;
+
+          border: 1px solid rgba(255, 42, 133, 0.55);
+
+          color: #ffffff;
+
+          padding: 7px 18px;
+
+          border-radius: 8px;
+
+          font-size: 0.88rem;
+
+          font-weight: 600;
+
+          cursor: pointer;
+
+          display: inline-flex;
+
+          align-items: center;
+
+          gap: 8px;
+
+          transition: all 0.2s ease;
+
+        }
+
+        .referral-btn:hover {
+
+          border-color: #ff2a85;
+
+          background: rgba(255, 42, 133, 0.1);
+
+          color: #ffffff;
+
+        }
+
+        .referral-btn.copied {
+
+          border-color: #ff2a85;
+
+          color: #ff2a85;
+
+          background: rgba(255, 42, 133, 0.15);
+
+        }
+
+        .referral-stats-grid {
+
+          display: grid;
+
+          grid-template-columns: repeat(2, 135px);
+
+          gap: 10px;
+
+        }
+
+        .referral-stat-box {
+
+          background: rgba(0, 0, 0, 0.3);
+
+          border: 1px solid rgba(255, 42, 133, 0.4);
+
+          border-radius: 8px;
+
+          padding: 10px 14px;
+
+          min-height: 62px;
+
+          display: flex;
+
+          flex-direction: column;
+
+          justify-content: space-between;
+
+          box-sizing: border-box;
+
+        }
+
+        .referral-stat-label {
+
+          font-size: 0.75rem;
+
+          color: #94a3b8;
+
+          margin-bottom: 4px;
+
+        }
+
+        .referral-stat-val {
+
+          font-size: 1.35rem;
+
+          font-weight: 700;
+
+          color: #ffffff;
+
+        }
+
+        .referral-bottom-section {
+
+          border-top: none;
+
+          padding: 0;
+
+          background: transparent;
+
+        }
+
+        .referral-rewards-row {
+
+          display: flex;
+
+          align-items: center;
+
+          gap: 16px;
+
+          margin-bottom: 14px;
+
+        }
+
+        .referral-reward-box {
+
+          flex: 1;
+
+          background: rgba(0, 0, 0, 0.35);
+
+          border: 1px solid rgba(255, 42, 133, 0.4);
+
+          border-radius: 10px;
+
+          padding: 16px 20px;
+
+        }
+
+        .referral-reward-header {
+
+          font-size: 0.72rem;
+
+          font-weight: 600;
+
+          text-transform: uppercase;
+
+          letter-spacing: 0.05em;
+
+          color: #94a3b8;
+
+          margin-bottom: 10px;
+
+        }
+
+        .referral-reward-amount-wrap {
+
+          display: flex;
+
+          align-items: center;
+
+          gap: 12px;
+
+        }
+
+        .referral-reward-badge {
+
+          width: 34px;
+
+          height: 34px;
+
+          border-radius: 6px;
+
+          background: rgba(0, 0, 0, 0.5);
+
+          border: 1px solid rgba(255, 42, 133, 0.45);
+
+          display: flex;
+
+          align-items: center;
+
+          justify-content: center;
+
+          font-size: 1.1rem;
+
+          font-weight: 700;
+
+          color: #ff2a85;
+
+        }
+
+        .referral-reward-num {
+
+          font-size: 1.55rem;
+
+          font-weight: 800;
+
+          color: #ffffff;
+
+        }
+
+        .referral-reward-unit {
+
+          font-size: 0.88rem;
+
+          font-weight: 600;
+
+          color: #94a3b8;
+
+        }
+
+        .referral-plus-circle {
+
+          width: 32px;
+
+          height: 32px;
+
+          border-radius: 50%;
+
+          border: 1px solid rgba(255, 42, 133, 0.45);
+
+          background: rgba(0, 0, 0, 0.6);
+
+          display: flex;
+
+          align-items: center;
+
+          justify-content: center;
+
+          color: #ff2a85;
+
+          font-size: 1.15rem;
+
+          font-weight: 600;
+
+          flex-shrink: 0;
+
+        }
+
+        .referral-footer-note {
+
+          display: flex;
+
+          align-items: center;
+
+          gap: 8px;
+
+          font-size: 0.82rem;
+
+          color: #94a3b8;
+
+          margin-top: 0;
+
+        }
+
+        .referral-invites-card {
+
+          background: #070d0a;
+
+          border: 1px solid rgba(255, 42, 133, 0.4);
+
+          border-radius: 12px;
+
+          padding: 24px;
+
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+
+        }
+
+        .referral-invites-header {
+
+          display: flex;
+
+          justify-content: space-between;
+
+          align-items: center;
+
+          margin-bottom: 24px;
+
+        }
+
+        .referral-invites-title {
+
+          font-size: 1.05rem;
+
+          font-weight: 700;
+
+          color: #ffffff;
+
+          margin: 0;
+
+        }
+
+        .referral-invites-total {
+
+          font-size: 0.95rem;
+
+          font-weight: 600;
+
+          color: #94a3b8;
+
+        }
+
+        .referral-invites-empty {
+
+          font-size: 0.85rem;
+
+          color: #94a3b8;
+
+          margin: 0;
+
+          line-height: 1.5;
+
+        }
+
+        @media (max-width: 768px) {
+
+          .referral-rewards-row {
+
+            flex-direction: column;
+
+          }
+
+          .referral-plus-circle {
+
+            margin: 4px 0;
+
+          }
+
+          .referral-stats-grid {
+
+            grid-template-columns: repeat(2, 1fr);
+
+            width: 100%;
+
+          }
+
+        }
+
+      </style>
+
+      <div class="referral-container">
+
+        <!-- Header -->
+
+        <div class="referral-header">
+
+          <h1 class="referral-title">Mời bạn bè</h1>
+
+          <p class="referral-subtitle">Chia sẻ mã của bạn. Khi bạn của bạn chơi đủ 60 phút, cả hai cùng nhận thưởng.</p>
+
+        </div>
+
+        <!-- Main Card -->
+
+        <div class="referral-main-card">
+
+          <!-- Top Section (Code boxes + Action buttons + Stats) -->
+
+          <div class="referral-top-section" id="referral-auth-container">
+
+            <!-- Left: Your Code -->
+
+            <div class="referral-code-col">
+
+              <div class="referral-field-label">MÃ CỦA BẠN</div>
+
+              <div class="referral-code-boxes" id="referral-boxes-wrap">
+
+                <span class="referral-char-box">J</span>
+
+                <span class="referral-char-box">C</span>
+
+                <span class="referral-char-box">D</span>
+
+                <span class="referral-char-box">9</span>
+
+                <span class="referral-char-box">J</span>
+
+                <span class="referral-char-box">R</span>
+
+              </div>
+
+              <div class="referral-action-btns">
+
+                <button class="referral-btn" id="btn-copy-code" onclick="Referral.copyCode()">
+
+                  <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+
+                  <span id="btn-copy-code-text">Sao chép mã</span>
+
+                </button>
+
+                <button class="referral-btn" id="btn-copy-link" onclick="Referral.copyLink()">
+
+                  <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+
+                  <span id="btn-copy-link-text">Sao chép liên kết mời</span>
+
+                </button>
+
+              </div>
+
+              <!-- Ô Nhập Mã Bạn Bè (Thực thi API) -->
+
+              <div id="referral-input-section" style="margin-top: 14px; display: flex; gap: 8px; max-width: 360px;">
+
+                <input type="text" id="referral-input-code" placeholder="Nhập mã mời của bạn bè..." maxlength="10" style="flex: 1; text-transform: uppercase; padding: 7px 12px; border-radius: 8px; background: rgba(0,0,0,0.5); border: 1px solid rgba(16,185,129,0.35); color: #fff; font-size: 0.85rem; outline: none;">
+
+                <button type="button" class="referral-btn" style="padding: 7px 14px; font-size: 0.82rem;" onclick="Referral.applyCode()">Áp dụng</button>
+
+              </div>
+
+              <div id="referral-applied-status" style="font-size: 0.82rem; margin-top: 8px; display: none;"></div>
+
+            </div>
+
+            <!-- Right: Stats Grid -->
+
+            <div class="referral-stats-grid">
+
+              <div class="referral-stat-box">
+
+                <div class="referral-stat-label">Đã mời</div>
+
+                <div class="referral-stat-val" id="referral-stat-invited">0</div>
+
+              </div>
+
+              <div class="referral-stat-box">
+
+                <div class="referral-stat-label">Đã thưởng</div>
+
+                <div class="referral-stat-val" id="referral-stat-rewarded">0</div>
+
+              </div>
+
+              <div class="referral-stat-box">
+
+                <div class="referral-stat-label">Đã kiếm</div>
+
+                <div class="referral-stat-val" id="referral-stat-earned">$ 0</div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- Bottom Section: Rewards & Trao sau 60 phút chơi -->
+
+          <div class="referral-bottom-section">
+
+            <div class="referral-rewards-row">
+
+              <!-- You Receive -->
+
+              <div class="referral-reward-box">
+
+                <div class="referral-reward-header">BẠN NHẬN</div>
+
+                <div class="referral-reward-amount-wrap">
+
+                  <span class="referral-reward-badge">$</span>
+
+                  <div style="display: flex; align-items: baseline; gap: 6px;">
+
+                    <span class="referral-reward-num" id="referral-reward-you">5,000</span>
+
+                    <span class="referral-reward-unit">3M</span>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+              <!-- Plus Circle -->
+
+              <div class="referral-plus-circle">+</div>
+
+              <!-- Friend Receives -->
+
+              <div class="referral-reward-box">
+
+                <div class="referral-reward-header">BẠN CỦA BẠN NHẬN</div>
+
+                <div class="referral-reward-amount-wrap">
+
+                  <span class="referral-reward-badge">$</span>
+
+                  <div style="display: flex; align-items: baseline; gap: 6px;">
+
+                    <span class="referral-reward-num" id="referral-reward-friend">700</span>
+
+                    <span class="referral-reward-unit">3M</span>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <div class="referral-footer-note">
+
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #94a3b8;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+
+              <span id="referral-playtime-note">Trao sau 60 phút chơi</span>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- Invites List Card -->
+
+        <div class="referral-invites-card">
+
+          <div class="referral-invites-header">
+
+            <h2 class="referral-invites-title">Lời mời của bạn</h2>
+
+            <span class="referral-invites-total" id="referral-invites-total-count">0</span>
+
+          </div>
+
+          <div id="referral-invites-list-wrap">
+
+            <p class="referral-invites-empty">Chưa ai dùng mã của bạn.</p>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- TAB: DỊCH CHUYỂN -->
+
+    <section id="view-teleport" class="view-section">
+
+      <!-- Header & Balance Badge -->
+
+      <div class="teleport-header-wrap">
+
+        <div>
+
+          <h2 class="teleport-main-title">Dịch chuyển</h2>
+
+          <p class="teleport-sub-title">Nhảy tới một điểm đến đã lưu hoặc gặp bạn bè.</p>
+
+        </div>
+
+        <div class="teleport-balance-badge">
+
+          <span class="teleport-balance-icon">🪙</span>
+
+          <div class="teleport-balance-meta">
+
+            <span class="teleport-balance-label">SỐ DƯ</span>
+
+            <span class="teleport-balance-val" id="teleport-balance-val">$ 8,090</span>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Danh Sách Điểm Đến Đã Lưu (Gần cầu Delta, spawm...) -->
+
+      <div id="teleport-locations-container" class="teleport-locations-grid">
+
+        <div style="text-align: center; padding: 30px; color: var(--text-muted); grid-column: 1/-1;">Đang tải danh sách điểm đến...</div>
+
+      </div>
+
+      <!-- Khối Dịch Chuyển Tới Bạn Bè -->
+
+      <div class="teleport-friend-container">
+
+        <div class="teleport-friend-header">
+
+          <span class="teleport-friend-header-icon">👤⁺</span>
+
+          <h3 class="teleport-friend-header-title">Dịch chuyển tới bạn bè</h3>
+
+        </div>
+
+        <p class="teleport-friend-sub">Chia sẻ mã để bạn bè dịch chuyển thẳng tới chỗ bạn.</p>
+
+        <div class="teleport-friend-grid">
+
+          <!-- Sub-card 1: Mời ai đó tới chỗ bạn -->
+
+          <div class="teleport-friend-subcard">
+
+            <div>
+
+              <h4 class="teleport-subcard-title">Mời ai đó tới chỗ bạn</h4>
+
+              <p class="teleport-subcard-text">Tạo mã và gửi cho bạn bè. Họ nhập mã và sẽ xuất hiện ngay chỗ bạn.</p>
+
+            </div>
+
+            <div id="teleport-invite-action-wrap">
+
+              <button type="button" class="teleport-btn-ticket" onclick="Teleport.createFriendCode()">
+
+                <span>🎟️</span> <span>Tạo mã</span>
+
+              </button>
+
+            </div>
+
+          </div>
+
+          <!-- Sub-card 2: Tới chỗ bạn bè -->
+
+          <div class="teleport-friend-subcard">
+
+            <div>
+
+              <h4 class="teleport-subcard-title">Tới chỗ bạn bè</h4>
+
+              <p class="teleport-subcard-text">Nhập mã bạn bè đưa để dịch chuyển tới chỗ họ. Bạn cần đang ở trong game.</p>
+
+            </div>
+
+            <div>
+
+              <input type="text" id="teleport-friend-code-input" class="teleport-code-input" placeholder="A B C 1 2 3" maxlength="8" oninput="Teleport.onCodeInput(this.value)">
+
+              <button type="button" id="teleport-friend-btn-submit" class="teleport-btn-submit" onclick="Teleport.redeemFriendCode()">
+
+                Dịch chuyển
+
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- TAB: NHIỆM VỤ -->
+
+    <section id="view-quests" class="view-section">
+
+      <div class="card" style="margin-bottom: 20px;">
+
+        <div class="card-header" style="border: none; margin-bottom: 0; padding-bottom: 0;">
+
+          <div>
+
+            <h2 class="card-title">🎯 Hệ Thống Nhiệm Vụ Sinh Tồn (Quests)</h2>
+
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">
+
+              Dữ liệu nhiệm vụ đồng bộ thời gian thực từ IslePilot. Hoàn thành để tích lũy Xu mua Skin và Khủng Long!
+
+            </p>
+
+          </div>
+
+        </div>
+
+        <div style="display: flex; gap: 8px; margin-top: 16px;" id="quests-filters">
+
+          <button type="button" class="map-filter-btn active" onclick="Quests.filter('all', this)">Tất cả</button>
+
+          <button type="button" class="map-filter-btn" onclick="Quests.filter('daily', this)">⭐ Hàng Ngày</button>
+
+          <button type="button" class="map-filter-btn" onclick="Quests.filter('weekly', this)">📅 Hàng Tuần</button>
+
+        </div>
+
+      </div>
+
+      <div id="quests-container"></div>
+
+    </section>
+
+    <!-- TAB: MUA DINO -->
+
+    <section id="view-buydino" class="view-section">
+
+      <div class="card" style="margin-bottom: 20px;">
+
+        <div class="card-header" style="border: none; margin-bottom: 0; padding-bottom: 0;">
+
+          <div>
+
+            <h2 class="card-title">🦖 Cửa Hàng Gói Khủng Long (Dino Packs)</h2>
+
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">
+
+              Mua trực tiếp các cá thể khủng long có tỉ lệ tăng trưởng cao và đột biến gen quý hiếm vào Gara của bạn.
+
+            </p>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="garage-grid" id="buydino-container"></div>
+
+    </section>
+
+    <!-- TAB: THẢ XÁC -->
+
+    <!-- TAB: THẢ XÁC (CARCASS SPAWNER) -->
+
+    <section id="view-carcass" class="view-section">
+
+      <div style="max-width: 1024px; margin: 0 auto;">
+
+        <div style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
+
+          <div>
+
+            <h1 style="font-size: 1.5rem; font-weight: 700; color: #fff; margin-bottom: 6px;">Thả xác</h1>
+
+            <p style="font-size: 0.9rem; color: #94a3b8; line-height: 1.5; margin: 0;">
+
+              Mua một cái xác và nó sẽ rơi ngay trước mặt bạn trong game. Bạn phải online thì xác mới tới. Mỗi 300 giây mua được một lần.
+
+            </p>
+
+            <p id="carcass-auth-hint" style="font-size: 0.85rem; color: #64748b; margin-top: 6px;">
+
+              Đăng nhập bằng Steam để mua.
+
+            </p>
+
+          </div>
+
+          <div>
+
+            <a href="https://3mgaming.islepilot.eu/carcass" target="_blank" rel="noopener noreferrer" class="btn-secondary" style="font-size: 0.82rem; padding: 7px 14px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; border-radius: 6px;">
+
+              <span>🌐</span> <span>Mở trang gốc IslePilot</span>
+
+            </a>
+
+          </div>
+
+        </div>
+
+        <div class="carcass-grid" id="carcass-grid-container"></div>
+
+      </div>
+
+    </section>
+
+    <!-- TAB 4: BẢN ĐỒ GATEWAY TƯƠNG TÁC -->
+
+    <section id="view-map" class="view-section">
+
+      <div class="card" style="margin-bottom: 20px;">
+
+        <div class="card-header" style="border: none; margin-bottom: 0; padding-bottom: 0;">
+
+          <div>
+
+            <h2 class="card-title">🗺️ Bản Đồ Vệ Tinh Gateway & Vùng Đại Di Cư (The Isle: Evrima)</h2>
+
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">
+
+              Bản đồ địa hình vệ tinh toàn cảnh Gateway tích hợp hệ thống <b>Đại Di Cư (Great Migration)</b> và các <b>Vùng Di Cư (Migration Zones)</b> chuẩn server 3MGAMING. Bạn có thể kéo thả, phóng to thu nhỏ, xem nguồn nước, khu trú ẩn Sanctuary và tra cứu tọa độ Ingame.
+
+            </p>
+
+          </div>
+
+        </div>
+
+        <!-- Banner Sự Kiện Đại Di Cư -->
+
+        <div class="great-migration-banner" id="great-migration-banner">
+
+          <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+
+            <span class="great-migration-badge">⚡ ĐẠI DI CƯ ĐANG DIỄN RA</span>
+
+            <div>
+
+              <div style="font-weight: 700; color: #fff; font-size: 0.95rem;">
+
+                Tâm Chấn: <span style="color: #fbbf24;" id="gm-banner-title">Cao Nguyên Đông Bắc (Highlands Corridor)</span>
+
+              </div>
+
+              <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 2px;">
+
+                Hành lang di chuyển: <span style="color: #60a5fa;" id="gm-banner-corridor">Thung Lũng Trung Tâm &rarr; Cao Nguyên</span> |
+
+                Hiệu ứng: <b style="color: var(--accent);">+100% Tốc độ lớn (Growth Buff)</b> khi ăn cỏ/thịt tại vùng di cư
+
+              </div>
+
+            </div>
+
+          </div>
+
+          <div style="display: flex; gap: 8px;">
+
+            <button type="button" class="btn-primary" style="padding: 8px 16px; font-size: 0.82rem; background: linear-gradient(135deg, #f59e0b, #d97706); border: none; color: #fff; font-weight: 800; cursor: pointer; border-radius: 6px; box-shadow: 0 0 14px rgba(245, 158, 11, 0.45); transition: transform 0.2s;" onclick="GatewayMap.focusGreatMigration()">
+
+              🎯 Đi Tới Tâm Đại Di Cư
+
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="map-viewport" id="map-viewport">
+
+        <!-- Bộ lọc trên bản đồ & Chọn nhanh địa danh -->
+
+        <div class="map-controls">
+
+          <button type="button" class="map-filter-btn active" onclick="GatewayMap.filter('all', this)">Tất cả</button>
+
+          <button type="button" class="map-filter-btn" style="border-color: #f59e0b; color: #fde68a;" onclick="GatewayMap.filter('greatmigration', this)">⚡ Đại di cư</button>
+
+          <button type="button" class="map-filter-btn" onclick="GatewayMap.filter('migration', this)">🌾 Vùng di cư</button>
+
+          <button type="button" class="map-filter-btn" onclick="GatewayMap.filter('water', this)">💧 Nguồn nước</button>
+
+          <button type="button" class="map-filter-btn" onclick="GatewayMap.filter('sanctuary', this)">🛡️ Sanctuary</button>
+
+          <button type="button" class="map-filter-btn" onclick="GatewayMap.filter('hotspot', this)">💀 Điểm PVP</button>
+
+          <button type="button" class="map-filter-btn" onclick="GatewayMap.filter('landmark', this)">🏛️ Công trình</button>
+
+          <button type="button" class="map-filter-btn" onclick="GatewayMap.filter('nesting', this)">🪺 Khu làm tổ</button>
+
+          <!-- Chọn nhanh địa danh -->
+
+          <select id="map-poi-select" class="map-poi-select" onchange="GatewayMap.onSelectPoi(this.value)">
+
+            <option value="">🎯 Bay nhanh tới địa danh...</option>
+
+          </select>
+
+        </div>
+
+        <!-- Tìm kiếm tọa độ Ingame -->
+
+        <div class="map-coord-search">
+
+          <input type="text" id="map-search-input" class="map-coord-input" placeholder="Tọa độ: -250, 180">
+
+          <button type="button" class="map-coord-btn" onclick="GatewayMap.searchCoords()">Định vị</button>
+
+        </div>
+
+        <!-- Hiển thị tọa độ chuột theo thời gian thực -->
+
+        <div class="map-hud-coord" id="map-hud-coord">
+
+          <span>📍 Tọa độ Gateway:</span> <b id="map-coord-text">X: 0, Y: 0</b>
+
+        </div>
+
+        <!-- Điều khiển Zoom Mở Rộng & Toàn Màn Hình -->
+
+        <div class="map-zoom-controls">
+
+          <button type="button" class="zoom-btn" onclick="GatewayMap.zoomIn()" title="Phóng to gần (Zoom In)">+</button>
+
+          <div class="zoom-level-badge" id="zoom-level-badge" title="Tỉ lệ phóng to">100%</div>
+
+          <button type="button" class="zoom-btn" onclick="GatewayMap.zoomOut()" title="Thu nhỏ xa (Zoom Out)">-</button>
+
+          <button type="button" class="zoom-btn" onclick="GatewayMap.fitToView()" title="Toàn cảnh đảo (Xem bao quát toàn bộ)" style="font-size: 1rem;">⤢</button>
+
+          <button type="button" class="zoom-btn" onclick="GatewayMap.toggleFullscreen()" id="btn-fullscreen" title="Toàn màn hình" style="font-size: 1rem;">⛶</button>
+
+        </div>
+
+        <!-- Thanh Radar Người Chơi Trực Tiếp -->
+
+        <div class="map-live-radar-hud" id="map-live-radar-hud">
+
+          <span class="live-beacon-dot"></span>
+
+          <span style="color: #fff;">Vị trí của bạn: <b style="color: #ff2a85;" id="live-player-count">Đang định vị...</b> <span id="live-player-unit"></span></span>
+
+          <button type="button" class="btn-track-me" id="btn-track-my-dino" style="display: none;" onclick="GatewayMap.focusMyPlayer()">
+
+            ⭐ Định vị vị trí của tôi
+
+          </button>
+
+        </div>
+
+        <!-- Bề mặt bản đồ kéo thả & phóng to -->
+
+        <div class="map-surface" id="map-surface">
+
+          <img src="assets/images/gateway_official.webp" alt="Gateway Map The Isle Evrima 3MGAMING" class="map-image" id="map-image">
+
+          
+
+          <!-- Lớp SVG Đại Di Cư & Hành Lang Di Chuyển -->
+
+          <svg class="map-svg-layer" id="map-svg-layer" viewBox="0 0 1000 1000" preserveAspectRatio="none">
+
+            <!-- Render tự động bởi map.js -->
+
+          </svg>
+
+          <!-- Các điểm ghim POI -->
+
+          <div class="map-pins-layer" id="map-pins-layer">
+
+            <!-- Render tự động bởi map.js -->
+
+          </div>
+
+          <!-- Lớp hiển thị vị trí người chơi trực tiếp theo thời gian thực -->
+
+          <div class="map-players-layer" id="map-players-layer">
+
+            <!-- Cập nhật liên tục bởi map.js -->
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- TAB 5: HƯỚNG DẪN VÀO GAME & VOICE LAUNCHER -->
+
+    <section id="view-guide" class="view-section">
+
+      <div class="content-box">
+
+        <h2>📖 Hướng Dẫn Tham Gia Server 3MGAMING</h2>
+
+        <h3>Bước 1: Chuyển sang nhánh Evrima trên Steam</h3>
+
+        <p>
+
+          1. Mở thư viện Steam của bạn, chuột phải vào tựa game <b>The Isle</b> &rarr; chọn <b>Properties (Thuộc tính)</b>.<br>
+
+          2. Chọn tab <b>Betas (Bản thử nghiệm)</b>.<br>
+
+          3. Tại mục Beta Participation, chọn nhánh: <code>evrima - EVRIMA Public Branch</code>.<br>
+
+          4. Chờ Steam tải bản cập nhật hoàn tất.
+
+        </p>
+
+        <h3>Bước 2: Tải Launcher tìm và kết nối vào Server</h3>
+
+        <p>
+
+          1. Khởi động Launcher bấm cài đặt tệp, cài đặt xong bấm mở game trên Launcher.<br>
+
+          2. Chọn tab <b>Unofficial Servers</b>.<br>
+
+          3. Tìm kiếm tên: <b>3MGAMING-NO RULES</b>.<br>
+
+          4. Bấm <b>Connect</b> để vào game ngay!
+
+        </p>
+
+        <h3>Bước 3: Tải Launcher Voice (Chat giọng nói cự ly)</h3>
+
+        <p>
+
+          Server có hỗ trợ chat giọng nói theo khoảng cách giúp trải nghiệm sinh tồn trở nên sống động và kịch tính hơn.
+
+        </p>
+
+        <p>
+
+          <a href="https://drive.google.com/file/d/1osdyzIc372MDDrXW725lnMKUJrW_WBSv/view" target="_blank" rel="noopener noreferrer" class="btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
+
+            <span>📥</span> Tải Launcher Voice (Google Drive)
+
+          </a>
+
+        </p>
+
+      </div>
+
+    </section>
+
+    <!-- TAB 6: NỘI QUY SERVER (3MGAMING) -->
+
+    <section id="view-rules" class="view-section">
+
+      <div class="content-box">
+
+        <h2>⚖️ Nội Quy Server 3MGAMING</h2>
+
+        <p style="color: var(--accent); font-weight: 600; margin-bottom: 20px;">
+
+          Tiêu chí hoạt động: FAIR PLAY • RESPECT • SURVIVE. Mọi thành viên tham gia cộng đồng vui lòng đọc kỹ và tuân thủ các quy định dưới đây!
+
+        </p>
+
+        <!-- PHẦN I -->
+
+        <div class="rule-item">
+
+          <strong>I. 📌 QUY ĐỊNH CHUNG</strong>
+
+          <ul style="padding-left: 20px; line-height: 1.85; color: #d1d5db; margin-top: 6px;">
+
+            <li>Tôn trọng tất cả thành viên, Admin và Staff.</li>
+
+            <li>Không chửi bới, xúc phạm, phân biệt đối xử hoặc gây war trong cộng đồng.</li>
+
+            <li>Không spam tin nhắn, ping @everyone/@here hoặc quảng cáo khi chưa được cho phép.</li>
+
+            <li>Không gửi link độc hại, nội dung lừa đảo hoặc nội dung không phù hợp.</li>
+
+            <li>Tuân thủ hướng dẫn hợp lý của đội ngũ quản trị.</li>
+
+          </ul>
+
+        </div>
+
+        <!-- PHẦN II -->
+
+        <div class="rule-item" style="border-left-color: #ff66ab;">
+
+          <strong>II. 🦕 LUẬT TRONG GAME THE ISLE EVRIMA</strong>
+
+          <ul style="padding-left: 20px; line-height: 1.85; color: #d1d5db; margin-top: 6px;">
+
+            <li><b>Không Hack/Cheat:</b> Nghiêm cấm sử dụng phần mềm gian lận, exploit hoặc bug để trục lợi.</li>
+
+            <li><b>Không Combat Log:</b> Không thoát game để né giao tranh hoặc tránh hậu quả trong game.</li>
+
+            <li><b>Không phá game:</b> Không cố tình quấy rối, phá trải nghiệm của người chơi khác.</li>
+
+            <li><b>Không lạm dụng lỗi game:</b> Nếu phát hiện bug nghiêm trọng, hãy báo Staff.</li>
+
+            <li><b>Tôn trọng quy định riêng của server:</b> Tuân thủ các luật về KOS, mix-pack, body down và các quy định sinh tồn nếu server có áp dụng.</li>
+
+            <li><b>Không tấn công con non dưới 35%</b> ở các khu bảo tồn (rừng dừa).</li>
+
+          </ul>
+
+        </div>
+
+        <!-- PHẦN III -->
+
+        <div class="rule-item" style="border-left-color: #60a5fa;">
+
+          <strong>III. 🎙️ LUẬT VOICE & DISCORD</strong>
+
+          <ul style="padding-left: 20px; line-height: 1.85; color: #d1d5db; margin-top: 6px;">
+
+            <li>Không mở mic gây ồn, spam âm thanh hoặc phá cuộc trò chuyện.</li>
+
+            <li>Không tự ý ghi âm, phát tán thông tin riêng tư của người khác khi chưa được phép.</li>
+
+            <li>Không gây mất đoàn kết, kích động tranh cãi hoặc vu khống thành viên.</li>
+
+            <li>Đăng bài đúng kênh và sử dụng Ticket khi cần hỗ trợ.</li>
+
+            <li>Không tấn công đả kích giới tính, không phân biệt vùng miền.</li>
+
+          </ul>
+
+        </div>
+
+        <!-- PHẦN IV -->
+
+        <div class="rule-item" style="border-left-color: #f59e0b;">
+
+          <strong>IV. ⚖️ HÌNH THỨC XỬ PHẠT</strong>
+
+          <ul style="padding-left: 20px; line-height: 1.85; color: #d1d5db; margin-top: 6px;">
+
+            <li><b>Lần 1:</b> Nhắc nhở.</li>
+
+            <li><b>Lần 2:</b> Cảnh cáo hoặc timeout tùy mức độ.</li>
+
+            <li><b>Lần 3:</b> Kick khỏi server hoặc game nếu phù hợp.</li>
+
+            <li><b>Vi phạm nghiêm trọng:</b> Ban tạm thời hoặc ban vĩnh viễn.</li>
+
+            <li><b>Hack/Cheat, phá hoại nghiêm trọng:</b> Có thể ban ngay sau khi xác minh bằng chứng.</li>
+
+          </ul>
+
+          <p style="margin-top: 8px; font-size: 0.85rem; color: #fbbf24; font-style: italic;">
+
+            * Staff có thể điều chỉnh mức phạt theo tính chất, mức độ và lịch sử vi phạm.
+
+          </p>
+
+        </div>
+
+        <!-- PHẦN V -->
+
+        <div class="rule-item" style="border-left-color: #ec4899;">
+
+          <strong>V. 🤝 CAM KẾT THÀNH VIÊN</strong>
+
+          <p style="color: #d1d5db; line-height: 1.85; margin-top: 6px;">
+
+            Khi tham gia <b>3MGAMING</b>, bạn đồng ý đọc, hiểu và tuân thủ nội quy của cộng đồng.
+
+          </p>
+
+          <div style="margin-top: 14px; text-align: center; padding: 14px; background: rgba(255, 42, 133, 0.08); border: 1px dashed var(--accent); border-radius: 8px;">
+
+            <div style="font-weight: 800; color: #fff; font-size: 1.05rem; letter-spacing: 1px;">
+
+              🔥 3MGAMING – FAIR PLAY • RESPECT • SURVIVE 🔥
+
+            </div>
+
+            <div style="color: var(--accent); font-size: 0.9rem; margin-top: 6px;">
+
+              Chúc mọi người có những giờ phút sinh tồn vui vẻ tại The Isle Evrima!
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- TAB 7: ỦNG HỘ SERVER (DONATE) -->
+
+    <section id="view-donate" class="view-section">
+
+      <div class="donate-grid">
+
+        <div class="content-box" style="margin-bottom: 0;">
+
+          <h2>💖 Ủng Hộ Duy Trì Server</h2>
+
+          <p>
+
+            Server hoạt động phi lợi nhuận với mục tiêu tạo sân chơi công bằng, ổn định và không lag cho cộng đồng The Isle Việt Nam.
+
+          </p>
+
+          <p>
+
+            Mọi sự đóng góp của bạn giúp chi trả chi phí thuê máy chủ chuyên dụng (Dedicated Server), bản quyền IslePilot và chi phí duy trì bot Discord.
+
+          </p>
+
+          <h3 style="color: var(--accent-gold);">Quyền Lợi Tri Ân Người Ủng Hộ (VIP Supporter):</h3>
+
+          <ul style="padding-left: 20px; color: #d1d5db; line-height: 2;">
+
+            <li>Màu tên và Role VIP trên Discord</li>
+
+            <li>Tặng thêm <b>+3 Slot lưu trữ Dino</b> trong Gara IslePilot</li>
+
+            <li>Ưu tiên hàng chờ khi server đạt 100/100 người chơi</li>
+
+            <li>Vinh danh trên bảng tri ân trang chủ</li>
+
+          </ul>
+
+        </div>
+
+        <!-- Khung quét mã VietQR tự động -->
+
+        <div class="qr-box">
+
+          <h3 style="margin-bottom: 12px; font-weight: 800; color: #fff;">QUÉT MÃ VIETQR CHUYỂN KHOẢN</h3>
+
+          <img id="vietqr-image" class="qr-img" src="assets/images/donate_qr.png" alt="Mã VietQR Chuyển Khoản">
+
+          <div style="font-size: 0.9rem; line-height: 1.8; text-align: left; width: 100%; padding: 0 10px;">
+
+            Ngân hàng: <b id="donate-bank-name">VCB</b><br>
+
+            Số tài khoản: <b id="donate-bank-acc" style="color: #047857; font-size: 1.05rem;">9899996836</b><br>
+
+            Chủ tài khoản: <b id="donate-bank-holder">CHỦ SỞ HỮU SERVER</b><br>
+
+            Nội dung CK: <code id="donate-transfer-note" style="background: #e5e7eb; padding: 2px 6px; border-radius: 4px; font-weight: 700;">ĐỂ MẶC ĐỊNH</code>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- TAB QUẢN TRỊ VIÊN (ADMIN BRANCH) -->
+    <section id="view-admin" class="view-section">
+      <!-- Admin Content được tải bởi AdminPanel.render() -->
+    </section>
+
+  </main>
+
+  <!-- Chân trang phong cách Dino4VN -->
+
+  <footer class="app-footer">
+
+    <div class="footer-inner">
+
+      <ul class="footer-links">
+
+        <li><a href="#home">Trang chủ</a></li>
+
+        <li><a href="#guide">Cách vào server</a></li>
+
+        <li><a href="#rules">Nội quy</a></li>
+
+        <li><a href="#map">Bản đồ Gateway</a></li>
+
+        <li><a href="#bxh">Bảng xếp hạng</a></li>
+
+        <li><a href="#garage">Gara khủng long</a></li>
+
+        <li><a href="#donate">Ủng hộ server</a></li>
+
+        <li><a href="https://discord.gg/f3R9mMAfms" target="_blank" class="discord-link">Discord Cộng Đồng</a></li>
+
+      </ul>
+
+    </div>
+
+  </footer>
+
+  <!-- 3D Graphics Engine for Multi-dimensional Dinosaur Rotation -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+  
+
+  <!-- App Scripts -->
+
+  <script src="js/islepilot.js?v=2.3"></script>
+
+  <script src="js/garage.js?v=2.3"></script>
+
+  <script src="js/pilot_features.js?v=2.3"></script>
+
+  <script src="js/map.js?v=2.3"></script>
+
+  <script src="js/admin.js?v=4.0"></script>
+  <script src="js/app.js?v=3.1"></script>
+
+  <!-- Floating Guest Mode Indicator for Admin -->
+  <div id="floating-guest-pill" class="floating-guest-indicator" style="display: none;" onclick="App.setAdminViewMode('admin')">
+    <span class="pulsing-guest-dot"></span>
+    <span>Đang test chế độ Khách &bull; <b style="color: #ff70a6;">Bấm để trở lại Admin 👑</b></span>
+  </div>
+
+</body>
+
+</html>
+

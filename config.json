@@ -1,0 +1,31 @@
+{
+  "SERVER_ID": "cmv3zzfix02g3pj01yay0hw4g",
+  "ISLEPILOT_API_KEY": "ipa_77e4d19d6459793afa72b8ae3c060d0e0ba766d27c2b8e21",
+  "ISLEPILOT_BASE_URL": "https://islepilot.eu/api",
+  "SERVER_NAME": "3MGAMING",
+  "SERVER_MOTD": "Server The Isle: Evrima dành cho cộng đồng Việt Nam. Luật rõ ràng. Xử nhanh. Không thiên vị.",
+  "SERVER_IP": "103.179.189.50",
+  "SERVER_PORT": 7777,
+  "MAX_SLOTS": 100,
+  "DISCORD_URL": "https://discord.gg/f3R9mMAfms",
+  "BANK_INFO": {
+    "BANK_NAME": "VCB",
+    "ACCOUNT_NUMBER": "9899996836",
+    "ACCOUNT_HOLDER": "CHỦ SỞ HỮU SERVER",
+    "TRANSFER_NOTE": "ĐỂ MẶC ĐỊNH",
+    "QR_IMAGE": "assets/images/donate_qr.png",
+    "MOMO_PHONE": "0987654321"
+  },
+  "ADMIN_STEAM_IDS": [
+    "76561199575258338",
+    "76561199259679997",
+    "76561199175571899"
+  ],
+  "ADMIN_DISCORD_IDS": [
+    "749270027605114922"
+  ],
+  "ADMIN_PASSCODE": "admin3m",
+  "MAX_GARAGE_SLOTS": 5,
+  "GARAGE_PARK_SECONDS": 30,
+  "DOMAIN": "3mgaming.vn"
+}

@@ -1,0 +1,608 @@
+/* Gateway Interactive Map Styling */
+.map-viewport {
+  position: relative;
+  width: 100%;
+  height: 740px;
+  background-color: #020704;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.9);
+  cursor: grab;
+  user-select: none;
+}
+
+.map-viewport:active {
+  cursor: grabbing;
+}
+
+/* Chế độ toàn màn hình */
+.map-viewport.is-fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 99999;
+  border-radius: 0;
+  border: none;
+}
+
+/* Container vuông 1:1 chuẩn xác với tỉ lệ bản đồ Gateway 4096x4096 */
+.map-surface {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2048px;
+  height: 2048px;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.map-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+  filter: brightness(0.95) contrast(1.08);
+}
+
+.map-pins-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Thanh điều khiển bộ lọc */
+.map-controls {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 25;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  background: rgba(7, 19, 14, 0.9);
+  backdrop-filter: blur(10px);
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+.map-filter-btn {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.map-filter-btn:hover {
+  color: #fff;
+  border-color: #fff;
+}
+
+.map-filter-btn.active {
+  background: var(--accent);
+  color: #08070b;
+  border-color: var(--accent);
+  font-weight: 700;
+}
+
+/* Hộp tìm kiếm tọa độ Ingame */
+.map-coord-search {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 25;
+  display: flex;
+  gap: 6px;
+  background: rgba(7, 19, 14, 0.9);
+  backdrop-filter: blur(10px);
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+.map-coord-input {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--border-color);
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 0.82rem;
+  width: 160px;
+  outline: none;
+}
+
+.map-coord-input:focus {
+  border-color: var(--accent);
+}
+
+.map-coord-btn {
+  background: var(--accent);
+  color: #08070b;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.map-coord-btn:hover {
+  background: #ff66ab;
+}
+
+/* Hộp hiển thị tọa độ chuột theo thời gian thực */
+.map-hud-coord {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  z-index: 25;
+  background: rgba(7, 19, 14, 0.92);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border-color);
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  color: #d1d5db;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.map-hud-coord b {
+  color: var(--accent);
+}
+
+/* Nút điều khiển Zoom */
+.map-zoom-controls {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.zoom-btn {
+  width: 38px;
+  height: 38px;
+  background: rgba(7, 19, 14, 0.9);
+  border: 1px solid var(--border-color);
+  color: #fff;
+  border-radius: 6px;
+  font-size: 1.25rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+.zoom-btn:hover {
+  background: rgba(22, 53, 38, 0.95);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* Ghim POI */
+.map-pin {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 10;
+}
+
+.map-pin:hover {
+  transform: translate(-50%, -50%) scale(1.35);
+  z-index: 30;
+}
+
+.pin-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.9);
+  border: 2px solid #fff;
+}
+
+.pin-water .pin-icon {
+  background: #2563eb;
+  border-color: #93c5fd;
+}
+
+.pin-hotspot .pin-icon {
+  background: #dc2626;
+  border-color: #fca5a5;
+}
+
+.pin-sanctuary .pin-icon {
+  background: #d91b6e;
+  border-color: #6ee7b7;
+}
+
+.pin-migration .pin-icon {
+  background: #d97706;
+  border-color: #fde68a;
+}
+
+.pin-landmark .pin-icon {
+  background: #7c3aed;
+  border-color: #c4b5fd;
+}
+
+.pin-nesting .pin-icon {
+  background: #ff2a85;
+  border-color: #6ee7b7;
+}
+
+/* Dropdown chọn nhanh địa danh */
+.map-poi-select {
+  background: rgba(0, 0, 0, 0.65);
+  border: 1px solid var(--border-color);
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+  transition: var(--transition);
+  max-width: 230px;
+}
+
+.map-poi-select:focus,
+.map-poi-select:hover {
+  border-color: var(--accent);
+}
+
+.map-poi-select option {
+  background: #08070b;
+  color: #fff;
+}
+
+/* Huy hiệu hiển thị % Zoom */
+.zoom-level-badge {
+  background: rgba(7, 19, 14, 0.95);
+  border: 1px solid var(--border-color);
+  color: var(--accent);
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-align: center;
+  min-width: 38px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* Ghim Đại Di Cư Đặc Biệt */
+.pin-greatmigration {
+  z-index: 28;
+}
+
+.pin-greatmigration .pin-icon {
+  background: linear-gradient(135deg, #f59e0b, #b45309);
+  border: 2px solid #fef08a;
+  animation: pulse-gold 1.6s infinite;
+  font-size: 16px;
+  width: 36px;
+  height: 36px;
+}
+
+@keyframes pulse-gold {
+  0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.85); }
+  70% { box-shadow: 0 0 0 18px rgba(245, 158, 11, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+}
+
+/* Ghim vị trí người dùng tìm kiếm */
+.pin-user .pin-icon {
+  background: #ff2a85;
+  border-color: #ffffff;
+  animation: pulse-ring 1.5s infinite;
+}
+
+/* Đại Di Cư & Tuyến Đường Di Cư */
+.map-svg-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.great-migration-circle {
+  fill: rgba(245, 158, 11, 0.18);
+  stroke: #fbbf24;
+  stroke-width: 2.5;
+  stroke-dasharray: 8 6;
+  animation: rotate-dash 25s linear infinite;
+  filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.5));
+}
+
+@keyframes rotate-dash {
+  to { stroke-dashoffset: 1000; }
+}
+
+.migration-route-path {
+  fill: none;
+  stroke: rgba(251, 191, 36, 0.75);
+  stroke-width: 3;
+  stroke-dasharray: 10 8;
+  animation: flow-route 2s linear infinite;
+  filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.6));
+}
+
+@keyframes flow-route {
+  to { stroke-dashoffset: -36; }
+}
+
+/* Thẻ Thông Tin Đại Di Cư */
+.great-migration-banner {
+  background: linear-gradient(135deg, rgba(30, 20, 10, 0.9), rgba(18, 14, 8, 0.95));
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.great-migration-badge {
+  background: rgba(245, 158, 11, 0.2);
+  color: var(--accent-gold);
+  border: 1px solid var(--accent-gold);
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(255, 42, 133, 0.7); }
+  70% { box-shadow: 0 0 0 15px rgba(255, 42, 133, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 42, 133, 0); }
+}
+
+.map-tooltip {
+  position: absolute;
+  bottom: 38px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(7, 19, 14, 0.95);
+  border: 1px solid var(--border-color);
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.7);
+  z-index: 50;
+}
+
+.map-pin:hover .map-tooltip,
+.map-player-pin:hover .map-tooltip {
+  opacity: 1;
+}
+
+/* ==============================================================
+   🎯 LỚP THEO DÕI VỊ TRÍ NGƯỜI CHƠI TRỰC TIẾP (LIVE RADAR TRACKING)
+   ============================================================== */
+.map-players-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 35;
+}
+
+.map-player-pin {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+  cursor: pointer;
+  z-index: 35;
+  transition: left 0.9s cubic-bezier(0.2, 0, 0.2, 1), top 0.9s cubic-bezier(0.2, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.map-player-pin:hover {
+  z-index: 50;
+  transform: translate(-50%, -50%) scale(1.15);
+}
+
+/* Vòng tròn Radar phát sóng vị trí */
+.player-beacon {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff2a85, #d91b6e);
+  border: 2px solid #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  box-shadow: 0 0 16px rgba(255, 42, 133, 0.9);
+}
+
+.player-beacon::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  right: -6px;
+  bottom: -6px;
+  border-radius: 50%;
+  border: 2px solid #ff2a85;
+  animation: player-radar-pulse 1.8s infinite;
+}
+
+@keyframes player-radar-pulse {
+  0% { transform: scale(0.9); opacity: 0.95; }
+  70% { transform: scale(2.2); opacity: 0; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+
+/* Mũi tên định hướng góc nhìn (Yaw Heading Indicator) */
+.player-yaw-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  transition: transform 0.4s ease;
+}
+
+.player-yaw-arrow {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 9px solid #ff2a85;
+  filter: drop-shadow(0 0 4px #ff2a85);
+}
+
+/* Nhãn tên & loài người chơi */
+.player-pin-label {
+  margin-top: 5px;
+  background: rgba(7, 19, 14, 0.94);
+  border: 1px solid rgba(255, 42, 133, 0.7);
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  pointer-events: none;
+}
+
+.player-species-tag {
+  color: #fbbf24;
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+/* Đánh dấu đặc biệt cho chính người chơi (Is Me) */
+.map-player-pin.is-me .player-beacon {
+  background: linear-gradient(135deg, #0284c7, #38bdf8);
+  border-color: #fef08a;
+  box-shadow: 0 0 22px #38bdf8;
+}
+
+.map-player-pin.is-me .player-beacon::before {
+  border-color: #38bdf8;
+  animation: player-radar-pulse-me 1.3s infinite;
+}
+
+@keyframes player-radar-pulse-me {
+  0% { transform: scale(0.9); opacity: 1; }
+  70% { transform: scale(2.5); opacity: 0; }
+  100% { transform: scale(2.7); opacity: 0; }
+}
+
+.map-player-pin.is-me .player-yaw-arrow {
+  border-bottom-color: #38bdf8;
+  filter: drop-shadow(0 0 5px #38bdf8);
+}
+
+.map-player-pin.is-me .player-pin-label {
+  border-color: #38bdf8;
+  background: rgba(8, 47, 73, 0.95);
+  color: #38bdf8;
+}
+
+/* Thanh HUD hiển thị số lượng người chơi trực tiếp */
+.map-live-radar-hud {
+  position: absolute;
+  top: 72px;
+  left: 16px;
+  z-index: 25;
+  background: rgba(7, 19, 14, 0.92);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 42, 133, 0.45);
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.8rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+.live-beacon-dot {
+  width: 9px;
+  height: 9px;
+  background: #ff2a85;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #ff2a85;
+  animation: pulse-beacon 1.2s infinite;
+}
+
+@keyframes pulse-beacon {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(1.35); }
+}
+
+.btn-track-me {
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid #38bdf8;
+  color: #38bdf8;
+  padding: 3px 9px;
+  border-radius: 4px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-track-me:hover {
+  background: #38bdf8;
+  color: #000;
+}
