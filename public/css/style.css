@@ -275,6 +275,13 @@ a:hover {
   padding: 30px 20px 60px;
   width: 100%;
   flex: 1;
+  transition: max-width 0.2s ease;
+}
+
+body:has(#view-admin.active) .main-wrapper,
+.main-wrapper:has(#view-admin.active) {
+  max-width: 1600px;
+  width: 96%;
 }
 
 /* View Pages Switching */
@@ -2205,7 +2212,8 @@ a:hover {
    ========================================================================== */
 
 .admin-wrapper {
-  max-width: 1240px;
+  max-width: 1600px;
+  width: 100%;
   margin: 0 auto;
 }
 
@@ -3517,9 +3525,27 @@ a:hover {
 /* ==========================================================================
    ADMIN LEADERBOARD TABLE STYLES
    ========================================================================== */
+.admin-players-container {
+  width: 100%;
+  display: block;
+}
+
 .admin-bxh-table {
   width: 100%;
+  min-width: 1150px;
   border-collapse: collapse;
+}
+
+.admin-bxh-table td.col-steamid,
+.admin-bxh-table th.col-steamid {
+  white-space: nowrap !important;
+  min-width: 210px !important;
+}
+
+.admin-bxh-table td.col-player,
+.admin-bxh-table th.col-player {
+  white-space: nowrap !important;
+  min-width: 220px !important;
 }
 
 .admin-bxh-table th {

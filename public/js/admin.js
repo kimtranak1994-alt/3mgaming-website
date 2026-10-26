@@ -70,6 +70,8 @@ const AdminPanel = {
     }
 
     this.authenticated = true;
+    const mainWrap = document.querySelector('.main-wrapper');
+    if (mainWrap) mainWrap.style.maxWidth = '1600px';
     container.innerHTML = `
       <div class="admin-wrapper">
         <!-- Admin Header -->
@@ -169,7 +171,7 @@ const AdminPanel = {
             </div>
 
             <!-- Bảng Xếp Hạng & Danh Sách Người Chơi -->
-            <div id="admin-players-list" class="admin-players-grid">
+            <div id="admin-players-list" class="admin-players-container" style="width: 100%;">
               <div style="text-align: center; padding: 40px; color: var(--text-muted);">
                 <div class="spinner" style="margin: 0 auto 12px;"></div>
                 Đang tải dữ liệu người chơi...
@@ -713,6 +715,8 @@ const AdminPanel = {
   },
 
   async logout() {
+    const mainWrap = document.querySelector('.main-wrapper');
+    if (mainWrap) mainWrap.style.maxWidth = '';
     try {
       await fetch('/api/admin/logout', { method: 'POST' });
     } catch (e) {}
@@ -929,9 +933,9 @@ const AdminPanel = {
               <span style="font-size: 0.75rem; color: #ff2a85;">⚙️</span>
             </div>
           </td>
-          <td>
-            <span style="font-family: monospace; font-size: 0.82rem; color: #9ca3af;">${sid}</span>
-            <button class="btn-copy-mini" onclick="navigator.clipboard.writeText('${sid}'); window.AdminPanel.showNotification('Thành công', true);" title="Sao chép SteamID">📋</button>
+          <td class="col-steamid" style="white-space: nowrap; min-width: 210px;">
+            <span style="font-family: monospace; font-size: 0.88rem; color: #38bdf8; font-weight: 600; letter-spacing: 0.5px;">${sid}</span>
+            <button class="btn-copy-mini" onclick="navigator.clipboard.writeText('${sid}'); window.AdminPanel.showNotification('Thành công', true);" title="Sao chép SteamID" style="margin-left: 6px; padding: 2px 6px; cursor: pointer; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 4px; color: #fbbf24;">📋</button>
           </td>
           <td>
             ${isOnline ? '<span class="status-badge-mini online">🟢 ONLINE</span>' : '<span class="status-badge-mini offline">⚫ OFFLINE</span>'}
@@ -980,19 +984,19 @@ const AdminPanel = {
     }
 
     listEl.innerHTML = `
-      <div class="table-responsive card" style="padding: 0; overflow-x: auto; border: 1px solid var(--border-color); border-radius: var(--radius); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-        <table class="bxh-table admin-bxh-table" style="margin: 0; width: 100%;">
+      <div class="table-responsive card" style="padding: 0; overflow-x: auto; width: 100%; border: 1px solid var(--border-color); border-radius: var(--radius); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        <table class="bxh-table admin-bxh-table" style="margin: 0; width: 100%; min-width: 1150px;">
           <thead>
             <tr>
               <th style="width: 70px; text-align: center;">Hạng</th>
-              <th>Người chơi (Bấm tên để Quản trị)</th>
-              <th>Steam ID</th>
-              <th>Trạng thái</th>
-              <th>Loài khủng long</th>
-              <th style="text-align: center;">Kills</th>
-              <th style="text-align: center;">Deaths</th>
-              <th style="text-align: center;">K/D</th>
-              <th style="text-align: center;">Điểm BXH</th>
+              <th class="col-player" style="min-width: 220px;">Người chơi (Bấm tên để Quản trị)</th>
+              <th class="col-steamid" style="min-width: 210px;">Steam ID</th>
+              <th style="min-width: 120px;">Trạng thái</th>
+              <th style="min-width: 150px;">Loài khủng long</th>
+              <th style="text-align: center; width: 75px;">Kills</th>
+              <th style="text-align: center; width: 75px;">Deaths</th>
+              <th style="text-align: center; width: 80px;">K/D</th>
+              <th style="text-align: center; width: 110px;">Điểm BXH</th>
               <th style="text-align: right; width: 130px;">Thao tác</th>
             </tr>
           </thead>
@@ -1069,8 +1073,10 @@ const AdminPanel = {
       document.getElementById('vitals-p-name').textContent = steamId;
       document.getElementById('vitals-p-species').textContent = 'Thủ công';
       document.getElementById('vitals-p-status').textContent = 'Nhập trực tiếp';
-      document.getElementById('vitals-p-growth').textContent = '--%';
-      const coordsEl = document.getElementById('vitals-p-coords');
+      document.getElementById('vitals-p-growth').textContent = '--%';
+
+      const coordsEl = document.getElementById('vitals-p-coords');
+
       if (coordsEl) coordsEl.textContent = '--';
     }
   },
