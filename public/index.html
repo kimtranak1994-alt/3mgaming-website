@@ -35,7 +35,7 @@
 
   <link rel="stylesheet" href="css/style.css?v=3.2">
 
-  <link rel="stylesheet" href="css/map.css?v=2.2">
+  <link rel="stylesheet" href="css/map.css?v=2.3">
 
 </head>
 
@@ -2000,6 +2000,8 @@
 
           <button type="button" class="map-filter-btn active" onclick="GatewayMap.filter('all', this)">Tất cả</button>
 
+          <button type="button" class="map-filter-btn active" id="btn-toggle-regions" style="border-color: #38bdf8; color: #7dd3fc;" onclick="GatewayMap.toggleRegions(this)">🗺️ Tên khu vực (Delta, Wesrell...)</button>
+
           <button type="button" class="map-filter-btn" style="border-color: #f59e0b; color: #fde68a;" onclick="GatewayMap.filter('greatmigration', this)">⚡ Đại di cư</button>
 
           <button type="button" class="map-filter-btn" onclick="GatewayMap.filter('migration', this)">🌾 Vùng di cư</button>
@@ -2081,6 +2083,10 @@
           <img src="assets/images/gateway_official.webp" alt="Gateway Map The Isle Evrima 3MGAMING" class="map-image" id="map-image">
 
           
+
+          <!-- Lớp Hiển Thị Tên Các Khu Vực Chuẩn Gateway (Delta, Wesrell...) -->
+
+          <div class="map-regions-layer" id="map-regions-layer"></div>
 
           <!-- Lớp SVG Đại Di Cư & Hành Lang Di Chuyển -->
 
@@ -2433,7 +2439,7 @@
 
   <script src="js/pilot_features.js?v=3.1"></script>
 
-  <script src="js/map.js?v=2.6"></script>
+  <script src="js/map.js?v=2.7"></script>
 
   <script src="js/admin.js?v=4.3"></script>
   <script src="js/app.js?v=3.5"></script>

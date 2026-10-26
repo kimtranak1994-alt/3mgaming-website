@@ -1,6 +1,7 @@
 // Module Bản Đồ Vệ Tinh Gateway Tương Tác Siêu Nét & Hệ Thống Đại Di Cư (The Isle: Evrima - 3MGAMING)
 const GatewayMap = {
   activeFilter: 'all',
+  showRegions: true,
   zoom: 0.35,
   panX: 0,
   panY: 0,
@@ -13,6 +14,164 @@ const GatewayMap = {
   pollTimer: null,
   pollIntervalMs: 1500, // Quét và cập nhật vị trí trực tiếp liên tục mỗi 1.5 giây
   isPolling: false,
+
+  // Danh sách các vùng / khu vực chính thức chuẩn bản đồ Gateway (The Isle: Evrima)
+  regionsList: [
+    {
+      id: "delta",
+      name: "DELTA",
+      subName: "Cầu Delta / Đồng Bằng Sông (River Delta)",
+      x: 74,
+      y: 63,
+      size: "large",
+      tag: "Cửa sông & Cầu vượt",
+      desc: "Vùng đồng bằng cửa sông Delta rộng lớn với hệ thống cầu bê tông, kênh rạch và bãi cạn. Điểm nóng di cư và phục kích Deino.",
+      color: "#38bdf8"
+    },
+    {
+      id: "west_rail",
+      name: "WEST RAIL",
+      subName: "Wesrell / Đường Ray Tây (West Rail Access)",
+      x: 33,
+      y: 47,
+      size: "large",
+      tag: "Hồ & Hành lang đường ray",
+      desc: "Tuyến đường sắt công nghiệp phía Tây nối giữa đầm lầy và cao nguyên. Có hồ nước ngọt West Rail Pond nổi tiếng.",
+      color: "#fbbf24"
+    },
+    {
+      id: "south_plains",
+      name: "SOUTH PLAINS",
+      subName: "Thảo Nguyên Phía Nam (Hotspot)",
+      x: 58,
+      y: 72,
+      size: "large",
+      tag: "Khu PVP trung tâm",
+      desc: "Bình nguyên đồng cỏ rộng lớn bậc nhất phía Nam Gateway. Nơi tụ họp đông đúc nhất của các loài khủng long ăn cỏ và thợ săn Apex.",
+      color: "#f43f5e"
+    },
+    {
+      id: "center_lake",
+      name: "CENTER LAKE & VALLEY",
+      subName: "Hồ Trung Tâm (Center Gateway)",
+      x: 50,
+      y: 50,
+      size: "large",
+      tag: "Trái tim Gateway",
+      desc: "Lòng chảo thung lũng và hồ nước ngọt trung tâm đảo, ngã ba giao tranh quyết liệt giữa các bầy đàn khủng long.",
+      color: "#06b6d4"
+    },
+    {
+      id: "highlands",
+      name: "HIGHLANDS",
+      subName: "Cao Nguyên Đông Bắc (Highland Lake)",
+      x: 60,
+      y: 35,
+      size: "large",
+      tag: "Đỉnh núi & Sanctuary",
+      desc: "Vùng núi cao nguyên mát mẻ, địa hình dốc đá hùng vĩ với hồ Highland Lake trên đỉnh núi và khu bảo hộ Sanctuary cho baby dino.",
+      color: "#a855f7"
+    },
+    {
+      id: "north_plains",
+      name: "NORTH PLAINS",
+      subName: "Thảo Nguyên Bắc (North Steppe)",
+      x: 44,
+      y: 18,
+      size: "large",
+      tag: "Đồng cỏ hoang sơ",
+      desc: "Khu vực đồng bằng phía Bắc dãy núi tuyết, thảm thực vật phong phú, ít kẻ săn mồi lớn rình rập.",
+      color: "#34d399"
+    },
+    {
+      id: "nw_steppe",
+      name: "NORTH-WEST STEPPE",
+      subName: "Bình Nguyên Tây Bắc (NW Coast)",
+      x: 24,
+      y: 28,
+      size: "medium",
+      tag: "Bờ biển & Đồi núi",
+      desc: "Vùng đồi thảo nguyên giáp bờ biển Tây Bắc, không khí thoáng đãng, nhiều rễ cây và nấm dinh dưỡng.",
+      color: "#10b981"
+    },
+    {
+      id: "west_swamp",
+      name: "WEST SWAMP",
+      subName: "Vùng Trũng Đầm Lầy (Swamp Marsh)",
+      x: 23,
+      y: 67,
+      size: "large",
+      tag: "Lãnh địa Cá Sấu Deinosuchus",
+      desc: "Vùng đầm lầy âm u, nhiều kênh mương sâu và bèo tây. Địa bàn săn mồi số một của Deinosuchus khổng lồ.",
+      color: "#14b8a6"
+    },
+    {
+      id: "swamp_dam",
+      name: "SWAMP DAM",
+      subName: "Đập Thủy Lợi Đầm Lầy (South Dam)",
+      x: 28,
+      y: 78,
+      size: "medium",
+      tag: "Công trình đập nước",
+      desc: "Công trình đập thủy điện bê tông khổng lồ ngăn nước đầm lầy xả ra biển Tây Nam.",
+      color: "#94a3b8"
+    },
+    {
+      id: "east_jungle",
+      name: "EAST JUNGLE",
+      subName: "Rừng Rậm Đông & Hồ Núi Lửa (East Crater)",
+      x: 74,
+      y: 44,
+      size: "large",
+      tag: "Tán rừng nhiệt đới cổ",
+      desc: "Lòng chảo núi lửa cổ với hồ nước sâu và những cánh rừng già rậm rạp, trái cây sum suê cho loài ăn quả.",
+      color: "#10b981"
+    },
+    {
+      id: "water_access",
+      name: "WATER ACCESS",
+      subName: "Hành Lang Sông Bắc (Water River Fork)",
+      x: 48,
+      y: 38,
+      size: "medium",
+      tag: "Đường thủy huyết mạch",
+      desc: "Nhánh sông dài kết nối hồ trung tâm lên thung lũng hẻm núi phía bắc.",
+      color: "#0ea5e9"
+    },
+    {
+      id: "south_cliffs",
+      name: "SOUTH CLIFFS",
+      subName: "Vách Đá & Bờ Biển Nam (South Coast)",
+      x: 52,
+      y: 84,
+      size: "medium",
+      tag: "Vách đá ven biển",
+      desc: "Vùng đồng cỏ ven biển ôn hòa phía nam, chân các vách đá cao nhìn ra đại dương.",
+      color: "#f59e0b"
+    },
+    {
+      id: "dome_facility",
+      name: "GATEWAY RESEARCH DOME",
+      subName: "Vòm Sinh Thái & Căn Cứ Ngầm",
+      x: 54,
+      y: 42,
+      size: "medium",
+      tag: "Căn cứ khoa học",
+      desc: "Khu phức hợp nhà vòm nhân tạo và hệ thống phòng thí nghiệm ngầm của con người trên đảo Gateway.",
+      color: "#ec4899"
+    },
+    {
+      id: "sw_lighthouse",
+      name: "SW LIGHTHOUSE",
+      subName: "Hải Đăng Tây Nam",
+      x: 12,
+      y: 84,
+      size: "medium",
+      tag: "Ngọn hải đăng cổ",
+      desc: "Mũi đất nhô ra biển phía Tây Nam với ngọn hải đăng bỏ hoang.",
+      color: "#64748b"
+    }
+  ],
 
   // Chuẩn Calibration chính thức của IslePilot trên bản đồ Gateway v0.21.7 (server 3MGAMING)
   calibration: {
@@ -233,6 +392,7 @@ const GatewayMap = {
     this.updateBanner();
     this.fitToView();
     this.render();
+    this.renderRegions();
     this.startLiveTracking();
   },
 
@@ -254,6 +414,7 @@ const GatewayMap = {
     select.innerHTML = '<option value="">🎯 Bay nhanh tới địa danh...</option>';
 
     const groups = [
+      { id: 'regions', label: '🗺️ Các Vùng Bản Đồ Lớn (Delta, Wesrell...)' },
       { id: 'greatmigration', label: '⚡ Đại Di Cư & Vùng Di Cư' },
       { id: 'sanctuary', label: '🛡️ Khu Trú Ẩn Sanctuary' },
       { id: 'water', label: '💧 Nguồn Nước & Hồ Lớn' },
@@ -267,7 +428,9 @@ const GatewayMap = {
       optGroup.label = g.label;
 
       let items = [];
-      if (g.id === 'greatmigration') {
+      if (g.id === 'regions') {
+        items = this.regionsList.map(r => ({ name: `${r.name} (${r.subName})`, x: r.x, y: r.y }));
+      } else if (g.id === 'greatmigration') {
         items = this.poiList.filter(p => p.type === 'greatmigration' || p.type === 'migration');
       } else {
         items = this.poiList.filter(p => p.type === g.id);
@@ -286,7 +449,11 @@ const GatewayMap = {
 
   onSelectPoi(poiName) {
     if (!poiName) return;
-    const pt = this.poiList.find(p => p.name === poiName);
+    let pt = this.poiList.find(p => p.name === poiName);
+    if (!pt) {
+      const reg = this.regionsList.find(r => poiName.includes(r.name));
+      if (reg) pt = { name: `${reg.name} (${reg.subName})`, x: reg.x, y: reg.y };
+    }
     if (!pt) return;
 
     this.flyTo(pt.x, pt.y, 1.8);
@@ -589,14 +756,34 @@ const GatewayMap = {
   searchCoords() {
     const input = document.getElementById('map-search-input');
     if (!input || !input.value.trim()) {
-      App.showToast("⚠️ Vui lòng nhập tọa độ (Ví dụ: -200, 150, 45)!");
+      App.showToast("⚠️ Vui lòng nhập tọa độ hoặc tên khu vực (Ví dụ: Delta, Wesrell, -200, 150)!");
       return;
     }
 
     const val = input.value.trim();
+    const qLower = val.toLowerCase();
+
+    // 1. Kiểm tra tìm theo tên khu vực Gateway (Delta, Wesrell, West Rail, Highlands...)
+    const matchedRegion = this.regionsList.find(r => 
+      r.id.toLowerCase().includes(qLower) || 
+      r.name.toLowerCase().includes(qLower) || 
+      r.subName.toLowerCase().includes(qLower) ||
+      (qLower === 'wesrell' && r.id === 'west_rail')
+    );
+    if (matchedRegion) {
+      this.flyTo(matchedRegion.x, matchedRegion.y, 2.0);
+      const world = this.normalizedToWorld(matchedRegion.x / 100, matchedRegion.y / 100);
+      const ingameX = Math.round(world.worldX * 0.01);
+      const ingameY = Math.round(world.worldY * 0.01);
+      const ingameZ = this.getElevationZ(ingameX, ingameY);
+      App.showToast(`🎯 Đã định vị khu vực: ${matchedRegion.name} (${matchedRegion.subName}) - Tọa độ: X: ${ingameX}, Y: ${ingameY}, Z: ${ingameZ}`);
+      return;
+    }
+
+    // 2. Phân tích tọa độ số X, Y, Z
     const parts = val.split(/[,\s]+/).map(Number);
     if (parts.length < 2 || isNaN(parts[0]) || isNaN(parts[1])) {
-      App.showToast("⚠️ Định dạng tọa độ không hợp lệ! Hãy nhập dạng: X, Y, Z hoặc X, Y (Ví dụ: -150, 220, 35)");
+      App.showToast("⚠️ Vui lòng nhập tọa độ hợp lệ (X, Y, Z) hoặc tên khu vực (VD: Delta, Wesrell)!");
       return;
     }
 
@@ -639,6 +826,68 @@ const GatewayMap = {
     // Bay tới vị trí và zoom 2.0x
     this.flyTo(pctX, pctY, 2.0);
     App.showToast(`🎯 Đã định vị thành công: X: ${ingameX}, Y: ${ingameY}, Z: ${ingameZ}`);
+  },
+
+  // Hiển thị tên các khu vực chính thức chuẩn bản đồ Gateway (Delta, West Rail / Wesrell, South Plains...)
+  renderRegions() {
+    const layer = document.getElementById('map-regions-layer');
+    if (!layer) return;
+
+    if (!this.showRegions) {
+      layer.style.display = 'none';
+      return;
+    }
+    layer.style.display = 'block';
+    layer.innerHTML = '';
+
+    this.regionsList.forEach(r => {
+      const el = document.createElement('div');
+      el.className = `map-region-label region-size-${r.size || 'large'}`;
+      el.style.left = `${r.x}%`;
+      el.style.top = `${r.y}%`;
+      el.setAttribute('data-region-id', r.id);
+
+      const world = this.normalizedToWorld(r.x / 100, r.y / 100);
+      const ingameX = Math.round(world.worldX * 0.01);
+      const ingameY = Math.round(world.worldY * 0.01);
+      const ingameZ = this.getElevationZ(ingameX, ingameY);
+
+      el.innerHTML = `
+        <div class="region-badge-pill" style="border-left: 3px solid ${r.color};">
+          <span class="region-badge-dot" style="background: ${r.color}; box-shadow: 0 0 8px ${r.color};"></span>
+          <span class="region-main-name">${r.name}</span>
+        </div>
+        <div class="region-sub-name">${r.subName}</div>
+        <div class="map-tooltip region-tooltip">
+          <strong style="color: ${r.color}; font-size: 0.92rem;">📍 Khu Vực: ${r.name}</strong><br>
+          <span style="color: #fff; font-weight: 600;">${r.subName}</span><br>
+          <span style="color: var(--text-muted); font-size: 0.8rem;">${r.desc}</span><br>
+          <span style="color: #60a5fa; font-family: monospace; font-size: 0.82rem;">Tọa độ Gateway: X: ${ingameX}, Y: ${ingameY}, Z: ${ingameZ}</span><br>
+          <span style="color: #fbbf24; font-size: 0.78rem;">👉 Bấm để phóng to và sao chép tọa độ</span>
+        </div>
+      `;
+
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.flyTo(r.x, r.y, 2.0);
+        navigator.clipboard.writeText(`${ingameX}, ${ingameY}, ${ingameZ}`).then(() => {
+          App.showToast(`📍 Đã bay tới: ${r.name} (${r.subName}) - Đã sao chép X: ${ingameX}, Y: ${ingameY}, Z: ${ingameZ}`);
+        }).catch(() => {
+          App.showToast(`📍 ${r.name} (${r.subName}) - Tọa độ: X: ${ingameX}, Y: ${ingameY}, Z: ${ingameZ}`);
+        });
+      });
+
+      layer.appendChild(el);
+    });
+  },
+
+  toggleRegions(btn) {
+    this.showRegions = !this.showRegions;
+    if (btn) {
+      btn.classList.toggle('active', this.showRegions);
+    }
+    this.renderRegions();
+    App.showToast(this.showRegions ? "🗺️ Đã bật hiển thị tên khu vực Gateway" : "🗺️ Đã tắt hiển thị tên khu vực");
   },
 
   render() {
@@ -715,6 +964,7 @@ const GatewayMap = {
     document.querySelectorAll('.map-controls .map-filter-btn').forEach(btn => btn.classList.remove('active'));
     if (btnElement) btnElement.classList.add('active');
     this.render();
+    this.renderRegions();
   },
 
   // ==============================================================
