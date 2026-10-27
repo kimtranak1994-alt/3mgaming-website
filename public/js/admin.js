@@ -1241,6 +1241,10 @@ const AdminPanel = {
   // ==========================================
   // ISLEPILOT MODERATION MODAL & ACTIONS
   // ==========================================
+  async openModerationModal(steamId) {
+    return await this.openPlayerModerationModal(steamId);
+  },
+
   async openPlayerModerationModal(steamId) {
     if (!steamId || steamId === 'undefined' || steamId === 'null') {
       console.warn('openPlayerModerationModal: Invalid steamId', steamId);

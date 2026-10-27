@@ -704,27 +704,15 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 except Exception:
                     pass
 
-            # Hợp nhất đột biến gen đã cấu hình qua Admin Panel (admin_player_mutations.json)
-            mut_file = "admin_player_mutations.json"
-            if os.path.exists(mut_file) and player_info and isinstance(player_info, dict):
-                try:
-                    with open(mut_file, "r", encoding="utf-8") as f:
-                        all_muts = json.load(f)
-                    p_muts = all_muts.get(str(target_steam_id))
-                    if p_muts and isinstance(p_muts, dict):
-                        if not player_info.get("mutationSlots") or not isinstance(player_info.get("mutationSlots"), dict):
-                            player_info["mutationSlots"] = {}
-                        for cat, slot_list in p_muts.items():
-                            if isinstance(slot_list, list):
-                                cur_list = player_info["mutationSlots"].get(cat, ["None", "None", "None", "None"])
-                                if not isinstance(cur_list, list) or len(cur_list) < 4:
-                                    cur_list = ["None", "None", "None", "None"]
-                                for idx in range(min(4, len(slot_list))):
-                                    if slot_list[idx] and slot_list[idx] != "None":
-                                        cur_list[idx] = slot_list[idx]
-                                player_info["mutationSlots"][cat] = cur_list
-                except Exception as e:
-                    print("Error merging admin_player_mutations:", e)
+            # Đồng bộ trực tiếp mutationSlots từ IslePilot
+            if player_info and isinstance(player_info, dict):
+                if not player_info.get("mutationSlots") or not isinstance(player_info.get("mutationSlots"), dict):
+                    player_info["mutationSlots"] = {
+                        "active": ["None", "None", "None", "None"],
+                        "parent": ["None", "None", "None", "None"],
+                        "elderA": ["None", "None", "None", "None"],
+                        "elderB": ["None", "None", "None", "None"]
+                    }
             garage_info = self.fetch_islepilot(f"/players/{target_steam_id}/garage") or {}
             skins_info = self.fetch_islepilot(f"/players/{target_steam_id}/skins") or {}
             warnings_info = self.fetch_islepilot(f"/players/{target_steam_id}/warnings") or {}
@@ -1025,41 +1013,40 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     cmd_body["protein"] = prot_val
                     cmd_body["lipid"] = lipid_val
                 elif action == "mutations":
-                    mut_file = "admin_player_mutations.json"
-                    all_muts = {}
-                    if os.path.exists(mut_file):
-                        try:
-                            with open(mut_file, "r", encoding="utf-8") as f:
-                                all_muts = json.load(f)
-                        except Exception:
-                            all_muts = {}
-                    
                     sid_str = str(target_steam_id)
-                    if sid_str not in all_muts:
-                        all_muts[sid_str] = {
-                            "active": ["None", "None", "None", "None"],
-                            "parent": ["None", "None", "None", "None"],
-                            "elderA": ["None", "None", "None", "None"],
-                            "elderB": ["None", "None", "None", "None"]
-                        }
-
-                    # Xóa toàn bộ
+                    # Xóa toàn bộ đột biến gen
                     if params.get("clear"):
-                        all_muts[sid_str] = {
-                            "active": ["None", "None", "None", "None"],
-                            "parent": ["None", "None", "None", "None"],
-                            "elderA": ["None", "None", "None", "None"],
-                            "elderB": ["None", "None", "None", "None"]
-                        }
-                        try:
-                            with open(mut_file, "w", encoding="utf-8") as f:
-                                json.dump(all_muts, f, ensure_ascii=False, indent=2)
-                        except Exception:
-                            pass
-                        self.fetch_islepilot("/commands", method="POST", body_data={"action": "mutations", "steamId": sid_str, "clear": True})
-                        self.fetch_islepilot("/commands", method="POST", body_data={"action": "mutations", "steamId": sid_str, "mutations": []})
+                        def async_clear_mutations():
+                            self.fetch_islepilot("/commands", method="POST", body_data={
+                                "action": "mutations",
+                                "steamId": sid_str,
+                                "active": ["None", "None", "None", "None"],
+                                "parent": ["None", "None", "None", "None"],
+                                "elderA": ["None", "None"],
+                                "elderB": ["None", "None"]
+                            })
+                            time.sleep(0.3)
+                            self.fetch_islepilot("/commands", method="POST", body_data={"action": "mutations", "steamId": sid_str, "clear": True})
+                            self.fetch_islepilot("/commands", method="POST", body_data={"action": "mutations", "steamId": sid_str, "mutations": []})
+                        threading.Thread(target=async_clear_mutations, daemon=True).start()
                         self.send_json_response({"ok": True, "message": "Thành công"})
                         return
+
+                    # Lấy mutationSlots hiện tại từ IslePilot
+                    cur_p = self.fetch_islepilot(f"/players/{sid_str}") or {}
+                    cur_slots = cur_p.get("mutationSlots") or {}
+                    if not isinstance(cur_slots, dict):
+                        cur_slots = {}
+
+                    all_muts = {
+                        "active": list(cur_slots.get("active") or ["None", "None", "None", "None"]),
+                        "parent": list(cur_slots.get("parent") or ["None", "None", "None", "None"]),
+                        "elderA": list(cur_slots.get("elderA") or ["None", "None", "None", "None"]),
+                        "elderB": list(cur_slots.get("elderB") or ["None", "None", "None", "None"])
+                    }
+                    for k in ["active", "parent", "elderA", "elderB"]:
+                        while len(all_muts[k]) < 4:
+                            all_muts[k].append("None")
 
                     # Cập nhật mutation từ Apply mutations hoặc các nhóm
                     for k_cat in ["active", "parent", "elderA", "elderB"]:
@@ -1073,79 +1060,61 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                             for i_idx in range(min(4, len(arr))):
                                 val_s = str(arr[i_idx]).strip() if arr[i_idx] else "None"
                                 norm_arr[i_idx] = val_s if val_s else "None"
-                            all_muts[sid_str][k_cat] = norm_arr
+                            all_muts[k_cat] = norm_arr
 
                     # Cập nhật nếu gửi theo từng slot riêng lẻ
                     if params.get("slot") and "mutation" in params:
                         cat = str(params.get("category", "active"))
                         slot_num = int(params["slot"])
                         m_name = str(params["mutation"]).strip()
-                        if cat not in all_muts[sid_str]:
-                            all_muts[sid_str][cat] = ["None", "None", "None", "None"]
+                        if cat not in all_muts:
+                            all_muts[cat] = ["None", "None", "None", "None"]
                         if 1 <= slot_num <= 4:
-                            all_muts[sid_str][cat][slot_num - 1] = m_name
+                            all_muts[cat][slot_num - 1] = m_name
 
-                    # Lưu bền vững admin_player_mutations.json
-                    try:
-                        with open(mut_file, "w", encoding="utf-8") as f:
-                            json.dump(all_muts, f, ensure_ascii=False, indent=2)
-                    except Exception as e:
-                        print("Error writing admin_player_mutations:", e)
-
-                    # Gửi đồng bộ lên máy chủ game IslePilot
-                    active_clean = [m for m in all_muts[sid_str].get("active", []) if m and m != "None"]
-                    slot_target = int(params.get("slot", 1))
-                    mut_target = str(params.get("mutation", "")).strip()
-                    cat_target = str(params.get("category", "active"))
+                    active_clean = [m for m in all_muts["active"] if m and m != "None"]
 
                     def async_push_mutations():
-                        # 1. Gửi cấu hình 4 nhóm trực tiếp (active, parent, elderA, elderB) chuẩn IslePilot Apply mutations
+                        # 1. Gửi cấu hình chuẩn IslePilot Apply mutations (2 slots cho elder)
                         self.fetch_islepilot("/commands", method="POST", body_data={
                             "action": "mutations",
                             "steamId": sid_str,
-                            "active": all_muts[sid_str]["active"],
-                            "parent": all_muts[sid_str]["parent"],
-                            "elderA": all_muts[sid_str]["elderA"],
-                            "elderB": all_muts[sid_str]["elderB"]
+                            "active": all_muts["active"],
+                            "parent": all_muts["parent"],
+                            "elderA": all_muts["elderA"][:2],
+                            "elderB": all_muts["elderB"][:2]
                         })
                         time.sleep(0.3)
 
-                        # 2. Gửi qua mutationSlots object
+                        # 2. Gửi cấu hình 4 nhóm trực tiếp (active, parent, elderA, elderB)
                         self.fetch_islepilot("/commands", method="POST", body_data={
                             "action": "mutations",
                             "steamId": sid_str,
-                            "mutationSlots": all_muts[sid_str]
+                            "active": all_muts["active"],
+                            "parent": all_muts["parent"],
+                            "elderA": all_muts["elderA"],
+                            "elderB": all_muts["elderB"]
                         })
                         time.sleep(0.3)
 
-                        # 3. Gửi danh sách active mutations
+                        # 3. Gửi qua mutationSlots object
+                        self.fetch_islepilot("/commands", method="POST", body_data={
+                            "action": "mutations",
+                            "steamId": sid_str,
+                            "mutationSlots": all_muts
+                        })
+                        time.sleep(0.3)
+
+                        # 4. Gửi danh sách active mutations
                         if active_clean:
                             self.fetch_islepilot("/commands", method="POST", body_data={
                                 "action": "mutations",
                                 "steamId": sid_str,
                                 "mutations": active_clean
                             })
-                            self.fetch_islepilot("/commands", method="POST", body_data={
-                                "action": "mutations",
-                                "steamId": sid_str,
-                                "slots": active_clean
-                            })
-                            time.sleep(0.3)
-
-                        # 4. Gửi từng slot cho các nhóm active và elderA
-                        for c_name in ["active", "elderA"]:
-                            for s_i, m_val in enumerate(all_muts[sid_str].get(c_name, [])):
-                                if m_val and m_val != "None":
-                                    self.fetch_islepilot("/commands", method="POST", body_data={
-                                        "action": "mutations",
-                                        "steamId": sid_str,
-                                        "category": c_name,
-                                        "slot": s_i + 1,
-                                        "mutation": m_val
-                                    })
 
                     threading.Thread(target=async_push_mutations, daemon=True).start()
-                    self.send_json_response({"ok": True, "message": "Thành công", "mutationSlots": all_muts[sid_str]})
+                    self.send_json_response({"ok": True, "message": "Thành công", "mutationSlots": all_muts})
                     return
                 elif action in ["teleporthub", "reset"]:
                     cmd_body["action"] = action
@@ -1706,18 +1675,6 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                             "mutationSlots": full_mutation_slots
                         })
 
-                        # 4. Lưu bền vững vào admin_player_mutations.json
-                        try:
-                            mut_file = "admin_player_mutations.json"
-                            all_m = {}
-                            if os.path.exists(mut_file):
-                                with open(mut_file, "r", encoding="utf-8") as fp:
-                                    all_m = json.load(fp)
-                            all_m[sid] = full_mutation_slots
-                            with open(mut_file, "w", encoding="utf-8") as fp:
-                                json.dump(all_m, fp, ensure_ascii=False, indent=2)
-                        except Exception as ex_m:
-                            pass
 
                         # 5. Reinforce worker: CHỈ bổ trợ mutations, TUYỆT ĐỐI không gọi setstats hay setnutrition!
                         def reinforce_mut_only():
@@ -1891,18 +1848,6 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                         "mutationSlots": full_mutation_slots
                     })
 
-                    # 4. Lưu bền vững vào admin_player_mutations.json
-                    try:
-                        mut_file = "admin_player_mutations.json"
-                        all_m = {}
-                        if os.path.exists(mut_file):
-                            with open(mut_file, "r", encoding="utf-8") as fp:
-                                all_m = json.load(fp)
-                        all_m[sid] = full_mutation_slots
-                        with open(mut_file, "w", encoding="utf-8") as fp:
-                            json.dump(all_m, fp, ensure_ascii=False, indent=2)
-                    except Exception as ex_m:
-                        print(f"Error saving admin_player_mutations: {ex_m}")
 
                     # 5. Luồng phụ bổ trợ (reinforce) sau 5 giây để đảm bảo gen ăn chắc chắn vào nhân vật game
                     def reinforce_worker():
