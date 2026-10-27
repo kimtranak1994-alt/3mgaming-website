@@ -3793,11 +3793,12 @@ body[data-current-tab="admin"] .nav-links {
   display: flex;
   flex-direction: column;
   gap: 3px;
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 0.65rem;
-  font-weight: 700;
+  font-family: 'Montserrat', 'Courier New', monospace;
+  font-size: 0.74rem;
+  font-weight: 800;
   color: #38bdf8;
-  letter-spacing: 1px;
+  letter-spacing: 0.8px;
+  text-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
   opacity: 0.85;
 }
 
