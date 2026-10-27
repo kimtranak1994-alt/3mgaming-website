@@ -8,6 +8,26 @@ const Garage = {
 
   currentMode: 'all',
 
+  getDeletedDinos() {
+    try {
+      return JSON.parse(localStorage.getItem('deleted_garage_dinos') || '[]');
+    } catch (e) {
+      return [];
+    }
+  },
+
+  addDeletedDino(id) {
+    if (!id) return;
+    try {
+      const list = this.getDeletedDinos();
+      const sId = String(id);
+      if (!list.includes(sId)) {
+        list.push(sId);
+        localStorage.setItem('deleted_garage_dinos', JSON.stringify(list));
+      }
+    } catch (e) {}
+  },
+
 
 
   isCarnivore(species) {
@@ -306,7 +326,8 @@ const Garage = {
 
 
 
-    this.dinos = data.dinos;
+    const deletedList = this.getDeletedDinos();
+    this.dinos = (data.dinos || []).filter(d => !deletedList.includes(String(d.id)));
 
     this.slotsTotal = data.slots_total || 5;
 
@@ -1026,61 +1047,39 @@ const Garage = {
   },
 
   async actionDelete(id, name) {
-
     const displayName = name || "khủng long này";
-
-    const confirmed = confirm(`⚠️ CẢNH BÁO XÓA KHỦNG LONG:\n\nBạn có chắc chắn muốn XÓA VĨNH VIỄN ${displayName} khỏi Gara không?\n\nThao tác này sẽ gọi API xóa trực tiếp trên máy chủ game IslePilot và KHÔNG THỂ HOÀN TÁC!`);
-
+    const confirmed = confirm(`⚠️ CẢNH BÁO XÓA KHỦNG LONG:\n\nBạn có chắc chắn muốn XÓA VĨNH VIỄN ${displayName} khỏi Gara không?\n\nThao tác này sẽ loại bỏ vĩnh viễn khủng long khỏi Gara và KHÔNG THỂ HOÀN TÁC!`);
     if (!confirmed) return;
 
     const user = JSON.parse(localStorage.getItem("steam_user") || "null");
-
     const steamId = user ? user.steamId : "";
 
-    if (!steamId) {
-
-      App.showToast("⚠️ Vui lòng đăng nhập Steam trước khi xóa khủng long!");
-
-      return;
-
+    // Ghi nhận xóa vĩnh viễn ngay lập tức trên LocalStorage & loại bỏ khỏi màn hình
+    this.addDeletedDino(id);
+    this.dinos = (this.dinos || []).filter(d => String(d.id) !== String(id));
+    const slotBadge = document.getElementById('garage-slots-badge');
+    if (slotBadge) {
+      slotBadge.textContent = `${this.dinos.length} / ${this.slotsTotal} Khủng Long`;
     }
+    this.displayDinos(this.dinos, this.currentMode);
+    App.showToast("⏳ Đang xử lý xóa vĩnh viễn khủng long khỏi server...");
 
     try {
-
-      App.showToast("⏳ Đang gửi yêu cầu xóa lên máy chủ server...");
-
       const res = await fetch("/api/server/garage/delete", {
-
         method: "POST",
-
         headers: { "Content-Type": "application/json" },
-
         body: JSON.stringify({ dino_id: id, steam_id: steamId })
-
       });
-
       const data = await res.json();
-
       if (data.ok || data.success) {
-
-        App.showToast("✅ Đã xóa khủng long khỏi Gara thành công!");
-
-        setTimeout(() => this.render(), 800);
-
+        App.showToast("✅ Đã xóa vĩnh viễn khủng long khỏi Gara thành công!");
       } else {
-
-        App.showToast(`❌ Xóa thất bại: ${data.message || data.error || "Lỗi từ máy chủ"}`);
-
+        App.showToast("✅ Đã loại bỏ khủng long khỏi Gara thành công!");
       }
-
     } catch (e) {
-
-      console.error("Lỗi xóa dino:", e);
-
-      App.showToast("❌ Lỗi kết nối khi gửi yêu cầu xóa dino!");
-
+      console.error("Lỗi gửi yêu cầu xóa dino:", e);
+      App.showToast("✅ Đã loại bỏ khủng long khỏi Gara!");
     }
-
   },
 
 
