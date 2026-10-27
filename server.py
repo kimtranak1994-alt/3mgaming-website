@@ -4051,14 +4051,62 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
     def handle_carcass(self):
         try:
+            length = int(self.headers.get("Content-Length", 0))
+            payload = json.loads(self.rfile.read(length).decode("utf-8")) if length > 0 else {}
+            offer_id = payload.get("offerId") or payload.get("offer_id") or "omv572un0"
+            steam_id = payload.get("steam_id") or self.get_active_steam_id()
+
+            if not steam_id:
+                self.send_json_response({
+                    "success": False,
+                    "ok": False,
+                    "message": "Vui lòng đăng nhập Steam trước khi nhận xác!"
+                }, 401)
+                return
+
+            # Ánh xạ chuẩn 3 loài khủng long của 3 gói thả xác theo đúng server
+            species_map = {
+                "omv572un0": "Tenontosaurus",
+                "omv6uqesm": "Triceratops",
+                "omv6viaxj": "Stegosaurus"
+            }
+            target_species = species_map.get(offer_id, payload.get("species", "Tenontosaurus"))
+
+            # Gửi lệnh thực thi thả xác trực tiếp tới game server qua IslePilot commands
+            cmd_payload = {
+                "action": "carcass",
+                "steamId": steam_id,
+                "species": target_species,
+                "growth": 1.0,
+                "offerId": offer_id
+            }
+            res = self.fetch_islepilot("/commands", method="POST", body_data=cmd_payload)
+
+            # Dự phòng gọi endpoint carcass của player nếu có
+            if not res or not (res.get("ok") or res.get("commandId")):
+                res2 = self.fetch_islepilot(f"/players/{steam_id}/carcass", method="POST", body_data={"offerId": offer_id})
+                if res2 and (res2.get("ok") or res2.get("commandId")):
+                    res = res2
+
+            if res and (res.get("ok") is True or res.get("success") is True or "commandId" in res):
+                self.send_json_response({
+                    "success": True,
+                    "ok": True,
+                    "commandId": res.get("commandId"),
+                    "message": f"🎉 Thả xác {target_species} thành công! Lệnh thả xác đã được gửi tới server 3MGAMING, xác sẽ rơi ngay trước mặt bạn trong game."
+                })
+                return
+
+            err = res.get("error") if (res and isinstance(res, dict)) else "Không thể kết nối đến máy chủ game."
             self.send_json_response({
-                "success": True,
-                "ok": True,
-                "direct_url": "https://3mgaming.islepilot.eu/carcass",
-                "message": "Đang chuyển tiếp tới trang thả xác trung gian IslePilot..."
-            })
+                "success": False,
+                "ok": False,
+                "message": f"Thả xác thất bại: {err}"
+            }, 400)
+
         except Exception as e:
-            self.send_json_response({"success": False, "ok": False, "message": f"Lỗi hệ thống: {e}"}, 500)
+            print(f"[Handle Carcass Error] {e}")
+            self.send_json_response({"success": False, "ok": False, "message": f"Lỗi hệ thống khi thả xác: {e}"}, 500)
 
     def handle_quests(self):
 

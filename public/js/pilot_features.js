@@ -5044,7 +5044,7 @@ const Carcass = {
 
       if (user) {
 
-        hintEl.innerHTML = `Đã đăng nhập: <b style="color: #00f076;">${user.personaName || user.steamId}</b>. Bấm <b>"Mua"</b> để mở trang thả xác IslePilot và nhận xác rơi trước mặt bạn trong game.`;
+        hintEl.innerHTML = `Đã đăng nhập: <b style="color: #00f076;">${user.personaName || user.steamId}</b>. Sẵn sàng nhận xác trong game.`;
 
       } else {
 
@@ -5280,10 +5280,61 @@ const Carcass = {
 
 
 
-  actionDrop(offerId, name) {
+  async actionDrop(offerId, name) {
+    if (Date.now() < this.cooldownEnd) {
+      const remaining = Math.ceil((this.cooldownEnd - Date.now()) / 1000);
+      App.showToast(`⏱️ Mỗi 300 giây mua được một lần. Vui lòng chờ ${remaining} giây!`);
+      return;
+    }
+
+    const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
+    if (!user) {
+      App.showToast("⚠️ Vui lòng đăng nhập bằng Steam để mua xác!");
+      setTimeout(() => {
+        if (confirm("Bạn cần đăng nhập bằng Steam để mua xác. Bạn có muốn chuyển đến trang đăng nhập Steam không?")) {
+          window.location.href = '/api/player/steam/login?redirect=' + encodeURIComponent(window.location.pathname + '#carcass');
+        }
+      }, 300);
+      return;
+    }
+
+    const steamId = user.steamId;
+    const btn = document.getElementById(`carcass-btn-${offerId}`);
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = '⏳ Đang thả...';
+    }
+
     const displayName = name || 'Carcass';
-    App.showToast(`🥩 Đang mở trang thả xác IslePilot để nhận ${displayName}...`);
-    window.open('https://3mgaming.islepilot.eu/carcass', '_blank');
+    App.showToast(`⏳ Đang gửi lệnh thả xác ${displayName} tới server...`);
+
+    try {
+      const res = await fetch('/api/server/carcass', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ offerId, name: displayName, steam_id: steamId })
+      });
+      const data = await res.json();
+
+      if (data.success || data.ok) {
+        App.showToast(data.message || `🎉 Thả xác ${displayName} thành công! Xác rơi ngay trước mặt bạn trong game.`);
+        this.cooldownEnd = Date.now() + 300000;
+        this.startCooldownInterval();
+      } else {
+        App.showToast(`❌ ${data.message || data.error || 'Thả xác thất bại!'}`);
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Mua';
+        }
+      }
+    } catch (e) {
+      console.error("Lỗi mua carcass:", e);
+      App.showToast("❌ Lỗi kết nối khi gửi yêu cầu thả xác!");
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = 'Mua';
+      }
+    }
   }
 };
 
