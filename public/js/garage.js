@@ -1125,7 +1125,7 @@ const Garage = {
 
     }
 
-  }
+  },
 
 
   MUTATION_DICT: {
@@ -1161,7 +1161,7 @@ const Garage = {
   },
 
   showMutationsModal(dinoId) {
-    const dino = this.dinos.find(d => String(d.id) === String(dinoId));
+    const dino = (this.dinos || []).find(d => String(d.id) === String(dinoId));
     if (!dino) {
       App.showToast("⚠️ Không tìm thấy thông tin khủng long!");
       return;
