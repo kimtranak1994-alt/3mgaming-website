@@ -1017,17 +1017,17 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     # Xóa toàn bộ đột biến gen
                     if params.get("clear"):
                         def async_clear_mutations():
-                            self.fetch_islepilot("/commands", method="POST", body_data={
+                            res = self.fetch_islepilot("/commands", method="POST", body_data={
                                 "action": "mutations",
                                 "steamId": sid_str,
+                                "clear": True,
+                                "mutations": [],
                                 "active": ["None", "None", "None", "None"],
                                 "parent": ["None", "None", "None", "None"],
                                 "elderA": ["None", "None"],
                                 "elderB": ["None", "None"]
                             })
-                            time.sleep(0.3)
-                            self.fetch_islepilot("/commands", method="POST", body_data={"action": "mutations", "steamId": sid_str, "clear": True})
-                            self.fetch_islepilot("/commands", method="POST", body_data={"action": "mutations", "steamId": sid_str, "mutations": []})
+                            print(f"[mutations] Đã gửi lệnh xóa đột biến cho {sid_str}: {res}")
                         threading.Thread(target=async_clear_mutations, daemon=True).start()
                         self.send_json_response({"ok": True, "message": "Thành công"})
                         return
@@ -1072,46 +1072,17 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                         if 1 <= slot_num <= 4:
                             all_muts[cat][slot_num - 1] = m_name
 
-                    active_clean = [m for m in all_muts["active"] if m and m != "None"]
-
                     def async_push_mutations():
-                        # 1. Gửi cấu hình chuẩn IslePilot Apply mutations (2 slots cho elder)
-                        self.fetch_islepilot("/commands", method="POST", body_data={
+                        # Gửi duy nhất 1 lệnh chuẩn xác theo đúng đặc tả IslePilot
+                        res = self.fetch_islepilot("/commands", method="POST", body_data={
                             "action": "mutations",
                             "steamId": sid_str,
-                            "active": all_muts["active"],
-                            "parent": all_muts["parent"],
+                            "active": all_muts["active"][:4],
+                            "parent": all_muts["parent"][:4],
                             "elderA": all_muts["elderA"][:2],
                             "elderB": all_muts["elderB"][:2]
                         })
-                        time.sleep(0.3)
-
-                        # 2. Gửi cấu hình 4 nhóm trực tiếp (active, parent, elderA, elderB)
-                        self.fetch_islepilot("/commands", method="POST", body_data={
-                            "action": "mutations",
-                            "steamId": sid_str,
-                            "active": all_muts["active"],
-                            "parent": all_muts["parent"],
-                            "elderA": all_muts["elderA"],
-                            "elderB": all_muts["elderB"]
-                        })
-                        time.sleep(0.3)
-
-                        # 3. Gửi qua mutationSlots object
-                        self.fetch_islepilot("/commands", method="POST", body_data={
-                            "action": "mutations",
-                            "steamId": sid_str,
-                            "mutationSlots": all_muts
-                        })
-                        time.sleep(0.3)
-
-                        # 4. Gửi danh sách active mutations
-                        if active_clean:
-                            self.fetch_islepilot("/commands", method="POST", body_data={
-                                "action": "mutations",
-                                "steamId": sid_str,
-                                "mutations": active_clean
-                            })
+                        print(f"[mutations] Đã gửi lệnh cập nhật đột biến cho {sid_str}: {res}")
 
                     threading.Thread(target=async_push_mutations, daemon=True).start()
                     self.send_json_response({"ok": True, "message": "Thành công", "mutationSlots": all_muts})

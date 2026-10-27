@@ -1615,7 +1615,7 @@ const AdminPanel = {
                         <span>🧬</span> Live mutations
                       </h3>
                       <p style="font-size: 0.84rem; color: #9ca3af; margin: 4px 0 0 0;">
-                        Prefilled with the dino's current mutations. Overwrites all slots on apply; empty slots are cleared.
+                        Prefilled with the dino's current mutations. Overwrites all slots on apply; empty slots are cleared.<br><span style="color: #fb923c; font-size: 0.8rem; font-weight: 600;">💡 Lưu ý: Máy chủ xử lý lệnh trong 4-8s. Nếu người chơi đang online trong game, cần mở lại bảng Character Menu (Tab/Insert) hoặc Safelog/Re-join để game đồng bộ giao diện hiển thị.</span>
                       </p>
                     </div>
                     <span style="font-size: 0.75rem; color: #fb923c; background: rgba(249, 115, 22, 0.15); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(249, 115, 22, 0.35); font-weight: 700;">
@@ -2262,6 +2262,13 @@ const AdminPanel = {
   },
 
   async modApplyAllMutations(steamId) {
+    const btn = document.querySelector('#mod-tab-mutations .btn-primary');
+    const oldHtml = btn ? btn.innerHTML : '';
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<span>⏳</span> Đang lưu & áp dụng vào game...';
+    }
+
     const categories = ['active', 'parent', 'elderA', 'elderB'];
     const payloadSlots = {
       active: [],
@@ -2278,37 +2285,54 @@ const AdminPanel = {
       }
     });
 
+    this.currentMutations = JSON.parse(JSON.stringify(payloadSlots));
+
     const ok = await this.executeCommand('mutations', steamId, {
       active: payloadSlots.active,
       parent: payloadSlots.parent,
       elderA: payloadSlots.elderA,
       elderB: payloadSlots.elderB,
       mutationSlots: payloadSlots
-    });
+    }, true);
 
     if (ok) {
-      this.activeModalTab = 'mutations';
-      await this.openModerationModal(steamId);
-      this.switchModalTab('mutations');
+      this.showNotification('Thành công: Đã gửi lệnh cập nhật đột biến vào game! Vui lòng đợi vài giây...', true);
+      setTimeout(async () => {
+        this.activeModalTab = 'mutations';
+        await this.openModerationModal(steamId);
+        this.switchModalTab('mutations');
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = oldHtml;
+        }
+      }, 4500);
+    } else {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = oldHtml;
+      }
     }
   },
 
   async modClearAllMutations(steamId) {
     if (!confirm('Bạn có chắc chắn muốn xóa toàn bộ đột biến gen của khủng long này?')) return;
-    this.currentMutations = {
-      active: ['None', 'None', 'None', 'None'],
-      parent: ['None', 'None', 'None', 'None'],
-      elderA: ['None', 'None', 'None', 'None'],
-      elderB: ['None', 'None', 'None', 'None']
-    };
     const ok = await this.executeCommand('mutations', steamId, {
       clear: true,
       mutations: []
-    });
+    }, true);
     if (ok) {
-      this.activeModalTab = 'mutations';
-      await this.openModerationModal(steamId);
-      this.switchModalTab('mutations');
+      this.currentMutations = {
+        active: ['None', 'None', 'None', 'None'],
+        parent: ['None', 'None', 'None', 'None'],
+        elderA: ['None', 'None', 'None', 'None'],
+        elderB: ['None', 'None', 'None', 'None']
+      };
+      this.showNotification('Thành công: Đã gửi lệnh xóa đột biến trên máy chủ!', true);
+      setTimeout(async () => {
+        this.activeModalTab = 'mutations';
+        await this.openModerationModal(steamId);
+        this.switchModalTab('mutations');
+      }, 4500);
     }
   },
 
