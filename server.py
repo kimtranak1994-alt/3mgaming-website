@@ -1014,20 +1014,15 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                             base = v
                             break
                     is_prime = bool(p_info.get("isPrimeElder") or p_info.get("primeEligible"))
-                    max_h = float(p_info.get("maxHealth") or (base.get("prime_hp") if is_prime else base.get("hp")) or params.get("maxHealth") or 10000)
-                    max_hu = float(p_info.get("maxHunger") or base.get("hunger") or params.get("maxHunger") or 4000)
+                    cur_growth = float(p_info.get("growth") or 1.0)
+                    base_hp = (base.get("prime_hp") if is_prime else base.get("hp")) or 10000
+                    calc_max_hp = base_hp * max(0.1, cur_growth)
+                    max_h = float(p_info.get("maxHealth") or params.get("maxHealth") or calc_max_hp)
+                    max_hu = float(p_info.get("maxHunger") or params.get("maxHunger") or base.get("hunger") or 4000)
                     max_t = float(p_info.get("maxThirst") or params.get("maxThirst") or 1000)
 
-                    # 1. Growth 1.0 (trưởng thành 100%)
-                    self.fetch_islepilot("/commands", method="POST", body_data={
-                        "action": "setgrowth",
-                        "steamId": str(target_steam_id),
-                        "growth": 1.0,
-                        "frozen": False
-                    })
-                    time.sleep(0.1)
-
-                    # 2. Sinh lực tối đa (Health, Hunger, Thirst, Bleed=0)
+                    # KHÔNG thay đổi Growth % khi Heal (giữ nguyên độ tuổi khủng long hiện tại)
+                    # 1. Sinh lực tối đa (Health, Hunger, Thirst, Bleed=0)
                     res = self.fetch_islepilot("/commands", method="POST", body_data={
                         "action": "setstats",
                         "steamId": str(target_steam_id),

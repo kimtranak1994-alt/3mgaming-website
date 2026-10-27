@@ -2271,7 +2271,7 @@ const AdminPanel = {
     const curHu = maxHu || 3086;
     const curT = maxT || 1000;
 
-    // Cập nhật giao diện tức thì 100% full
+    // Cập nhật giao diện tức thì: Hồi Máu, Đói, Nước, Stamina, Dinh dưỡng (KHÔNG CHẠM GROWTH %)
     const hbVal = document.getElementById('mod-bar-val-health');
     const hbFill = document.getElementById('mod-bar-fill-health');
     if (hbVal) hbVal.textContent = `${curH} / ${curH}`;
@@ -2287,12 +2287,7 @@ const AdminPanel = {
     if (tbVal) tbVal.textContent = `${curT} / ${curT}`;
     if (tbFill) tbFill.style.width = '100%';
 
-    const gbVal = document.getElementById('mod-bar-val-growth');
-    const gbFill = document.getElementById('mod-bar-fill-growth');
-    if (gbVal) gbVal.textContent = '100%';
-    if (gbFill) gbFill.style.width = '100%';
-
-    // Cập nhật các ô input
+    // Cập nhật các ô input (giữ nguyên Growth % hiện tại của khủng long)
     const inHp = document.getElementById('mod-val-health');
     if (inHp) inHp.value = curH;
     const inHg = document.getElementById('mod-val-hunger');
@@ -2303,8 +2298,8 @@ const AdminPanel = {
     if (inBl) inBl.value = 0;
     const inSt = document.getElementById('mod-val-stamina');
     if (inSt) inSt.value = 100;
-    const inGr = document.getElementById('mod-val-growth');
-    if (inGr) inGr.value = 100;
+    // KHÔNG thay đổi inGr.value để bảo toàn Growth %
+
     const inNa = document.getElementById('mod-val-nutr-a');
     if (inNa) inNa.value = 100;
     const inNb = document.getElementById('mod-val-nutr-b');
