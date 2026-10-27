@@ -474,51 +474,7 @@ const Garage = {
 
 
 
-          <!-- Ô Đột Biến Gen Từ Server -->
 
-          ${validMutations.length > 0 ? `
-
-            <div class="dino-mutations-box">
-
-              <div class="mutations-header">🧬 Đột Biến Gen (${validMutations.length}):</div>
-
-              <div class="mutations-list">
-
-                ${validMutations.map(m => {
-
-                  const dict = {
-
-                    "Hemomania": { name: "Cuồng Huyết (Hemomania)", icon: "🩸" },
-
-                    "Osteosclerosis": { name: "Xương Cốt Thép (Osteosclerosis)", icon: "🦴" },
-
-                    "Epidermal Fibrosis": { name: "Da Xơ Hóa (Epidermal Fibrosis)", icon: "🛡️" },
-
-                    "Gastronomic Regeneration": { name: "Hấp Thụ Nhanh (Gastronomic Regeneration)", icon: "🧬" },
-
-                    "Photosynthetic Regeneration": { name: "Quang Hợp Hồi Phục (Photosynthetic)", icon: "🌱" },
-
-                    "Accelerated Prey Drive": { name: "Tăng Tốc Săn Mồi (Prey Drive)", icon: "⚡" },
-
-                    "Nocturnal": { name: "Thích Nghi Đêm (Nocturnal)", icon: "🌙" },
-
-                    "Social Behavior": { name: "Tập Tính Bầy Đàn (Social)", icon: "🐾" },
-
-                    "Congenital Hypoalgesia": { name: "Giảm Đau Bẩm Sinh", icon: "🛡️" }
-
-                  };
-
-                  const item = dict[m] || { name: m, icon: "🧬" };
-
-                  return `<div class="mutation-tag"><span>${item.icon} <b>${item.name}</b></span> <span style="color: var(--accent); font-size: 0.7rem;">Kích hoạt</span></div>`;
-
-                }).join('')}
-
-              </div>
-
-            </div>
-
-          ` : ''}
 
 
 

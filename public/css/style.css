@@ -1089,6 +1089,7 @@ body:has(#view-admin.active) .main-wrapper,
 
 /* Dino Mutations Box */
 .dino-mutations-box {
+  display: none !important;
   background: rgba(7, 19, 14, 0.75);
   border: 1px solid rgba(255, 42, 133, 0.35);
   border-radius: var(--radius-sm);
