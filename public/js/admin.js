@@ -1403,7 +1403,8 @@ const AdminPanel = {
         const maxHunger = Math.round(p.maxHunger || 100);
         const thirst = Math.round(p.thirst || 0);
         const maxThirst = Math.round(p.maxThirst || 1000);
-        const growthVal = Math.round((p.growth || 1.0) * 100);
+        const staminaVal = Math.round(typeof p.stamina === 'number' ? p.stamina : 1000);
+    const growthVal = Math.round((p.growth || 1.0) * 100);
         const isOnline = !!p.online;
 
         // Cập nhật thanh sinh lực trực quan
@@ -1555,10 +1556,10 @@ const AdminPanel = {
             <div class="mod-bar-item">
               <div class="mod-bar-label">
                 <span>Stamina</span>
-                <span class="mod-bar-val" style="color: #10b981;">100 / 100</span>
+                <span id="mod-bar-val-stamina" class="mod-bar-val" style="color: #10b981;">${staminaVal} / 1000</span>
               </div>
               <div class="mod-bar-track">
-                <div class="mod-bar-fill stamina" style="width: 100%; background: #10b981;"></div>
+                <div id="mod-bar-fill-stamina" class="mod-bar-fill stamina" style="width: ${Math.min(100, Math.round((staminaVal / 1000) * 100))}%; background: #10b981;"></div>
               </div>
             </div>
 
@@ -1603,8 +1604,8 @@ const AdminPanel = {
                       <input type="number" id="mod-val-bleed" value="0">
                     </div>
                     <div class="mod-field-box">
-                      <label>Stamina (0 - 100)</label>
-                      <input type="number" id="mod-val-stamina" value="100">
+                      <label>Stamina (0 - 1000)</label>
+                      <input type="number" id="mod-val-stamina" value="${staminaVal}" min="0" max="1000">
                     </div>
                     <div class="mod-field-box">
                       <label>Growth % (0 - 100%)</label>
@@ -2197,7 +2198,7 @@ const AdminPanel = {
     const health = parseFloat(document.getElementById('mod-val-health')?.value || 100);
     const hunger = parseFloat(document.getElementById('mod-val-hunger')?.value || 100);
     const thirst = parseFloat(document.getElementById('mod-val-thirst')?.value || 100);
-    const stamina = parseFloat(document.getElementById('mod-val-stamina')?.value || 100);
+    const stamina = parseFloat(document.getElementById('mod-val-stamina')?.value || 1000);
     const bleed = parseFloat(document.getElementById('mod-val-bleed')?.value || 0);
     const growth = parseFloat(document.getElementById('mod-val-growth')?.value || 100) / 100;
 
@@ -2224,6 +2225,11 @@ const AdminPanel = {
     const tbFill = document.getElementById('mod-bar-fill-thirst');
     if (tbVal) tbVal.textContent = `${Math.round(thirst)} / ${Math.round(maxT)}`;
     if (tbFill) tbFill.style.width = `${Math.min(100, Math.round((thirst / maxT) * 100))}%`;
+
+    const sbVal = document.getElementById('mod-bar-val-stamina');
+    const sbFill = document.getElementById('mod-bar-fill-stamina');
+    if (sbVal) sbVal.textContent = `${Math.round(stamina)} / 1000`;
+    if (sbFill) sbFill.style.width = `${Math.min(100, Math.round((stamina / 1000) * 100))}%`;
 
     const gbVal = document.getElementById('mod-bar-val-growth');
     const gbFill = document.getElementById('mod-bar-fill-growth');
@@ -2287,6 +2293,11 @@ const AdminPanel = {
     if (tbVal) tbVal.textContent = `${curT} / ${curT}`;
     if (tbFill) tbFill.style.width = '100%';
 
+    const sbVal = document.getElementById('mod-bar-val-stamina');
+    const sbFill = document.getElementById('mod-bar-fill-stamina');
+    if (sbVal) sbVal.textContent = '1000 / 1000';
+    if (sbFill) sbFill.style.width = '100%';
+
     // Cập nhật các ô input (giữ nguyên Growth % hiện tại của khủng long)
     const inHp = document.getElementById('mod-val-health');
     if (inHp) inHp.value = curH;
@@ -2297,7 +2308,7 @@ const AdminPanel = {
     const inBl = document.getElementById('mod-val-bleed');
     if (inBl) inBl.value = 0;
     const inSt = document.getElementById('mod-val-stamina');
-    if (inSt) inSt.value = 100;
+    if (inSt) inSt.value = 1000;
     // KHÔNG thay đổi inGr.value để bảo toàn Growth %
 
     const inNa = document.getElementById('mod-val-nutr-a');

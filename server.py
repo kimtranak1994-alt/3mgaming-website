@@ -1037,7 +1037,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     self.fetch_islepilot("/commands", method="POST", body_data={
                         "action": "setstamina",
                         "steamId": str(target_steam_id),
-                        "stamina": 100.0
+                        "stamina": 1000.0
                     })
                     time.sleep(0.1)
 
@@ -1067,7 +1067,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     return
 
                 elif action == "setstamina":
-                    cmd_body["stamina"] = float(params.get("stamina", 100.0))
+                    cmd_body["stamina"] = float(params.get("stamina", 1000.0))
                     res = self.fetch_islepilot("/commands", method="POST", body_data=cmd_body)
                     if res and (res.get("ok") is True or "commandId" in res):
                         self.send_json_response({"ok": True, "result": res})
@@ -1109,7 +1109,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                         self.fetch_islepilot("/commands", method="POST", body_data={
                             "action": "setstamina",
                             "steamId": str(target_steam_id),
-                            "stamina": float(params.get("stamina", 100.0))
+                            "stamina": float(params.get("stamina", 1000.0))
                         })
                         time.sleep(0.1)
 
