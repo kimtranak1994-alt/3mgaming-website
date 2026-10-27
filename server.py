@@ -757,7 +757,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "garage": combined_garage,
                 "skins": skins_info.get("skins", []),
                 "warnings": warnings_info.get("warnings", []),
-                "economy": economy_info
+                "economy": {}
             })
             return
 
