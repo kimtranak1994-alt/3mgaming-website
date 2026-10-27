@@ -1360,7 +1360,7 @@ const AdminPanel = {
         const u = JSON.parse(localStorage.getItem('steam_user') || 'null');
         const adminSid = (u && u.steamId) ? u.steamId : '76561199175571899';
         const adminPass = localStorage.getItem('admin_passcode') || 'admin3m';
-        const res = await fetch(`/api/admin/player-detail?steam_id=${steamId}&admin_steam_id=${adminSid}&passcode=${adminPass}&_t=${Date.now()}`);
+        const res = await fetch(`/api/admin/player-detail?steam_id=${steamId}&admin_steam_id=${adminSid}&passcode=${adminPass}&vitals_only=1&_t=${Date.now()}`);
         if (!res.ok) return;
         const data = await res.json();
         if (!data.ok || !data.player) return;
@@ -1375,7 +1375,7 @@ const AdminPanel = {
         const growthVal = Math.round((p.growth || 1.0) * 100);
         const isOnline = !!p.online;
 
-        // Cập nhật thanh sinh lực trực tiếp
+        // Cập nhật thanh sinh lực trực quan
         const hbVal = document.getElementById('mod-bar-val-health');
         const hbFill = document.getElementById('mod-bar-fill-health');
         if (hbVal) hbVal.textContent = `${health} / ${maxHealth}`;
@@ -1396,29 +1396,6 @@ const AdminPanel = {
         if (gbVal) gbVal.textContent = `${growthVal}%`;
         if (gbFill) gbFill.style.width = `${Math.min(100, growthVal)}%`;
 
-        if (!isTyping) {
-          const inHp = document.getElementById('mod-val-health');
-          if (inHp) {
-            inHp.value = health;
-            const lHp = inHp.closest('.mod-field-box')?.querySelector('label');
-            if (lHp) lHp.textContent = `Health (max ${maxHealth})`;
-          }
-          const inHg = document.getElementById('mod-val-hunger');
-          if (inHg) {
-            inHg.value = hunger;
-            const lHg = inHg.closest('.mod-field-box')?.querySelector('label');
-            if (lHg) lHg.textContent = `Hunger (max ${maxHunger})`;
-          }
-          const inTh = document.getElementById('mod-val-thirst');
-          if (inTh) {
-            inTh.value = thirst;
-            const lTh = inTh.closest('.mod-field-box')?.querySelector('label');
-            if (lTh) lTh.textContent = `Thirst (max ${maxThirst})`;
-          }
-          const inGr = document.getElementById('mod-val-growth');
-          if (inGr) inGr.value = growthVal;
-        }
-
         const specBadge = document.getElementById('mod-badge-species');
         if (specBadge) {
           specBadge.textContent = `${p.species || 'Unknown'} ${p.female ? '♀ Female' : '♂ Male'}`;
@@ -1429,7 +1406,7 @@ const AdminPanel = {
           statusBadge.textContent = isOnline ? '🟢 ONLINE' : '⚫ OFFLINE';
         }
       } catch (err) {}
-    }, 3500);
+    }, 8000);
   },
 
   renderModerationModalContent(p, garage = [], skins = [], warnings = []) {
@@ -2197,23 +2174,20 @@ const AdminPanel = {
     const prot = parseFloat(document.getElementById('mod-val-nutr-b')?.value || 100);
     const fat = parseFloat(document.getElementById('mod-val-nutr-y')?.value || 100);
 
-    // 1. Áp dụng sinh lực toàn diện (Health, Hunger, Thirst, Stamina, Bleed, Growth) trong 1 lệnh duy nhất
+    // Gửi toàn bộ thông số trong 1 lệnh duy nhất lên server để server xử lý tuần tự chuẩn IslePilot
     const ok = await this.executeCommand('setstats', steamId, {
       health,
       hunger,
       thirst,
       stamina,
       bleed,
-      growth
+      growth,
+      carb,
+      protein: prot,
+      lipid: fat
     });
-
-    // 2. Cập nhật 3 dưỡng chất dinh dưỡng A B Y (Chuẩn IslePilot API: carb, protein, lipid)
-    if (document.getElementById('mod-val-nutr-a')) {
-      await this.executeCommand('setnutrition', steamId, {
-        carb: carb,
-        protein: prot,
-        lipid: fat
-      }, true);
+    if (ok) {
+      setTimeout(() => this.openPlayerModerationModal(steamId, true), 1200);
     }
   },
 
@@ -2236,20 +2210,13 @@ const AdminPanel = {
   },
 
   async modHeal(steamId, maxH, maxHu, maxT) {
-    const ok = await this.executeCommand('setstats', steamId, {
-      health: maxH || 10000,
-      hunger: maxHu || 4000,
-      thirst: maxT || 1000,
-      stamina: 100,
-      bleed: 0,
-      growth: 1.0
+    const ok = await this.executeCommand('heal', steamId, {
+      maxHealth: maxH,
+      maxHunger: maxHu,
+      maxThirst: maxT
     });
     if (ok) {
-      await this.executeCommand('setnutrition', steamId, {
-        carbohydrate: 100,
-        protein: 100,
-        fat: 100
-      }, true);
+      setTimeout(() => this.openPlayerModerationModal(steamId, true), 1200);
     }
   },
 

@@ -692,6 +692,11 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             if not target_steam_id:
                 self.send_json_response({"ok": False, "error": "Missing steam_id"}, status=400)
                 return
+
+            if "vitals_only" in self.path:
+                player_info = self.fetch_islepilot(f"/players/{target_steam_id}") or {}
+                self.send_json_response({"ok": True, "player": player_info})
+                return
             with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
                 f_player = executor.submit(self.fetch_islepilot, f"/players/{target_steam_id}")
                 f_garage = executor.submit(self.fetch_islepilot, f"/players/{target_steam_id}/garage")
@@ -1000,18 +1005,82 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 if target_steam_id:
                     cmd_body["steamId"] = str(target_steam_id)
                     
-                if action == "setgrowth":
-                    cmd_body["growth"] = float(params.get("growth", 1.0))
+                if action == "heal":
+                    p_info = self.fetch_islepilot(f"/players/{target_steam_id}") or {}
+                    spec = (p_info.get("species") or "").lower()
+                    base = {"hp": 3000, "prime_hp": 4100, "hunger": 1500, "thirst": 1000}
+                    for k, v in SPECIES_BASE_STATS.items():
+                        if k in spec:
+                            base = v
+                            break
+                    is_prime = bool(p_info.get("isPrimeElder") or p_info.get("primeEligible"))
+                    max_h = float(params.get("maxHealth") or p_info.get("maxHealth") or (base.get("prime_hp") if is_prime else base.get("hp")) or 10000)
+                    max_hu = float(params.get("maxHunger") or p_info.get("maxHunger") or base.get("hunger") or 4000)
+                    max_t = float(params.get("maxThirst") or p_info.get("maxThirst") or 1000)
+
+                    # 1. Growth 1.0 (trưởng thành 100%)
+                    self.fetch_islepilot("/commands", method="POST", body_data={
+                        "action": "setgrowth",
+                        "steamId": str(target_steam_id),
+                        "growth": 1.0,
+                        "frozen": False
+                    })
+                    time.sleep(0.1)
+
+                    # 2. Sinh lực tối đa (Health, Hunger, Thirst, Bleed=0)
+                    res = self.fetch_islepilot("/commands", method="POST", body_data={
+                        "action": "setstats",
+                        "steamId": str(target_steam_id),
+                        "health": max_h,
+                        "hunger": max_hu,
+                        "thirst": max_t,
+                        "bleed": 0.0
+                    })
+                    time.sleep(0.1)
+
+                    # 3. Stamina 100%
+                    self.fetch_islepilot("/commands", method="POST", body_data={
+                        "action": "setstamina",
+                        "steamId": str(target_steam_id),
+                        "stamina": 100.0
+                    })
+                    time.sleep(0.1)
+
+                    # 4. Nutrition A-B-Y 100%
+                    self.fetch_islepilot("/commands", method="POST", body_data={
+                        "action": "setnutrition",
+                        "steamId": str(target_steam_id),
+                        "carb": 100.0,
+                        "protein": 100.0,
+                        "lipid": 100.0
+                    })
+
+                    self.send_json_response({"ok": True, "message": "Hồi phục toàn diện thành công", "result": res})
+                    return
+
+                elif action == "setgrowth":
+                    g_val = float(params.get("growth", 1.0))
+                    if g_val > 1.0: g_val = g_val / 100.0
+                    cmd_body["growth"] = g_val
                     cmd_body["frozen"] = bool(params.get("frozen", False))
-                elif action == "setstats":
-                    cmd_body["health"] = float(params.get("health", 100))
-                    cmd_body["hunger"] = float(params.get("hunger", 100))
-                    cmd_body["thirst"] = float(params.get("thirst", 100))
-                    cmd_body["stamina"] = float(params.get("stamina", 100))
-                    if "bleed" in params:
-                        cmd_body["bleed"] = float(params.get("bleed", 0))
-                    if "growth" in params:
-                        cmd_body["growth"] = float(params.get("growth", 1.0))
+                    res = self.fetch_islepilot("/commands", method="POST", body_data=cmd_body)
+                    if res and (res.get("ok") is True or "commandId" in res):
+                        self.send_json_response({"ok": True, "result": res})
+                    else:
+                        err_msg = (res.get("error") if res else None) or "Lệnh thất bại"
+                        self.send_json_response({"ok": False, "error": err_msg}, status=400)
+                    return
+
+                elif action == "setstamina":
+                    cmd_body["stamina"] = float(params.get("stamina", 100.0))
+                    res = self.fetch_islepilot("/commands", method="POST", body_data=cmd_body)
+                    if res and (res.get("ok") is True or "commandId" in res):
+                        self.send_json_response({"ok": True, "result": res})
+                    else:
+                        err_msg = (res.get("error") if res else None) or "Lệnh thất bại"
+                        self.send_json_response({"ok": False, "error": err_msg}, status=400)
+                    return
+
                 elif action == "setnutrition":
                     carb_val = float(params.get("carb", params.get("carbohydrate", params.get("s1", params.get("a", 100)))))
                     prot_val = float(params.get("protein", params.get("s2", params.get("b", 100))))
@@ -1019,6 +1088,63 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     cmd_body["carb"] = carb_val
                     cmd_body["protein"] = prot_val
                     cmd_body["lipid"] = lipid_val
+                    res = self.fetch_islepilot("/commands", method="POST", body_data=cmd_body)
+                    if res and (res.get("ok") is True or "commandId" in res):
+                        self.send_json_response({"ok": True, "result": res})
+                    else:
+                        err_msg = (res.get("error") if res else None) or "Lệnh thất bại"
+                        self.send_json_response({"ok": False, "error": err_msg}, status=400)
+                    return
+
+                elif action == "setstats":
+                    # 1. Growth nếu có truyền
+                    if "growth" in params:
+                        g_val = float(params.get("growth", 1.0))
+                        if g_val > 1.0: g_val = g_val / 100.0
+                        self.fetch_islepilot("/commands", method="POST", body_data={
+                            "action": "setgrowth",
+                            "steamId": str(target_steam_id),
+                            "growth": g_val,
+                            "frozen": False
+                        })
+                        time.sleep(0.1)
+
+                    # 2. Stamina nếu có truyền
+                    if "stamina" in params:
+                        self.fetch_islepilot("/commands", method="POST", body_data={
+                            "action": "setstamina",
+                            "steamId": str(target_steam_id),
+                            "stamina": float(params.get("stamina", 100.0))
+                        })
+                        time.sleep(0.1)
+
+                    # 3. Nutrition nếu có truyền
+                    if any(k in params for k in ["carb", "protein", "lipid", "fat", "carbohydrate", "nutrA", "nutrB", "nutrY"]):
+                        c_val = float(params.get("carb", params.get("carbohydrate", params.get("nutrA", 100))))
+                        p_val = float(params.get("protein", params.get("nutrB", 100)))
+                        l_val = float(params.get("lipid", params.get("fat", params.get("nutrY", 100))))
+                        self.fetch_islepilot("/commands", method="POST", body_data={
+                            "action": "setnutrition",
+                            "steamId": str(target_steam_id),
+                            "carb": c_val,
+                            "protein": p_val,
+                            "lipid": l_val
+                        })
+                        time.sleep(0.1)
+
+                    cmd_body["health"] = float(params.get("health", 100))
+                    cmd_body["hunger"] = float(params.get("hunger", 100))
+                    cmd_body["thirst"] = float(params.get("thirst", 100))
+                    if "bleed" in params:
+                        cmd_body["bleed"] = float(params.get("bleed", 0))
+
+                    res = self.fetch_islepilot("/commands", method="POST", body_data=cmd_body)
+                    if res and (res.get("ok") is True or "commandId" in res):
+                        self.send_json_response({"ok": True, "result": res})
+                    else:
+                        err_msg = (res.get("error") if res else None) or "Lệnh thất bại"
+                        self.send_json_response({"ok": False, "error": err_msg}, status=400)
+                    return
                 elif action == "mutations":
                     sid_str = str(target_steam_id)
                     # Xóa toàn bộ đột biến gen
