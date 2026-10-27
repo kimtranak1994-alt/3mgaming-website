@@ -5044,7 +5044,7 @@ const Carcass = {
 
       if (user) {
 
-        hintEl.innerHTML = `Đã đăng nhập: <b style="color: #00f076;">${user.personaName || user.steamId}</b>. Sẵn sàng nhận xác trong game.`;
+        hintEl.innerHTML = `Đã đăng nhập: <b style="color: #00f076;">${user.personaName || user.steamId}</b>. Bấm <b>"Mua"</b> để mở trang thả xác IslePilot và nhận xác rơi trước mặt bạn trong game.`;
 
       } else {
 
@@ -5280,75 +5280,10 @@ const Carcass = {
 
 
 
-  async actionDrop(offerId, name) {
-    if (Date.now() < this.cooldownEnd) {
-      const remaining = Math.ceil((this.cooldownEnd - Date.now()) / 1000);
-      App.showToast(`⏱️ Mỗi 300 giây mua được một lần. Vui lòng chờ ${remaining} giây!`);
-      return;
-    }
-
-    const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
-    if (!user) {
-      App.showToast("⚠️ Vui lòng đăng nhập bằng Steam để mua xác!");
-      setTimeout(() => {
-        if (confirm("Bạn cần đăng nhập bằng Steam để mua xác. Bạn có muốn chuyển đến trang đăng nhập Steam không?")) {
-          window.location.href = '/api/player/steam/login?redirect=' + encodeURIComponent(window.location.pathname + '#carcass');
-        }
-      }, 300);
-      return;
-    }
-
-    const steamId = user.steamId;
-    const btn = document.getElementById(`carcass-btn-${offerId}`);
-    if (btn) {
-      btn.disabled = true;
-      btn.textContent = '⏳ Đang xử lý...';
-    }
-
-    App.showToast("⏳ Đang gửi yêu cầu thả xác tới máy chủ IslePilot...");
-
-    try {
-      const res = await fetch('/api/server/carcass', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ offerId, steam_id: steamId })
-      });
-      const data = await res.json();
-
-      if (data.success || data.ok) {
-        App.showToast(data.message || "🎉 Mua xác thành công! Xác sẽ rơi ngay trước mặt bạn trong game.");
-        this.cooldownEnd = Date.now() + 300000;
-        this.startCooldownInterval();
-      } else {
-        const errMsg = data.message || data.error || "Thả xác thất bại!";
-        App.showToast(`❌ ${errMsg}`);
-
-        if (btn) {
-          btn.disabled = false;
-          btn.textContent = 'Mua';
-        }
-
-        // Nếu thiếu scope carcass:write trên IslePilot Token hoặc có direct_url
-        if (data.error_code === 'SCOPE_MISSING' || data.direct_url) {
-          setTimeout(() => {
-            if (confirm(`⚠️ Thông báo từ IslePilot:
-
-${errMsg}
-
-Bạn có muốn mở trang gốc IslePilot (3mgaming.islepilot.eu/carcass) để nhận xác ngay lập tức không?`)) {
-              window.open(data.direct_url || "https://3mgaming.islepilot.eu/carcass", "_blank");
-            }
-          }, 400);
-        }
-      }
-    } catch (e) {
-      console.error("Lỗi mua carcass:", e);
-      App.showToast("❌ Lỗi kết nối khi gửi yêu cầu thả xác!");
-      if (btn) {
-        btn.disabled = false;
-        btn.textContent = 'Mua';
-      }
-    }
+  actionDrop(offerId, name) {
+    const displayName = name || 'Carcass';
+    App.showToast(`🥩 Đang mở trang thả xác IslePilot để nhận ${displayName}...`);
+    window.open('https://3mgaming.islepilot.eu/carcass', '_blank');
   }
 };
 

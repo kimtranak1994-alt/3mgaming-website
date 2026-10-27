@@ -4051,77 +4051,13 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
     def handle_carcass(self):
         try:
-            length = int(self.headers.get("Content-Length", 0))
-            payload = json.loads(self.rfile.read(length).decode("utf-8")) if length > 0 else {}
-            offer_id = payload.get("offerId") or payload.get("offer_id") or "omv572un0"
-            steam_id = payload.get("steam_id") or self.get_active_steam_id()
-
-            if not steam_id:
-                self.send_json_response({
-                    "success": False,
-                    "ok": False,
-                    "message": "Vui lòng đăng nhập Steam trước khi nhận xác!"
-                }, 401)
-                return
-
-            # Kiểm tra xem người chơi có đang online trong game không
-            try:
-                online_res = self.fetch_islepilot("/players")
-                if online_res and "players" in online_res:
-                    online_ids = [str(p.get("steamId")) for p in online_res.get("players", [])]
-                    if str(steam_id) not in online_ids:
-                        self.send_json_response({
-                            "success": False,
-                            "ok": False,
-                            "message": "⚠️ Bạn phải online trong game (đang vào server và điều khiển khủng long) thì xác mới rơi tới bạn được!"
-                        }, 400)
-                        return
-            except Exception as e:
-                print(f"[Check Online Error] {e}")
-
-            # Gọi chính xác API chuẩn của IslePilot: POST /players/{steamId}/carcass
-            res = self.fetch_islepilot(f"/players/{steam_id}/carcass", method="POST", body_data={"offerId": offer_id})
-
-            if res and (res.get("ok") is True or res.get("success") is True or "commandId" in res):
-                self.send_json_response({
-                    "success": True,
-                    "ok": True,
-                    "message": "🎉 Thả xác thành công! Xác khủng long sẽ rơi ngay trước mặt bạn trong game trong vài giây."
-                })
-                return
-
-            # Xử lý trường hợp API Key thiếu quyền carcass:write trên IslePilot Dashboard
-            if res and (res.get("code") == "SCOPE_MISSING" or "carcass:write" in str(res.get("error", ""))):
-                self.send_json_response({
-                    "success": False,
-                    "ok": False,
-                    "error_code": "SCOPE_MISSING",
-                    "direct_url": "https://3mgaming.islepilot.eu/carcass",
-                    "message": "Token API máy chủ hiện tại chưa được cấp quyền 'carcass:write' trên IslePilot Dashboard. Bạn có thể mở trực tiếp trang https://3mgaming.islepilot.eu/carcass để nhận ngay!"
-                }, 403)
-                return
-
-            err = res.get("error") if (res and isinstance(res, dict)) else "Không thể kết nối đến máy chủ IslePilot."
-            err_str = str(err).lower()
-
-            if "not online" in err_str or "online" in err_str:
-                msg = "⚠️ Bạn phải online trong game thì xác mới tới!"
-            elif "cooldown" in err_str or "300" in err_str:
-                msg = "⏱️ Mỗi 300 giây mua được một lần. Vui lòng chờ!"
-            elif "daily limit" in err_str:
-                msg = "⚠️ Bạn đã dùng hết lượt nhận xác trong ngày hôm nay!"
-            else:
-                msg = f"Máy chủ IslePilot phản hồi: {err}"
-
             self.send_json_response({
-                "success": False,
-                "ok": False,
+                "success": True,
+                "ok": True,
                 "direct_url": "https://3mgaming.islepilot.eu/carcass",
-                "message": msg
-            }, 400)
-
+                "message": "Đang chuyển tiếp tới trang thả xác trung gian IslePilot..."
+            })
         except Exception as e:
-            print(f"[Handle Carcass Error] {e}")
             self.send_json_response({"success": False, "ok": False, "message": f"Lỗi hệ thống: {e}"}, 500)
 
     def handle_quests(self):
