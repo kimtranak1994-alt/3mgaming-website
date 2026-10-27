@@ -1451,6 +1451,7 @@ const AdminPanel = {
     const maxHunger = Math.round(p.maxHunger || 4050);
     const thirst = Math.round(p.thirst || 0);
     const maxThirst = Math.round(p.maxThirst || 1000);
+    const staminaVal = Math.round(typeof p.stamina === 'number' ? p.stamina : 1000);
     const growthVal = Math.round((p.growth || 1.0) * 100);
     const balance = (p.wallet && typeof p.wallet.balance === 'number') ? p.wallet.balance : 8110;
     const prime = p.prime || {};
