@@ -24,6 +24,7 @@ import datetime
 
 import random
 import threading
+import concurrent.futures
 
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 
@@ -691,7 +692,17 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             if not target_steam_id:
                 self.send_json_response({"ok": False, "error": "Missing steam_id"}, status=400)
                 return
-            player_info = self.fetch_islepilot(f"/players/{target_steam_id}")
+            with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+                f_player = executor.submit(self.fetch_islepilot, f"/players/{target_steam_id}")
+                f_garage = executor.submit(self.fetch_islepilot, f"/players/{target_steam_id}/garage")
+                f_skins = executor.submit(self.fetch_islepilot, f"/players/{target_steam_id}/skins")
+                f_warnings = executor.submit(self.fetch_islepilot, f"/players/{target_steam_id}/warnings")
+
+                player_info = f_player.result() or {}
+                garage_info = f_garage.result() or {}
+                skins_info = f_skins.result() or {}
+                warnings_info = f_warnings.result() or {}
+
             if os.path.exists("admin_wallet_adjustments.json") and player_info and isinstance(player_info, dict):
                 try:
                     with open("admin_wallet_adjustments.json", "r", encoding="utf-8") as f:
@@ -713,10 +724,6 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                         "elderA": ["None", "None", "None", "None"],
                         "elderB": ["None", "None", "None", "None"]
                     }
-            garage_info = self.fetch_islepilot(f"/players/{target_steam_id}/garage") or {}
-            skins_info = self.fetch_islepilot(f"/players/{target_steam_id}/skins") or {}
-            warnings_info = self.fetch_islepilot(f"/players/{target_steam_id}/warnings") or {}
-            economy_info = self.fetch_islepilot(f"/players/{target_steam_id}/economy") or {}
 
             combined_garage = list(garage_info.get("garage", []))
             gift_file = "user_gift_dinos.json"

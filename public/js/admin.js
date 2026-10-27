@@ -486,21 +486,31 @@ const AdminPanel = {
     try {
       const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
       const adminSid = (user && user.steamId) ? user.steamId : '';
-      const param = adminSid ? `?steam_id=${adminSid}&admin_steam_id=${adminSid}` : '';
+      const param = adminSid ? `?steam_id=${adminSid}&admin_steam_id=${adminSid}&_t=${Date.now()}` : `?_t=${Date.now()}`;
       const res = await fetch(`/api/admin/players${param}`, {
         headers: { 'X-Admin-Steam-Id': adminSid }
       });
       if (res.ok) {
         const data = await res.json();
         let raw = data.players || [];
-        
-        // Dữ liệu từ server đã được tổng hợp từ Bảng Xếp Hạng & Live Players
-        // Người chơi Online đã được xếp ở phía trên, Offline ở phía dưới chuẩn xác
         this.players = raw;
         this.updateStatsCounters();
         this.renderPlayersList();
         this.renderVitalsTargetDropdown();
+
+        // Tự động đồng bộ danh sách người chơi mỗi 10 giây nếu đang ở tab Admin
+        if (!this.playerListTimer) {
+          this.playerListTimer = setInterval(() => {
+            if (!document.getElementById('mod-modal-overlay')) {
+              this.loadPlayers();
+            }
+          }, 10000);
+        }
       }
+    } catch (e) {
+      console.error(e);
+    }
+  }
     } catch (e) {
       console.error(e);
     }
@@ -1245,39 +1255,46 @@ const AdminPanel = {
     return await this.openPlayerModerationModal(steamId);
   },
 
-  async openPlayerModerationModal(steamId) {
+  async openPlayerModerationModal(steamId, keepTab = false) {
     if (!steamId || steamId === 'undefined' || steamId === 'null') {
       console.warn('openPlayerModerationModal: Invalid steamId', steamId);
       this.showNotification('Thất bại', false);
       return;
     }
-    this.closeModerationModal();
 
-    const overlay = document.createElement('div');
-    overlay.id = 'mod-modal-overlay';
-    overlay.className = 'mod-modal-overlay';
-    overlay.innerHTML = `
-      <div class="mod-modal-container">
-        <div class="mod-modal-header">
-          <div class="mod-breadcrumbs">
-            <span>3m gaming - low rules</span> &gt; <span>Players & Moderation</span> &gt; <span>Đang tải...</span>
+    const currentTab = keepTab ? (this.activeModalTab || 'stats') : 'stats';
+
+    if (!keepTab) {
+      this.closeModerationModal();
+      const overlay = document.createElement('div');
+      overlay.id = 'mod-modal-overlay';
+      overlay.className = 'mod-modal-overlay';
+      overlay.innerHTML = `
+        <div class="mod-modal-container">
+          <div class="mod-modal-header">
+            <div class="mod-breadcrumbs">
+              <span>3m gaming - low rules</span> &gt; <span>Players & Moderation</span> &gt; <span>Đang tải dữ liệu trực tiếp...</span>
+            </div>
+            <button class="mod-close-btn" onclick="window.AdminPanel.closeModerationModal()">✕</button>
           </div>
-          <button class="mod-close-btn" onclick="window.AdminPanel.closeModerationModal()">✕</button>
+          <div class="mod-modal-body" style="text-align: center; padding: 60px;">
+            <div class="spinner" style="margin: 0 auto 16px;"></div>
+            <p style="color: #9ca3af;">Đang tải dữ liệu thời gian thực từ IslePilot...</p>
+          </div>
         </div>
-        <div class="mod-modal-body" style="text-align: center; padding: 60px;">
-          <div class="spinner" style="margin: 0 auto 16px;"></div>
-          <p style="color: #9ca3af;">Đang tải dữ liệu chi tiết người chơi từ IslePilot...</p>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(overlay);
+      `;
+      document.body.appendChild(overlay);
+    } else {
+      const spin = document.getElementById('mod-sync-spinner');
+      if (spin) spin.style.animation = 'spin 1s linear infinite';
+    }
 
     try {
       const u = JSON.parse(localStorage.getItem('steam_user') || 'null');
       const adminSid = (u && u.steamId) ? u.steamId : '76561199175571899';
       const adminPass = localStorage.getItem('admin_passcode') || 'admin3m';
       const adminParam = `&admin_steam_id=${adminSid}&passcode=${adminPass}`;
-      const res = await fetch(`/api/admin/player-detail?steam_id=${steamId}${adminParam}`, {
+      const res = await fetch(`/api/admin/player-detail?steam_id=${steamId}${adminParam}&_t=${Date.now()}`, {
         credentials: 'same-origin',
         headers: {
           'X-Admin-Steam-Id': adminSid,
@@ -1286,7 +1303,6 @@ const AdminPanel = {
       });
       const data = await res.json();
       if (!res.ok || !data.ok || !data.player) {
-        // Fallback profile if player list already has summary info
         const localP = (this.players || []).find(x => (x.steamId === steamId || x.steam_id === steamId));
         if (localP) {
           this.renderModerationModalContent({
@@ -1304,38 +1320,120 @@ const AdminPanel = {
           });
           return;
         }
-        this.showNotification('Thất bại', false);
+        this.showNotification('Thất bại khi lấy dữ liệu', false);
         this.closeModerationModal();
         return;
       }
       this.renderModerationModalContent(data.player, data.garage || [], data.skins || [], data.warnings || []);
+      if (keepTab) {
+        this.switchModalTab(currentTab);
+      }
+      this.startModalLiveSync(steamId);
     } catch (e) {
       console.error('Error fetching player detail:', e);
-      const localP = (this.players || []).find(x => (x.steamId === steamId || x.steam_id === steamId));
-      if (localP) {
-        this.renderModerationModalContent({
-          steamId: steamId,
-          name: localP.name || `Player_${String(steamId).slice(-4)}`,
-          species: localP.species || 'Chưa chọn',
-          health: localP.health || 10000,
-          maxHealth: localP.maxHealth || 10000,
-          hunger: localP.hunger || 3500,
-          maxHunger: localP.maxHunger || 4000,
-          thirst: localP.thirst || 900,
-          maxThirst: localP.maxThirst || 1000,
-          growth: localP.growth || 1.0,
-          wallet: { balance: 240 }
-        });
-      } else {
-        this.showNotification('Thất bại', false);
-        this.closeModerationModal();
-      }
+      this.showNotification('Lỗi kết nối máy chủ', false);
+      if (!keepTab) this.closeModerationModal();
     }
   },
 
   closeModerationModal() {
+    if (this.modSyncTimer) {
+      clearInterval(this.modSyncTimer);
+      this.modSyncTimer = null;
+    }
     const existing = document.getElementById('mod-modal-overlay');
     if (existing) existing.remove();
+  },
+
+  startModalLiveSync(steamId) {
+    if (this.modSyncTimer) {
+      clearInterval(this.modSyncTimer);
+      this.modSyncTimer = null;
+    }
+    this.modSyncTimer = setInterval(async () => {
+      const overlay = document.getElementById('mod-modal-overlay');
+      if (!overlay) {
+        clearInterval(this.modSyncTimer);
+        this.modSyncTimer = null;
+        return;
+      }
+      const activeEl = document.activeElement;
+      const isTyping = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'SELECT');
+
+      try {
+        const u = JSON.parse(localStorage.getItem('steam_user') || 'null');
+        const adminSid = (u && u.steamId) ? u.steamId : '76561199175571899';
+        const adminPass = localStorage.getItem('admin_passcode') || 'admin3m';
+        const res = await fetch(`/api/admin/player-detail?steam_id=${steamId}&admin_steam_id=${adminSid}&passcode=${adminPass}&_t=${Date.now()}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data.ok || !data.player) return;
+
+        const p = data.player;
+        const health = Math.round(p.health || 0);
+        const maxHealth = Math.round(p.maxHealth || 100);
+        const hunger = Math.round(p.hunger || 0);
+        const maxHunger = Math.round(p.maxHunger || 100);
+        const thirst = Math.round(p.thirst || 0);
+        const maxThirst = Math.round(p.maxThirst || 1000);
+        const growthVal = Math.round((p.growth || 1.0) * 100);
+        const isOnline = !!p.online;
+
+        // Cập nhật thanh sinh lực trực tiếp
+        const hbVal = document.getElementById('mod-bar-val-health');
+        const hbFill = document.getElementById('mod-bar-fill-health');
+        if (hbVal) hbVal.textContent = `${health} / ${maxHealth}`;
+        if (hbFill) hbFill.style.width = `${Math.min(100, Math.round((health / maxHealth) * 100))}%`;
+
+        const hubVal = document.getElementById('mod-bar-val-hunger');
+        const hubFill = document.getElementById('mod-bar-fill-hunger');
+        if (hubVal) hubVal.textContent = `${hunger} / ${maxHunger}`;
+        if (hubFill) hubFill.style.width = `${Math.min(100, Math.round((hunger / maxHunger) * 100))}%`;
+
+        const tbVal = document.getElementById('mod-bar-val-thirst');
+        const tbFill = document.getElementById('mod-bar-fill-thirst');
+        if (tbVal) tbVal.textContent = `${thirst} / ${maxThirst}`;
+        if (tbFill) tbFill.style.width = `${Math.min(100, Math.round((thirst / maxThirst) * 100))}%`;
+
+        const gbVal = document.getElementById('mod-bar-val-growth');
+        const gbFill = document.getElementById('mod-bar-fill-growth');
+        if (gbVal) gbVal.textContent = `${growthVal}%`;
+        if (gbFill) gbFill.style.width = `${Math.min(100, growthVal)}%`;
+
+        if (!isTyping) {
+          const inHp = document.getElementById('mod-val-health');
+          if (inHp) {
+            inHp.value = health;
+            const lHp = inHp.closest('.mod-field-box')?.querySelector('label');
+            if (lHp) lHp.textContent = `Health (max ${maxHealth})`;
+          }
+          const inHg = document.getElementById('mod-val-hunger');
+          if (inHg) {
+            inHg.value = hunger;
+            const lHg = inHg.closest('.mod-field-box')?.querySelector('label');
+            if (lHg) lHg.textContent = `Hunger (max ${maxHunger})`;
+          }
+          const inTh = document.getElementById('mod-val-thirst');
+          if (inTh) {
+            inTh.value = thirst;
+            const lTh = inTh.closest('.mod-field-box')?.querySelector('label');
+            if (lTh) lTh.textContent = `Thirst (max ${maxThirst})`;
+          }
+          const inGr = document.getElementById('mod-val-growth');
+          if (inGr) inGr.value = growthVal;
+        }
+
+        const specBadge = document.getElementById('mod-badge-species');
+        if (specBadge) {
+          specBadge.textContent = `${p.species || 'Unknown'} ${p.female ? '♀ Female' : '♂ Male'}`;
+        }
+        const statusBadge = document.getElementById('mod-badge-online');
+        if (statusBadge) {
+          statusBadge.className = `status-badge-mini ${isOnline ? 'online' : 'offline'}`;
+          statusBadge.textContent = isOnline ? '🟢 ONLINE' : '⚫ OFFLINE';
+        }
+      } catch (err) {}
+    }, 3500);
   },
 
   renderModerationModalContent(p, garage = [], skins = [], warnings = []) {
@@ -1382,14 +1480,19 @@ const AdminPanel = {
           <div class="mod-breadcrumbs">
             <span>3m gaming - low rules</span> &gt; <span>Players & Moderation</span> &gt; 
             <span class="mod-player-name-crumb">${p.name || 'Player'} (${p.steamId})</span>
-            <span class="status-badge-mini ${isOnline ? 'online' : 'offline'}" style="margin-left: 8px;">
+            <span id="mod-badge-online" class="status-badge-mini ${isOnline ? 'online' : 'offline'}" style="margin-left: 8px;">
               ${isOnline ? '🟢 ONLINE' : '⚫ OFFLINE'}
             </span>
-            <span class="status-badge-mini" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3);">
+            <span id="mod-badge-species" class="status-badge-mini" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3);">
               ${p.species || 'Unknown'} ${p.female ? '♀ Female' : '♂ Male'}
             </span>
           </div>
-          <button class="mod-close-btn" onclick="window.AdminPanel.closeModerationModal()" title="Đóng (Esc)">✕</button>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button class="btn-mod-dark" id="btn-mod-live-sync" onclick="window.AdminPanel.openPlayerModerationModal('${p.steamId}', true)" style="font-size: 0.8rem; padding: 5px 12px; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8; font-weight: 700; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;" title="Làm mới chỉ số trực tiếp từ máy chủ game IslePilot">
+              <span id="mod-sync-spinner">🔄</span> Đồng Bộ Trực Tiếp
+            </button>
+            <button class="mod-close-btn" onclick="window.AdminPanel.closeModerationModal()" title="Đóng (Esc)">✕</button>
+          </div>
         </div>
 
         <!-- Modal Subtab Navigation (Ghim cố định trên đỉnh, không bị che khuất khi cuộn) -->
@@ -1418,30 +1521,30 @@ const AdminPanel = {
             <div class="mod-bar-item">
               <div class="mod-bar-label">
                 <span>Health</span>
-                <span class="mod-bar-val" style="color: #06b6d4;">${health} / ${maxHealth}</span>
+                <span id="mod-bar-val-health" class="mod-bar-val" style="color: #06b6d4;">${health} / ${maxHealth}</span>
               </div>
               <div class="mod-bar-track">
-                <div class="mod-bar-fill health" style="width: ${Math.min(100, Math.round((health / maxHealth) * 100))}%;"></div>
+                <div id="mod-bar-fill-health" class="mod-bar-fill health" style="width: ${Math.min(100, Math.round((health / maxHealth) * 100))}%;"></div>
               </div>
             </div>
 
             <div class="mod-bar-item">
               <div class="mod-bar-label">
                 <span>Hunger</span>
-                <span class="mod-bar-val" style="color: #eab308;">${hunger} / ${maxHunger}</span>
+                <span id="mod-bar-val-hunger" class="mod-bar-val" style="color: #eab308;">${hunger} / ${maxHunger}</span>
               </div>
               <div class="mod-bar-track">
-                <div class="mod-bar-fill hunger" style="width: ${Math.min(100, Math.round((hunger / maxHunger) * 100))}%;"></div>
+                <div id="mod-bar-fill-hunger" class="mod-bar-fill hunger" style="width: ${Math.min(100, Math.round((hunger / maxHunger) * 100))}%;"></div>
               </div>
             </div>
 
             <div class="mod-bar-item">
               <div class="mod-bar-label">
                 <span>Thirst</span>
-                <span class="mod-bar-val" style="color: #38bdf8;">${thirst} / ${maxThirst}</span>
+                <span id="mod-bar-val-thirst" class="mod-bar-val" style="color: #38bdf8;">${thirst} / ${maxThirst}</span>
               </div>
               <div class="mod-bar-track">
-                <div class="mod-bar-fill thirst" style="width: ${Math.min(100, Math.round((thirst / maxThirst) * 100))}%;"></div>
+                <div id="mod-bar-fill-thirst" class="mod-bar-fill thirst" style="width: ${Math.min(100, Math.round((thirst / maxThirst) * 100))}%;"></div>
               </div>
             </div>
 
@@ -1458,10 +1561,10 @@ const AdminPanel = {
             <div class="mod-bar-item">
               <div class="mod-bar-label">
                 <span>Growth %</span>
-                <span class="mod-bar-val" style="color: #ec4899;">${growthVal}%</span>
+                <span id="mod-bar-val-growth" class="mod-bar-val" style="color: #ec4899;">${growthVal}%</span>
               </div>
               <div class="mod-bar-track">
-                <div class="mod-bar-fill growth" style="width: ${Math.min(100, growthVal)}%; background: linear-gradient(90deg, #ec4899, #f43f5e);"></div>
+                <div id="mod-bar-fill-growth" class="mod-bar-fill growth" style="width: ${Math.min(100, growthVal)}%; background: linear-gradient(90deg, #ec4899, #f43f5e);"></div>
               </div>
             </div>
           </div>
