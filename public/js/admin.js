@@ -1332,6 +1332,37 @@ const AdminPanel = {
     }
   },
 
+  async manualLiveSync(steamId) {
+    const btn = document.getElementById('btn-mod-live-sync');
+    const spin = document.getElementById('mod-sync-spinner');
+    if (spin) spin.style.animation = 'spin 1s linear infinite';
+    if (btn) btn.disabled = true;
+
+    try {
+      const u = JSON.parse(localStorage.getItem('steam_user') || 'null');
+      const adminSid = (u && u.steamId) ? u.steamId : '76561199175571899';
+      const adminPass = localStorage.getItem('admin_passcode') || 'admin3m';
+      const res = await fetch(`/api/admin/player-detail?steam_id=${steamId}&admin_steam_id=${adminSid}&passcode=${adminPass}&_t=${Date.now()}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.ok && data.player) {
+          const curTab = this.activeModalTab || 'stats';
+          this.renderModerationModalContent(data.player, data.garage || [], data.skins || [], data.warnings || []);
+          this.switchModalTab(curTab);
+          this.showNotification('Đã đồng bộ trực tiếp thành công!', true);
+        } else {
+          this.showNotification('Không lấy được dữ liệu mới nhất', false);
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      this.showNotification('Lỗi kết nối máy chủ', false);
+    } finally {
+      if (spin) spin.style.animation = '';
+      if (btn) btn.disabled = false;
+    }
+  },
+
   closeModerationModal() {
     if (this.modSyncTimer) {
       clearInterval(this.modSyncTimer);
@@ -1461,7 +1492,7 @@ const AdminPanel = {
             </span>
           </div>
           <div style="display: flex; align-items: center; gap: 8px;">
-            <button class="btn-mod-dark" id="btn-mod-live-sync" onclick="window.AdminPanel.openPlayerModerationModal('${p.steamId}', true)" style="font-size: 0.8rem; padding: 5px 12px; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8; font-weight: 700; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;" title="Làm mới chỉ số trực tiếp từ máy chủ game IslePilot">
+            <button class="btn-mod-dark" id="btn-mod-live-sync" onclick="window.AdminPanel.manualLiveSync('${p.steamId}')" style="font-size: 0.8rem; padding: 5px 12px; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8; font-weight: 700; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;" title="Làm mới chỉ số trực tiếp từ máy chủ game IslePilot">
               <span id="mod-sync-spinner">🔄</span> Đồng Bộ Trực Tiếp
             </button>
             <button class="mod-close-btn" onclick="window.AdminPanel.closeModerationModal()" title="Đóng (Esc)">✕</button>
@@ -2174,6 +2205,32 @@ const AdminPanel = {
     const prot = parseFloat(document.getElementById('mod-val-nutr-b')?.value || 100);
     const fat = parseFloat(document.getElementById('mod-val-nutr-y')?.value || 100);
 
+    const maxH = parseFloat(document.getElementById('mod-val-health')?.closest('.mod-field-box')?.querySelector('label')?.textContent.match(/\d+/)?.[0] || health);
+    const maxHu = parseFloat(document.getElementById('mod-val-hunger')?.closest('.mod-field-box')?.querySelector('label')?.textContent.match(/\d+/)?.[0] || hunger);
+    const maxT = parseFloat(document.getElementById('mod-val-thirst')?.closest('.mod-field-box')?.querySelector('label')?.textContent.match(/\d+/)?.[0] || thirst);
+
+    // Cập nhật tức thì thanh sinh lực (Optimistic UI)
+    const hbVal = document.getElementById('mod-bar-val-health');
+    const hbFill = document.getElementById('mod-bar-fill-health');
+    if (hbVal) hbVal.textContent = `${Math.round(health)} / ${Math.round(maxH)}`;
+    if (hbFill) hbFill.style.width = `${Math.min(100, Math.round((health / maxH) * 100))}%`;
+
+    const hubVal = document.getElementById('mod-bar-val-hunger');
+    const hubFill = document.getElementById('mod-bar-fill-hunger');
+    if (hubVal) hubVal.textContent = `${Math.round(hunger)} / ${Math.round(maxHu)}`;
+    if (hubFill) hubFill.style.width = `${Math.min(100, Math.round((hunger / maxHu) * 100))}%`;
+
+    const tbVal = document.getElementById('mod-bar-val-thirst');
+    const tbFill = document.getElementById('mod-bar-fill-thirst');
+    if (tbVal) tbVal.textContent = `${Math.round(thirst)} / ${Math.round(maxT)}`;
+    if (tbFill) tbFill.style.width = `${Math.min(100, Math.round((thirst / maxT) * 100))}%`;
+
+    const gbVal = document.getElementById('mod-bar-val-growth');
+    const gbFill = document.getElementById('mod-bar-fill-growth');
+    const growthPercent = Math.round(growth * 100);
+    if (gbVal) gbVal.textContent = `${growthPercent}%`;
+    if (gbFill) gbFill.style.width = `${Math.min(100, growthPercent)}%`;
+
     // Gửi toàn bộ thông số trong 1 lệnh duy nhất lên server để server xử lý tuần tự chuẩn IslePilot
     const ok = await this.executeCommand('setstats', steamId, {
       health,
@@ -2187,7 +2244,7 @@ const AdminPanel = {
       lipid: fat
     });
     if (ok) {
-      setTimeout(() => this.openPlayerModerationModal(steamId, true), 1200);
+      setTimeout(() => this.openPlayerModerationModal(steamId, true), 8000);
     }
   },
 
@@ -2210,13 +2267,58 @@ const AdminPanel = {
   },
 
   async modHeal(steamId, maxH, maxHu, maxT) {
+    const curH = maxH || 9350;
+    const curHu = maxHu || 3086;
+    const curT = maxT || 1000;
+
+    // Cập nhật giao diện tức thì 100% full
+    const hbVal = document.getElementById('mod-bar-val-health');
+    const hbFill = document.getElementById('mod-bar-fill-health');
+    if (hbVal) hbVal.textContent = `${curH} / ${curH}`;
+    if (hbFill) hbFill.style.width = '100%';
+
+    const hubVal = document.getElementById('mod-bar-val-hunger');
+    const hubFill = document.getElementById('mod-bar-fill-hunger');
+    if (hubVal) hubVal.textContent = `${Math.round(curHu)} / ${Math.round(curHu)}`;
+    if (hubFill) hubFill.style.width = '100%';
+
+    const tbVal = document.getElementById('mod-bar-val-thirst');
+    const tbFill = document.getElementById('mod-bar-fill-thirst');
+    if (tbVal) tbVal.textContent = `${curT} / ${curT}`;
+    if (tbFill) tbFill.style.width = '100%';
+
+    const gbVal = document.getElementById('mod-bar-val-growth');
+    const gbFill = document.getElementById('mod-bar-fill-growth');
+    if (gbVal) gbVal.textContent = '100%';
+    if (gbFill) gbFill.style.width = '100%';
+
+    // Cập nhật các ô input
+    const inHp = document.getElementById('mod-val-health');
+    if (inHp) inHp.value = curH;
+    const inHg = document.getElementById('mod-val-hunger');
+    if (inHg) inHg.value = Math.round(curHu);
+    const inTh = document.getElementById('mod-val-thirst');
+    if (inTh) inTh.value = curT;
+    const inBl = document.getElementById('mod-val-bleed');
+    if (inBl) inBl.value = 0;
+    const inSt = document.getElementById('mod-val-stamina');
+    if (inSt) inSt.value = 100;
+    const inGr = document.getElementById('mod-val-growth');
+    if (inGr) inGr.value = 100;
+    const inNa = document.getElementById('mod-val-nutr-a');
+    if (inNa) inNa.value = 100;
+    const inNb = document.getElementById('mod-val-nutr-b');
+    if (inNb) inNb.value = 100;
+    const inNy = document.getElementById('mod-val-nutr-y');
+    if (inNy) inNy.value = 100;
+
     const ok = await this.executeCommand('heal', steamId, {
-      maxHealth: maxH,
-      maxHunger: maxHu,
-      maxThirst: maxT
+      maxHealth: curH,
+      maxHunger: curHu,
+      maxThirst: curT
     });
     if (ok) {
-      setTimeout(() => this.openPlayerModerationModal(steamId, true), 1200);
+      setTimeout(() => this.openPlayerModerationModal(steamId, true), 8000);
     }
   },
 

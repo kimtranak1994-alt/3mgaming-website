@@ -1014,9 +1014,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                             base = v
                             break
                     is_prime = bool(p_info.get("isPrimeElder") or p_info.get("primeEligible"))
-                    max_h = float(params.get("maxHealth") or p_info.get("maxHealth") or (base.get("prime_hp") if is_prime else base.get("hp")) or 10000)
-                    max_hu = float(params.get("maxHunger") or p_info.get("maxHunger") or base.get("hunger") or 4000)
-                    max_t = float(params.get("maxThirst") or p_info.get("maxThirst") or 1000)
+                    max_h = float(p_info.get("maxHealth") or (base.get("prime_hp") if is_prime else base.get("hp")) or params.get("maxHealth") or 10000)
+                    max_hu = float(p_info.get("maxHunger") or base.get("hunger") or params.get("maxHunger") or 4000)
+                    max_t = float(p_info.get("maxThirst") or params.get("maxThirst") or 1000)
 
                     # 1. Growth 1.0 (trưởng thành 100%)
                     self.fetch_islepilot("/commands", method="POST", body_data={
@@ -2013,6 +2013,12 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             sep = "&" if "?" in endpoint else "?"
 
             endpoint = f"{endpoint}{sep}serverId={server_id}"
+
+        if method == "GET" and "_t=" not in endpoint:
+
+            sep = "&" if "?" in endpoint else "?"
+
+            endpoint = f"{endpoint}{sep}_t={int(time.time()*1000)}"
 
         url = f"{base_url}{endpoint}"
 
