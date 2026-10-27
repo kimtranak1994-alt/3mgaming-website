@@ -807,6 +807,12 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
             return
 
+        elif self.path == "/api/server/garage/delete" or self.path == "/api/server/garage/sell":
+
+            self.handle_garage_delete()
+
+            return
+
         elif self.path == "/api/server/garage/rename":
 
             try:
@@ -2985,6 +2991,93 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         except Exception as e:
 
             self.send_json_response({"success": False, "message": f"Lỗi hệ thống khi rút dino: {e}"}, 500)
+
+    def handle_garage_delete(self):
+
+        try:
+
+            length = int(self.headers.get("Content-Length", 0))
+
+            payload = json.loads(self.rfile.read(length).decode("utf-8")) if length > 0 else {}
+
+            dino_id = str(payload.get("dino_id") or payload.get("id") or "").strip()
+
+            steam_id = payload.get("steam_id") or self.get_active_steam_id()
+
+            if not dino_id:
+
+                self.send_json_response({"success": False, "ok": False, "message": "Thiếu mã khủng long (dino_id)!"}, 400)
+
+                return
+
+            if not steam_id:
+
+                self.send_json_response({"success": False, "ok": False, "message": "Vui lòng đăng nhập Steam trước khi xóa khủng long!"}, 401)
+
+                return
+
+            # 1. Kiểm tra xóa trong user_gift_dinos.json (nếu là khủng long gift do admin cấp)
+            gift_file = "user_gift_dinos.json"
+            deleted_from_gift = False
+            if os.path.exists(gift_file):
+                try:
+                    with open(gift_file, "r", encoding="utf-8") as f:
+                        gifts = json.load(f)
+                    user_gifts = gifts.get(str(steam_id), [])
+                    new_gifts = [g for g in user_gifts if str(g.get("id")) != dino_id]
+                    if len(new_gifts) != len(user_gifts):
+                        gifts[str(steam_id)] = new_gifts
+                        with open(gift_file, "w", encoding="utf-8") as f:
+                            json.dump(gifts, f, ensure_ascii=False, indent=2)
+                        deleted_from_gift = True
+                except Exception as e:
+                    print(f"[Garage Delete Gift Error] {e}")
+
+            # 2. Xóa tên tùy chỉnh nếu có trong custom_dino_names.json
+            try:
+                names_data = load_custom_names()
+                if dino_id in names_data:
+                    del names_data[dino_id]
+                    with open(CUSTOM_NAMES_FILE, "w", encoding="utf-8") as f:
+                        json.dump(names_data, f, ensure_ascii=False, indent=2)
+            except Exception:
+                pass
+
+            if deleted_from_gift:
+                self.send_json_response({"success": True, "ok": True, "message": "Đã xóa khủng long khỏi Gara thành công!"})
+                return
+
+            # 3. Gọi API thực tế của server IslePilot: POST /players/{steam_id}/garage/{dino_id}/sell
+            res = self.fetch_islepilot(f"/players/{steam_id}/garage/{dino_id}/sell", method="POST", body_data={})
+            if not res or (res.get("ok") is not True and "commandId" not in res and not res.get("success")):
+                # Dự phòng phương thức DELETE nếu server cấu hình RESTful
+                res_del = self.fetch_islepilot(f"/players/{steam_id}/garage/{dino_id}", method="DELETE")
+                if res_del and (res_del.get("ok") is True or "commandId" in res_del or res_del.get("success")):
+                    res = res_del
+
+            if not res or (res.get("ok") is not True and "commandId" not in res and not res.get("success")):
+                # Dự phòng phương thức POST /delete
+                res_del2 = self.fetch_islepilot(f"/players/{steam_id}/garage/{dino_id}/delete", method="POST", body_data={})
+                if res_del2 and (res_del2.get("ok") is True or "commandId" in res_del2 or res_del2.get("success")):
+                    res = res_del2
+
+            if res and (res.get("ok") is True or "commandId" in res or res.get("success") is True):
+                self.send_json_response({
+                    "success": True,
+                    "ok": True,
+                    "message": "Đã xóa khủng long khỏi Gara thành công!",
+                    "result": res
+                })
+                return
+
+            err_msg = res.get("error") if (res and isinstance(res, dict)) else "Không thể xóa khủng long từ máy chủ IslePilot."
+            if "Selling is disabled" in str(err_msg):
+                err_msg = "Tính năng Xóa/Bán khủng long đang tạm tắt trên máy chủ IslePilot (Selling is disabled). Vui lòng liên hệ Admin bật tính năng này trên IslePilot Dashboard!"
+            self.send_json_response({"success": False, "ok": False, "message": err_msg}, 400)
+
+        except Exception as e:
+            print(f"[Garage Delete Error] {e}")
+            self.send_json_response({"success": False, "ok": False, "message": f"Lỗi hệ thống khi xóa dino: {e}"}, 500)
 
     def handle_garage_store(self):
 

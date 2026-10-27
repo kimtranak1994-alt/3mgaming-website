@@ -748,17 +748,21 @@ body:has(#view-admin.active) .main-wrapper,
 .dino-actions {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .dino-actions button {
-  flex: 1;
-  padding: 8px 12px;
+  flex: 1 1 calc(33.333% - 6px);
+  min-width: 85px;
+  padding: 8px 10px;
   border-radius: var(--radius-sm);
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
   border: none;
   transition: var(--transition);
+  text-align: center;
+  white-space: nowrap;
 }
 
 .btn-spawn {
@@ -4113,4 +4117,19 @@ body[data-current-tab="admin"] .nav-links {
   color: var(--text-muted);
   text-align: center;
   line-height: 1.4;
+}
+
+/* Nút xóa khủng long trong Gara khách */
+.btn-delete {
+  background: rgba(239, 68, 68, 0.16) !important;
+  color: #f87171 !important;
+  border: 1px solid rgba(239, 68, 68, 0.45) !important;
+  transition: all 0.2s ease !important;
+}
+
+.btn-delete:hover {
+  background: rgba(239, 68, 68, 0.35) !important;
+  color: #ffffff !important;
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.45) !important;
 }
