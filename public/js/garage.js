@@ -552,6 +552,13 @@ const Garage = {
 
           </div>
 
+          <button type="button" class="btn-mutations-view" onclick="Garage.showMutationsModal('${dino.id}')" title="Xem chi tiết các đột biến gen đã cộng">
+
+            🔀 Đột biến
+
+          </button>
+
+
         </div>
 
       </div>
@@ -1118,6 +1125,152 @@ const Garage = {
 
     }
 
+  }
+
+
+  MUTATION_DICT: {
+    "Hemomania": { name: "Cuồng Huyết", icon: "🩸", desc: "Tăng mạnh lực cắn và tốc độ khi tấn công mục tiêu đang bị chảy máu." },
+    "Osteosclerosis": { name: "Xương Cốt Thép", icon: "🦴", desc: "Tăng mật độ và độ cứng xương, giảm tỷ lệ gãy chân và thời gian choáng." },
+    "Epidermal Fibrosis": { name: "Da Xơ Hóa", icon: "🛡️", desc: "Lớp da dày sừng hóa bảo vệ, giảm đáng kể sát thương vật lý nhận vào." },
+    "Gastronomic Regeneration": { name: "Hấp Thụ Nhanh", icon: "🧬", desc: "Hồi phục máu và thể lực nhanh chóng sau khi ăn no thức ăn phù hợp." },
+    "Photosynthetic Regeneration": { name: "Quang Hợp Hồi Phục", icon: "🌱", desc: "Tăng tốc độ tự hồi phục sức khỏe khi đứng dưới ánh nắng ban ngày." },
+    "Photosynthetic Tissue": { name: "Mô Quang Hợp", icon: "🌿", desc: "Giảm tốc độ tiêu hao thức ăn và tăng trao đổi chất khi có ánh nắng." },
+    "Multichambered Lungs": { name: "Phổi Đa Ngăn", icon: "🫁", desc: "Tăng dung tích phổi, nín thở dưới nước lâu hơn và tăng độ bền thể lực." },
+    "Sustained Hydration": { name: "Duy Trì Độ Ẩm", icon: "💧", desc: "Giảm tốc độ tụt nước, tăng khả năng sống sót trong môi trường khô cằn." },
+    "Enhanced Digestion": { name: "Tăng Cường Tiêu Hóa", icon: "⚡", desc: "Hấp thụ tối đa 3 loại dưỡng chất giúp đẩy nhanh tốc độ phát triển." },
+    "Efficient Digestion": { name: "Tiêu Hóa Hiệu Quả", icon: "🌾", desc: "Giảm lượng thức ăn tiêu hao khi chạy nhanh và săn mồi liên tục." },
+    "Xerocole Adaptation": { name: "Thích Nghi Sa Mạc", icon: "🏜️", desc: "Giảm mất nước cực mạnh, tăng khả năng chịu nhiệt dưới thời tiết khắc nghiệt." },
+    "Tactile Endurance": { name: "Sức Bền Xúc Giác", icon: "💪", desc: "Tối ưu hóa cơ bắp, giảm tiêu hao thể lực khi chạy nước rút và bật nhảy." },
+    "Nocturnal": { name: "Thích Nghi Đêm", icon: "🌙", desc: "Tăng tầm nhìn đêm Night Vision sắc nét và tăng tốc độ di chuyển khi trời tối." },
+    "Social Behavior": { name: "Tập Tính Bầy Đàn", icon: "🐾", desc: "Tăng chỉ số phòng thủ và phục hồi khi ở gần các cá thể cùng loài." },
+    "Hypervigilance": { name: "Cảnh Giác Cao Độ", icon: "👁️", desc: "Tăng tầm ngửi mùi thức ăn và phát hiện kẻ săn mồi rình rập từ xa." },
+    "Enlarged Meniscus": { name: "Sụn Chêm Phóng Đại", icon: "🦵", desc: "Khớp chân dẻo dai, giảm sát thương khi rơi từ vách đá cao và nhảy xa hơn." },
+    "Cellular Regeneration": { name: "Tái Tạo Tế Bào", icon: "🩸", desc: "Tự động khép miệng vết thương và cầm máu với tốc độ vượt trội." },
+    "Accelerated Prey Drive": { name: "Tăng Tốc Săn Mồi", icon: "⚡", desc: "Tăng tốc độ bứt phá khi đuổi theo con mồi hoặc khủng long bị thương." },
+    "Reniculate Kidneys": { name: "Thận Hình Lựu", icon: "🫘", desc: "Lọc độc tố hiệu quả, giảm mạnh tác động của nọc độc Troodon và vi khuẩn." },
+    "Truculency": { name: "Hung Hãn Chiến Đấu", icon: "⚔️", desc: "Tăng sát thương chí mạng khi lượng máu xuống dưới mức báo động." },
+    "Congenital Hypoalgesia": { name: "Giảm Đau Bẩm Sinh", icon: "🛡️", desc: "Bỏ qua trạng thái đi khập khiễng do đau đớn, giữ vững phản xạ chiến đấu." },
+    "Hypermetabolic Inanition": { name: "Đổi Đói Lấy Sức Mạnh", icon: "🍖", desc: "Kích phát tiềm năng cơ bắp tối đa đổi lấy tốc độ tiêu hao dạ dày." },
+    "Wader": { name: "Lội Nước Nhanh", icon: "🌊", desc: "Giảm lực cản của nước nông và bùn lầy, di chuyển thanh thoát qua đầm lầy." },
+    "Hydrodynamic": { name: "Thủy Động Lực", icon: "🐬", desc: "Cơ thể thuôn mượt, tăng tốc độ bơi tối đa và tăng khả năng cơ động dưới nước." },
+    "Hydroregenerative": { name: "Hồi Phục Thủy Sinh", icon: "💧", desc: "Hồi phục vết thương nhanh hơn đáng kể khi ngâm mình dưới dòng nước mát." },
+    "Cannibalistic": { name: "Đồng Loại Tương Tàn", icon: "💀", desc: "Có thể ăn thịt đồng loại mà không phải chịu hình phạt co giật hay trúng độc." },
+    "Hematophagy": { name: "Hút Máu Hồi Phục", icon: "🩸", desc: "Hồi phục một lượng sinh lực dựa trên lượng sát thương gây ra cho đối thủ." },
+    "Featherweight": { name: "Nhẹ Như Lông Hồng", icon: "🪶", desc: "Giảm trọng lượng cơ thể giúp tiếng bước chân trở nên êm ái, khó bị phát hiện." },
+    "Submerged Optical Retention": { name: "Mắt Thủy Cung", icon: "👁️", desc: "Nhìn rõ ràng dưới đáy hồ sâu tăm tối mà không bị mờ nhòe." }
+  },
+
+  showMutationsModal(dinoId) {
+    const dino = this.dinos.find(d => String(d.id) === String(dinoId));
+    if (!dino) {
+      App.showToast("⚠️ Không tìm thấy thông tin khủng long!");
+      return;
+    }
+
+    const modal = document.getElementById("dino-mutations-modal");
+    const titleEl = document.getElementById("mut-modal-dino-title");
+    const subEl = document.getElementById("mut-modal-dino-sub");
+    const bodyEl = document.getElementById("mut-modal-body");
+    if (!modal || !bodyEl) return;
+
+    const displayName = dino.name ? `${dino.name} (${dino.species})` : dino.species;
+    if (titleEl) titleEl.textContent = `🧬 Đột Biến Gen - ${displayName}`;
+    if (subEl) subEl.textContent = `Loài: ${dino.species} • Giai đoạn: ${dino.stage || "Adult"} (${dino.growth_percent}%) • Giới tính: ${dino.gender}`;
+
+    const slots = dino.mutationSlots || {};
+    const activeMut = (slots.active && slots.active.length > 0) ? slots.active : (dino.mutations || []);
+    const parentMut = slots.parent || [];
+    const elderAMut = slots.elderA || [];
+    const elderBMut = slots.elderB || [];
+
+    const dict = this.MUTATION_DICT;
+
+    const renderSlotItem = (mutName, slotIndex, typeColor, typeBadge) => {
+      const isNone = !mutName || mutName === "None" || String(mutName).trim() === "";
+      if (isNone) {
+        return `
+          <div class="mutation-slot-card slot-empty">
+            <div class="slot-head">
+              <span class="slot-badge" style="background: rgba(255,255,255,0.06); color: #9ca3af; border: 1px solid rgba(255,255,255,0.1);">Slot ${slotIndex} • ${typeBadge}</span>
+              <span style="font-size: 0.72rem; color: #6b7280; font-weight: 600;">Chưa kích hoạt</span>
+            </div>
+            <div class="slot-empty-text">--- Trống (None) ---</div>
+          </div>
+        `;
+      }
+      const info = dict[mutName] || { name: mutName, icon: "🧬", desc: "Đột biến gen đặc trưng của The Isle: Evrima." };
+      return `
+        <div class="mutation-slot-card slot-active" style="border-left: 3px solid ${typeColor};">
+          <div class="slot-head">
+            <span class="slot-badge" style="background: ${typeColor}22; color: ${typeColor}; border: 1px solid ${typeColor}55;">Slot ${slotIndex} • ${typeBadge}</span>
+            <span class="slot-status-active" style="color: ${typeColor};">● Đã Kích Hoạt</span>
+          </div>
+          <div class="slot-title">
+            <span class="slot-icon">${info.icon}</span>
+            <div style="min-width: 0;">
+              <div class="slot-main-name">${info.name}</div>
+              <div class="slot-raw-name">${mutName}</div>
+            </div>
+          </div>
+          <div class="slot-desc">${info.desc}</div>
+        </div>
+      `;
+    };
+
+    const validActive = activeMut.filter(m => m && m !== "None" && String(m).trim() !== "");
+    const validParent = parentMut.filter(m => m && m !== "None" && String(m).trim() !== "");
+    const validElderA = elderAMut.filter(m => m && m !== "None" && String(m).trim() !== "");
+    const validElderB = elderBMut.filter(m => m && m !== "None" && String(m).trim() !== "");
+    const totalValid = validActive.length + validParent.length + validElderA.length + validElderB.length;
+
+    let html = `
+      <div class="mut-total-badge">
+        <span>📊 Tổng số đột biến gen đã cộng: <b style="color: #10b981; font-size: 1.05rem;">${totalValid}</b> đột biến</span>
+        <span style="font-size: 0.78rem; color: #94a3b8;">Đồng bộ 100% từ máy chủ game IslePilot</span>
+      </div>
+
+      <!-- 1. ACTIVE MUTATIONS (4 SLOTS) -->
+      <div class="mut-group-section">
+        <div class="mut-group-title" style="color: #10b981;">
+          <span>⚡ Đột Biến Đang Kích Hoạt (Active Mutations)</span>
+          <span class="mut-count-pill" style="border: 1px solid rgba(16,185,129,0.3); color: #10b981;">${validActive.length}/4</span>
+        </div>
+        <div class="mut-slots-grid">
+          ${[1, 2, 3, 4].map(i => renderSlotItem(activeMut[i - 1], i, "#10b981", "Active")).join("")}
+        </div>
+      </div>
+
+      <!-- 2. PARENT MUTATIONS (4 SLOTS) -->
+      <div class="mut-group-section">
+        <div class="mut-group-title" style="color: #c084fc;">
+          <span>🧬 Đột Biến Di Truyền Bố Mẹ (Parent Mutations)</span>
+          <span class="mut-count-pill" style="border: 1px solid rgba(192,132,252,0.3); color: #c084fc;">${validParent.length}/4</span>
+        </div>
+        <div class="mut-slots-grid">
+          ${[1, 2, 3, 4].map(i => renderSlotItem(parentMut[i - 1], i, "#c084fc", "Parent")).join("")}
+        </div>
+      </div>
+
+      <!-- 3. ELDER A & B MUTATIONS (8 SLOTS) -->
+      <div class="mut-group-section">
+        <div class="mut-group-title" style="color: #fbbf24;">
+          <span>👑 Đột Biến Trưởng Lão (Elder A & B Mutations)</span>
+          <span class="mut-count-pill" style="border: 1px solid rgba(251,191,36,0.3); color: #fbbf24;">${validElderA.length + validElderB.length}/8</span>
+        </div>
+        <div class="mut-slots-grid">
+          ${[1, 2, 3, 4].map(i => renderSlotItem(elderAMut[i - 1], i, "#fbbf24", "Elder A")).join("")}
+          ${[1, 2, 3, 4].map(i => renderSlotItem(elderBMut[i - 1], i + 4, "#f59e0b", "Elder B")).join("")}
+        </div>
+      </div>
+    `;
+
+    bodyEl.innerHTML = html;
+    modal.classList.add("active");
+  },
+
+  closeMutationsModal() {
+    const modal = document.getElementById("dino-mutations-modal");
+    if (modal) modal.classList.remove("active");
   }
 
 };

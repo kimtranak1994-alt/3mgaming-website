@@ -4133,3 +4133,178 @@ body[data-current-tab="admin"] .nav-links {
   border-color: #ef4444 !important;
   box-shadow: 0 0 10px rgba(239, 68, 68, 0.45) !important;
 }
+
+/* ==============================================================
+   🧬 NÚT & MODAL ĐỘT BIẾN GEN (CHUẨN ISLEPILOT GARA)
+   ============================================================== */
+.btn-mutations-view {
+  width: 100% !important;
+  margin-top: 10px !important;
+  background: rgba(16, 185, 129, 0.12) !important;
+  color: #10b981 !important;
+  border: 1.5px solid #10b981 !important;
+  border-radius: var(--radius-sm) !important;
+  padding: 9px 14px !important;
+  font-size: 0.88rem !important;
+  font-weight: 700 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  cursor: pointer !important;
+  transition: all 0.25s ease !important;
+  box-shadow: 0 2px 10px rgba(16, 185, 129, 0.15) !important;
+}
+
+.btn-mutations-view:hover {
+  background: rgba(16, 185, 129, 0.25) !important;
+  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.4) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Modal Chi Tiết Đột Biến Gen */
+.mutations-modal-box {
+  max-width: 680px !important;
+  background: #0d121b !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), 0 0 30px rgba(16, 185, 129, 0.2) !important;
+  padding: 24px !important;
+  max-height: 88vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.mutations-modal-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 14px;
+  margin-bottom: 16px;
+}
+
+.mutations-modal-body {
+  overflow-y: auto;
+  padding-right: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.mut-total-badge {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mut-group-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.95rem;
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+.mut-count-pill {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.mut-slots-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 10px;
+}
+
+.mutation-slot-card {
+  background: #141923;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.mutation-slot-card.slot-active:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+
+.mutation-slot-card.slot-empty {
+  opacity: 0.55;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+}
+
+.slot-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.slot-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.slot-status-active {
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.slot-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.slot-icon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+.slot-main-name {
+  font-weight: 800;
+  font-size: 0.92rem;
+  color: #fff;
+  line-height: 1.2;
+}
+
+.slot-raw-name {
+  font-size: 0.72rem;
+  color: #9ca3af;
+  font-family: monospace;
+}
+
+.slot-desc {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.slot-empty-text {
+  font-size: 0.82rem;
+  color: #6b7280;
+  font-style: italic;
+  padding: 6px 0;
+}
+
+.mutations-modal-footer {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: flex-end;
+}

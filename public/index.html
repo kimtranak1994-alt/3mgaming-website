@@ -33,7 +33,7 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="css/style.css?v=3.3">
+  <link rel="stylesheet" href="css/style.css?v=3.4">
 
   <link rel="stylesheet" href="css/map.css?v=2.3">
 
@@ -2456,6 +2456,29 @@
       <!-- Admin Content được tải bởi AdminPanel.render() -->
     </section>
 
+  
+    <!-- MODAL HIỂN THỊ ĐỘT BIẾN GEN CỦA KHỦNG LONG (CHUẨN ISLEPILOT) -->
+    <div id="dino-mutations-modal" class="modal-overlay" onclick="if(event.target===this) Garage.closeMutationsModal()">
+      <div class="modal-box mutations-modal-box">
+        <button type="button" class="modal-close" onclick="Garage.closeMutationsModal()" style="font-size: 1.6rem; color: #94a3b8; cursor: pointer;">&times;</button>
+        <div class="mutations-modal-header">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="font-size: 2rem; filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.6));">🧬</span>
+            <div>
+              <h3 style="margin: 0; font-size: 1.25rem; color: #fff; font-weight: 800;" id="mut-modal-dino-title">Chi Tiết Đột Biến Gen</h3>
+              <span style="font-size: 0.8rem; color: var(--text-muted);" id="mut-modal-dino-sub">Dữ liệu đồng bộ trực tiếp từ máy chủ IslePilot</span>
+            </div>
+          </div>
+        </div>
+        <div id="mut-modal-body" class="mutations-modal-body">
+          <!-- Render tự động bởi Garage.showMutationsModal() -->
+        </div>
+        <div class="mutations-modal-footer">
+          <button type="button" class="btn-primary" style="background: rgba(255,255,255,0.08); border: 1px solid var(--border-color); color: #fff; padding: 9px 26px; font-weight: 600; cursor: pointer; border-radius: 6px;" onclick="Garage.closeMutationsModal()">Đóng</button>
+        </div>
+      </div>
+    </div>
+
   </main>
 
   <!-- Chân trang phong cách Dino4VN -->
@@ -2502,7 +2525,7 @@
 
   <script src="js/islepilot.js?v=2.3"></script>
 
-  <script src="js/garage.js?v=2.4"></script>
+  <script src="js/garage.js?v=2.5"></script>
 
   <script src="js/pilot_features.js?v=3.1"></script>
 
