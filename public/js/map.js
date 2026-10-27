@@ -21,154 +21,154 @@ const GatewayMap = {
       id: "delta",
       name: "DELTA",
       subName: "Cầu Delta / Đồng Bằng Sông (River Delta)",
-      x: 74,
-      y: 63,
+      x: 63,
+      y: 58,
       size: "large",
       tag: "Cửa sông & Cầu vượt",
-      desc: "Vùng đồng bằng cửa sông Delta rộng lớn với hệ thống cầu bê tông, kênh rạch và bãi cạn. Điểm nóng di cư và phục kích Deino.",
+      desc: "Vùng đồng bằng cửa sông Delta rộng lớn với hệ thống cầu bê tông bắc ngang sông, kênh rạch và bãi cạn. Điểm nóng di cư và phục kích Deino.",
       color: "#38bdf8"
     },
     {
       id: "west_rail",
       name: "WEST RAIL",
-      subName: "Wesrell / Đường Ray Tây (West Rail Access)",
-      x: 33,
-      y: 47,
+      subName: "Wesrell / Đường Ray Tây & Hồ West Rail",
+      x: 22,
+      y: 54,
       size: "large",
-      tag: "Hồ & Hành lang đường ray",
-      desc: "Tuyến đường sắt công nghiệp phía Tây nối giữa đầm lầy và cao nguyên. Có hồ nước ngọt West Rail Pond nổi tiếng.",
+      tag: "Hồ & Tuyến đường ray",
+      desc: "Tuyến đường sắt công nghiệp phía Tây nối giữa đầm lầy và cao nguyên. Nổi tiếng với hồ nước ngọt West Rail Pond và bãi cỏ xanh.",
       color: "#fbbf24"
     },
     {
-      id: "south_plains",
-      name: "SOUTH PLAINS",
-      subName: "Thảo Nguyên Phía Nam (Hotspot)",
-      x: 58,
-      y: 72,
+      id: "water_access",
+      name: "WATER ACCESS",
+      subName: "Đập Nước Water Access & Hồ Lớn Phía Bắc",
+      x: 52,
+      y: 31,
       size: "large",
-      tag: "Khu PVP trung tâm",
-      desc: "Bình nguyên đồng cỏ rộng lớn bậc nhất phía Nam Gateway. Nơi tụ họp đông đúc nhất của các loài khủng long ăn cỏ và thợ săn Apex.",
-      color: "#f43f5e"
-    },
-    {
-      id: "center_lake",
-      name: "CENTER LAKE & VALLEY",
-      subName: "Hồ Trung Tâm (Center Gateway)",
-      x: 50,
-      y: 50,
-      size: "large",
-      tag: "Trái tim Gateway",
-      desc: "Lòng chảo thung lũng và hồ nước ngọt trung tâm đảo, ngã ba giao tranh quyết liệt giữa các bầy đàn khủng long.",
-      color: "#06b6d4"
+      tag: "Đập nước khổng lồ & Hồ chứa",
+      desc: "Hồ chứa nước ngọt khổng lồ phía Bắc có công trình đập bê tông xả tràn. Điểm tụ họp uống nước và săn mồi nhộn nhịp bậc nhất.",
+      color: "#0ea5e9"
     },
     {
       id: "highlands",
       name: "HIGHLANDS",
-      subName: "Cao Nguyên Đông Bắc (Highland Lake)",
-      x: 60,
-      y: 35,
+      subName: "Cao Nguyên / Hồ Highland Lake & Sanctuary",
+      x: 42,
+      y: 43,
       size: "large",
       tag: "Đỉnh núi & Sanctuary",
-      desc: "Vùng núi cao nguyên mát mẻ, địa hình dốc đá hùng vĩ với hồ Highland Lake trên đỉnh núi và khu bảo hộ Sanctuary cho baby dino.",
+      desc: "Vùng núi cao nguyên mát mẻ, địa hình dốc đá hùng vĩ với hồ Highland Lake trên đỉnh núi và khu bảo hộ Sanctuary an toàn cho baby dino.",
       color: "#a855f7"
+    },
+    {
+      id: "south_plains",
+      name: "SOUTH PLAINS",
+      subName: "Thảo Nguyên Phía Nam (Hotspot PVP)",
+      x: 54,
+      y: 74,
+      size: "large",
+      tag: "Bình nguyên trung tâm PVP",
+      desc: "Bình nguyên đồng cỏ rộng lớn bậc nhất phía Nam Gateway. Nơi tụ họp đông đúc nhất của các loài khủng long ăn cỏ và thợ săn Apex Carnivore.",
+      color: "#f43f5e"
+    },
+    {
+      id: "dome_facility",
+      name: "GATEWAY DOME",
+      subName: "Mái Vòm Nghiên Cứu Sinh Thái (Bio Dome)",
+      x: 42,
+      y: 65,
+      size: "large",
+      tag: "Căn cứ khoa học ngầm",
+      desc: "Khu phức hợp nhà vòm nhân tạo và hệ thống phòng thí nghiệm ngầm của con người trên đảo Gateway, nằm giữa đồng bằng và rừng rậm.",
+      color: "#ec4899"
+    },
+    {
+      id: "swamp",
+      name: "SWAMP & MUDFLATS",
+      subName: "Vùng Đầm Lầy & Rừng Ngập Mặn Phía Nam",
+      x: 36,
+      y: 86,
+      size: "large",
+      tag: "Lãnh địa Cá Sấu Deinosuchus",
+      desc: "Vùng đầm lầy âm u, nhiều kênh rạch sâu, bãi bùn lầy và bèo tây. Địa bàn săn mồi số một của sát thủ rình rập Deinosuchus.",
+      color: "#14b8a6"
+    },
+    {
+      id: "volcano",
+      name: "VOLCANO (CRATER)",
+      subName: "Miệng Núi Lửa & Lòng Chảo Đông Bắc",
+      x: 70,
+      y: 32,
+      size: "large",
+      tag: "Miệng núi lửa cổ",
+      desc: "Lòng chảo núi lửa cổ với hồ nước sâu và vách đá dốc đứng cheo leo hiểm trở, giáp ranh tán rừng nguyên sinh.",
+      color: "#f97316"
+    },
+    {
+      id: "center_lake",
+      name: "CENTER VALLEY",
+      subName: "Thung Lũng & Hồ Trung Tâm Gateway",
+      x: 48,
+      y: 50,
+      size: "large",
+      tag: "Trái tim Gateway",
+      desc: "Lòng chảo thung lũng và hồ nước ngọt trung tâm đảo, ngã ba huyết mạch giao tranh quyết liệt giữa các bầy đàn khủng long.",
+      color: "#06b6d4"
     },
     {
       id: "north_plains",
       name: "NORTH PLAINS",
       subName: "Thảo Nguyên Bắc (North Steppe)",
-      x: 44,
-      y: 18,
+      x: 40,
+      y: 22,
       size: "large",
       tag: "Đồng cỏ hoang sơ",
-      desc: "Khu vực đồng bằng phía Bắc dãy núi tuyết, thảm thực vật phong phú, ít kẻ săn mồi lớn rình rập.",
+      desc: "Khu vực đồng bằng phía Bắc dãy núi, thảm thực vật phong phú, nhiều rễ cây và nấm, ít kẻ săn mồi lớn rình rập.",
       color: "#34d399"
     },
     {
       id: "nw_steppe",
-      name: "NORTH-WEST STEPPE",
+      name: "NW STEPPE",
       subName: "Bình Nguyên Tây Bắc (NW Coast)",
       x: 24,
-      y: 28,
+      y: 32,
       size: "medium",
       tag: "Bờ biển & Đồi núi",
-      desc: "Vùng đồi thảo nguyên giáp bờ biển Tây Bắc, không khí thoáng đãng, nhiều rễ cây và nấm dinh dưỡng.",
+      desc: "Vùng đồi thảo nguyên giáp bờ biển Tây Bắc, không khí thoáng đãng, nhiều rễ cây và hoa màu dinh dưỡng.",
       color: "#10b981"
-    },
-    {
-      id: "west_swamp",
-      name: "WEST SWAMP",
-      subName: "Vùng Trũng Đầm Lầy (Swamp Marsh)",
-      x: 23,
-      y: 67,
-      size: "large",
-      tag: "Lãnh địa Cá Sấu Deinosuchus",
-      desc: "Vùng đầm lầy âm u, nhiều kênh mương sâu và bèo tây. Địa bàn săn mồi số một của Deinosuchus khổng lồ.",
-      color: "#14b8a6"
-    },
-    {
-      id: "swamp_dam",
-      name: "SWAMP DAM",
-      subName: "Đập Thủy Lợi Đầm Lầy (South Dam)",
-      x: 28,
-      y: 78,
-      size: "medium",
-      tag: "Công trình đập nước",
-      desc: "Công trình đập thủy điện bê tông khổng lồ ngăn nước đầm lầy xả ra biển Tây Nam.",
-      color: "#94a3b8"
     },
     {
       id: "east_jungle",
       name: "EAST JUNGLE",
-      subName: "Rừng Rậm Đông & Hồ Núi Lửa (East Crater)",
-      x: 74,
+      subName: "Rừng Rậm Đông & Thung Lũng Cổ",
+      x: 78,
       y: 44,
       size: "large",
       tag: "Tán rừng nhiệt đới cổ",
-      desc: "Lòng chảo núi lửa cổ với hồ nước sâu và những cánh rừng già rậm rạp, trái cây sum suê cho loài ăn quả.",
+      desc: "Khu rừng già phía Đông với tán cây cao rậm rạp, thảm thực vật nhiệt đới phong phú cho loài ăn quả và thợ săn rình mồi.",
       color: "#10b981"
-    },
-    {
-      id: "water_access",
-      name: "WATER ACCESS",
-      subName: "Hành Lang Sông Bắc (Water River Fork)",
-      x: 48,
-      y: 38,
-      size: "medium",
-      tag: "Đường thủy huyết mạch",
-      desc: "Nhánh sông dài kết nối hồ trung tâm lên thung lũng hẻm núi phía bắc.",
-      color: "#0ea5e9"
     },
     {
       id: "south_cliffs",
       name: "SOUTH CLIFFS",
       subName: "Vách Đá & Bờ Biển Nam (South Coast)",
       x: 52,
-      y: 84,
+      y: 88,
       size: "medium",
       tag: "Vách đá ven biển",
-      desc: "Vùng đồng cỏ ven biển ôn hòa phía nam, chân các vách đá cao nhìn ra đại dương.",
-      color: "#f59e0b"
+      desc: "Vùng đồng cỏ ven biển ôn hòa phía Nam, chân các vách đá cao nhìn ra đại dương bao la.",
+      color: "#eab308"
     },
     {
-      id: "dome_facility",
-      name: "GATEWAY RESEARCH DOME",
-      subName: "Vòm Sinh Thái & Căn Cứ Ngầm",
-      x: 54,
-      y: 42,
-      size: "medium",
-      tag: "Căn cứ khoa học",
-      desc: "Khu phức hợp nhà vòm nhân tạo và hệ thống phòng thí nghiệm ngầm của con người trên đảo Gateway.",
-      color: "#ec4899"
-    },
-    {
-      id: "sw_lighthouse",
-      name: "SW LIGHTHOUSE",
-      subName: "Hải Đăng Tây Nam",
+      id: "airfield",
+      name: "AIRFIELD & HARBOR",
+      subName: "Sân Bay & Bến Cảng Tây Nam",
       x: 12,
-      y: 84,
+      y: 82,
       size: "medium",
-      tag: "Ngọn hải đăng cổ",
-      desc: "Mũi đất nhô ra biển phía Tây Nam với ngọn hải đăng bỏ hoang.",
+      tag: "Căn cứ bỏ hoang",
+      desc: "Mũi đất Tây Nam với đường băng cất cánh quân sự, container rỉ sét và ngọn hải đăng cổ bỏ hoang.",
       color: "#64748b"
     }
   ],
@@ -236,19 +236,19 @@ const GatewayMap = {
   // Cấu hình Sự kiện Đại Di Cư (Great Migration)
   greatMigration: {
     active: true,
-    title: "Cao Nguyên Đông Bắc (Highlands Sanctuary Corridor)",
-    corridorName: "Thung Lũng Trung Tâm ➔ Cao Nguyên Đông Bắc",
-    center: { x: 59, y: 37 }, // Phần trăm (%)
-    ingameCoord: "X: 144, Y: -208",
+    title: "Cao Nguyên (Highlands Sanctuary Corridor)",
+    corridorName: "Thung Lũng Trung Tâm ➔ Cao Nguyên",
+    center: { x: 42, y: 43 }, // Phần trăm (%)
+    ingameCoord: "X: -550, Y: -1200",
     radius: 90, // Bán kính trên hệ tọa độ SVG 1000x1000
     diets: "🌾 Cỏ non (Lines), Củ ngọt (Dots), Cây bụi (Slices)",
     herbivores: "Stegosaurus, Tenontosaurus, Gallimimus, Diabloceratops, Pachy",
     threats: "Tyrannosaurus Rex, Carnotaurus, Ceratosaurus, Herrerasaurus",
     buffText: "+100% Tốc độ tăng trưởng khi ăn cỏ/thịt tại vùng di cư",
     corridors: [
-      { from: { x: 520, y: 520 }, to: { x: 590, y: 370 }, name: "Hành lang Trung Tâm ➔ Cao Nguyên" },
-      { from: { x: 740, y: 520 }, to: { x: 590, y: 370 }, name: "Hành lang Rừng Đông ➔ Cao Nguyên" },
-      { from: { x: 340, y: 640 }, to: { x: 520, y: 520 }, name: "Hành lang Đầm Lầy ➔ Thung Lũng Trung Tâm" }
+      { from: { x: 480, y: 500 }, to: { x: 420, y: 430 }, name: "Hành lang Trung Tâm ➔ Cao Nguyên" },
+      { from: { x: 630, y: 580 }, to: { x: 480, y: 500 }, name: "Hành lang Delta ➔ Thung Lũng Trung Tâm" },
+      { from: { x: 220, y: 540 }, to: { x: 420, y: 430 }, name: "Hành lang West Rail ➔ Cao Nguyên" }
     ]
   },
 
@@ -260,52 +260,70 @@ const GatewayMap = {
     { 
       name: "⚡ TÂM CHẤN ĐẠI DI CƯ (Highlands)", 
       type: "greatmigration", 
-      x: 59, 
-      y: 37, 
+      x: 42, 
+      y: 43, 
       danger: "CỰC ĐỘ (Chiến trường toàn server)", 
-      desc: "Tâm chấn Đại Di Cư hiện tại. Nơi tụ họp đàn khủng long ăn cỏ khổng lồ và các loài Apex Carnivore săn mồi. Buff x2 Tốc độ phát triển!",
+      desc: "Tâm chấn Đại Di Cư hiện tại tại vùng Cao Nguyên. Nơi tụ họp đàn khủng long ăn cỏ khổng lồ và các loài Apex Carnivore săn mồi. Buff x2 Tốc độ phát triển!",
       diets: "🌾 Đầy đủ 3 dưỡng chất Lines // Dots / Slices"
+    },
+    { 
+      name: "Vùng Di Cư: Cầu & Cửa Sông Delta (Delta River)", 
+      type: "migration", 
+      x: 63, 
+      y: 58, 
+      danger: "Rất cao (Deinosuchus & Carnivore phục kích)", 
+      desc: "Đồng bằng cửa sông Delta rộng lớn với hệ thống cầu vượt bê tông và bãi cạn. Hành lang di chuyển trọng điểm.",
+      diets: "🌾 Dưỡng chất Lines & Slices"
+    },
+    { 
+      name: "Vùng Di Cư: West Rail (Wesrell Access)", 
+      type: "migration", 
+      x: 22, 
+      y: 54, 
+      danger: "Cao (Giao tranh đường sắt)", 
+      desc: "Hành lang đường sắt công nghiệp và hồ nước West Rail Pond, nguồn thức ăn và nước uống dồi dào.",
+      diets: "🌾 Dưỡng chất Dots ngọt & Lines"
     },
     { 
       name: "Vùng Di Cư: Thung Lũng Trung Tâm (Center Valley)", 
       type: "migration", 
-      x: 52, 
-      y: 52, 
+      x: 48, 
+      y: 50, 
       danger: "Rất cao (Ngã ba giao tranh)", 
       desc: "Vùng đồng cỏ chuyển tiếp lớn nhất giữa Đông và Tây Gateway, đàn di cư thường trung chuyển qua đây.",
       diets: "🌾 Dưỡng chất Lines & Dots"
     },
     { 
-      name: "Vùng Di Cư: Thảo Nguyên Đông Nam (South-East Plains)", 
+      name: "Vùng Di Cư: Thảo Nguyên Phía Nam (South Plains)", 
       type: "migration", 
-      x: 68, 
-      y: 72, 
-      danger: "Trung bình", 
-      desc: "Cánh đồng cỏ rộng bát ngát, dồi dào cỏ mọng cho Gallimimus, Tenontosaurus và Pachycephalosaurus.",
+      x: 54, 
+      y: 74, 
+      danger: "Cực độ (Hotspot PVP)", 
+      desc: "Cánh đồng cỏ rộng bát ngát phía Nam, dồi dào cỏ mọng cho Gallimimus, Tenontosaurus và Diabloceratops.",
       diets: "🌾 Dưỡng chất Slices & Dots"
     },
     { 
       name: "Vùng Di Cư: Bình Nguyên Tây Bắc (North-West Steppe)", 
       type: "migration", 
-      x: 32, 
-      y: 26, 
+      x: 24, 
+      y: 32, 
       danger: "Trung bình", 
       desc: "Khu vực thảo nguyên đồi núi Tây Bắc, khí hậu trong lành, nhiều cụm nấm và rễ cây.",
       diets: "🌾 Dưỡng chất Lines & Slices"
     },
     { 
-      name: "Vùng Di Cư: Vùng Trũng Đầm Lầy (Swamp Lowlands)", 
+      name: "Vùng Di Cư: Vùng Trũng Đầm Lầy (Swamp Mudflats)", 
       type: "migration", 
-      x: 28, 
-      y: 66, 
+      x: 36, 
+      y: 86, 
       danger: "Cao (Cá sấu phục kích)", 
-      desc: "Vùng cây bụi đầm lầy chứa nhiều loại rễ và hoa sen dồi dào dinh dưỡng cho khủng long ăn củ.",
+      desc: "Vùng cây bụi đầm lầy và rừng ngập mặn phía Nam chứa nhiều loại rễ và hoa sen dồi dào dinh dưỡng cho khủng long ăn củ.",
       diets: "🌾 Dưỡng chất Dots ngọt"
     },
     { 
       name: "Vùng Di Cư: Thung Lũng Rừng Đông (East Jungle Basin)", 
       type: "migration", 
-      x: 74, 
+      x: 78, 
       y: 44, 
       danger: "Cao (Thợ săn rình rập)", 
       desc: "Vạt rừng già với tán cây rậm rạp, trái cây nhiệt đới phong phú cho các loài ăn quả.",
@@ -314,76 +332,67 @@ const GatewayMap = {
     { 
       name: "Vùng Di Cư: Đồng Cỏ Bờ Biển Nam (South Coast)", 
       type: "migration", 
-      x: 48, 
-      y: 82, 
+      x: 52, 
+      y: 88, 
       danger: "Thấp - Trung bình", 
       desc: "Vùng đồng cỏ ven biển ôn hòa phía nam vách đá.",
       diets: "🌾 Dưỡng chất Lines non"
     },
     { 
-      name: "Vùng Di Cư: Thảo Nguyên Bắc (North Highlands)", 
+      name: "Vùng Di Cư: Thảo Nguyên Bắc (North Plains)", 
       type: "migration", 
-      x: 44, 
-      y: 16, 
+      x: 40, 
+      y: 22, 
       danger: "Trung bình", 
-      desc: "Đồng cỏ cao nguyên phía bắc dãy núi tuyết, thưa thớt bóng người.",
+      desc: "Đồng cỏ cao nguyên phía bắc thung lũng, thưa thớt bóng người.",
       diets: "🌾 Dưỡng chất Lines & Dots"
     },
 
     // ==============================================================
     // 🛡️ 2. SANCTUARY (KHU AN TOÀN NẤM CHO BABY DINO)
     // ==============================================================
-    { name: "Sanctuary Cao Nguyên Bắc (North Highland)", type: "sanctuary", x: 40, y: 28, danger: "An toàn (Chỉ khủng long con)", desc: "Khu nấm an toàn cao nguyên phía bắc, ong bắp cày bảo vệ baby khỏi khủng long lớn" },
-    { name: "Sanctuary Đầm Lầy Tây (West Swamp)", type: "sanctuary", x: 22, y: 64, danger: "An toàn (Chỉ khủng long con)", desc: "Khu nấm bổ sung 3 loại dưỡng chất an toàn cho dino bé vùng đầm lầy" },
-    { name: "Sanctuary Rừng Rậm Đông (East Jungle)", type: "sanctuary", x: 74, y: 48, danger: "An toàn (Chỉ khủng long con)", desc: "Khu trú ẩn trong thung lũng rậm rạp phía đông, râm mát và kín đáo" },
-    { name: "Sanctuary Vách Đá Nam (South Cliffs)", type: "sanctuary", x: 56, y: 80, danger: "An toàn (Chỉ khủng long con)", desc: "Khu trú ẩn vách đá phía nam gần bờ biển" },
-    { name: "Sanctuary Ven Hồ Trung Tâm (Center Edge)", type: "sanctuary", x: 42, y: 44, danger: "An toàn (Chỉ khủng long con)", desc: "Khu trú ẩn an toàn ven rìa hồ trung tâm" },
-    { name: "Sanctuary Bờ Biển Tây Bắc (NW Coast)", type: "sanctuary", x: 20, y: 32, danger: "An toàn (Chỉ khủng long con)", desc: "Khu bảo hộ baby dino giáp bờ biển tây bắc" },
-    { name: "Sanctuary Hẻm Núi Đông Bắc (NE Gorge)", type: "sanctuary", x: 66, y: 26, danger: "An toàn (Chỉ khủng long con)", desc: "Khu trú ẩn ẩn sâu trong hẻm núi đá cao tầng" },
+    { name: "Sanctuary Cao Nguyên (Highland Sanctuary)", type: "sanctuary", x: 42, y: 43, danger: "An toàn (Chỉ khủng long con)", desc: "Khu nấm an toàn cao nguyên, ong bắp cày bảo vệ baby khỏi khủng long lớn" },
+    { name: "Sanctuary Đầm Lầy Nam (South Swamp Sanctuary)", type: "sanctuary", x: 36, y: 86, danger: "An toàn (Chỉ khủng long con)", desc: "Khu nấm an toàn trong rừng ngập mặn phía Nam cho baby dino" },
+    { name: "Sanctuary Rừng Rậm Đông (East Jungle Sanctuary)", type: "sanctuary", x: 78, y: 44, danger: "An toàn (Chỉ khủng long con)", desc: "Khu trú ẩn trong thung lũng rậm rạp phía đông, râm mát và kín đáo" },
+    { name: "Sanctuary Vách Đá Nam (South Cliffs Sanctuary)", type: "sanctuary", x: 52, y: 88, danger: "An toàn (Chỉ khủng long con)", desc: "Khu trú ẩn vách đá phía nam gần bờ biển" },
+    { name: "Sanctuary Bờ Biển Tây Bắc (NW Coast Sanctuary)", type: "sanctuary", x: 24, y: 32, danger: "An toàn (Chỉ khủng long con)", desc: "Khu bảo hộ baby dino giáp bờ biển tây bắc" },
+    { name: "Sanctuary Hồ Miệng Núi Lửa (East Crater Sanctuary)", type: "sanctuary", x: 70, y: 32, danger: "An toàn (Chỉ khủng long con)", desc: "Khu trú ẩn ẩn sâu trong lòng chảo núi lửa đông bắc" },
 
     // ==============================================================
     // 💧 3. NGUỒN NƯỚC, HỒ & CỬA SÔNG (WATER SOURCES)
     // ==============================================================
-    { name: "Hồ Lớn Trung Tâm (Center Lake)", type: "water", x: 50, y: 49, danger: "Cực độ (Apex Carnivore)", desc: "Điểm uống nước nhộn nhịp nhất Gateway, thường xuyên diễn ra giao tranh đẫm máu" },
-    { name: "Đầm Lầy Phía Tây (West Swamp Marsh)", type: "water", x: 26, y: 72, danger: "Rất cao (Deinosuchus rình mồi)", desc: "Vùng bùn lầy sâu, địa bàn săn mồi số 1 của sát thủ đầm lầy Deinosuchus" },
-    { name: "Hồ Nước Ngọt Phía Bắc (North Lake)", type: "water", x: 44, y: 22, danger: "Trung bình", desc: "Hồ nước trong lành trên sườn núi phía bắc" },
-    { name: "Hồ Miệng Núi Lửa (East Crater Lake)", type: "water", x: 68, y: 46, danger: "Cao (Phục kích bờ dốc)", desc: "Hồ nước nằm sâu trong lòng chảo núi lửa cổ phía đông" },
-    { name: "Thác Nước Cao Nguyên (Highland Waterfall)", type: "water", x: 64, y: 34, danger: "Cao (Bầy đàn phục kích)", desc: "Thác nước hùng vĩ đổ từ vách núi đá cao nguyên xuống dòng suối" },
-    { name: "Thác Nước Vách Đá Nam (South Waterfall)", type: "water", x: 52, y: 78, danger: "Trung bình", desc: "Dòng thác mát lạnh đổ thẳng ra vùng trũng đồng bằng phía nam" },
-    { name: "Nhánh Sông Đông (East River Delta)", type: "water", x: 76, y: 62, danger: "Cao (Cá sấu & Thợ săn)", desc: "Cửa sông rộng lớn nhiều bãi cát bồi đổ ra biển đông" },
-    { name: "Sông Uốn Khúc Phía Tây (West River)", type: "water", x: 32, y: 58, danger: "Cao (Rình rập trong nước)", desc: "Nhánh sông dài uốn quanh vạt rừng rậm rạp" },
-    { name: "Đầm Nước Mặn Nam (South Salt Marsh)", type: "water", x: 46, y: 86, danger: "Thấp", desc: "Vùng nước cạn ngập mặn trải dài ven bờ biển phía nam" },
-    { name: "Hồ Rừng Rậm Bí Mật (Hidden Jungle Pond)", type: "water", x: 62, y: 58, danger: "Trung bình", desc: "Vũng nước tĩnh lặng được bao bọc bởi tán cây dương xỉ rậm rạp" },
+    { name: "Hồ Lớn Trung Tâm (Center Lake)", type: "water", x: 48, y: 50, danger: "Cực độ (Apex Carnivore)", desc: "Điểm uống nước nhộn nhịp nhất Gateway, thường xuyên diễn ra giao tranh đẫm máu" },
+    { name: "Đập Nước Water Access (North Dam Reservoir)", type: "water", x: 52, y: 31, danger: "Cao (Phục kích bờ đập)", desc: "Hồ nước ngọt mênh mông với công trình đập thủy lợi khổng lồ ngăn dòng" },
+    { name: "Hồ West Rail (West Rail Pond)", type: "water", x: 22, y: 54, danger: "Cao (Điểm nóng phục kích)", desc: "Hồ nước ngọt trong xanh bên tuyến đường sắt phía Tây, địa điểm tụ họp quen thuộc" },
+    { name: "Hồ Cao Nguyên (Highland Lake)", type: "water", x: 42, y: 43, danger: "Rất cao (Chiến trường săn mồi)", desc: "Hồ nước lớn trên đỉnh cao nguyên dốc đá, nguồn nước chính của khu bảo tồn" },
+    { name: "Hồ Miệng Núi Lửa (East Crater Lake)", type: "water", x: 70, y: 32, danger: "Cao (Phục kích bờ dốc)", desc: "Hồ nước nằm sâu trong lòng chảo núi lửa cổ phía đông bắc" },
+    { name: "Sông & Cầu Delta (Delta River Forks)", type: "water", x: 63, y: 58, danger: "Cực độ (Deinosuchus rình mồi)", desc: "Hệ thống sông phân nhánh Delta đổ ra biển đông với bãi cát bồi và vùng nước cạn" },
+    { name: "Đầm Lầy Phía Nam (Swamp & Mudflats Water)", type: "water", x: 36, y: 86, danger: "Rất cao (Lãnh địa Cá Sấu)", desc: "Mạng lưới kênh rạch ngập mặn chằng chịt, sào huyệt của sát thủ đầm lầy Deinosuchus" },
 
     // ==============================================================
     // 💀 4. ĐIỂM NÓNG PVP & CHIẾN TRƯỜNG (HOTSPOTS)
     // ==============================================================
-    { name: "Thung Lũng Trung Tâm (Center Valley Hotspot)", type: "hotspot", x: 52, y: 52, danger: "TỬ ĐỊA (T-Rex, Cera, Carno)", desc: "Điểm nóng PVP lớn nhất server 3MGAMING, liên tục diễn ra các cuộc săn lùng tử thần" },
-    { name: "Bình Nguyên Cao Nguyên (Highlands Plains Hotspot)", type: "hotspot", x: 58, y: 38, danger: "Cực độ (Săn rượt đuổi tốc độ)", desc: "Địa hình đồng cỏ rộng mở, nơi các bầy Carno và Raptor phô diễn tốc độ" },
-    { name: "Bìa Rừng Đầm Lầy (Swamp Border Ambush)", type: "hotspot", x: 32, y: 68, danger: "Cao (Phục kích bất ngờ)", desc: "Vùng ranh giới râm mát giữa rừng rậm và đầm lầy, thường bị phục kích" },
-    { name: "Vách Đá Bờ Đông (East Coastal Ridge)", type: "hotspot", x: 78, y: 50, danger: "Cao (Rơi vực & Đẩy ngã)", desc: "Vách đá cheo leo nhìn ra biển lớn, chiến trường của Herrerasaurus và Raptor" },
-    { name: "Giao Lộ Ba Tuyến Đường (Three Ways Crossroads)", type: "hotspot", x: 46, y: 38, danger: "Rất cao (Ngã ba giao thông)", desc: "Điểm nghẽn giao thông huyết mạch kết nối Bắc - Trung Tâm - Tây" },
+    { name: "Thung Lũng Trung Tâm (Center Valley Hotspot)", type: "hotspot", x: 48, y: 50, danger: "TỬ ĐỊA (T-Rex, Cera, Carno)", desc: "Điểm nóng PVP lớn nhất server 3MGAMING, liên tục diễn ra các cuộc săn lùng tử thần" },
+    { name: "Thảo Nguyên Nam (South Plains Hotspot)", type: "hotspot", x: 54, y: 74, danger: "Cực độ (Săn rượt đuổi tốc độ)", desc: "Bình nguyên đồng cỏ bát ngát phía Nam, nơi các đàn khủng long chạm trán khốc liệt" },
+    { name: "Cầu Delta (Delta Bridge Hotspot)", type: "hotspot", x: 63, y: 58, danger: "Rất cao (Phục kích cầu & cửa sông)", desc: "Cây cầu bê tông bắc ngang sông Delta, nơi thường xuyên diễn ra các cuộc đột kích nghẹt thở" },
+    { name: "Hồ West Rail (West Rail Pond Hotspot)", type: "hotspot", x: 22, y: 54, danger: "Cao (Chiến trường Tây)", desc: "Điểm giao chiến ác liệt quanh hồ nước ngọt West Rail và hành lang đường sắt" },
+    { name: "Cao Nguyên (Highlands Hotspot)", type: "hotspot", x: 42, y: 43, danger: "Cực độ (Săn mồi cao nguyên)", desc: "Đỉnh cao nguyên lộng gió, địa hình vách đá tạo lợi thế chiến thuật tuyệt vời" },
 
     // ==============================================================
     // 🏛️ 5. CÔNG TRÌNH CON NGƯỜI & DI TÍCH (LANDMARKS)
     // ==============================================================
-    { name: "Mái Vòm Sinh Học Alpha (Bio Dome Alpha)", type: "landmark", x: 66, y: 44, danger: "Bí ẩn", desc: "Mái vòm nghiên cứu khoa học bỏ hoang khổng lồ thời tiền sử" },
-    { name: "Mái Vòm Sinh Học Beta (Bio Dome Beta)", type: "landmark", x: 48, y: 34, danger: "Bí ẩn", desc: "Mái vòm sinh thái thứ hai đổ nát trên sườn đồi" },
-    { name: "Trạm Radar Bờ Tây (Radar Tower)", type: "landmark", x: 16, y: 36, danger: "Thấp", desc: "Tháp radar liên lạc tọa lạc trên đỉnh vách đá bờ biển tây" },
-    { name: "Bến Cảng Bỏ Hoang (Abandoned Docks)", type: "landmark", x: 14, y: 78, danger: "Trung bình", desc: "Khu cảng công nghiệp với container rỉ sét và cần cẩu cổ" },
-    { name: "Nhà Máy Xử Lý Nước (Water Treatment)", type: "landmark", x: 38, y: 54, danger: "Trung bình", desc: "Tổ hợp bể lọc nước nhân tạo lớn giữa thung lũng" },
-    { name: "Lối Vào Căn Cứ Ngầm (Underground Bunker)", type: "landmark", x: 54, y: 42, danger: "Nguy hiểm", desc: "Cửa thép hầm ngầm của tổ chức nghiên cứu Gateway" },
-    { name: "Hải Đăng Tây Nam (South-West Lighthouse)", type: "landmark", x: 12, y: 84, danger: "Thấp", desc: "Ngọn hải đạo cổ kính soi sáng bờ biển phía tây nam" },
-    { name: "Cầu Bê Tông Sập (Broken Highway Bridge)", type: "landmark", x: 60, y: 64, danger: "Cao (Rơi sụp)", desc: "Đoạn cầu vượt cao tốc bị gãy đôi bắc qua hẻm vực sâu" },
-    { name: "Trạm Quan Trắc Đỉnh Núi Bắc (North Summit)", type: "landmark", x: 46, y: 12, danger: "Thấp (Lạnh giá)", desc: "Trạm thời tiết trên đỉnh núi tuyết cao nhất đảo Gateway" },
+    { name: "Mái Vòm Nghiên Cứu Gateway (Bio Dome Facility)", type: "landmark", x: 42, y: 65, danger: "Bí ẩn", desc: "Mái vòm sinh học nhân tạo khổng lồ và phòng thí nghiệm ngầm bỏ hoang" },
+    { name: "Đập Nước Water Access (North Dam Concrete)", type: "landmark", x: 52, y: 31, danger: "Nguy hiểm (Độ cao lớn)", desc: "Công trình đập bê tông khổng lồ kiểm soát dòng chảy lưu vực Bắc" },
+    { name: "Cầu Cao Tốc Delta (Delta Highway Bridge)", type: "landmark", x: 63, y: 58, danger: "Cao (Gãy nhịp)", desc: "Cầu vượt bê tông hiện đại bắc ngang dòng sông Delta chảy ra biển" },
+    { name: "Sân Bay & Bến Cảng Tây Nam (Airfield & Harbor)", type: "landmark", x: 12, y: 82, danger: "Thấp", desc: "Đường băng cất cánh quân sự và tổ hợp kho bãi container rỉ sét bỏ hoang" },
+    { name: "Hải Đăng Tây Nam (South-West Lighthouse)", type: "landmark", x: 12, y: 84, danger: "Thấp", desc: "Ngọn hải đăng cổ kính đứng sừng sững trên mỏm đá bờ biển phía Tây Nam" },
 
     // ==============================================================
     // 🪺 6. KHU VỰC LÀM TỔ & AN TOÀN (NESTING GROUNDS)
     // ==============================================================
-    { name: "Khu Làm Tổ Rừng Thông Bắc (North Pine Nesting)", type: "nesting", x: 36, y: 18, danger: "Yên tĩnh", desc: "Khu vực rừng thông râm mát, kín gió, nguồn thức ăn gần, hoàn hảo để làm tổ đẻ trứng" },
-    { name: "Khu Làm Tổ Thung Lũng Kín (Hidden Valley Nesting)", type: "nesting", x: 72, y: 36, danger: "Kín đáo", desc: "Thung lũng trũng sâu được vách đá bao bọc, rất khó bị kẻ săn mồi phát hiện" },
-    { name: "Khu Làm Tổ Vịnh Bờ Nam (South Bay Nesting)", type: "nesting", x: 42, y: 88, danger: "Yên bình", desc: "Bãi cát thoai thoải đón nắng ấm, an toàn cho khủng long ăn cỏ ấp trứng" },
-    { name: "Khu Làm Tổ Đồi Núi Phía Tây (West Hills Nesting)", type: "nesting", x: 22, y: 48, danger: "Kín đáo", desc: "Rừng cây rậm rạp trên triền đồi tây, thích hợp cho đàn nhỏ trú ngụ" }
+    { name: "Khu Làm Tổ Rừng Thông Bắc (North Pine Nesting)", type: "nesting", x: 40, y: 22, danger: "Yên tĩnh", desc: "Khu vực rừng thông râm mát, kín gió, nguồn thức ăn gần, hoàn hảo để làm tổ đẻ trứng" },
+    { name: "Khu Làm Tổ Thung Lũng Kín (Hidden Valley Nesting)", type: "nesting", x: 74, y: 40, danger: "Kín đáo", desc: "Thung lũng trũng sâu được vách đá bao bọc, rất khó bị kẻ săn mồi phát hiện" },
+    { name: "Khu Làm Tổ Vịnh Bờ Nam (South Bay Nesting)", type: "nesting", x: 52, y: 88, danger: "Yên bình", desc: "Bãi cát thoai thoải đón nắng ấm, an toàn cho khủng long ăn cỏ ấp trứng" }
   ],
 
   init() {
@@ -768,7 +777,15 @@ const GatewayMap = {
       r.id.toLowerCase().includes(qLower) || 
       r.name.toLowerCase().includes(qLower) || 
       r.subName.toLowerCase().includes(qLower) ||
-      (qLower === 'wesrell' && r.id === 'west_rail')
+      (qLower.includes('wesrell') && r.id === 'west_rail') ||
+      (qLower.includes('west rail') && r.id === 'west_rail') ||
+      (qLower.includes('delta') && r.id === 'delta') ||
+      (qLower.includes('water') && r.id === 'water_access') ||
+      (qLower.includes('highland') && r.id === 'highlands') ||
+      (qLower.includes('swamp') && r.id === 'swamp') ||
+      (qLower.includes('dome') && r.id === 'dome_facility') ||
+      (qLower.includes('crater') && r.id === 'volcano') ||
+      (qLower.includes('volcano') && r.id === 'volcano')
     );
     if (matchedRegion) {
       this.flyTo(matchedRegion.x, matchedRegion.y, 2.0);
