@@ -5031,31 +5031,7 @@ const Carcass = {
 
 
   async render() {
-
     const container = document.getElementById('carcass-grid-container');
-
-    const hintEl = document.getElementById('carcass-auth-hint');
-
-
-
-    const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
-
-    if (hintEl) {
-
-      if (user) {
-
-        hintEl.innerHTML = `Đã đăng nhập: <b style="color: #00f076;">${user.personaName || user.steamId}</b>. Sẵn sàng nhận xác trong game.`;
-
-      } else {
-
-        hintEl.innerHTML = `Đăng nhập bằng Steam để mua. <a href="/api/player/steam/login" style="color: #00f076; text-decoration: underline; margin-left: 6px;">Đăng nhập ngay</a>`;
-
-      }
-
-    }
-
-
-
     if (!container) return;
 
 
@@ -5083,62 +5059,69 @@ const Carcass = {
 
 
     if (this.offers.length === 0) {
-
       this.offers = [
-
         {
-
-          id: "omv572un0",
-
-          name: "Carcass",
-
-          price_display: "$ 0",
-
-          species: "Tenontosaurus",
-
-          image: "https://islepilot.eu/cdn/dino-art/render/Tenontosaurus.webp",
-
-          description: "Xác tươi, cho thịt · hợp với chế độ ăn của bạn · kích cỡ 100%"
-
+                "id": "omv572un0",
+                "name": "Carcass",
+                "price": 0,
+                "price_display": "$ 0",
+                "species": "Tenontosaurus",
+                "species_name": "Tenontosaurus",
+                "image": "https://islepilot.eu/cdn/dino-art/render/Tenontosaurus.webp",
+                "description": "Xác tươi, cho thịt · hợp với chế độ ăn của bạn · kích cỡ 100%"
         },
-
         {
-
-          id: "omv6uqesm",
-
-          name: "triceraptor",
-
-          price_display: "$ 0",
-
-          species: "Triceratops",
-
-          image: "https://islepilot.eu/cdn/dino-art/render/Triceratops.webp",
-
-          description: "Xác tươi, cho thịt · Triceratops · kích cỡ 100%"
-
+                "id": "omv6uqesm",
+                "name": "triceraptor",
+                "price": 0,
+                "price_display": "$ 0",
+                "species": "Triceratops",
+                "species_name": "Triceratops",
+                "image": "https://islepilot.eu/cdn/dino-art/render/Triceratops.webp",
+                "description": "Xác tươi, cho thịt · Triceratops · kích cỡ 100%"
         },
-
         {
-
-          id: "omv6viaxj",
-
-          name: "stegosarus",
-
-          price_display: "$ 0",
-
-          species: "Stegosaurus",
-
-          image: "https://islepilot.eu/cdn/dino-art/render/Stegosaurus.webp",
-
-          description: "Xác tươi, cho thịt · Stegosaurus · kích cỡ 100%"
-
+                "id": "omv6viaxj",
+                "name": "stegosarus",
+                "price": 0,
+                "price_display": "$ 0",
+                "species": "Stegosaurus",
+                "species_name": "Stegosaurus",
+                "image": "https://islepilot.eu/cdn/dino-art/render/Stegosaurus.webp",
+                "description": "Xác tươi, cho thịt · Stegosaurus · kích cỡ 100%"
+        },
+        {
+                "id": "omvqituv4",
+                "name": "carnotaurus",
+                "price": 0,
+                "price_display": "$ 0",
+                "species": "Carnotaurus",
+                "species_name": "Carnotaurus",
+                "image": "https://islepilot.eu/cdn/dino-art/render/Carnotaurus.webp",
+                "description": "Xác tươi, cho thịt · Carnotaurus · kích cỡ 100%"
+        },
+        {
+                "id": "omvqiuffy",
+                "name": "ceratosaurus",
+                "price": 0,
+                "price_display": "$ 0",
+                "species": "Ceratosaurus",
+                "species_name": "Ceratosaurus",
+                "image": "https://islepilot.eu/cdn/dino-art/render/Ceratosaurus.webp",
+                "description": "Xác tươi, cho thịt · Ceratosaurus · kích cỡ 100%"
+        },
+        {
+                "id": "omvqiuphi",
+                "name": "tyrannosaurus",
+                "price": 0,
+                "price_display": "$ 0",
+                "species": "Tyrannosaurus",
+                "species_name": "Tyrannosaurus",
+                "image": "https://islepilot.eu/cdn/dino-art/render/Tyrannosaurus.webp",
+                "description": "Xác tươi, cho thịt · Tyrannosaurus · kích cỡ 100%"
         }
-
-      ];
-
+];
     }
-
-
 
     this.displayCards();
 
@@ -5289,12 +5272,7 @@ const Carcass = {
 
     const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
     if (!user) {
-      App.showToast("⚠️ Vui lòng đăng nhập bằng Steam để mua xác!");
-      setTimeout(() => {
-        if (confirm("Bạn cần đăng nhập bằng Steam để mua xác. Bạn có muốn chuyển đến trang đăng nhập Steam không?")) {
-          window.location.href = '/api/player/steam/login?redirect=' + encodeURIComponent(window.location.pathname + '#carcass');
-        }
-      }, 300);
+      App.showToast("Thất bại");
       return;
     }
 
@@ -5305,31 +5283,27 @@ const Carcass = {
       btn.textContent = '⏳ Đang thả...';
     }
 
-    const displayName = name || 'Carcass';
-    App.showToast(`⏳ Đang gửi lệnh thả xác ${displayName} tới server...`);
-
     try {
       const res = await fetch('/api/server/carcass', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ offerId, name: displayName, steam_id: steamId })
+        body: JSON.stringify({ offerId, name, steam_id: steamId })
       });
       const data = await res.json();
 
       if (data.success || data.ok) {
-        App.showToast(data.message || `🎉 Thả xác ${displayName} thành công! Xác rơi ngay trước mặt bạn trong game.`);
+        App.showToast("Thành công");
         this.cooldownEnd = Date.now() + 300000;
         this.startCooldownInterval();
       } else {
-        App.showToast(`❌ ${data.message || data.error || 'Thả xác thất bại!'}`);
+        App.showToast("Thất bại");
         if (btn) {
           btn.disabled = false;
           btn.textContent = 'Mua';
         }
       }
     } catch (e) {
-      console.error("Lỗi mua carcass:", e);
-      App.showToast("❌ Lỗi kết nối khi gửi yêu cầu thả xác!");
+      App.showToast("Thất bại");
       if (btn) {
         btn.disabled = false;
         btn.textContent = 'Mua';
