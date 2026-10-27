@@ -33,7 +33,7 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="css/style.css?v=3.2">
+  <link rel="stylesheet" href="css/style.css?v=3.3">
 
   <link rel="stylesheet" href="css/map.css?v=2.3">
 
@@ -250,63 +250,130 @@
 
       <div class="dashboard-grid">
 
-        <!-- Cột trái: Bục vinh danh Top 3 (Dino4VN style) -->
+        <!-- Cột trái: Bảng Vinh Danh TOP DONATE + SUPPORT (Phong cách Cyberpunk Neon theo Ảnh 2) -->
 
-        <div class="card">
+        <div class="card cyber-support-card">
 
-          <div class="card-header">
+          <!-- Đỉnh bảng: Vương miện Neon phát sáng & Telemetry HUD (Ảnh 2) -->
+          <div class="cyber-crown-section">
+            <div class="cyber-telemetry cyber-telemetry-left" title="System Telemetry">
+              <span>SYS.ONLINE</span>
+              <div class="telemetry-bar"><div class="telemetry-fill"></div></div>
+              <span>VAL: #3MG-VIP</span>
+            </div>
 
-            <h2 class="card-title">🏆 Top Thợ Săn Server</h2>
+            <div class="cyber-crown-wrap">
+              <svg class="cyber-neon-crown-svg" viewBox="0 0 160 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="crownNeonGrad" x1="0%" y1="50%" x2="100%" y2="50%">
+                    <stop offset="0%" stop-color="#00f2fe" />
+                    <stop offset="50%" stop-color="#38bdf8" />
+                    <stop offset="80%" stop-color="#a855f7" />
+                    <stop offset="100%" stop-color="#ff2a85" />
+                  </linearGradient>
+                  <filter id="crownGlow" x="-30%" y="-30%" width="160%" height="160%">
+                    <feGaussianBlur stdDeviation="3" result="blur" />
+                    <feMerge>
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
+                <!-- Đáy vương miện elip phát sáng -->
+                <ellipse cx="80" cy="74" rx="42" ry="9" stroke="url(#crownNeonGrad)" stroke-width="3.5" filter="url(#crownGlow)" />
+                <!-- Thân vương miện 5 đỉnh sắc nét -->
+                <path d="M 42 71 L 24 30 L 54 50 L 80 14 L 106 50 L 136 30 L 118 71" stroke="url(#crownNeonGrad)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" filter="url(#crownGlow)" />
+                <!-- 5 viên ngọc cầu neon trên 5 đỉnh -->
+                <circle cx="24" cy="30" r="5" stroke="#00f2fe" stroke-width="3" filter="url(#crownGlow)" />
+                <circle cx="54" cy="50" r="4" stroke="#38bdf8" stroke-width="2.5" filter="url(#crownGlow)" />
+                <circle cx="80" cy="14" r="6" stroke="#00f2fe" stroke-width="3.5" filter="url(#crownGlow)" />
+                <circle cx="106" cy="50" r="4" stroke="#a855f7" stroke-width="2.5" filter="url(#crownGlow)" />
+                <circle cx="136" cy="30" r="5" stroke="#ff2a85" stroke-width="3" filter="url(#crownGlow)" />
+              </svg>
+            </div>
 
-            <a href="#bxh" style="font-size: 0.85rem;">Xem tất cả &rarr;</a>
-
+            <div class="cyber-telemetry cyber-telemetry-right" title="Network Status">
+              <span>DONATE.NET</span>
+              <div class="telemetry-bar"><div class="telemetry-fill fill-pink"></div></div>
+              <span>SYNC: LIVE</span>
+            </div>
           </div>
 
-          <div class="podium-container">
+          <!-- Khung HUD Công Nghệ Viền Neon (Ảnh 2) -->
+          <div class="cyber-hud-frame">
+            <!-- Tiêu đề HUD viền neon -->
+            <div class="cyber-hud-header">
+              <h2 class="cyber-hud-title">TOP DONATE + SUPPORT</h2>
+              <a href="#donate" class="cyber-hud-link" title="Ủng hộ server 3MGAMING">Ủng hộ &rarr;</a>
+            </div>
 
-            <!-- Hạng 2 -->
+            <!-- Danh sách các vị trí Top 1, Top 2, Top 3 -->
+            <div class="cyber-supporter-list">
 
-            <div class="podium-slot">
+              <!-- HẠNG 1: MINH REDBULL (kèm ảnh khủng long trước tên) -->
+              <div class="cyber-supporter-row rank-1-active">
+                <div class="cyber-rank-box rank-1-box">
+                  <span>1</span>
+                </div>
+                <div class="cyber-avatar-wrap rank-1-avatar" title="Khủng long đại diện">
+                  <img src="/assets/images/Tyrannosaurus.webp" alt="Tyrannosaurus" class="cyber-dino-img">
+                </div>
+                <div class="cyber-player-info">
+                  <div class="cyber-player-name rank-1-name">
+                    @MINH REDBULL
+                    <span class="cyber-crown-icon" title="Top 1 VIP Supporter">👑</span>
+                  </div>
+                  <div class="cyber-player-role rank-1-role">Top 1 Nhà Tài Trợ & Đồng Hành</div>
+                </div>
+                <div class="cyber-supporter-badge rank-1-badge">
+                  <span>👑 TOP 1</span>
+                </div>
+              </div>
 
-              <div class="podium-player" id="podium-2-name">Player_2</div>
+              <!-- HẠNG 2: Để trống sau này thêm -->
+              <div class="cyber-supporter-row rank-empty">
+                <div class="cyber-rank-box rank-2-box">
+                  <span>2</span>
+                </div>
+                <div class="cyber-avatar-wrap rank-empty-avatar" title="Vị trí chờ thêm">
+                  <span class="cyber-placeholder-icon">🦕</span>
+                </div>
+                <div class="cyber-player-info">
+                  <div class="cyber-player-name text-empty">--- Vị trí đang chờ vinh danh ---</div>
+                  <div class="cyber-player-role">Top 2 Supporter</div>
+                </div>
+                <div class="cyber-supporter-badge rank-empty-badge">
+                  <span>--</span>
+                </div>
+              </div>
 
-              <div class="podium-score" id="podium-2-score">-- Kills</div>
-
-              <div class="podium-bar podium-2">2</div>
+              <!-- HẠNG 3: Để trống sau này thêm -->
+              <div class="cyber-supporter-row rank-empty">
+                <div class="cyber-rank-box rank-3-box">
+                  <span>3</span>
+                </div>
+                <div class="cyber-avatar-wrap rank-empty-avatar" title="Vị trí chờ thêm">
+                  <span class="cyber-placeholder-icon">🦖</span>
+                </div>
+                <div class="cyber-player-info">
+                  <div class="cyber-player-name text-empty">--- Vị trí đang chờ vinh danh ---</div>
+                  <div class="cyber-player-role">Top 3 Supporter</div>
+                </div>
+                <div class="cyber-supporter-badge rank-empty-badge">
+                  <span>--</span>
+                </div>
+              </div>
 
             </div>
 
-            <!-- Hạng 1 -->
-
-            <div class="podium-slot">
-
-              <div class="podium-player" id="podium-1-name" style="color: var(--accent-gold);">Player_1</div>
-
-              <div class="podium-score" id="podium-1-score">-- Kills</div>
-
-              <div class="podium-bar podium-1">👑 1</div>
-
+            <!-- Chân khung HUD cảm ơn -->
+            <div class="cyber-hud-footer">
+              <p class="cyber-footer-note">
+                💖 Cảm ơn những nhà tài trợ và supporter đã đồng hành phát triển cộng đồng 3MGAMING!
+              </p>
             </div>
-
-            <!-- Hạng 3 -->
-
-            <div class="podium-slot">
-
-              <div class="podium-player" id="podium-3-name">Player_3</div>
-
-              <div class="podium-score" id="podium-3-score">-- Kills</div>
-
-              <div class="podium-bar podium-3">3</div>
-
-            </div>
-
           </div>
-
-          <p style="text-align: center; font-size: 0.85rem; color: var(--text-muted);">
-
-            Điểm số được tính tự động từ số lần hạ gục, thời gian sinh tồn và loài khủng long.
-
-          </p>
 
         </div>
 

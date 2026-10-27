@@ -3767,3 +3767,349 @@ body.admin-mode-active .nav-links,
 body[data-current-tab="admin"] .nav-links {
   gap: 12px 18px;
 }
+
+
+/* ==============================================================
+   👑 CYBERPUNK HUD WIDGET: TOP DONATE + SUPPORT (THEO ẢNH 2)
+   ============================================================== */
+.cyber-support-card {
+  position: relative;
+  background: radial-gradient(circle at 50% 0%, rgba(0, 242, 254, 0.08) 0%, rgba(10, 8, 16, 0.95) 70%);
+  border: 1px solid rgba(0, 242, 254, 0.3) !important;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.8), 0 0 25px rgba(0, 242, 254, 0.12);
+  padding: 16px 20px 20px !important;
+  overflow: visible;
+}
+
+.cyber-crown-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: -6px;
+  margin-bottom: 6px;
+}
+
+.cyber-telemetry {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #38bdf8;
+  letter-spacing: 1px;
+  opacity: 0.85;
+}
+
+.cyber-telemetry-right {
+  text-align: right;
+  color: #f472b6;
+}
+
+.telemetry-bar {
+  width: 58px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.telemetry-fill {
+  width: 75%;
+  height: 100%;
+  background: linear-gradient(90deg, #00f2fe, #38bdf8);
+  box-shadow: 0 0 6px #00f2fe;
+}
+
+.telemetry-fill.fill-pink {
+  width: 60%;
+  margin-left: auto;
+  background: linear-gradient(90deg, #a855f7, #ff2a85);
+  box-shadow: 0 0 6px #ff2a85;
+}
+
+.cyber-crown-wrap {
+  width: 140px;
+  height: 75px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 0 16px rgba(0, 242, 254, 0.65)) drop-shadow(0 0 28px rgba(168, 85, 247, 0.45));
+  animation: crownNeonPulse 3s ease-in-out infinite alternate;
+}
+
+@keyframes crownNeonPulse {
+  0% {
+    filter: drop-shadow(0 0 12px rgba(0, 242, 254, 0.6)) drop-shadow(0 0 22px rgba(168, 85, 247, 0.35));
+    transform: translateY(0);
+  }
+  100% {
+    filter: drop-shadow(0 0 20px rgba(0, 242, 254, 0.85)) drop-shadow(0 0 35px rgba(255, 42, 133, 0.55));
+    transform: translateY(-2px);
+  }
+}
+
+.cyber-neon-crown-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* Khung viền HUD công nghệ */
+.cyber-hud-frame {
+  position: relative;
+  background: rgba(8, 10, 18, 0.88);
+  border: 1.5px solid rgba(0, 242, 254, 0.45);
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: inset 0 0 20px rgba(0, 242, 254, 0.08), 0 0 16px rgba(0, 242, 254, 0.2);
+}
+
+.cyber-hud-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(0, 242, 254, 0.2);
+  padding-bottom: 10px;
+  margin-bottom: 14px;
+}
+
+.cyber-hud-title {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.96rem;
+  font-weight: 900;
+  letter-spacing: 2.2px;
+  color: #fff;
+  text-shadow: 0 0 10px rgba(0, 242, 254, 0.85), 0 0 20px rgba(0, 242, 254, 0.4);
+  margin: 0;
+}
+
+.cyber-hud-link {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #38bdf8;
+  text-decoration: none;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  padding: 3px 10px;
+  border-radius: 14px;
+  transition: all 0.2s ease;
+}
+
+.cyber-hud-link:hover {
+  background: rgba(56, 189, 248, 0.25);
+  border-color: #38bdf8;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+  transform: translateX(2px);
+}
+
+/* Danh sách các dòng Top Supporter */
+.cyber-supporter-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cyber-supporter-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(14, 17, 27, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.25s ease;
+}
+
+/* Row Rank 1 Active */
+.cyber-supporter-row.rank-1-active {
+  background: linear-gradient(90deg, rgba(0, 242, 248, 0.14) 0%, rgba(14, 18, 30, 0.9) 45%, rgba(168, 85, 247, 0.12) 100%);
+  border: 1.5px solid #00f2fe;
+  box-shadow: 0 0 18px rgba(0, 242, 254, 0.35), inset 0 0 12px rgba(0, 242, 254, 0.12);
+}
+
+.cyber-supporter-row.rank-1-active:hover {
+  transform: translateX(3px);
+  box-shadow: 0 0 24px rgba(0, 242, 254, 0.5), inset 0 0 16px rgba(0, 242, 254, 0.2);
+}
+
+/* Row Rank 2 & 3 Empty */
+.cyber-supporter-row.rank-empty {
+  background: rgba(12, 14, 22, 0.45);
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+  opacity: 0.8;
+}
+
+.cyber-supporter-row.rank-empty:hover {
+  opacity: 0.95;
+  border-color: rgba(0, 242, 254, 0.3);
+}
+
+/* Hộp số thứ tự Rank [1], [2], [3] */
+.cyber-rank-box {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 900;
+  font-size: 0.95rem;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.rank-1-box {
+  background: rgba(0, 242, 254, 0.15);
+  border: 2px solid #00f2fe;
+  color: #00f2fe;
+  box-shadow: 0 0 12px rgba(0, 242, 254, 0.65), inset 0 0 6px rgba(0, 242, 254, 0.3);
+  text-shadow: 0 0 8px #00f2fe;
+}
+
+.rank-2-box {
+  background: rgba(56, 189, 248, 0.1);
+  border: 1.5px solid rgba(56, 189, 248, 0.5);
+  color: #38bdf8;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.35);
+}
+
+.rank-3-box {
+  background: rgba(255, 42, 133, 0.1);
+  border: 1.5px solid rgba(255, 42, 133, 0.5);
+  color: #ff2a85;
+  box-shadow: 0 0 8px rgba(255, 42, 133, 0.35);
+}
+
+/* Avatar khủng long trước tên */
+.cyber-avatar-wrap {
+  width: 42px;
+  height: 42px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  flex-shrink: 0;
+  background: rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.rank-1-avatar {
+  border: 2px solid #00f2fe;
+  box-shadow: 0 0 10px rgba(0, 242, 254, 0.65);
+}
+
+.cyber-dino-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 2px;
+  transition: transform 0.3s ease;
+}
+
+.cyber-supporter-row:hover .cyber-dino-img {
+  transform: scale(1.12);
+}
+
+.rank-empty-avatar {
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.cyber-placeholder-icon {
+  font-size: 1.15rem;
+  opacity: 0.5;
+  filter: grayscale(0.5);
+}
+
+/* Thông tin người chơi */
+.cyber-player-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.cyber-player-name {
+  font-weight: 800;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rank-1-name {
+  color: #ffffff;
+  text-shadow: 0 0 8px rgba(0, 242, 254, 0.6);
+  letter-spacing: 0.5px;
+}
+
+.cyber-crown-icon {
+  font-size: 1rem;
+  filter: drop-shadow(0 0 5px #f59e0b);
+  animation: crownBounce 2s infinite ease-in-out;
+}
+
+@keyframes crownBounce {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-2px) rotate(4deg); }
+}
+
+.cyber-player-name.text-empty {
+  color: rgba(255, 255, 255, 0.38);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+.cyber-player-role {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+.rank-1-role {
+  color: #7dd3fc;
+  font-weight: 600;
+}
+
+/* Huy hiệu bên phải */
+.cyber-supporter-badge {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  font-size: 0.78rem;
+  padding: 4px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.rank-1-badge {
+  background: linear-gradient(135deg, rgba(0, 242, 254, 0.25), rgba(168, 85, 247, 0.25));
+  border: 1px solid #00f2fe;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(0, 242, 254, 0.5);
+  letter-spacing: 1px;
+}
+
+.rank-empty-badge {
+  color: rgba(255, 255, 255, 0.25);
+  font-size: 0.9rem;
+}
+
+/* Footer note */
+.cyber-hud-footer {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.cyber-footer-note {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 1.4;
+}
