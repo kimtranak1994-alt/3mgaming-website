@@ -33,7 +33,7 @@ const App = {
 
   switchTab(tabId) {
     const validTabs = [
-      'home', 'bxh', 'garage', 
+      'home', 'bxh', 'damage', 'garage', 
       'skinshop', 'skins', 'skineditor', 'referral', 'teleport', 'quests', 'buydino', 'carcass',
       'map', 'guide', 'rules', 'donate', 'admin'
     ];
@@ -58,7 +58,11 @@ const App = {
     });
 
     // Kích hoạt load chuyên biệt cho từng tab
-    if (tabId === 'garage') {
+    if (tabId === 'damage') {
+      if (window.DamageChecker && typeof window.DamageChecker.render === 'function') {
+        window.DamageChecker.render();
+      }
+    } else if (tabId === 'garage') {
       Garage.render();
     } else if (tabId === 'skinshop') {
       SkinShop.render();

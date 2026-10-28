@@ -487,6 +487,11 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
             return
 
+        # 9b. Check Dame / Combat Log (Live từ IslePilot)
+        elif self.path.startswith("/api/combat-log") or self.path.startswith("/api/damage-log"):
+            self.handle_combat_log()
+            return
+
         # 10. Gara Khủng Long (Live từ IslePilot)
 
         elif self.path.startswith("/api/server/garage"):
@@ -2673,6 +2678,137 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             return
 
         self.send_json_response([])
+
+    def handle_combat_log(self):
+        query = urllib.parse.urlparse(self.path).query
+        q_params = urllib.parse.parse_qs(query)
+        steam_id = q_params.get("steam_id", [None])[0]
+        search_q = q_params.get("search", [""])[0].strip().lower()
+        filter_type = q_params.get("type", ["all"])[0]
+
+        endpoint = "/combat-log"
+        if steam_id and str(steam_id).isdigit() and len(str(steam_id)) >= 15:
+            endpoint = f"/combat-log?steamId={steam_id}"
+
+        remote_data = self.fetch_islepilot(endpoint) or {}
+        raw_hits = remote_data.get("hits", [])
+
+        ABILITY_NAMES = {
+            "Bite_Boar": "Cắn (Heo rừng)",
+            "Giga_Bite": "Cắn xé Giga",
+            "Giga_Maul": "Vồ cắn Giga",
+            "TyrannosaurusMuzzleSwingHold": "Quật đầu T-Rex (Gồng)",
+            "TyrannosaurusMuzzleSwingTap": "Quật đầu T-Rex (Nhanh)",
+            "BiteTyrannosaurus": "Cắn chí mạng T-Rex",
+            "CeratopsianFlipTriceratops": "Húc hất Trike",
+            "CeratopsianSprintingFlipTriceratops": "Húc xung lực Trike",
+            "SparringFlipTriceratops": "Húc đối kháng Trike",
+            "Bite_Triceratops": "Cắn Trike",
+            "Spino_Bite": "Cắn Spinosaurus",
+            "DirectionalGallimimusKick": "Cú đá Gallimimus",
+            "DirectionalGallimimusKickPrimary": "Đá trực diện Galli",
+            "GallimimusKickLeft": "Đá mạn sườn Galli",
+            "Puerta_Stomp": "Giẫm nát Puerta",
+            "Crush": "Nghiền nát (Crush)",
+            "SparringFlip_Tyrannosaurus": "Quật đối kháng T-Rex",
+            "Bite_NoBleed": "Cắn thường",
+            "PrimaryBite": "Cắn cơ bản",
+            "AltBite": "Đòn cắn phụ",
+            "TailAttack": "Quật đuôi"
+        }
+
+        formatted_hits = []
+        total_dmg_dealt = 0.0
+        total_dmg_received = 0.0
+        total_kills_count = 0
+
+        target_sid = str(steam_id) if (steam_id and str(steam_id).isdigit() and len(str(steam_id)) >= 15) else None
+
+        for h in raw_hits:
+            hit_id = str(h.get("id"))
+            emitted_at = h.get("at")
+            atk_sid = str(h.get("attackerSteamId") or "")
+            atk_name = h.get("attackerName") or "Ẩn danh / NPC"
+            atk_spec = h.get("attackerSpecies") or "Khủng long"
+            atk_growth = round(float(h.get("attackerGrowth") or 1.0) * 100)
+
+            vic_sid = str(h.get("victimSteamId") or "")
+            vic_name = h.get("victimName") or "Ẩn danh / NPC"
+            vic_spec = h.get("victimSpecies") or "Khủng long"
+            vic_growth = round(float(h.get("victimGrowth") or 1.0) * 100)
+
+            damage = round(float(h.get("damage") or 0), 2)
+            hp_before = round(float(h.get("hpBefore") or 0), 1)
+            hp_after = round(float(h.get("hpAfter") or 0), 1)
+            dist_m = round(float(h.get("distanceM") or 0), 1)
+            raw_ability = str(h.get("ability") or "")
+            ability_label = ABILITY_NAMES.get(raw_ability, raw_ability.replace("_", " ") if raw_ability else "Tấn công")
+            killed = bool(h.get("killed"))
+
+            is_outgoing = bool(target_sid and atk_sid == target_sid)
+            is_incoming = bool(target_sid and vic_sid == target_sid)
+
+            if target_sid:
+                if filter_type == "outgoing" and not is_outgoing:
+                    continue
+                elif filter_type == "incoming" and not is_incoming:
+                    continue
+                elif filter_type == "kills" and not killed:
+                    continue
+                elif filter_type == "all" and not (is_outgoing or is_incoming):
+                    continue
+
+                if is_outgoing:
+                    total_dmg_dealt += damage
+                    if killed:
+                        total_kills_count += 1
+                if is_incoming:
+                    total_dmg_received += damage
+            else:
+                if filter_type == "kills" and not killed:
+                    continue
+
+            if search_q:
+                haystack = f"{atk_name} {atk_sid} {atk_spec} {vic_name} {vic_sid} {vic_spec} {raw_ability} {ability_label}".lower()
+                if search_q not in haystack:
+                    continue
+
+            formatted_hits.append({
+                "id": hit_id,
+                "timestamp": emitted_at,
+                "attacker": {
+                    "steamId": atk_sid,
+                    "name": atk_name,
+                    "species": atk_spec,
+                    "growth": atk_growth
+                },
+                "victim": {
+                    "steamId": vic_sid,
+                    "name": vic_name,
+                    "species": vic_spec,
+                    "growth": vic_growth
+                },
+                "damage": damage,
+                "hpBefore": hp_before,
+                "hpAfter": hp_after,
+                "distance": dist_m,
+                "ability": ability_label,
+                "rawAbility": raw_ability,
+                "killed": killed,
+                "isOutgoing": is_outgoing,
+                "isIncoming": is_incoming
+            })
+
+        self.send_json_response({
+            "ok": True,
+            "hits": formatted_hits,
+            "stats": {
+                "totalHits": len(formatted_hits),
+                "damageDealt": round(total_dmg_dealt, 1),
+                "damageReceived": round(total_dmg_received, 1),
+                "kills": total_kills_count
+            }
+        })
 
     def handle_garage(self):
 
