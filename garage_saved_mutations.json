@@ -1,0 +1,522 @@
+{
+  "76561199062270730_cmvs39f4u0borqp01kmprho7l": {
+    "active": [
+      "Hemomania",
+      "Accelerated Prey Drive",
+      "Osteosclerosis",
+      "Gastronomic Regeneration"
+    ],
+    "parent": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderA": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "cmvs39f4u0borqp01kmprho7l": {
+    "active": [
+      "Hemomania",
+      "Accelerated Prey Drive",
+      "Osteosclerosis",
+      "Gastronomic Regeneration"
+    ],
+    "parent": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderA": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "76561199062270730_Tyrannosaurus": {
+    "active": [
+      "Increased Inspiratory Capacity",
+      "Enlarged meniscus",
+      "Congenital Hypoalgesia",
+      "Cannibalistic"
+    ],
+    "parent": [
+      "Multichambered Lungs",
+      "Gastronomic Regeneration",
+      "Enhanced Digestion",
+      "Nocturnal"
+    ],
+    "elderA": [
+      "Cellular Regeneration",
+      "Hematophagy",
+      "Efficient Digestion",
+      "Sustained Hydration"
+    ],
+    "elderB": [
+      "Hemomania",
+      "Accelerated Prey Drive",
+      "Epidermal Fibrosis",
+      "Osteosclerosis"
+    ]
+  },
+  "76561199062270730_cmvqqlmds4553pk01iertvoip": {
+    "active": [
+      "Hemomania",
+      "Accelerated Prey Drive",
+      "Hydrodynamic",
+      "Gastronomic Regeneration"
+    ],
+    "parent": [
+      "Cellular Regeneration",
+      "Multichambered Lungs",
+      "Osteophagic",
+      "Nocturnal"
+    ],
+    "elderA": [
+      "Epidermal Fibrosis",
+      "Congenital Hypoalgesia",
+      "Hypermetabolic Inanition",
+      "Hydroregenerative"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "cmvqqlmds4553pk01iertvoip": {
+    "active": [
+      "Hemomania",
+      "Accelerated Prey Drive",
+      "Hydrodynamic",
+      "Gastronomic Regeneration"
+    ],
+    "parent": [
+      "Cellular Regeneration",
+      "Multichambered Lungs",
+      "Osteophagic",
+      "Nocturnal"
+    ],
+    "elderA": [
+      "Epidermal Fibrosis",
+      "Congenital Hypoalgesia",
+      "Hypermetabolic Inanition",
+      "Hydroregenerative"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "76561199062270730_Deinosuchus": {
+    "active": [
+      "Hemomania",
+      "Accelerated Prey Drive",
+      "Hydrodynamic",
+      "Gastronomic Regeneration"
+    ],
+    "parent": [
+      "Cellular Regeneration",
+      "Multichambered Lungs",
+      "Osteophagic",
+      "Nocturnal"
+    ],
+    "elderA": [
+      "Epidermal Fibrosis",
+      "Congenital Hypoalgesia",
+      "Hypermetabolic Inanition",
+      "Hydroregenerative"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "76561199062270730_cmvjght5yd9vso901v94aro4j": {
+    "active": [
+      "Hemomania",
+      "Osteosclerosis",
+      "Cellular Regeneration",
+      "Gastronomic Regeneration"
+    ],
+    "parent": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderA": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "cmvjght5yd9vso901v94aro4j": {
+    "active": [
+      "Hemomania",
+      "Osteosclerosis",
+      "Cellular Regeneration",
+      "Gastronomic Regeneration"
+    ],
+    "parent": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderA": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "76561199062270730_Giganotosaurus": {
+    "active": [
+      "Hemomania",
+      "Osteosclerosis",
+      "Cellular Regeneration",
+      "Gastronomic Regeneration"
+    ],
+    "parent": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderA": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "76561199062270730_cmvjgfffddlv8o901ch6lfoxc": {
+    "active": [
+      "Congenital Hypoalgesia",
+      "Multichambered Lungs",
+      "Hypervigilance",
+      "Xerocole Adaptation"
+    ],
+    "parent": [
+      "Photosynthetic Tissue",
+      "Nocturnal",
+      "Hydroregenerative",
+      "Sustained Hydration"
+    ],
+    "elderA": [
+      "Photosynthetic Regeneration",
+      "Tactile Endurance",
+      "Truculency",
+      "Efficient Digestion"
+    ],
+    "elderB": [
+      "Osteosclerosis",
+      "Epidermal Fibrosis",
+      "Cellular Regeneration",
+      "Gastronomic Regeneration"
+    ]
+  },
+  "cmvjgfffddlv8o901ch6lfoxc": {
+    "active": [
+      "Congenital Hypoalgesia",
+      "Multichambered Lungs",
+      "Hypervigilance",
+      "Xerocole Adaptation"
+    ],
+    "parent": [
+      "Photosynthetic Tissue",
+      "Nocturnal",
+      "Hydroregenerative",
+      "Sustained Hydration"
+    ],
+    "elderA": [
+      "Photosynthetic Regeneration",
+      "Tactile Endurance",
+      "Truculency",
+      "Efficient Digestion"
+    ],
+    "elderB": [
+      "Osteosclerosis",
+      "Epidermal Fibrosis",
+      "Cellular Regeneration",
+      "Gastronomic Regeneration"
+    ]
+  },
+  "76561199062270730_Triceratops": {
+    "active": [
+      "Congenital Hypoalgesia",
+      "Multichambered Lungs",
+      "Hypervigilance",
+      "Xerocole Adaptation"
+    ],
+    "parent": [
+      "Photosynthetic Tissue",
+      "Nocturnal",
+      "Hydroregenerative",
+      "Sustained Hydration"
+    ],
+    "elderA": [
+      "Photosynthetic Regeneration",
+      "Tactile Endurance",
+      "Truculency",
+      "Efficient Digestion"
+    ],
+    "elderB": [
+      "Osteosclerosis",
+      "Epidermal Fibrosis",
+      "Cellular Regeneration",
+      "Gastronomic Regeneration"
+    ]
+  },
+  "76561199062270730_cmvi8vane6qrfn001gvdevyex": {
+    "active": [
+      "Increased Inspiratory Capacity",
+      "Enlarged meniscus",
+      "Congenital Hypoalgesia",
+      "Cannibalistic"
+    ],
+    "parent": [
+      "Multichambered Lungs",
+      "Gastronomic Regeneration",
+      "Enhanced Digestion",
+      "Nocturnal"
+    ],
+    "elderA": [
+      "Cellular Regeneration",
+      "Hematophagy",
+      "Efficient Digestion",
+      "Sustained Hydration"
+    ],
+    "elderB": [
+      "Hemomania",
+      "Accelerated Prey Drive",
+      "Epidermal Fibrosis",
+      "Osteosclerosis"
+    ]
+  },
+  "cmvi8vane6qrfn001gvdevyex": {
+    "active": [
+      "Increased Inspiratory Capacity",
+      "Enlarged meniscus",
+      "Congenital Hypoalgesia",
+      "Cannibalistic"
+    ],
+    "parent": [
+      "Multichambered Lungs",
+      "Gastronomic Regeneration",
+      "Enhanced Digestion",
+      "Nocturnal"
+    ],
+    "elderA": [
+      "Cellular Regeneration",
+      "Hematophagy",
+      "Efficient Digestion",
+      "Sustained Hydration"
+    ],
+    "elderB": [
+      "Hemomania",
+      "Accelerated Prey Drive",
+      "Epidermal Fibrosis",
+      "Osteosclerosis"
+    ]
+  },
+  "76561199062270730_cmvgrcktz0yoisd01zsk9az0v": {
+    "active": [
+      "Multichambered Lungs",
+      "Congenital Hypoalgesia",
+      "Efficient Digestion",
+      "Gastronomic Regeneration"
+    ],
+    "parent": [
+      "Osteosclerosis",
+      "Enhanced Digestion",
+      "Sustained Hydration",
+      "Epidermal Fibrosis"
+    ],
+    "elderA": [
+      "Accelerated Prey Drive",
+      "Hemomania",
+      "Cellular Regeneration",
+      "Cannibalistic"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "cmvgrcktz0yoisd01zsk9az0v": {
+    "active": [
+      "Multichambered Lungs",
+      "Congenital Hypoalgesia",
+      "Efficient Digestion",
+      "Gastronomic Regeneration"
+    ],
+    "parent": [
+      "Osteosclerosis",
+      "Enhanced Digestion",
+      "Sustained Hydration",
+      "Epidermal Fibrosis"
+    ],
+    "elderA": [
+      "Accelerated Prey Drive",
+      "Hemomania",
+      "Cellular Regeneration",
+      "Cannibalistic"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "76561199062270730_Carnotaurus": {
+    "active": [
+      "Multichambered Lungs",
+      "Congenital Hypoalgesia",
+      "Efficient Digestion",
+      "Gastronomic Regeneration"
+    ],
+    "parent": [
+      "Osteosclerosis",
+      "Enhanced Digestion",
+      "Sustained Hydration",
+      "Epidermal Fibrosis"
+    ],
+    "elderA": [
+      "Accelerated Prey Drive",
+      "Hemomania",
+      "Cellular Regeneration",
+      "Cannibalistic"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "76561199062270730_cmvf9woaa0cuao301x3enzh90": {
+    "active": [
+      "Cellular Regeneration",
+      "Epidermal Fibrosis",
+      "Osteosclerosis",
+      "Truculency"
+    ],
+    "parent": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderA": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "cmvf9woaa0cuao301x3enzh90": {
+    "active": [
+      "Cellular Regeneration",
+      "Epidermal Fibrosis",
+      "Osteosclerosis",
+      "Truculency"
+    ],
+    "parent": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderA": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "76561199062270730_Kentrosaurus": {
+    "active": [
+      "Cellular Regeneration",
+      "Epidermal Fibrosis",
+      "Osteosclerosis",
+      "Truculency"
+    ],
+    "parent": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderA": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  }
+}
