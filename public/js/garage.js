@@ -278,9 +278,9 @@ const Garage = {
 
     const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
 
-    const garageUrl = user ? `/api/server/garage?steam_id=${user.steamId}` : '/api/server/garage';
-
-
+    const garageUrl = user 
+      ? `/api/server/garage?steam_id=${user.steamId}&_t=${Date.now()}` 
+      : `/api/server/garage?_t=${Date.now()}`;
 
     let data = null;
 
@@ -294,6 +294,24 @@ const Garage = {
 
       console.warn("Không thể tải Gara:", e);
 
+    }
+
+    if (data && data.deleted_ids && Array.isArray(data.deleted_ids)) {
+      const localList = this.getDeletedDinos();
+      const merged = Array.from(new Set([...localList, ...data.deleted_ids.map(String)]));
+      try {
+        localStorage.setItem('deleted_garage_dinos', JSON.stringify(merged));
+      } catch (e) {}
+    }
+
+    // Tự động đồng bộ 2 chiều các ID đã xóa lên server
+    const currentDeleted = this.getDeletedDinos();
+    if (currentDeleted.length > 0 && user && user.steamId) {
+      fetch('/api/server/garage/sync-deleted', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deleted_ids: currentDeleted, steam_id: user.steamId })
+      }).catch(() => {});
     }
 
 

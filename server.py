@@ -144,33 +144,92 @@ CUSTOM_NAMES_FILE = os.path.join(os.path.dirname(__file__), "dino_names.json")
 DELETED_GARAGE_FILE = os.path.join(os.path.dirname(__file__), "deleted_garage_dinos.json")
 
 def load_deleted_dinos():
-    if os.path.exists(DELETED_GARAGE_FILE):
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    primary_file = os.path.join(base_dir, "deleted_garage_dinos.json")
+    sub_file = os.path.join(base_dir, "3mgaming-website", "deleted_garage_dinos.json")
+    backup_file = os.path.join(base_dir, ".persistent_deleted_garage_dinos.json")
+
+    result = {}
+    for fpath in [backup_file, sub_file, primary_file]:
+        if os.path.exists(fpath):
+            try:
+                with open(fpath, "r", encoding="utf-8") as f:
+                    content = json.load(f)
+                    if isinstance(content, dict):
+                        result.update(content)
+                    elif isinstance(content, list):
+                        for item in content:
+                            result[str(item)] = {"deleted_at": datetime.datetime.now().isoformat()}
+            except Exception:
+                pass
+    return result
+
+def save_deleted_dino(dino_id, steam_id=""):
+    dino_id_str = str(dino_id).strip()
+    if not dino_id_str:
+        return
+    data = load_deleted_dinos()
+    data[dino_id_str] = {
+        "steam_id": str(steam_id).strip(),
+        "deleted_at": datetime.datetime.now().isoformat()
+    }
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    primary_file = os.path.join(base_dir, "deleted_garage_dinos.json")
+    sub_file = os.path.join(base_dir, "3mgaming-website", "deleted_garage_dinos.json")
+    backup_file = os.path.join(base_dir, ".persistent_deleted_garage_dinos.json")
+
+    for fpath in [primary_file, sub_file, backup_file]:
         try:
-            with open(DELETED_GARAGE_FILE, "r", encoding="utf-8") as f:
+            os.makedirs(os.path.dirname(fpath), exist_ok=True)
+            with open(fpath, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            print(f"[Save Deleted Dino Error {fpath}] {e}")
+
+def remove_from_deleted_dinos(dino_id):
+    dino_id_str = str(dino_id).strip()
+    if not dino_id_str:
+        return
+    data = load_deleted_dinos()
+    if dino_id_str in data:
+        del data[dino_id_str]
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        for fpath in [
+            os.path.join(base_dir, "deleted_garage_dinos.json"),
+            os.path.join(base_dir, "3mgaming-website", "deleted_garage_dinos.json"),
+            os.path.join(base_dir, ".persistent_deleted_garage_dinos.json")
+        ]:
+            try:
+                if os.path.exists(os.path.dirname(fpath)):
+                    with open(fpath, "w", encoding="utf-8") as f:
+                        json.dump(data, f, ensure_ascii=False, indent=2)
+            except Exception:
+                pass
+
+def get_user_gift_file():
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), "user_gift_dinos.json")
+
+def load_user_gift_dinos():
+    fpath = get_user_gift_file()
+    if os.path.exists(fpath):
+        try:
+            with open(fpath, "r", encoding="utf-8") as f:
                 return json.load(f)
         except Exception:
             pass
     return {}
 
-def save_deleted_dino(dino_id, steam_id=""):
-    data = load_deleted_dinos()
-    data[str(dino_id)] = {
-        "steam_id": str(steam_id),
-        "deleted_at": datetime.datetime.now().isoformat()
-    }
-    try:
-        with open(DELETED_GARAGE_FILE, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-    except Exception as e:
-        print(f"[Save Deleted Dino Error] {e}")
-
-    try:
-        sub_dir = os.path.join(os.path.dirname(__file__), "3mgaming-website")
-        if os.path.exists(sub_dir):
-            import shutil
-            shutil.copy2(DELETED_GARAGE_FILE, os.path.join(sub_dir, "deleted_garage_dinos.json"))
-    except Exception:
-        pass
+def save_user_gift_dinos(data):
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    fpath1 = os.path.join(base_dir, "user_gift_dinos.json")
+    fpath2 = os.path.join(base_dir, "3mgaming-website", "user_gift_dinos.json")
+    for fpath in [fpath1, fpath2]:
+        try:
+            if os.path.exists(os.path.dirname(fpath)):
+                with open(fpath, "w", encoding="utf-8") as f:
+                    json.dump(data, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            print(f"[Save User Gift Dinos Error {fpath}] {e}")
 
 def load_custom_names():
 
@@ -740,17 +799,13 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                         "elderB": ["None", "None", "None", "None"]
                     }
 
-            combined_garage = list(garage_info.get("garage", []))
-            gift_file = "user_gift_dinos.json"
-            if os.path.exists(gift_file):
-                try:
-                    with open(gift_file, "r", encoding="utf-8") as f:
-                        gifts = json.load(f)
-                    user_gifts = gifts.get(str(target_steam_id), [])
-                    for g in user_gifts:
-                        combined_garage.append(g)
-                except Exception as e:
-                    pass
+            deleted_dinos = load_deleted_dinos()
+            combined_garage = [g for g in garage_info.get("garage", []) if str(g.get("id")) not in deleted_dinos]
+            gifts = load_user_gift_dinos()
+            user_gifts = gifts.get(str(target_steam_id), [])
+            for g in user_gifts:
+                if str(g.get("id")) not in deleted_dinos:
+                    combined_garage.append(g)
 
             for g in combined_garage:
                 s_name = (g.get("species") or "").lower()
@@ -850,6 +905,12 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         elif self.path == "/api/server/garage/delete" or self.path == "/api/server/garage/sell":
 
             self.handle_garage_delete()
+
+            return
+
+        elif self.path == "/api/server/garage/sync-deleted":
+
+            self.handle_garage_sync_deleted()
 
             return
 
@@ -1311,33 +1372,23 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     self.send_json_response({"ok": True, "message": "Thành công", "dino": new_dino})
                     return
                 elif action == "delete_garage_dino":
-                    dino_id = str(params.get("garageDinoId") or "")
-                    gift_file = "user_gift_dinos.json"
-                    deleted = False
-                    if os.path.exists(gift_file):
-                        try:
-                            with open(gift_file, "r", encoding="utf-8") as f:
-                                gifts = json.load(f)
-                            user_gifts = gifts.get(str(target_steam_id), [])
-                            new_gifts = [g for g in user_gifts if str(g.get("id")) != dino_id]
-                            if len(new_gifts) != len(user_gifts):
-                                gifts[str(target_steam_id)] = new_gifts
-                                with open(gift_file, "w", encoding="utf-8") as f:
-                                    json.dump(gifts, f, ensure_ascii=False, indent=2)
-                                deleted = True
-                        except Exception:
-                            pass
-                    if deleted:
-                        self.send_json_response({"ok": True, "message": "Thành công"})
-                    else:
-                        res = self.fetch_islepilot(f"/players/{target_steam_id}/garage/{dino_id}/sell", method="POST", body_data={})
-                        if res and (res.get("ok") is True or "commandId" in res):
-                            self.send_json_response({"ok": True, "result": res})
-                        else:
-                            self.send_json_response({"ok": False, "error": "Thất bại"}, status=400)
+                    dino_id = str(params.get("garageDinoId") or "").strip()
+                    save_deleted_dino(dino_id, target_steam_id)
+                    gifts = load_user_gift_dinos()
+                    user_gifts = gifts.get(str(target_steam_id), [])
+                    new_gifts = [g for g in user_gifts if str(g.get("id")) != dino_id]
+                    if len(new_gifts) != len(user_gifts):
+                        gifts[str(target_steam_id)] = new_gifts
+                        save_user_gift_dinos(gifts)
+                    try:
+                        self.fetch_islepilot(f"/players/{target_steam_id}/garage/{dino_id}/sell", method="POST", body_data={})
+                    except Exception:
+                        pass
+                    self.send_json_response({"ok": True, "message": "Đã xóa vĩnh viễn khủng long khỏi Gara thành công!"})
                     return
                 elif action == "restore_garage_dino":
-                    dino_id = str(params.get("garageDinoId") or "")
+                    dino_id = str(params.get("garageDinoId") or "").strip()
+                    remove_from_deleted_dinos(dino_id)
                     gift_file = "user_gift_dinos.json"
                     found_gift = None
                     if os.path.exists(gift_file):
@@ -3488,61 +3539,58 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     })
 
                 # Gộp thêm khủng long quà tặng / Admin cấp
-                gift_file = "user_gift_dinos.json"
-                if os.path.exists(gift_file):
-                    try:
-                        with open(gift_file, "r", encoding="utf-8") as f:
-                            gifts = json.load(f)
-                        for gd in gifts.get(str(active_steam_id), []):
-                            if str(gd.get("id")) in deleted_dinos:
-                                continue
-                            g_growth = float(gd.get("growth", 1.0) or 1.0)
-                            g_pct = round(g_growth * 100, 1)
-                            g_stage = "Adult" if g_pct >= 100 else ("Sub-Adult" if g_pct >= 60 else ("Juvenile" if g_pct >= 20 else "Baby"))
-                            is_p = bool(gd.get("isPrimeElder", False) or gd.get("is_prime_elder", False))
-                            spec_raw = gd.get("species", "Tyrannosaurus")
-                            stats = calc_dino_stats(spec_raw, g_growth, 1.0, 1.0, 1.0, is_p)
-                            w_lbl = gd.get("weight_label")
-                            if "spino" in spec_raw.lower() and is_p:
-                                w_lbl = "15.0 Tấn (15,000 kg)"
-                                stats["max_hp"] = 15000
-                                stats["current_hp"] = 15000
-                            elif "trice" in spec_raw.lower() and is_p:
-                                w_lbl = "13.0 Tấn (13,000 kg)"
-                                stats["max_hp"] = 13000
-                                stats["current_hp"] = 13000
-                            elif not w_lbl:
-                                w_lbl = "Chuẩn Prime Elder" if is_p else "Chuẩn"
-                            dinos.append({
-                                "id": gd.get("id"),
-                                "name": gd.get("name") or gd.get("species"),
-                                "species": spec_raw,
-                                "gender": "Cái (Female)" if gd.get("gender") == "Female" else "Đực (Male)",
-                                "growth": g_growth,
-                                "growth_percent": g_pct,
-                                "stage": g_stage,
-                                "is_prime_elder": is_p,
-                                "mutations": gd.get("mutations", []),
-                                "mutationSlots": gd.get("mutationSlots") or {"active": gd.get("mutations", []), "parent": ["None", "None", "None", "None"], "elderA": ["None", "None", "None", "None"], "elderB": ["None", "None", "None", "None"]},
-                                "weight": stats["max_hp"],
-                                "weight_label": w_lbl,
-                                "current_hp": stats["current_hp"],
-                                "max_hp": stats["max_hp"],
-                                "health": stats["health_pct"],
-                                "current_hunger": stats["current_hunger"],
-                                "max_hunger": stats["max_hunger"],
-                                "hunger": stats["hunger_pct"],
-                                "current_thirst": stats["current_thirst"],
-                                "max_thirst": stats["max_thirst"],
-                                "thirst": stats["thirst_pct"],
-                                "stamina": 100,
-                                "stored_at": gd.get("parkedAt", "Vừa thêm"),
-                                "parked_at": gd.get("parkedAt"),
-                                "status": "stored",
-                                "source": "admin_granted"
-                            })
-                    except Exception as e:
-                        pass
+                try:
+                    gifts = load_user_gift_dinos()
+                    for gd in gifts.get(str(active_steam_id), []):
+                        if str(gd.get("id")) in deleted_dinos:
+                            continue
+                        g_growth = float(gd.get("growth", 1.0) or 1.0)
+                        g_pct = round(g_growth * 100, 1)
+                        g_stage = "Adult" if g_pct >= 100 else ("Sub-Adult" if g_pct >= 60 else ("Juvenile" if g_pct >= 20 else "Baby"))
+                        is_p = bool(gd.get("isPrimeElder", False) or gd.get("is_prime_elder", False))
+                        spec_raw = gd.get("species", "Tyrannosaurus")
+                        stats = calc_dino_stats(spec_raw, g_growth, 1.0, 1.0, 1.0, is_p)
+                        w_lbl = gd.get("weight_label")
+                        if "spino" in spec_raw.lower() and is_p:
+                            w_lbl = "15.0 Tấn (15,000 kg)"
+                            stats["max_hp"] = 15000
+                            stats["current_hp"] = 15000
+                        elif "trice" in spec_raw.lower() and is_p:
+                            w_lbl = "13.0 Tấn (13,000 kg)"
+                            stats["max_hp"] = 13000
+                            stats["current_hp"] = 13000
+                        elif not w_lbl:
+                            w_lbl = "Chuẩn Prime Elder" if is_p else "Chuẩn"
+                        dinos.append({
+                            "id": gd.get("id"),
+                            "name": gd.get("name") or gd.get("species"),
+                            "species": spec_raw,
+                            "gender": "Cái (Female)" if gd.get("gender") == "Female" else "Đực (Male)",
+                            "growth": g_growth,
+                            "growth_percent": g_pct,
+                            "stage": g_stage,
+                            "is_prime_elder": is_p,
+                            "mutations": gd.get("mutations", []),
+                            "mutationSlots": gd.get("mutationSlots") or {"active": gd.get("mutations", []), "parent": ["None", "None", "None", "None"], "elderA": ["None", "None", "None", "None"], "elderB": ["None", "None", "None", "None"]},
+                            "weight": stats["max_hp"],
+                            "weight_label": w_lbl,
+                            "current_hp": stats["current_hp"],
+                            "max_hp": stats["max_hp"],
+                            "health": stats["health_pct"],
+                            "current_hunger": stats["current_hunger"],
+                            "max_hunger": stats["max_hunger"],
+                            "hunger": stats["hunger_pct"],
+                            "current_thirst": stats["current_thirst"],
+                            "max_thirst": stats["max_thirst"],
+                            "thirst": stats["thirst_pct"],
+                            "stamina": 100,
+                            "stored_at": gd.get("parkedAt", "Vừa thêm"),
+                            "parked_at": gd.get("parkedAt"),
+                            "status": "stored",
+                            "source": "admin_granted"
+                        })
+                except Exception as e:
+                    pass
 
                 self.send_json_response({
 
@@ -3553,7 +3601,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
                     "dinos": dinos,
 
-                    "steam_id": active_steam_id
+                    "steam_id": active_steam_id,
+
+                    "deleted_ids": list(deleted_dinos.keys())
 
                 })
 
@@ -3561,12 +3611,13 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
         # Kiểm tra gift dinos khi IslePilot garage trống
         fallback_dinos = []
-        gift_file = "user_gift_dinos.json"
-        if active_steam_id and os.path.exists(gift_file):
+        deleted_dinos = load_deleted_dinos()
+        gifts = load_user_gift_dinos()
+        if active_steam_id:
             try:
-                with open(gift_file, "r", encoding="utf-8") as f:
-                    gifts = json.load(f)
                 for gd in gifts.get(str(active_steam_id), []):
+                    if str(gd.get("id")) in deleted_dinos:
+                        continue
                     g_growth = float(gd.get("growth", 1.0) or 1.0)
                     g_pct = round(g_growth * 100, 1)
                     g_stage = "Adult" if g_pct >= 100 else ("Sub-Adult" if g_pct >= 60 else ("Juvenile" if g_pct >= 20 else "Baby"))
@@ -3621,7 +3672,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
             "slots_used": len(fallback_dinos),
 
-            "dinos": fallback_dinos
+            "dinos": fallback_dinos,
+
+            "deleted_ids": list(deleted_dinos.keys())
 
         })
 
@@ -3757,23 +3810,12 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             save_deleted_dino(dino_id, steam_id)
 
             # 2. Xóa triệt để trong user_gift_dinos.json nếu có
-            gift_file = os.path.join(os.path.dirname(__file__), "user_gift_dinos.json")
-            if os.path.exists(gift_file):
-                try:
-                    with open(gift_file, "r", encoding="utf-8") as f:
-                        gifts = json.load(f)
-                    user_gifts = gifts.get(str(steam_id), [])
-                    new_gifts = [g for g in user_gifts if str(g.get("id")) != dino_id]
-                    if len(new_gifts) != len(user_gifts):
-                        gifts[str(steam_id)] = new_gifts
-                        with open(gift_file, "w", encoding="utf-8") as f:
-                            json.dump(gifts, f, ensure_ascii=False, indent=2)
-                        sub_gift = os.path.join(os.path.dirname(__file__), "3mgaming-website", "user_gift_dinos.json")
-                        if os.path.exists(os.path.dirname(sub_gift)):
-                            with open(sub_gift, "w", encoding="utf-8") as f:
-                                json.dump(gifts, f, ensure_ascii=False, indent=2)
-                except Exception as e:
-                    print(f"[Garage Delete Gift Error] {e}")
+            gifts = load_user_gift_dinos()
+            user_gifts = gifts.get(str(steam_id), [])
+            new_gifts = [g for g in user_gifts if str(g.get("id")) != dino_id]
+            if len(new_gifts) != len(user_gifts):
+                gifts[str(steam_id)] = new_gifts
+                save_user_gift_dinos(gifts)
 
             # 3. Xóa tên tùy chỉnh nếu có trong custom_dino_names.json
             try:
@@ -3801,6 +3843,19 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         except Exception as e:
             print(f"[Garage Delete Error] {e}")
             self.send_json_response({"success": False, "ok": False, "message": f"Lỗi hệ thống khi xóa dino: {e}"}, 500)
+
+    def handle_garage_sync_deleted(self):
+        try:
+            length = int(self.headers.get("Content-Length", 0))
+            payload = json.loads(self.rfile.read(length).decode("utf-8")) if length > 0 else {}
+            deleted_ids = payload.get("deleted_ids", [])
+            steam_id = str(payload.get("steam_id") or self.get_active_steam_id() or "").strip()
+            if isinstance(deleted_ids, list):
+                for did in deleted_ids:
+                    save_deleted_dino(did, steam_id)
+            self.send_json_response({"ok": True, "count": len(deleted_ids)})
+        except Exception as e:
+            self.send_json_response({"ok": False, "error": str(e)}, 500)
 
     def handle_garage_store(self):
 
