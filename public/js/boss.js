@@ -447,53 +447,125 @@ const BossHunt = {
           </span>
         </div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 20px;">
+        <!-- NÚT 1-CHẠM: THẢ AI BOSS TỰ ĐỘNG KHÔNG CẦN CHỌN TÀI KHOẢN HAY STEAM ID -->
+        <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(6, 78, 59, 0.4)); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
           <div>
-            <label style="display: block; font-size: 0.85rem; color: #cbd5e1; margin-bottom: 6px; font-weight: 700;">
-              👤 Chọn tài khoản đặt làm vật chủ Boss AI:
-            </label>
-            <select id="boss-admin-target-select" class="form-input" style="width: 100%;" onchange="if(this.value !== 'custom') { document.getElementById('boss-admin-target-sid').value = this.value; }">
-              <option value="${adminSid}" ${defaultSid === adminSid ? 'selected' : ''}>
-                👑 Chính tôi (Admin: ${adminName}) [${adminSid}]
-              </option>
-              ${onlinePlayers.filter(p => p.steamId !== adminSid).map(p => `
-                <option value="${p.steamId}" ${p.steamId === defaultSid ? 'selected' : ''}>
-                  ${p.name || 'Player'} (${p.species || 'Dino'}, Steam: ${p.steamId})
-                </option>
-              `).join('')}
-              <option value="custom" ${defaultSid !== adminSid && !onlinePlayers.some(p => p.steamId === defaultSid) ? 'selected' : ''}>-- Nhập Steam ID thủ công bên dưới --</option>
-            </select>
-            <input type="text" id="boss-admin-target-sid" class="form-input" style="width: 100%; margin-top: 8px;" placeholder="Nhập Steam ID của tài khoản Boss..." value="${defaultSid}">
+            <div style="font-weight: 900; color: #34d399; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+              <span>⚡</span> THẢ AI BOSS TỰ ĐỘNG (KHÔNG CẦN CHỌN STEAM ID)
+            </div>
+            <p style="margin: 4px 0 0; color: #cbd5e1; font-size: 0.85rem;">
+              Bấm 1 chạm để hệ thống tự động triển khai <b>Boss Hươu AI 100.000 HP</b> tại Đấu Trường, tự động xuất chiêu 1.000 dame và chia 5.000 Xu!
+            </p>
           </div>
-
-          <div style="display: flex; flex-direction: column; justify-content: center; gap: 8px;">
-            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: #cbd5e1; cursor: pointer;">
-              <input type="checkbox" id="boss-admin-teleport" checked>
-              <span>Tự động dịch chuyển Boss đến <b>Đấu Trường</b> khi thả</span>
-            </label>
-            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: #cbd5e1; cursor: pointer;">
-              <input type="checkbox" id="boss-admin-slay" checked>
-              <span>Tiêu diệt / Slay nhân vật Boss khi bấm <b>Tắt Boss</b></span>
-            </label>
-          </div>
-        </div>
-
-        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
           ${!isActive ? `
-            <button class="btn-primary" style="background: linear-gradient(135deg, #ef4444, #b91c1c); font-size: 1rem; font-weight: 800; padding: 12px 24px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 0 16px rgba(239, 68, 68, 0.4);" onclick="BossHunt.adminToggle('enable')">
-              🔥 THẢ BOSS HƯƠU AI (100.000 HP)
+            <button class="btn-primary" style="background: linear-gradient(135deg, #10b981, #047857); font-size: 1rem; font-weight: 900; padding: 13px 26px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 0 20px rgba(16, 185, 129, 0.5); cursor: pointer;" onclick="BossHunt.spawnAutoAiBoss()">
+              🚀 THẢ AI BOSS TỰ ĐỘNG NGAY
             </button>
           ` : `
-            <button class="btn-primary" style="background: linear-gradient(135deg, #475569, #334155); font-size: 1rem; font-weight: 800; padding: 12px 24px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px;" onclick="BossHunt.adminToggle('disable')">
-              🛑 TẮT BOSS / THU HỒI
-            </button>
-            <button class="btn-primary" style="background: linear-gradient(135deg, #d97706, #b45309); font-size: 1rem; font-weight: 800; padding: 12px 24px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px;" onclick="BossHunt.adminToggle('respawn')">
-              🔄 HỒI ĐẦY 100K HP / HỒI SINH BOSS
-            </button>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <button class="btn-primary" style="background: linear-gradient(135deg, #ef4444, #b91c1c); font-size: 0.95rem; font-weight: 800; padding: 10px 20px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px;" onclick="BossHunt.adminToggle('disable')">
+                🛑 TẮT BOSS / THU HỒI
+              </button>
+              <button class="btn-primary" style="background: linear-gradient(135deg, #d97706, #b45309); font-size: 0.95rem; font-weight: 800; padding: 10px 20px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px;" onclick="BossHunt.adminToggle('respawn')">
+                🔄 HỒI ĐẦY 100K HP
+              </button>
+            </div>
           `}
         </div>
+
+        <!-- TÙY CHỌN NÂNG CAO: CHỈ ĐỊNH THỦ CÔNG TÀI KHOẢN (NẾU MUỐN) -->
+        <details style="border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px 14px; background: rgba(0,0,0,0.25);">
+          <summary style="font-size: 0.85rem; color: #94a3b8; cursor: pointer; font-weight: 700;">
+            ⚙️ Tùy chọn nâng cao: Chỉ định tài khoản cụ thể làm vật chủ (Thủ công)
+          </summary>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 14px; margin-bottom: 14px;">
+            <div>
+              <label style="display: block; font-size: 0.85rem; color: #cbd5e1; margin-bottom: 6px; font-weight: 700;">
+                👤 Chọn tài khoản đặt làm vật chủ Boss:
+              </label>
+              <select id="boss-admin-target-select" class="form-input" style="width: 100%;" onchange="if(this.value !== 'custom') { document.getElementById('boss-admin-target-sid').value = this.value; }">
+                <option value="${adminSid}" ${defaultSid === adminSid ? 'selected' : ''}>
+                  👑 Chính tôi (Admin: ${adminName}) [${adminSid}]
+                </option>
+                ${onlinePlayers.filter(p => p.steamId !== adminSid).map(p => `
+                  <option value="${p.steamId}" ${p.steamId === defaultSid ? 'selected' : ''}>
+                    ${p.name || 'Player'} (${p.species || 'Dino'}, Steam: ${p.steamId})
+                  </option>
+                `).join('')}
+                <option value="custom" ${defaultSid !== adminSid && !onlinePlayers.some(p => p.steamId === defaultSid) ? 'selected' : ''}>-- Nhập Steam ID thủ công bên dưới --</option>
+              </select>
+              <input type="text" id="boss-admin-target-sid" class="form-input" style="width: 100%; margin-top: 8px;" placeholder="Nhập Steam ID của tài khoản Boss..." value="${defaultSid}">
+            </div>
+
+            <div style="display: flex; flex-direction: column; justify-content: center; gap: 8px;">
+              <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: #cbd5e1; cursor: pointer;">
+                <input type="checkbox" id="boss-admin-teleport" checked>
+                <span>Tự động dịch chuyển Boss đến <b>Đấu Trường</b> khi thả</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: #cbd5e1; cursor: pointer;">
+                <input type="checkbox" id="boss-admin-slay" checked>
+                <span>Tiêu diệt / Slay nhân vật Boss khi bấm <b>Tắt Boss</b></span>
+              </label>
+            </div>
+          </div>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            ${!isActive ? `
+              <button class="btn-primary" style="background: linear-gradient(135deg, #ef4444, #b91c1c); font-size: 0.9rem; font-weight: 700; padding: 10px 18px; border-radius: 6px;" onclick="BossHunt.adminToggle('enable')">
+                🔥 Thả Boss Theo ID Đã Chọn
+              </button>
+            ` : `
+              <button class="btn-primary" style="background: linear-gradient(135deg, #475569, #334155); font-size: 0.9rem; font-weight: 700; padding: 10px 18px; border-radius: 6px;" onclick="BossHunt.adminToggle('disable')">
+                🛑 Tắt Boss Thủ Công
+              </button>
+            `}
+          </div>
+        </details>
       </div>
     `;
+  },
+
+  async spawnAutoAiBoss() {
+    if (!confirm("⚠️ XÁC NHẬN THẢ TỰ ĐỘNG AI BOSS:
+
+Bạn có muốn kích hoạt thả Boss Hươu AI 100.000 HP tại Đấu Trường ngay bây giờ?
+
+⭐ Hệ thống sẽ TỰ ĐỘNG triển khai Boss tại Đấu Trường mà không cần chọn bất kỳ ID Steam nào!")) {
+      return;
+    }
+
+    if (window.App && App.showToast) {
+      App.showToast("⏳ Đang tự động kích hoạt thả AI Boss...");
+    }
+
+    try {
+      const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
+      const adminSid = user ? user.steamId : '76561199175571899';
+
+      const res = await fetch(`/api/boss/toggle?admin_steam_id=${adminSid}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'enable',
+          auto_ai: true,
+          species: 'Dryosaurus',
+          teleport: true
+        })
+      });
+
+      const resData = await res.json();
+      if (resData.ok) {
+        if (window.App && App.showToast) {
+          App.showToast(resData.message || "✅ Thả AI Boss tự động thành công!");
+        } else {
+          alert(resData.message || "✅ Thả AI Boss tự động thành công!");
+        }
+        await this.fetchData();
+      } else {
+        alert("❌ " + (resData.error || "Lỗi thao tác!"));
+      }
+    } catch (e) {
+      alert("❌ Lỗi kết nối khi thả AI Boss: " + e.message);
+    }
   },
 
   async adminToggle(action) {

@@ -3870,17 +3870,26 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 return
 
             action = payload.get("action", "toggle") # enable, disable, respawn
-            target_sid = str(payload.get("target_steam_id") or self.get_active_steam_id() or "76561199175571899").strip()
+            auto_ai = bool(payload.get("auto_ai", False))
+            target_sid = str(payload.get("target_steam_id") or "").strip()
+
+            # Nếu là chế độ thả AI Boss tự động (không cần chọn ID):
+            if auto_ai or not target_sid:
+                target_sid = str(self.get_active_steam_id() or payload.get("admin_steam_id") or "76561199175571899").strip()
 
             if action in ["enable", "respawn"] or (action == "toggle" and not boss_db.get("active")):
                 # 0. Kiểm tra trạng thái thực tế của người chơi trên IslePilot
                 p_info = None
-                try:
-                    p_info = self.fetch_islepilot(f"/players/{target_sid}")
-                except Exception as e:
-                    print(f"[Boss Toggle] Lỗi kiểm tra player {target_sid}: {e}")
+                if target_sid:
+                    try:
+                        p_info = self.fetch_islepilot(f"/players/{target_sid}")
+                    except Exception as e:
+                        print(f"[Boss Toggle] Lỗi kiểm tra player {target_sid}: {e}")
 
-                if not p_info or not isinstance(p_info, dict) or p_info.get("error") or p_info.get("online") is not True:
+                is_player_online = isinstance(p_info, dict) and p_info.get("online") is True
+
+                # Nếu là chọn thủ công (không phải auto_ai) và tài khoản được chọn không online thì mới báo lỗi
+                if not auto_ai and payload.get("target_steam_id") and not is_player_online:
                     p_name = target_sid
                     if isinstance(p_info, dict) and p_info.get("name"):
                         p_name = p_info.get("name")
@@ -3890,70 +3899,69 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     }, status=400)
                     return
 
-                # 1. Swap sang loài Hươu (Dryosaurus)
-                try:
-                    swap_res = self.fetch_islepilot("/commands", method="POST", body_data={
-                        "action": "swap",
-                        "steamId": target_sid,
-                        "species": payload.get("species") or "Dryosaurus",
-                        "gender": "Female"
-                    })
-                    print(f"[Boss Spawn] Swap Dryosaurus (Hươu) cho {target_sid}: {swap_res}")
-                except Exception as e:
-                    print(f"[Boss Spawn] Lỗi swap: {e}")
+                chosen_species = payload.get("species") or "Dryosaurus"
 
-                time.sleep(1.0)
-
-                # 2. Đặt tăng trưởng Growth 1.0 (trưởng thành hoàn toàn)
-                try:
-                    self.fetch_islepilot("/commands", method="POST", body_data={
-                        "action": "setgrowth",
-                        "steamId": target_sid,
-                        "growth": 1.0,
-                        "frozen": False
-                    })
-                except Exception as e:
-                    print(f"[Boss Spawn] Lỗi setgrowth: {e}")
-
-                time.sleep(0.3)
-
-                # 3. Phóng to kích cỡ Boss (Scale 1.35x khổng lồ)
-                try:
-                    self.fetch_islepilot("/commands", method="POST", body_data={
-                        "action": "scale",
-                        "steamId": target_sid,
-                        "scale": 1.8
-                    })
-                except Exception as e:
-                    print(f"[Boss Spawn] Lỗi scale: {e}")
-
-                time.sleep(0.3)
-
-                # 4. Đặt chỉ số siêu Boss 100.000 HP, 100 Tấn, bất tử đói khát
-                try:
-                    self.fetch_islepilot("/commands", method="POST", body_data={
-                        "action": "setstats",
-                        "steamId": target_sid,
-                        "growth": 1.0,
-                        "health": 100000,
-                        "maxHealth": 100000,
-                        "hunger": 5000,
-                        "thirst": 1000,
-                        "stamina": 1000,
-                        "bleed": 0
-                    })
-                except Exception as e:
-                    print(f"[Boss Spawn] Lỗi setstats: {e}")
-
-                time.sleep(0.3)
-
-                # 5. Dịch chuyển đến Đấu Trường nếu tùy chọn bật
-                if payload.get("teleport", True):
+                # 1. Nếu tài khoản vật chủ đang online trong game, thực hiện swap và teleport
+                if is_player_online and target_sid:
                     try:
-                        tp_res = self.fetch_islepilot(f"/players/{target_sid}/teleport", method="POST", body_data={"locationId": "cmvqtjyrr4ombph01vi8dknwg"})
-                        print(f"[Boss Spawn] Dịch chuyển Boss {target_sid} vào Đấu Trường: {tp_res}")
+                        swap_res = self.fetch_islepilot("/commands", method="POST", body_data={
+                            "action": "swap",
+                            "steamId": target_sid,
+                            "species": chosen_species,
+                            "gender": "Female"
+                        })
+                        print(f"[Boss Spawn] Swap {chosen_species} cho {target_sid}: {swap_res}")
                     except Exception as e:
-                        print(f"[Boss Spawn] Lỗi teleport: {e}")
+                        print(f"[Boss Spawn] Lỗi swap: {e}")
+
+                    time.sleep(1.0)
+
+                    try:
+                        self.fetch_islepilot("/commands", method="POST", body_data={
+                            "action": "setgrowth",
+                            "steamId": target_sid,
+                            "growth": 1.0,
+                            "frozen": False
+                        })
+                    except Exception as e:
+                        print(f"[Boss Spawn] Lỗi setgrowth: {e}")
+
+                    time.sleep(0.3)
+
+                    try:
+                        self.fetch_islepilot("/commands", method="POST", body_data={
+                            "action": "scale",
+                            "steamId": target_sid,
+                            "scale": 1.8
+                        })
+                    except Exception as e:
+                        print(f"[Boss Spawn] Lỗi scale: {e}")
+
+                    time.sleep(0.3)
+
+                    try:
+                        self.fetch_islepilot("/commands", method="POST", body_data={
+                            "action": "setstats",
+                            "steamId": target_sid,
+                            "growth": 1.0,
+                            "health": 100000,
+                            "maxHealth": 100000,
+                            "hunger": 5000,
+                            "thirst": 1000,
+                            "stamina": 1000,
+                            "bleed": 0
+                        })
+                    except Exception as e:
+                        print(f"[Boss Spawn] Lỗi setstats: {e}")
+
+                    time.sleep(0.3)
+
+                    if payload.get("teleport", True):
+                        try:
+                            tp_res = self.fetch_islepilot(f"/players/{target_sid}/teleport", method="POST", body_data={"locationId": "cmvqtjyrr4ombph01vi8dknwg"})
+                            print(f"[Boss Spawn] Dịch chuyển Boss {target_sid} vào Đấu Trường: {tp_res}")
+                        except Exception as e:
+                            print(f"[Boss Spawn] Lỗi teleport: {e}")
 
                 # 6. Thông báo toàn server trong game
                 try:
@@ -3964,9 +3972,10 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 except Exception as e:
                     print(f"[Boss Spawn] Lỗi announce: {e}")
 
-                boss_name = f"👑 BOSS HƯƠU ({p_info.get('name', 'Admin')})" if p_info.get('name') else "👑 BOSS HƯƠU BẠO THẦN (100.000 HP)"
+                p_name = p_info.get('name') if (p_info and isinstance(p_info, dict)) else None
+                boss_name = f"👑 BOSS HƯƠU ({p_name})" if p_name else "👑 BOSS HƯƠU AI BẠO THẦN (100.000 HP)"
                 boss_db["active"] = True
-                boss_db["boss_steam_id"] = target_sid
+                boss_db["boss_steam_id"] = target_sid if is_player_online else "BOSS_AI_SYSTEM" 
                 boss_db["boss_name"] = boss_name
                 boss_db["species"] = payload.get("species") or "Dryosaurus"
                 boss_db["max_hp"] = 100000
