@@ -7,6 +7,9 @@ const Garage = {
   slotsTotal: 5,
 
   currentMode: 'all',
+  autoRefreshTimer: null,
+  isRefreshing: false,
+  isSpawning: false,
 
   getDeletedDinos() {
     try {
@@ -266,7 +269,72 @@ const Garage = {
 
 
 
+    updateSlotsBadge() {
+    const slotBadge = document.getElementById('garage-slots-badge');
+    if (slotBadge) {
+      slotBadge.textContent = `${(this.dinos || []).length} / ${this.slotsTotal || 5} Khủng Long`;
+    }
+  },
+
+  startAutoRefresh() {
+    this.stopAutoRefresh();
+    this.autoRefreshTimer = setInterval(() => {
+      const view = document.getElementById('view-garage');
+      if (!view || !view.classList.contains('active')) {
+        this.stopAutoRefresh();
+        return;
+      }
+      if (document.hidden || this.isStoring || this.isSpawning) {
+        return;
+      }
+      this.silentRefresh();
+    }, 4000);
+  },
+
+  stopAutoRefresh() {
+    if (this.autoRefreshTimer) {
+      clearInterval(this.autoRefreshTimer);
+      this.autoRefreshTimer = null;
+    }
+  },
+
+  async silentRefresh() {
+    if (this.isRefreshing || this.isStoring || this.isSpawning) return;
+    this.isRefreshing = true;
+
+    const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
+    const garageUrl = user 
+      ? `/api/server/garage?steam_id=${user.steamId}&_t=${Date.now()}` 
+      : `/api/server/garage?_t=${Date.now()}`;
+
+    try {
+      this.renderActiveDino();
+
+      const res = await fetch(garageUrl);
+      const data = await res.json();
+      if (data && Array.isArray(data.dinos)) {
+        const deletedList = this.getDeletedDinos();
+        const newDinos = data.dinos.filter(d => !deletedList.includes(String(d.id)));
+
+        const currentIds = (this.dinos || []).map(d => String(d.id)).sort().join(',');
+        const newIds = newDinos.map(d => String(d.id)).sort().join(',');
+
+        if (currentIds !== newIds) {
+          this.dinos = newDinos;
+          this.slotsTotal = data.slots_total || 5;
+          this.updateSlotsBadge();
+          this.displayDinos(this.dinos, this.currentMode);
+        }
+      }
+    } catch (e) {
+      // silent
+    } finally {
+      this.isRefreshing = false;
+    }
+  },
+
   async render() {
+    this.startAutoRefresh();
 
     this.renderActiveDino();
 
@@ -527,7 +595,7 @@ const Garage = {
 
           <div class="dino-actions">
 
-            <button class="btn-spawn" onclick="Garage.actionSpawn('${dino.id}', '${dino.species}')">
+            <button class="btn-spawn" data-id="${dino.id}" onclick="Garage.actionSpawn('${dino.id}', '${dino.species}', this)">
 
               ⚡ Rút Dino
 
@@ -674,46 +742,73 @@ const Garage = {
 
 
 
-  async actionSpawn(id, species) {
+  async actionSpawn(id, species, btnElement = null) {
+    if (this.isSpawning) return;
+    this.isSpawning = true;
 
     const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
-
     const steamId = user ? user.steamId : '76561199259679997';
 
+    const btn = btnElement || document.querySelector(`button.btn-spawn[data-id="${id}"]`);
+    const allSpawnBtns = document.querySelectorAll('button.btn-spawn');
 
+    allSpawnBtns.forEach(b => { b.disabled = true; });
+    if (btn) {
+      btn.innerHTML = '<span>⏳</span> Đang lấy...';
+      btn.style.opacity = '0.7';
+    }
+
+    if (window.App && window.App.showToast) {
+      window.App.showToast("⏳ Đang gửi lệnh lấy khủng long ra game...", "info");
+    }
 
     try {
-
       const res = await fetch('/api/server/garage/spawn', {
-
         method: 'POST',
-
         headers: { 'Content-Type': 'application/json' },
-
         body: JSON.stringify({ dino_id: id, species: species, steam_id: steamId })
-
       });
-
       const data = await res.json();
 
       if (data.success || data.ok) {
+        if (window.App && window.App.showToast) {
+          window.App.showToast(data.message || "🎉 Lấy khủng long thành công! Đang tải vào game...", "success");
+        }
 
-        App.showToast("Thành công");
+        // Cập nhật giao diện ngay lập tức (Optimistic UI) mà KHÔNG CẦN double click hay reload trang!
+        this.dinos = (this.dinos || []).filter(d => String(d.id) !== String(id));
+        this.updateSlotsBadge();
+        this.displayDinos(this.dinos, this.currentMode);
 
-        setTimeout(() => this.render(), 1200);
+        // Cập nhật ngay banner active dino
+        this.renderActiveDino();
 
+        // Đồng bộ ngầm lại sau 1s để đảm bảo khớp dữ liệu với server
+        setTimeout(() => this.silentRefresh(), 1000);
       } else {
-
-        App.showToast("Thất bại");
-
+        const errMsg = data.message || "Rút khủng long thất bại! Vui lòng thử lại.";
+        if (window.App && window.App.showToast) {
+          window.App.showToast(`⚠️ ${errMsg}`, "error");
+        } else {
+          alert(`⚠️ ${errMsg}`);
+        }
+        if (btn) {
+          btn.innerHTML = '⚡ Rút Dino';
+          btn.style.opacity = '1';
+        }
       }
-
     } catch (e) {
-
-      App.showToast("Thất bại");
-
+      if (window.App && window.App.showToast) {
+        window.App.showToast("⚠️ Lỗi kết nối khi rút khủng long! Vui lòng thử lại.", "error");
+      }
+      if (btn) {
+        btn.innerHTML = '⚡ Rút Dino';
+        btn.style.opacity = '1';
+      }
+    } finally {
+      this.isSpawning = false;
+      allSpawnBtns.forEach(b => { b.disabled = false; });
     }
-
   },
 
 

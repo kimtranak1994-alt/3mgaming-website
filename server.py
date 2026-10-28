@@ -4220,6 +4220,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             remote_garage = self.fetch_islepilot(f"/players/{steam_id}/garage") or {}
             dino_muts = []
             dino_spec = None
+            dino_growth = 1.0
             is_prime = False
             if remote_garage and "garage" in remote_garage:
                 for gd in remote_garage["garage"]:
@@ -4227,6 +4228,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                         raw_m = gd.get("mutations") or (gd.get("mutationSlots", {}).get("active")) or []
                         dino_muts = [m for m in raw_m if m and str(m).strip() != "None"]
                         dino_spec = gd.get("species")
+                        dino_growth = float(gd.get("growth") or 1.0)
                         is_prime = bool(gd.get("isPrimeElder"))
                         break
             restore_body = {}
@@ -4250,19 +4252,24 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     preserve_vitals=True
                 )
                 self.send_json_response({
-                    "success": True, 
-                    "message": "Thành công"
+                    "success": True,
+                    "ok": True,
+                    "message": f"Đã lấy thành công {dino_spec or species} ra game!",
+                    "dino_id": str(dino_id)
                 })
                 return
 
-            err = res.get("error") if (res and isinstance(res, dict)) else "Không thể kết nối đến máy chủ IslePilot."
-
+            err = res.get("error") or res.get("message") if (res and isinstance(res, dict)) else "Không thể kết nối đến máy chủ IslePilot."
             err_str = str(err)
-
-            self.send_json_response({"success": False, "message": "Thất bại"}, 400)
+            if "not online" in err_str.lower() or "offline" in err_str.lower():
+                err_msg = "Khủng long của bạn chưa online trong server! Vui lòng vào game trước."
+            elif "slot" in err_str.lower():
+                err_msg = "Ô lưu trữ không hợp lệ hoặc đã được rút."
+            else:
+                err_msg = f"Rút dino thất bại: {err_str}"
+            self.send_json_response({"success": False, "ok": False, "message": err_msg}, 400)
 
         except Exception as e:
-
             self.send_json_response({"success": False, "message": f"Lỗi hệ thống khi rút dino: {e}"}, 500)
 
     def handle_garage_delete(self):
