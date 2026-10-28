@@ -2102,73 +2102,77 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         t = threading.Thread(target=worker, daemon=True)
         t.start()
     def fetch_islepilot(self, endpoint, method="GET", body_data=None):
-
         api_key = config.get("ISLEPILOT_API_KEY", "").strip()
-
         base_url = "https://islepilot.eu/api/v1"
-
         if not api_key:
-
             return None
 
         server_id = config.get("SERVER_ID", "cmv3zzfix02g3pj01yay0hw4g")
+        clean_key = endpoint.split("?")[0].strip()
+        now_ts = time.time()
+
+        if not hasattr(DinoRequestHandler, "_islepilot_cache"):
+            DinoRequestHandler._islepilot_cache = {}
+
+        # 1. Kiểm tra cache GET để tránh bị IslePilot rate-limit (HTTP 429)
+        ttl = 0
+        if method == "GET":
+            if clean_key.startswith("/players/"):
+                ttl = 4.0  # Cache 4s cho thông tin player / ví
+            elif clean_key == "/players":
+                ttl = 6.0  # Cache 6s cho danh sách players
+            elif clean_key == "/server":
+                ttl = 8.0  # Cache 8s cho trạng thái server
+            elif clean_key in ["/killfeed", "/combat-log"]:
+                ttl = 3.5  # Cache 3.5s cho combat / killfeed
+            elif clean_key == "/teleport/locations":
+                ttl = 60.0
+            else:
+                ttl = 3.0
+
+            if ttl > 0 and clean_key in DinoRequestHandler._islepilot_cache:
+                cached_time, cached_val = DinoRequestHandler._islepilot_cache[clean_key]
+                if (now_ts - cached_time) < ttl:
+                    return cached_val
 
         if "serverId=" not in endpoint:
-
             sep = "&" if "?" in endpoint else "?"
-
             endpoint = f"{endpoint}{sep}serverId={server_id}"
 
-        if method == "GET" and "_t=" not in endpoint:
-
-            sep = "&" if "?" in endpoint else "?"
-
-            endpoint = f"{endpoint}{sep}_t={int(time.time()*1000)}"
-
         url = f"{base_url}{endpoint}"
-
         data_bytes = None
-
         if body_data is not None:
-
             data_bytes = json.dumps(body_data).encode("utf-8")
 
         req = urllib.request.Request(url, data=data_bytes, method=method)
-
         req.add_header("Authorization", f"Bearer {api_key}")
-
         req.add_header("x-api-key", api_key)
-
         req.add_header("User-Agent", "3MGAMING-Portal/1.0")
-
         if data_bytes is not None:
-
             req.add_header("Content-Type", "application/json")
 
         try:
-
             with urllib.request.urlopen(req, timeout=6) as response:
-
                 if response.status in [200, 201]:
-
-                    return json.loads(response.read().decode("utf-8"))
-
+                    res_json = json.loads(response.read().decode("utf-8"))
+                    if method == "GET" and ttl > 0:
+                        DinoRequestHandler._islepilot_cache[clean_key] = (now_ts, res_json)
+                    return res_json
         except urllib.error.HTTPError as e:
-
+            # Nếu gặp lỗi HTTP 429 hoặc 5xx, tự động trả về dữ liệu cache gần nhất nếu có
+            if clean_key in DinoRequestHandler._islepilot_cache:
+                _, fallback_val = DinoRequestHandler._islepilot_cache[clean_key]
+                return fallback_val
             try:
-
                 err_content = e.read().decode("utf-8")
-
                 return json.loads(err_content)
-
-            except:
-
+            except Exception:
                 pass
-
             print(f"[IslePilot API] Gọi {url} HTTP {e.code}")
-
         except Exception as e:
-
+            if clean_key in DinoRequestHandler._islepilot_cache:
+                _, fallback_val = DinoRequestHandler._islepilot_cache[clean_key]
+                return fallback_val
             print(f"[IslePilot API] Gọi {url} thất bại: {e}")
 
         return None
@@ -2368,21 +2372,14 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
         balance = 0
         if is_logged_in and steam_id:
-            player_info = self.fetch_islepilot(f"/players/{steam_id}")
-            if isinstance(player_info, dict):
-                wallet = player_info.get("wallet", {})
-                if isinstance(wallet, dict) and "balance" in wallet:
-                    balance = wallet.get("balance", 0)
-                if os.path.exists("admin_wallet_adjustments.json"):
-                    try:
-                        with open("admin_wallet_adjustments.json", "r", encoding="utf-8") as f:
-                            adjs = json.load(f)
-                            balance = max(0, balance + adjs.get(str(steam_id), 0))
-                    except Exception:
-                        pass
-                if not name and player_info.get("name"):
-                    name = player_info.get("name")
-
+            balance = self._get_player_xu_balance(steam_id)
+            if not name:
+                try:
+                    p_info = self.fetch_islepilot(f"/players/{steam_id}")
+                    if isinstance(p_info, dict) and p_info.get("name"):
+                        name = p_info.get("name")
+                except Exception:
+                    pass
         self.send_json_response({
             "logged_in": is_logged_in,
             "steam_id": steam_id if is_logged_in else None,
@@ -2930,85 +2927,152 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         return {"matches": [], "stats": {"totalMatches": 0, "totalXuWagered": 0, "totalXuWon": 0}}
 
     def _save_arena_db(self, data):
-        db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "arena_matches.json")
-        try:
-            with open(db_path, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=2, ensure_ascii=False)
-        except Exception as e:
-            print(f"[Arena DB Save Error] {e}")
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        for db_path in [os.path.join(base_dir, "arena_matches.json"), os.path.join(base_dir, "3mgaming-website", "arena_matches.json")]:
+            try:
+                os.makedirs(os.path.dirname(db_path), exist_ok=True)
+                with open(db_path, "w", encoding="utf-8") as f:
+                    json.dump(data, f, indent=2, ensure_ascii=False)
+            except Exception as e:
+                print(f"[Arena DB Save Error] {e}")
+
+    def _get_cached_player_balance(self, steam_id):
+        steam_id = str(steam_id).strip()
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        cache_file = os.path.join(base_dir, "player_wallet_cache.json")
+        if os.path.exists(cache_file):
+            try:
+                with open(cache_file, "r", encoding="utf-8") as f:
+                    cache_data = json.load(f)
+                    return int(cache_data.get(steam_id, 0))
+            except Exception:
+                pass
+        return 0
+
+    def _update_cached_player_balance(self, steam_id, balance):
+        steam_id = str(steam_id).strip()
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        for cpath in [os.path.join(base_dir, "player_wallet_cache.json"), os.path.join(base_dir, "3mgaming-website", "player_wallet_cache.json")]:
+            try:
+                cache_data = {}
+                if os.path.exists(cpath):
+                    try:
+                        with open(cpath, "r", encoding="utf-8") as f:
+                            cache_data = json.load(f)
+                    except Exception:
+                        cache_data = {}
+                cache_data[steam_id] = int(balance)
+                os.makedirs(os.path.dirname(cpath), exist_ok=True)
+                with open(cpath, "w", encoding="utf-8") as f:
+                    json.dump(cache_data, f, indent=2, ensure_ascii=False)
+            except Exception:
+                pass
 
     def _adjust_player_xu(self, steam_id, amount, reason=""):
         steam_id = str(steam_id).strip()
         if not steam_id:
             return False
         
-        # 1. Kiểm tra xem người chơi có hồ sơ thực tế trên IslePilot không
-        player_info = None
-        try:
-            player_info = self.fetch_islepilot(f"/players/{steam_id}")
-        except Exception:
-            pass
-            
-        has_islepilot_wallet = isinstance(player_info, dict) and ("wallet" in player_info or player_info.get("name") is not None)
-        
+        amount = int(amount)
         applied = False
-        if has_islepilot_wallet:
+        new_islepilot_balance = None
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+
+        # 1. Gọi trực tiếp IslePilot API /players/{steam_id}/currency
+        try:
+            res = self.fetch_islepilot(f"/players/{steam_id}/currency", method="POST", body_data={
+                "amount": amount,
+                "reason": reason
+            })
+            if res and (res.get("ok") is True or "balance" in res or res.get("applied") is not None):
+                applied = True
+                if "balance" in res:
+                    new_islepilot_balance = int(res.get("balance"))
+        except Exception as e:
+            print(f"[Arena Currency Direct Error] {e}")
+
+        # Thử lại nếu gặp lỗi hoặc rate-limit
+        if not applied:
+            time.sleep(1.0)
             try:
                 res = self.fetch_islepilot(f"/players/{steam_id}/currency", method="POST", body_data={
-                    "amount": int(amount),
+                    "amount": amount,
                     "reason": reason
                 })
-                if res and (res.get("ok") is True or "balance" in res):
+                if res and (res.get("ok") is True or "balance" in res or res.get("applied") is not None):
                     applied = True
-            except Exception as e:
-                print(f"[Arena Currency Error] {e}")
-                
-        # 2. Nếu không có hồ sơ IslePilot hoặc API không thành công, lưu trực tiếp vào admin_wallet_adjustments.json
-        if not applied:
-            try:
-                base_dir = os.path.dirname(os.path.abspath(__file__))
-                for adj_file in [os.path.join(base_dir, "admin_wallet_adjustments.json"), os.path.join(base_dir, "3mgaming-website", "admin_wallet_adjustments.json")]:
-                    try:
-                        adjs = {}
-                        if os.path.exists(adj_file):
-                            try:
-                                with open(adj_file, "r", encoding="utf-8") as f:
-                                    adjs = json.load(f)
-                            except Exception:
-                                adjs = {}
-                        cur_val = float(adjs.get(steam_id, 0.0))
-                        adjs[steam_id] = max(0.0, round(cur_val + float(amount), 1))
-                        os.makedirs(os.path.dirname(adj_file), exist_ok=True)
-                        with open(adj_file, "w", encoding="utf-8") as f:
-                            json.dump(adjs, f, indent=2, ensure_ascii=False)
-                    except Exception:
-                        pass
-            except Exception as e:
-                print(f"[Arena Wallet Adjust Error] {e}")
+                    if "balance" in res:
+                        new_islepilot_balance = int(res.get("balance"))
+            except Exception:
+                pass
+
+        # 2. Xử lý kết quả cộng/trừ xu
+        if applied:
+            print(f"[Arena Currency Success] Đã áp dụng {amount:+d} Xu cho Steam {steam_id} trên IslePilot (Số dư mới: {new_islepilot_balance})")
+            if new_islepilot_balance is not None:
+                self._update_cached_player_balance(steam_id, new_islepilot_balance)
+            # Xóa cache GET /players/{steam_id} để lần đọc tiếp theo lấy số dư mới nhất
+            if hasattr(DinoRequestHandler, "_islepilot_cache"):
+                DinoRequestHandler._islepilot_cache.pop(f"/players/{steam_id}", None)
+            return True
+
+        # 3. Dự phòng: Nếu IslePilot tạm thời lỗi/429/offline, ghi nhận vào admin_wallet_adjustments.json
+        print(f"[Arena Currency Fallback] IslePilot chưa nhận, ghi nhận {amount:+d} Xu vào admin_wallet_adjustments.json cho Steam {steam_id}")
+        try:
+            for adj_file in [os.path.join(base_dir, "admin_wallet_adjustments.json"), os.path.join(base_dir, "3mgaming-website", "admin_wallet_adjustments.json")]:
+                try:
+                    adjs = {}
+                    if os.path.exists(adj_file):
+                        try:
+                            with open(adj_file, "r", encoding="utf-8") as f:
+                                adjs = json.load(f)
+                        except Exception:
+                            adjs = {}
+                    cur_val = float(adjs.get(steam_id, 0.0))
+                    adjs[steam_id] = round(cur_val + float(amount), 1)
+                    os.makedirs(os.path.dirname(adj_file), exist_ok=True)
+                    with open(adj_file, "w", encoding="utf-8") as f:
+                        json.dump(adjs, f, indent=2, ensure_ascii=False)
+                except Exception:
+                    pass
+        except Exception as e:
+            print(f"[Arena Wallet Adjust Error] {e}")
+
         return True
 
     def _get_player_xu_balance(self, steam_id):
         steam_id = str(steam_id).strip()
-        balance = 0
+        if not steam_id:
+            return 0
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        
+        # 1. Đọc số dư lưu trong player_wallet_cache
+        last_known = self._get_cached_player_balance(steam_id)
+
+        # 2. Thử lấy dữ liệu thực tế từ IslePilot
         try:
             player_info = self.fetch_islepilot(f"/players/{steam_id}")
             if isinstance(player_info, dict):
                 wallet = player_info.get("wallet", {})
                 if isinstance(wallet, dict) and "balance" in wallet:
-                    balance = wallet.get("balance", 0)
+                    last_known = int(wallet.get("balance", 0))
+                    self._update_cached_player_balance(steam_id, last_known)
         except Exception:
             pass
-        base_dir = os.path.dirname(os.path.abspath(__file__))
+
+        # 3. Cộng thêm các điều chỉnh từ admin_wallet_adjustments.json
         adj_file = os.path.join(base_dir, "admin_wallet_adjustments.json")
+        extra = 0.0
         if os.path.exists(adj_file):
             try:
                 with open(adj_file, "r", encoding="utf-8") as f:
                     adjs = json.load(f)
-                    balance = max(0, balance + adjs.get(str(steam_id), 0))
+                    extra = float(adjs.get(str(steam_id), 0.0))
             except Exception:
                 pass
-        return int(balance)
 
+        total_balance = max(0, int(round(last_known + extra)))
+        return total_balance
     def _translate_pilot_error(self, err_msg):
         err_str = str(err_msg).lower()
         if "not online" in err_str or "offline" in err_str or "player_offline" in err_str:

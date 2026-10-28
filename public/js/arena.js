@@ -266,7 +266,24 @@ const Arena = {
       if (!data.ok) throw new Error(data.error || 'Lỗi tải dữ liệu đấu trường');
 
       this.matches = data.matches || [];
-      this.myBalance = data.my_balance || 0;
+      if (data.my_balance !== undefined && data.my_balance !== null) {
+        this.myBalance = Number(data.my_balance);
+        if (window.App && window.App.updateUserBalanceUI) {
+          window.App.updateUserBalanceUI(this.myBalance);
+        }
+        try {
+          const u = JSON.parse(localStorage.getItem('steam_user') || 'null');
+          if (u) {
+            u.balance = this.myBalance;
+            localStorage.setItem('steam_user', JSON.stringify(u));
+          }
+        } catch (e) {}
+      } else {
+        const u = JSON.parse(localStorage.getItem('steam_user') || 'null');
+        if (u && u.balance !== undefined) {
+          this.myBalance = Number(u.balance);
+        }
+      }
       if (!this.mySteamId && data.my_steam_id) {
         this.mySteamId = String(data.my_steam_id).trim();
       }
@@ -825,8 +842,10 @@ const Arena = {
       alert('Mức cược tối thiểu là 10 Xu!');
       return;
     }
-    if (this.myBalance < betAmount) {
-      alert(`Số dư không đủ! Bạn có ${this.myBalance} Xu, cần ${betAmount} Xu.`);
+    const userObj = JSON.parse(localStorage.getItem('steam_user') || 'null');
+    const effectiveBal = Math.max(Number(this.myBalance || 0), Number((userObj && userObj.balance) || 0));
+    if (effectiveBal < betAmount) {
+      alert(`Số dư không đủ! Bạn có ${effectiveBal} Xu, cần ${betAmount} Xu.`);
       return;
     }
 
@@ -891,8 +910,10 @@ const Arena = {
       return;
     }
 
-    if (this.myBalance < betAmount) {
-      alert(`Số dư của bạn không đủ! Bạn có ${this.myBalance} Xu, cần ${betAmount} Xu để nhận kèo này.`);
+    const userObj = JSON.parse(localStorage.getItem('steam_user') || 'null');
+    const effectiveBal = Math.max(Number(this.myBalance || 0), Number((userObj && userObj.balance) || 0));
+    if (effectiveBal < betAmount) {
+      alert(`Số dư của bạn không đủ! Bạn có ${effectiveBal} Xu, cần ${betAmount} Xu để nhận kèo này.`);
       return;
     }
 

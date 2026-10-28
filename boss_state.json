@@ -4,32 +4,20 @@
   "boss_name": "👑 SIÊU BOSS PUERTA AI (100.000 HP)",
   "species": "Puerta",
   "max_hp": 100000,
-  "current_hp": 100000,
+  "current_hp": 0,
   "weight": 100000,
   "weight_label": "100.0 Tấn (100,000 kg)",
   "reward_xu": 5000,
   "location_id": "cmvqtjyrr4ombph01vi8dknwg",
   "location_name": "ĐẤU TRƯỜNG",
-  "spawned_at": "2026-10-28T22:38:05.993405",
+  "spawned_at": "2026-10-28T22:55:35.645245",
   "damage_per_hit": 1000,
   "is_settled": false,
   "last_killer": null,
-  "dps_ranking": [
-    {
-      "steam_id": "76561199243423930",
-      "name": "VTR•Tuan",
-      "damage": 750,
-      "damage_pct": 100.0,
-      "hits": 1,
-      "last_ability": "Crush",
-      "estimated_xu": 5000
-    }
-  ],
+  "dps_ranking": [],
   "kill_history": [],
   "last_rewards": [],
-  "processed_hit_keys": [
-    "6076421"
-  ],
+  "processed_hit_keys": [],
   "_last_proximity_scan": 1793202391.6387923,
   "last_proximity_hits": {
     "76561198657515598": 1793202245.792657,
