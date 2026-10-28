@@ -3663,6 +3663,18 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             if str(creator_obj.get("steamId")) == str(steam_id) or (opp_obj and str(opp_obj.get("steamId")) == str(steam_id)):
                 self.send_json_response({"ok": False, "error": "Đấu sĩ tham gia trận không được phép cược khán giả!"}, status=400)
                 return
+
+            # Kiểm tra: Mỗi người chơi chỉ được đặt cược 1 lần duy nhất trong suốt trận đấu
+            existing_bet = next((b for b in target_match.get("spectatorBets", []) if str(b.get("steamId", "")).strip() == str(steam_id).strip()), None)
+            if existing_bet:
+                chosen_key = existing_bet.get("chosenFighter", "creator")
+                chosen_name = (target_match.get(chosen_key) or {}).get("name", chosen_key)
+                self.send_json_response({
+                    "ok": False,
+                    "error": f"Bạn đã đặt cược {existing_bet.get('amount')} Xu cho {chosen_name} rồi! Mỗi người chơi chỉ được đặt cược 1 lần duy nhất trong suốt trận đấu."
+                }, status=400)
+                return
+
             if amount < 5:
                 self.send_json_response({"ok": False, "error": "Mức cược khán giả tối thiểu là 5 Xu!"}, status=400)
                 return

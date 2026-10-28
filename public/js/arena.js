@@ -606,6 +606,9 @@ const Arena = {
   },
 
   renderCardActions(m, isCreator, isOpponent, isFighter) {
+    const mySid = String(this.mySteamId || '').trim();
+    const myBet = m.spectatorBets && m.spectatorBets.find(b => this.isUserMatch(mySid, b.steamId || b.steam_id));
+
     if (m.status === 'waiting') {
       if (isCreator) {
         return `
@@ -620,13 +623,19 @@ const Arena = {
         `;
       } else {
         return `
-          <div style="display: flex; gap: 8px;">
+          <div style="display: flex; gap: 8px; align-items: center;">
             <button onclick="Arena.acceptMatch('${m.id}', ${m.betAmount})" class="btn-primary" style="flex: 1; padding: 10px 14px; font-size: 0.88rem; font-weight: 800; background: linear-gradient(135deg, #ef4444 0%, #ff2a85 100%); border: none; cursor: pointer; box-shadow: 0 0 14px rgba(239, 68, 68, 0.4); display: flex; align-items: center; justify-content: center; gap: 6px;">
               <span>🥊</span> Nhận Thách Đấu (${m.betAmount} Xu)
             </button>
-            <button onclick="Arena.openSpectatorBetModal('${m.id}')" class="btn-secondary" style="padding: 10px 12px; font-size: 0.84rem; cursor: pointer;" title="Đặt cược khán giả">
-              🎯 Cược
-            </button>
+            ${myBet ? `
+              <span style="padding: 9px 12px; font-size: 0.78rem; font-weight: 700; color: #fbbf24; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 8px; white-space: nowrap;" title="Bạn đã đặt cược (mỗi người chỉ được cược 1 lần)">
+                ✅ Đã cược ${myBet.amount} Xu
+              </span>
+            ` : `
+              <button onclick="Arena.openSpectatorBetModal('${m.id}')" class="btn-secondary" style="padding: 10px 12px; font-size: 0.84rem; cursor: pointer;" title="Đặt cược khán giả">
+                🎯 Cược
+              </button>
+            `}
           </div>
         `;
       }
@@ -650,14 +659,24 @@ const Arena = {
       } else {
         return `
           <div style="display: flex; flex-direction: column; gap: 8px;">
-            <div style="display: flex; gap: 8px;">
-              <button onclick="Arena.openSpectatorBetModal('${m.id}')" class="btn-primary" style="flex: 1; padding: 9px 12px; font-size: 0.85rem; font-weight: 700; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border: none; cursor: pointer;">
-                🎯 Đặt Cược Khán Giả
+            ${myBet ? `
+              <div style="padding: 9px 12px; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 8px; text-align: center; font-size: 0.82rem; color: #fbbf24; font-weight: 700;">
+                🎯 Bạn đã cược: <strong>${myBet.amount} Xu</strong> cho <strong>${this.escapeHtml((m[myBet.chosenFighter] && m[myBet.chosenFighter].name) || myBet.chosenFighter)}</strong><br />
+                <span style="font-size: 0.74rem; color: #94a3b8; font-weight: 500;">(Đã khóa cược • Mỗi người chỉ được cược 1 lần trong suốt trận)</span>
+              </div>
+              <button onclick="Arena.teleportToArena()" class="btn-secondary" style="width: 100%; padding: 9px 12px; font-size: 0.85rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;" title="Dịch chuyển tới Đấu Trường xem trực tiếp">
+                <span>🚀</span> Vào Đấu Trường Xem Trận
               </button>
-              <button onclick="Arena.teleportToArena()" class="btn-secondary" style="flex: 1; padding: 9px 12px; font-size: 0.85rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;" title="Dịch chuyển tới Đấu Trường xem trực tiếp">
-                <span>🚀</span> Vào Đấu Trường
-              </button>
-            </div>
+            ` : `
+              <div style="display: flex; gap: 8px;">
+                <button onclick="Arena.openSpectatorBetModal('${m.id}')" class="btn-primary" style="flex: 1; padding: 9px 12px; font-size: 0.85rem; font-weight: 700; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border: none; cursor: pointer;">
+                  🎯 Đặt Cược Khán Giả
+                </button>
+                <button onclick="Arena.teleportToArena()" class="btn-secondary" style="flex: 1; padding: 9px 12px; font-size: 0.85rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;" title="Dịch chuyển tới Đấu Trường xem trực tiếp">
+                  <span>🚀</span> Vào Đấu Trường
+                </button>
+              </div>
+            `}
           </div>
         `;
       }
@@ -707,6 +726,7 @@ const Arena = {
             </h3>
             <ul style="padding-left: 18px; font-size: 0.88rem; color: var(--text-muted);">
               <li>Khán giả có thể cược cho Đấu Sĩ A hoặc Đấu Sĩ B (tối thiểu <strong>5 Xu</strong>).</li>
+              <li><strong>Giới hạn 1 lần cược:</strong> Mỗi người chơi chỉ được đặt cược <strong>1 lần duy nhất</strong> trong suốt trận đấu. Sau khi đã cược, hệ thống sẽ khóa không cho đặt cược thêm nữa.</li>
               <li>Đấu sĩ trực tiếp tham gia trận đấu không được đặt cược khán giả vào trận của mình.</li>
               <li>Số tiền thắng cược của khán giả: Tỷ lệ thưởng chuẩn <strong>1:1</strong> (ví dụ cược 2,000 Xu thì khi thắng nhận lại đúng 2,000 Xu gốc + 2,000 Xu tiền lãi = 4,000 Xu tổng nhận về).</li>
             </ul>
@@ -1148,6 +1168,20 @@ const Arena = {
 
     const match = this.matches.find(m => m.id === matchId);
     if (!match) return;
+
+    // Kiểm tra: Mỗi người chơi chỉ được đặt cược 1 lần duy nhất trong suốt trận đấu
+    const mySid = String(this.mySteamId || '').trim();
+    const existingBet = match.spectatorBets && match.spectatorBets.find(b => this.isUserMatch(mySid, b.steamId || b.steam_id));
+    if (existingBet) {
+      const chosenName = (match[existingBet.chosenFighter] && match[existingBet.chosenFighter].name) || existingBet.chosenFighter;
+      const msg = `Bạn đã đặt cược ${existingBet.amount} Xu cho ${chosenName} rồi! Mỗi người chơi chỉ được đặt cược 1 lần duy nhất trong suốt trận đấu.`;
+      if (window.App && window.App.showToast) {
+        window.App.showToast(msg, 'warning');
+      } else {
+        alert(msg);
+      }
+      return;
+    }
 
     const modalContainer = document.getElementById('arena-modal-container');
     if (!modalContainer) return;
