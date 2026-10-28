@@ -400,6 +400,8 @@ def build_blueprint_skin_payload(species, sex, palette, variation=0, pattern=0, 
 class DinoRequestHandler(SimpleHTTPRequestHandler):
     _combat_log_cache_time = 0.0
     _combat_log_cached_data = None
+    _killfeed_cache_time = 0.0
+    _killfeed_cached_data = None
 
     def __init__(self, *args, **kwargs):
 
@@ -2939,20 +2941,30 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         steam_id = str(steam_id).strip()
         if not steam_id:
             return False
-        applied = None
-        # 1. Gọi IslePilot /players/{steam_id}/currency
+        
+        # 1. Kiểm tra xem người chơi có hồ sơ thực tế trên IslePilot không
+        player_info = None
         try:
-            res = self.fetch_islepilot(f"/players/{steam_id}/currency", method="POST", body_data={
-                "amount": int(amount),
-                "reason": reason
-            })
-            if res and res.get("ok") is True:
-                applied = res.get("applied")
-        except Exception as e:
-            print(f"[Arena Currency Error] {e}")
-        # 2. Tính phần chênh lệch còn lại cần cập nhật vào admin_wallet_adjustments.json
-        remainder = int(amount) - (applied if applied is not None else 0)
-        if remainder != 0:
+            player_info = self.fetch_islepilot(f"/players/{steam_id}")
+        except Exception:
+            pass
+            
+        has_islepilot_wallet = isinstance(player_info, dict) and ("wallet" in player_info or player_info.get("name") is not None)
+        
+        applied = False
+        if has_islepilot_wallet:
+            try:
+                res = self.fetch_islepilot(f"/players/{steam_id}/currency", method="POST", body_data={
+                    "amount": int(amount),
+                    "reason": reason
+                })
+                if res and (res.get("ok") is True or "balance" in res):
+                    applied = True
+            except Exception as e:
+                print(f"[Arena Currency Error] {e}")
+                
+        # 2. Nếu không có hồ sơ IslePilot hoặc API không thành công, lưu trực tiếp vào admin_wallet_adjustments.json
+        if not applied:
             try:
                 base_dir = os.path.dirname(os.path.abspath(__file__))
                 for adj_file in [os.path.join(base_dir, "admin_wallet_adjustments.json"), os.path.join(base_dir, "3mgaming-website", "admin_wallet_adjustments.json")]:
@@ -2964,7 +2976,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                                     adjs = json.load(f)
                             except Exception:
                                 adjs = {}
-                        adjs[steam_id] = round(adjs.get(steam_id, 0.0) + float(remainder), 1)
+                        cur_val = float(adjs.get(steam_id, 0.0))
+                        adjs[steam_id] = max(0.0, round(cur_val + float(amount), 1))
                         os.makedirs(os.path.dirname(adj_file), exist_ok=True)
                         with open(adj_file, "w", encoding="utf-8") as f:
                             json.dump(adjs, f, indent=2, ensure_ascii=False)
@@ -3059,23 +3072,55 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         })
 
     def _auto_check_in_progress_matches(self, matches):
-        # Tự động quét IslePilot Combat Log & Killfeed để xác định người chiến thắng
-        try:
-            remote_data = self.fetch_islepilot("/combat-log") or {}
-            hits = remote_data.get("hits", [])
-        except Exception:
-            hits = []
+        # Tự động quét IslePilot Killfeed, Combat Log & Trạng thái Player để xác định người chiến thắng
+        now_ts = time.time()
 
-        # Tập hợp các hit_id đã dùng để kết thúc các trận trước đó
+        # 1. Lấy dữ liệu /killfeed (Bộ đếm mạng chết chính thức từ máy chủ The Isle)
+        kills = []
+        try:
+            if DinoRequestHandler._killfeed_cached_data and (now_ts - DinoRequestHandler._killfeed_cache_time < 3.0):
+                kills = DinoRequestHandler._killfeed_cached_data.get("kills", [])
+            else:
+                remote_kf = self.fetch_islepilot("/killfeed")
+                if isinstance(remote_kf, dict):
+                    DinoRequestHandler._killfeed_cached_data = remote_kf
+                    DinoRequestHandler._killfeed_cache_time = now_ts
+                    kills = remote_kf.get("kills", [])
+                elif DinoRequestHandler._killfeed_cached_data:
+                    kills = DinoRequestHandler._killfeed_cached_data.get("kills", [])
+        except Exception as e:
+            if DinoRequestHandler._killfeed_cached_data:
+                kills = DinoRequestHandler._killfeed_cached_data.get("kills", [])
+
+        # 2. Lấy dữ liệu /combat-log
+        hits = []
+        try:
+            if DinoRequestHandler._combat_log_cached_data and (now_ts - DinoRequestHandler._combat_log_cache_time < 3.0):
+                hits = DinoRequestHandler._combat_log_cached_data.get("hits", [])
+            else:
+                remote_cl = self.fetch_islepilot("/combat-log")
+                if isinstance(remote_cl, dict):
+                    DinoRequestHandler._combat_log_cached_data = remote_cl
+                    DinoRequestHandler._combat_log_cache_time = now_ts
+                    hits = remote_cl.get("hits", [])
+                elif DinoRequestHandler._combat_log_cached_data:
+                    hits = DinoRequestHandler._combat_log_cached_data.get("hits", [])
+        except Exception as e:
+            if DinoRequestHandler._combat_log_cached_data:
+                hits = DinoRequestHandler._combat_log_cached_data.get("hits", [])
+
         used_hit_ids = {str(m.get("settledHitId")) for m in matches if m.get("settledHitId")}
 
         for m in matches:
             if m.get("status") != "in_progress":
                 continue
-            c_sid = str(m.get("creator", {}).get("steamId", ""))
-            o_sid = str(m.get("opponent", {}).get("steamId", ""))
+            c_sid = str(m.get("creator", {}).get("steamId", "")).strip()
+            o_sid = str(m.get("opponent", {}).get("steamId", "")).strip()
             if not c_sid or not o_sid:
                 continue
+
+            c_name = m.get("creator", {}).get("name", "Người tạo")
+            o_name = m.get("opponent", {}).get("name", "Đối thủ")
 
             started_at_str = m.get("startedAt")
             started_at_ts = 0.0
@@ -3087,39 +3132,113 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 except Exception:
                     pass
 
-            # Kiểm tra đòn kết liễu trong hits
-            for h in hits:
-                if not h.get("killed"):
-                    continue
-                hit_id = str(h.get("id") or "")
-                # Bỏ qua nếu hit_id này đã được dùng để kết thúc một trận đấu trước đó
-                if hit_id and hit_id in used_hit_ids:
+            is_settled = False
+
+            # CÁCH 1: Quét /killfeed (Sự kiện hạ gục / chết chính xác nhất của IslePilot)
+            for k in kills:
+                k_id = str(k.get("id") or "")
+                if k_id and k_id in used_hit_ids:
                     continue
 
-                # Bỏ qua đòn đánh xảy ra TRƯỚC KHI trận đấu bắt đầu (cho phép lệch 10s trễ mạng)
-                hit_at = h.get("at")
-                if hit_at and started_at_ts > 0:
+                emit_at = k.get("emittedAt")
+                emit_ts = 0.0
+                if emit_at:
                     try:
-                        clean_hit_at = hit_at.replace("Z", "+00:00")
-                        hit_dt = datetime.datetime.fromisoformat(clean_hit_at)
-                        if hit_dt.timestamp() < (started_at_ts - 10.0):
-                            continue
+                        clean_emit = emit_at.replace("Z", "+00:00")
+                        emit_ts = datetime.datetime.fromisoformat(clean_emit).timestamp()
                     except Exception:
                         pass
 
-                atk_sid = str(h.get("attackerSteamId") or "")
-                vic_sid = str(h.get("victimSteamId") or "")
+                # Bỏ qua sự kiện diễn ra trước khi trận đấu bắt đầu (cho phép trễ mạng 5s)
+                if started_at_ts > 0 and emit_ts > 0 and emit_ts < (started_at_ts - 5.0):
+                    continue
 
-                if atk_sid == c_sid and vic_sid == o_sid:
-                    self._settle_arena_match(m, "creator", f"Hạ gục đối thủ bằng chiêu {h.get('ability', 'tấn công')}!", hit_id=hit_id)
-                    if hit_id:
-                        used_hit_ids.add(hit_id)
+                k_vic = str(k.get("victimSteamId") or "").strip()
+                k_atk = str(k.get("killerSteamId") or "").strip()
+
+                if k_vic == o_sid:
+                    # Opponent đã chết -> Creator thắng!
+                    win_reason = f"Đã tiêu diệt {o_name} trong Đấu Trường PK!"
+                    if k_atk == c_sid:
+                        win_reason = f"Đã trực tiếp hạ gục {o_name} trong Đấu Trường PK!"
+                    self._settle_arena_match(m, "creator", win_reason, hit_id=k_id)
+                    if k_id:
+                        used_hit_ids.add(k_id)
+                    is_settled = True
                     break
-                elif atk_sid == o_sid and vic_sid == c_sid:
-                    self._settle_arena_match(m, "opponent", f"Hạ gục đối thủ bằng chiêu {h.get('ability', 'tấn công')}!", hit_id=hit_id)
-                    if hit_id:
-                        used_hit_ids.add(hit_id)
+
+                elif k_vic == c_sid:
+                    # Creator đã chết -> Opponent thắng!
+                    win_reason = f"Đã tiêu diệt {c_name} trong Đấu Trường PK!"
+                    if k_atk == o_sid:
+                        win_reason = f"Đã trực tiếp hạ gục {c_name} trong Đấu Trường PK!"
+                    self._settle_arena_match(m, "opponent", win_reason, hit_id=k_id)
+                    if k_id:
+                        used_hit_ids.add(k_id)
+                    is_settled = True
                     break
+
+            if is_settled:
+                continue
+
+            # CÁCH 2: Quét /combat-log (Kiểm tra đòn cắn kết liễu hoặc hpAfter <= 0)
+            for h in hits:
+                h_id = str(h.get("id") or "")
+                if h_id and h_id in used_hit_ids:
+                    continue
+
+                hit_at = h.get("at")
+                hit_ts = 0.0
+                if hit_at:
+                    try:
+                        clean_hit_at = hit_at.replace("Z", "+00:00")
+                        hit_ts = datetime.datetime.fromisoformat(clean_hit_at).timestamp()
+                    except Exception:
+                        pass
+
+                if started_at_ts > 0 and hit_ts > 0 and hit_ts < (started_at_ts - 5.0):
+                    continue
+
+                atk_sid = str(h.get("attackerSteamId") or "").strip()
+                vic_sid = str(h.get("victimSteamId") or "").strip()
+                hp_after = float(h.get("hpAfter") or 1.0)
+                is_fatal = (h.get("killed") is True) or (hp_after <= 0.0)
+
+                if is_fatal:
+                    ability = h.get("ability", "tấn công")
+                    if atk_sid == c_sid and vic_sid == o_sid:
+                        self._settle_arena_match(m, "creator", f"Đòn kết liễu ({ability}) đánh bại {o_name}!", hit_id=h_id)
+                        if h_id:
+                            used_hit_ids.add(h_id)
+                        is_settled = True
+                        break
+                    elif atk_sid == o_sid and vic_sid == c_sid:
+                        self._settle_arena_match(m, "opponent", f"Đòn kết liễu ({ability}) đánh bại {c_name}!", hit_id=h_id)
+                        if h_id:
+                            used_hit_ids.add(h_id)
+                        is_settled = True
+                        break
+
+            if is_settled:
+                continue
+
+            # CÁCH 3: Quét trực tiếp HP của 2 đấu sĩ trên server nếu trận đấu đã kéo dài > 10s
+            if started_at_ts > 0 and (now_ts - started_at_ts >= 10.0):
+                try:
+                    c_p = self.fetch_islepilot(f"/players/{c_sid}")
+                    o_p = self.fetch_islepilot(f"/players/{o_sid}")
+                    c_hp = float(c_p.get("health", 1.0)) if (isinstance(c_p, dict) and c_p.get("online")) else 1.0
+                    o_hp = float(o_p.get("health", 1.0)) if (isinstance(o_p, dict) and o_p.get("online")) else 1.0
+
+                    # Nếu 1 bên đã chết (health <= 0)
+                    if o_hp <= 0.0 and c_hp > 0.0:
+                        self._settle_arena_match(m, "creator", f"Đối thủ {o_name} đã gục ngã (0 HP)!")
+                        is_settled = True
+                    elif c_hp <= 0.0 and o_hp > 0.0:
+                        self._settle_arena_match(m, "opponent", f"Đối thủ {c_name} đã gục ngã (0 HP)!")
+                        is_settled = True
+                except Exception as e:
+                    pass
 
     def _settle_arena_match(self, m, winner_key, win_reason="Chiến thắng", hit_id=None):
         if m.get("status") == "finished":
@@ -3142,6 +3261,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         m["loserSteamId"] = loser_sid
         m["loserName"] = loser_name
 
+        print(f"[Arena Match Settle] Trận #{m.get('id')}: {winner_name} THẮNG trước {loser_name}! Mức cược: {bet_amount} Xu.")
+
         # 1. Người thua: Hệ thống tự trừ xu trong ví người chơi tương ứng số tiền đặt cược
         if bet_amount > 0 and loser_sid:
             self._adjust_player_xu(
@@ -3158,6 +3279,15 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 f"Thắng trận PK #{m.get('id')} trước {loser_name}: Nhận thưởng +{bet_amount} Xu cược"
             )
 
+        # 3. Gửi thông báo toàn máy chủ vinh danh người chiến thắng
+        try:
+            self.fetch_islepilot("/commands", method="POST", body_data={
+                "action": "announce",
+                "message": f"🏆 [ĐẤU TRƯỜNG PK] {winner_name} đã đánh bại {loser_name} trong trận PK #{m.get('id')} và giành chiến thắng +{bet_amount} Xu!"
+            })
+        except Exception as e:
+            pass
+
         m["settledSummary"] = {
             "winnerSteamId": winner_sid,
             "winnerName": winner_name,
@@ -3167,7 +3297,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             "loserDeductXu": bet_amount
         }
 
-        # 3. Trả thưởng cược khán giả (nếu có)
+        # 4. Trả thưởng cược khán giả (nếu có)
         spectator_bets = m.get("spectatorBets", [])
         winner_bets = [b for b in spectator_bets if b.get("chosenFighter") == winner_key]
         loser_bets = [b for b in spectator_bets if b.get("chosenFighter") != winner_key]
@@ -3193,6 +3323,17 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             if "status" not in b:
                 b["payout"] = 0
                 b["status"] = "lost"
+
+        # LƯU NGAY LẬP TỨC VÀO DATABASE
+        try:
+            db = self._get_arena_db()
+            for idx, existing_m in enumerate(db.get("matches", [])):
+                if existing_m.get("id") == m.get("id"):
+                    db["matches"][idx] = m
+                    break
+            self._save_arena_db(db)
+        except Exception as e:
+            print(f"[Arena Settle Save DB Error]: {e}")
 
     def handle_arena_post(self):
         try:
@@ -3550,8 +3691,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         defaults = {
             "active": False,
             "boss_steam_id": default_bot_sid,
-            "boss_name": "👑 SIÊU BOSS TRICERATOPS AI (100.000 HP)",
-            "species": "Triceratops",
+            "boss_name": "👑 SIÊU BOSS PUERTA AI MAX SIZE (100.000 HP)",
+            "species": "Puerta",
             "max_hp": 100000,
             "current_hp": 100000,
             "damage_per_hit": 1000,
@@ -3945,7 +4086,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
             action = payload.get("action", "toggle") # enable, disable, respawn
             bot_sid = str(payload.get("boss_bot_steam_id") or config.get("BOSS_BOT_STEAM_ID") or boss_db.get("boss_steam_id") or "76561198975489051").strip()
-            chosen_species = str(payload.get("species") or boss_db.get("species") or "Triceratops").strip()
+            chosen_species = str(payload.get("species") or boss_db.get("species") or "Puerta").strip()
 
             if action in ["enable", "respawn"] or (action == "toggle" and not boss_db.get("active")):
                 # Kiểm tra tài khoản Bot có đang online trong game không
@@ -3995,7 +4136,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     self.fetch_islepilot("/commands", method="POST", body_data={
                         "action": "scale",
                         "steamId": bot_sid,
-                        "scale": 1.8
+                        "scale": 3.0
                     })
                 except Exception as e:
                     print(f"[Boss Spawn] Lỗi scale: {e}")
@@ -4058,7 +4199,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
                 self.send_json_response({
                     "ok": True,
-                    "message": f"🔥 ĐÃ THẢ THÀNH CÔNG {boss_name} TẠI ĐẤU TRƯỜNG!\n\nBot ({bot_name}) đã biến hình to lớn 1.8x, máu 100.000 HP, tự phản đòn 1.000 dame và sẵn sàng chiến đấu.",
+                    "message": f"🔥 ĐÃ THẢ THÀNH CÔNG {boss_name} TẠI ĐẤU TRƯỜNG!\n\nBot ({bot_name}) đã biến hình to lớn 3.0x (Max Size), máu 100.000 HP, tự phản đòn 1.000 dame và sẵn sàng chiến đấu.",
                     "boss": boss_db
                 })
                 return
@@ -7702,13 +7843,21 @@ def start_boss_ai_worker():
         req_handler = DinoRequestHandler.__new__(DinoRequestHandler)
         while True:
             try:
+                # 1. Tự động kiểm tra và phân định kết quả các trận Đấu Trường PK đang diễn ra
+                arena_db = req_handler._get_arena_db()
+                active_matches = [m for m in arena_db.get("matches", []) if m.get("status") == "in_progress"]
+                if active_matches:
+                    req_handler._auto_check_in_progress_matches(arena_db.get("matches", []))
+                    req_handler._save_arena_db(arena_db)
+
+                # 2. Tự động kiểm tra và xử lý Boss AI (Puerta Max Size 100k HP)
                 boss_db = req_handler._get_boss_db()
                 if boss_db and boss_db.get("active"):
                     req_handler._auto_check_boss_status(boss_db)
             except Exception as e:
                 pass
-            time.sleep(3.5)
-    t = threading.Thread(target=boss_loop, daemon=True, name="BossAIBackgroundWorker")
+            time.sleep(3.0)
+    t = threading.Thread(target=boss_loop, daemon=True, name="BossAndArenaBackgroundWorker")
     t.start()
 
 def run():

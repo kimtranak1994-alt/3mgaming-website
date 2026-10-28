@@ -420,7 +420,7 @@ const BossHunt = {
     const isActive = !!boss.active;
     const curHp = boss.current_hp !== undefined ? boss.current_hp : 100000;
     const configuredBotSid = (this.data && this.data.boss_bot_steam_id) || boss.boss_steam_id || '76561198975489051';
-    const currentSpecies = boss.species || 'Triceratops';
+    const currentSpecies = boss.species || 'Puerta';
 
     return `
       <div class="card" style="border: 1px solid rgba(245, 158, 11, 0.4); background: linear-gradient(135deg, rgba(30, 20, 10, 0.65), rgba(15, 23, 42, 0.95)); margin-bottom: 24px;">
@@ -458,11 +458,11 @@ const BossHunt = {
                 🦖 Chủng Loài Siêu Boss:
               </label>
               <select id="boss-bot-species-select" class="form-input" style="width: 100%;">
-                <option value="Triceratops" ${currentSpecies === 'Triceratops' ? 'selected' : ''}>👑 Triceratops (Trice Sừng Khổng Lồ 1.8x - Chuẩn)</option>
+                <option value="Puerta" ${currentSpecies === 'Puerta' ? 'selected' : ''}>👑 Puerta (Puertasaurus Siêu Khổng Lồ Max Size - Khuyên Dùng)</option>
+                <option value="Triceratops" ${currentSpecies === 'Triceratops' ? 'selected' : ''}>Triceratops (Trice Sừng Khổng Lồ)</option>
                 <option value="Stegosaurus" ${currentSpecies === 'Stegosaurus' ? 'selected' : ''}>Stegosaurus (Gai Đuôi)</option>
-                <option value="Tenontosaurus" ${currentSpecies === 'Tenontosaurus' ? 'selected' : ''}>Tenontosaurus (Khủng Long Ăn Cỏ)</option>
-                <option value="Ceratosaurus" ${currentSpecies === 'Ceratosaurus' ? 'selected' : ''}>Ceratosaurus</option>
-                <option value="Carnotaurus" ${currentSpecies === 'Carnotaurus' ? 'selected' : ''}>Carnotaurus</option>
+                <option value="Tenontosaurus" ${currentSpecies === 'Tenontosaurus' ? 'selected' : ''}>Tenontosaurus</option>
+                <option value="Tyrannosaurus" ${currentSpecies === 'Tyrannosaurus' ? 'selected' : ''}>Tyrannosaurus (T-Rex)</option>
               </select>
             </div>
             <div>
@@ -483,7 +483,7 @@ const BossHunt = {
               <span>⚡</span> SIÊU BOSS AI 100.000 HP (TỰ ĐỘNG PHẢN ĐÒN & QUÉT 15M)
             </div>
             <p style="margin: 6px 0 0; color: #cbd5e1; font-size: 0.88rem; line-height: 1.5;">
-              • Chủng loại: <b style="color: #fbbf24;">${currentSpecies} (Khổng lồ 1.8x)</b> &bull; Máu tối đa: <b style="color: #ef4444;">100.000 HP</b> &bull; Phản đòn: <b style="color: #f43f5e;">1.000 Dame/hit</b><br>
+              • Chủng loại: <b style="color: #fbbf24;">${currentSpecies} (Max Size 3.0x)</b> &bull; Máu tối đa: <b style="color: #ef4444;">100.000 HP</b> &bull; Phản đòn: <b style="color: #f43f5e;">1.000 Dame/hit</b><br>
               • Vị trí: <b style="color: #38bdf8;">ĐẤU TRƯỜNG</b> &bull; Phần thưởng: <b style="color: #10b981;">5.000 Xu chia theo % sát thương</b><br>
               • Trạng thái hiện tại: <b>${isActive ? (curHp > 0 ? '🟢 Đang hoạt động (' + curHp.toLocaleString('vi-VN') + ' HP)' : '💀 Đã bị tiêu diệt') : '⚪ Đang Tắt'}</b>
             </p>
@@ -511,7 +511,7 @@ const BossHunt = {
     const botSidInput = document.getElementById('boss-bot-steam-id-input');
     const speciesSelect = document.getElementById('boss-bot-species-select');
     const botSid = botSidInput ? botSidInput.value.trim() : '';
-    const species = speciesSelect ? speciesSelect.value : 'Triceratops';
+    const species = speciesSelect ? speciesSelect.value : 'Puerta';
 
     if (!botSid) {
       alert("Vui lòng nhập Steam ID của tài khoản Bot!");
@@ -543,7 +543,7 @@ const BossHunt = {
     const botSidInput = document.getElementById('boss-bot-steam-id-input');
     const speciesSelect = document.getElementById('boss-bot-species-select');
     const botSid = botSidInput ? botSidInput.value.trim() : '';
-    const species = speciesSelect ? speciesSelect.value : 'Triceratops';
+    const species = speciesSelect ? speciesSelect.value : 'Puerta';
 
     let confirmMsg = "";
     if (action === 'enable') {
