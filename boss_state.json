@@ -1,8 +1,8 @@
 {
   "active": false,
-  "boss_steam_id": "76561199259679997",
-  "boss_name": "👑 BOSS HƯƠU (ghoulhy205)",
-  "species": "Dryosaurus",
+  "boss_steam_id": "AI_DEER_BOSS",
+  "boss_name": "🦌 SIÊU BOSS HƯƠU AI (100.000 HP)",
+  "species": "Deer",
   "max_hp": 100000,
   "current_hp": 0,
   "weight": 100000,
@@ -10,74 +10,12 @@
   "reward_xu": 5000,
   "location_id": "cmvqtjyrr4ombph01vi8dknwg",
   "location_name": "ĐẤU TRƯỜNG",
-  "spawned_at": "2026-10-28T19:49:31.708867",
-  "last_killer": null,
-  "kill_history": [
-    {
-      "session_id": "boss_session_1793181176434",
-      "killed_at": "2026-10-28T16:52:56.434768",
-      "killer_steam_id": "76561198000000002",
-      "killer_name": "DũngSĩ_0002",
-      "total_damage": 100000,
-      "total_reward_xu": 5000,
-      "participants_count": 2,
-      "rewards": [
-        {
-          "steam_id": "76561198000000002",
-          "name": "DũngSĩ_0002",
-          "damage": 70000,
-          "damage_pct": 70.0,
-          "hits": 1,
-          "reward_xu": 3500
-        },
-        {
-          "steam_id": "76561198000000001",
-          "name": "DũngSĩ_0001",
-          "damage": 30000,
-          "damage_pct": 30.0,
-          "hits": 1,
-          "reward_xu": 1500
-        }
-      ]
-    },
-    {
-      "hit_id": "boss_fatal_hit_1793177293327",
-      "killer_steam_id": "76561198657515598",
-      "killer_name": "haigialam20375",
-      "reward_xu": 5000,
-      "killed_at": "2026-10-28T15:48:14.089325",
-      "ability": "Cắn xuyên giáp"
-    },
-    {
-      "hit_id": "boss_fatal_hit_1793177242569",
-      "killer_steam_id": "76561198657515598",
-      "killer_name": "Dũng Sĩ Huyền Thoại",
-      "reward_xu": 5000,
-      "killed_at": "2026-10-28T15:47:22.571456",
-      "ability": "Cắn xuyên giáp"
-    }
-  ],
+  "spawned_at": "2026-10-28T20:07:55.781112",
   "damage_per_hit": 1000,
   "is_settled": false,
+  "last_killer": null,
   "dps_ranking": [],
-  "last_rewards": [
-    {
-      "steam_id": "76561198000000002",
-      "name": "DũngSĩ_0002",
-      "damage": 70000,
-      "damage_pct": 70.0,
-      "hits": 1,
-      "reward_xu": 3500
-    },
-    {
-      "steam_id": "76561198000000001",
-      "name": "DũngSĩ_0001",
-      "damage": 30000,
-      "damage_pct": 30.0,
-      "hits": 1,
-      "reward_xu": 1500
-    }
-  ],
-  "_last_proximity_scan": 1793191779.2389963,
-  "last_proximity_hits": {}
+  "kill_history": [],
+  "last_rewards": [],
+  "processed_hit_keys": []
 }

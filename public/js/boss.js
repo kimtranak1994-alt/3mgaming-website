@@ -418,15 +418,7 @@ const BossHunt = {
 
   renderAdminControls(boss) {
     const isActive = !!boss.active;
-    const onlinePlayers = (this.data && this.data.online_players) || [];
-    const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
-    const adminSid = (user && user.steamId) ? String(user.steamId).trim() : '76561199175571899';
-    const adminName = (user && (user.name || user.personaName)) ? (user.name || user.personaName) : 'Admin';
-
-    let defaultSid = adminSid;
-    if (boss.boss_steam_id && boss.boss_steam_id !== '76561198999999999') {
-      defaultSid = boss.boss_steam_id;
-    }
+    const curHp = boss.current_hp !== undefined ? boss.current_hp : 100000;
 
     return `
       <div class="card" style="border: 1px solid rgba(245, 158, 11, 0.4); background: linear-gradient(135deg, rgba(30, 20, 10, 0.6), rgba(15, 23, 42, 0.9)); margin-bottom: 24px;">
@@ -438,7 +430,7 @@ const BossHunt = {
                 BẢNG ĐIỀU KHIỂN BOSS DÀNH RIÊNG CHO QUẢN TRỊ VIÊN (ADMIN)
               </h3>
               <p style="margin: 2px 0 0; color: #94a3b8; font-size: 0.82rem;">
-                Chỉ Admin mới có thể bật/tắt thả Boss. Boss tích hợp AI tự động phản đòn và quét cự ly 15m trừ 1.000 HP/hit không cần người lái!
+                Chuẩn Bot AI tự động hoàn toàn — Không cần lựa chọn người chơi hay admin làm vật chủ!
               </p>
             </div>
           </div>
@@ -447,147 +439,51 @@ const BossHunt = {
           </span>
         </div>
 
-        <!-- NÚT 1-CHẠM: THẢ AI BOSS TỰ ĐỘNG KHÔNG CẦN CHỌN TÀI KHOẢN HAY STEAM ID -->
-        <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(6, 78, 59, 0.4)); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
+        <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(6, 78, 59, 0.3)); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 12px; padding: 18px 22px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
           <div>
-            <div style="font-weight: 900; color: #34d399; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
-              <span>⚡</span> THẢ AI BOSS TỰ ĐỘNG (KHÔNG CẦN CHỌN STEAM ID)
+            <div style="font-weight: 900; color: #34d399; font-size: 1.15rem; display: flex; align-items: center; gap: 8px;">
+              <span>🦌</span> SIÊU BOSS HƯƠU AI 100.000 HP (CHUẨN BOT AI TỰ ĐỘNG)
             </div>
-            <p style="margin: 4px 0 0; color: #cbd5e1; font-size: 0.85rem;">
-              Bấm 1 chạm để hệ thống tự động triển khai <b>Boss Hươu AI 100.000 HP</b> tại Đấu Trường, tự động xuất chiêu 1.000 dame và chia 5.000 Xu!
+            <p style="margin: 6px 0 0; color: #cbd5e1; font-size: 0.88rem; line-height: 1.5;">
+              • Chủng loại: <b style="color: #fbbf24;">Hươu AI (Deer)</b> &bull; Máu tối đa: <b style="color: #ef4444;">100.000 HP</b> &bull; Phản đòn: <b style="color: #f43f5e;">1.000 Dame/hit</b><br>
+              • Vị trí: <b style="color: #38bdf8;">ĐẤU TRƯỜNG</b> &bull; Phần thưởng: <b style="color: #10b981;">5.000 Xu chia theo % sát thương</b><br>
+              • Trạng thái hiện tại: <b>${isActive ? (curHp > 0 ? '🟢 Đang hoạt động (' + curHp.toLocaleString('vi-VN') + ' HP)' : '💀 Đã bị tiêu diệt') : '⚪ Đang Tắt'}</b>
             </p>
           </div>
-          ${!isActive ? `
-            <button class="btn-primary" style="background: linear-gradient(135deg, #10b981, #047857); font-size: 1rem; font-weight: 900; padding: 13px 26px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 0 20px rgba(16, 185, 129, 0.5); cursor: pointer;" onclick="BossHunt.spawnAutoAiBoss()">
-              🚀 THẢ AI BOSS TỰ ĐỘNG NGAY
-            </button>
-          ` : `
-            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-              <button class="btn-primary" style="background: linear-gradient(135deg, #ef4444, #b91c1c); font-size: 0.95rem; font-weight: 800; padding: 10px 20px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px;" onclick="BossHunt.adminToggle('disable')">
-                🛑 TẮT BOSS / THU HỒI
-              </button>
-              <button class="btn-primary" style="background: linear-gradient(135deg, #d97706, #b45309); font-size: 0.95rem; font-weight: 800; padding: 10px 20px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px;" onclick="BossHunt.adminToggle('respawn')">
-                🔄 HỒI ĐẦY 100K HP
-              </button>
-            </div>
-          `}
-        </div>
-
-        <!-- TÙY CHỌN NÂNG CAO: CHỈ ĐỊNH THỦ CÔNG TÀI KHOẢN (NẾU MUỐN) -->
-        <details style="border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px 14px; background: rgba(0,0,0,0.25);">
-          <summary style="font-size: 0.85rem; color: #94a3b8; cursor: pointer; font-weight: 700;">
-            ⚙️ Tùy chọn nâng cao: Chỉ định tài khoản cụ thể làm vật chủ (Thủ công)
-          </summary>
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 14px; margin-bottom: 14px;">
-            <div>
-              <label style="display: block; font-size: 0.85rem; color: #cbd5e1; margin-bottom: 6px; font-weight: 700;">
-                👤 Chọn tài khoản đặt làm vật chủ Boss:
-              </label>
-              <select id="boss-admin-target-select" class="form-input" style="width: 100%;" onchange="if(this.value !== 'custom') { document.getElementById('boss-admin-target-sid').value = this.value; }">
-                <option value="${adminSid}" ${defaultSid === adminSid ? 'selected' : ''}>
-                  👑 Chính tôi (Admin: ${adminName}) [${adminSid}]
-                </option>
-                ${onlinePlayers.filter(p => p.steamId !== adminSid).map(p => `
-                  <option value="${p.steamId}" ${p.steamId === defaultSid ? 'selected' : ''}>
-                    ${p.name || 'Player'} (${p.species || 'Dino'}, Steam: ${p.steamId})
-                  </option>
-                `).join('')}
-                <option value="custom" ${defaultSid !== adminSid && !onlinePlayers.some(p => p.steamId === defaultSid) ? 'selected' : ''}>-- Nhập Steam ID thủ công bên dưới --</option>
-              </select>
-              <input type="text" id="boss-admin-target-sid" class="form-input" style="width: 100%; margin-top: 8px;" placeholder="Nhập Steam ID của tài khoản Boss..." value="${defaultSid}">
-            </div>
-
-            <div style="display: flex; flex-direction: column; justify-content: center; gap: 8px;">
-              <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: #cbd5e1; cursor: pointer;">
-                <input type="checkbox" id="boss-admin-teleport" checked>
-                <span>Tự động dịch chuyển Boss đến <b>Đấu Trường</b> khi thả</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: #cbd5e1; cursor: pointer;">
-                <input type="checkbox" id="boss-admin-slay" checked>
-                <span>Tiêu diệt / Slay nhân vật Boss khi bấm <b>Tắt Boss</b></span>
-              </label>
-            </div>
-          </div>
-          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
             ${!isActive ? `
-              <button class="btn-primary" style="background: linear-gradient(135deg, #ef4444, #b91c1c); font-size: 0.9rem; font-weight: 700; padding: 10px 18px; border-radius: 6px;" onclick="BossHunt.adminToggle('enable')">
-                🔥 Thả Boss Theo ID Đã Chọn
+              <button class="btn-primary" style="background: linear-gradient(135deg, #10b981, #047857); font-size: 1.05rem; font-weight: 900; padding: 14px 28px; border-radius: 10px; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 0 20px rgba(16, 185, 129, 0.4); cursor: pointer;" onclick="BossHunt.toggleBossAi('enable')">
+                🚀 BẬT THẢ BOSS HƯƠU AI 100.000 HP
               </button>
             ` : `
-              <button class="btn-primary" style="background: linear-gradient(135deg, #475569, #334155); font-size: 0.9rem; font-weight: 700; padding: 10px 18px; border-radius: 6px;" onclick="BossHunt.adminToggle('disable')">
-                🛑 Tắt Boss Thủ Công
+              <button class="btn-primary" style="background: linear-gradient(135deg, #ef4444, #b91c1c); font-size: 0.95rem; font-weight: 800; padding: 12px 22px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;" onclick="BossHunt.toggleBossAi('disable')">
+                🛑 TẮT BOSS HƯƠU AI
+              </button>
+              <button class="btn-primary" style="background: linear-gradient(135deg, #d97706, #b45309); font-size: 0.95rem; font-weight: 800; padding: 12px 22px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;" onclick="BossHunt.toggleBossAi('respawn')">
+                🔄 HỒI ĐẦY 100K HP
               </button>
             `}
           </div>
-        </details>
+        </div>
       </div>
     `;
   },
 
-  async spawnAutoAiBoss() {
-    if (!confirm("⚠️ XÁC NHẬN THẢ TỰ ĐỘNG AI BOSS:
-
-Bạn có muốn kích hoạt thả Boss Hươu AI 100.000 HP tại Đấu Trường ngay bây giờ?
-
-⭐ Hệ thống sẽ TỰ ĐỘNG triển khai Boss tại Đấu Trường mà không cần chọn bất kỳ ID Steam nào!")) {
-      return;
+  async toggleBossAi(action) {
+    let confirmMsg = "";
+    if (action === 'enable') {
+      confirmMsg = "⚠️ XÁC NHẬN THẢ BOSS HƯƠU AI 100.000 HP:\n\nBạn có muốn kích hoạt thả Boss Hươu AI 100.000 HP tại Đấu Trường ngay bây giờ?\n\n⭐ Chuẩn AI tự động hoàn toàn, Boss tự phản đòn 1.000 dame và chia 5.000 Xu theo dame!";
+    } else if (action === 'disable') {
+      confirmMsg = "⚠️ XÁC NHẬN TẮT BOSS HƯƠU AI:\n\nBạn có chắc chắn muốn TẮT Boss Hươu AI và thu hồi khỏi Đấu Trường?";
+    } else {
+      confirmMsg = "⚠️ XÁC NHẬN HỒI ĐẦY MÁU BOSS:\n\nBạn có muốn hồi phục đầy đủ 100.000 HP cho Boss Hươu AI?";
     }
+
+    if (!confirm(confirmMsg)) return;
 
     if (window.App && App.showToast) {
-      App.showToast("⏳ Đang tự động kích hoạt thả AI Boss...");
+      App.showToast("⏳ Đang gửi lệnh máy chủ xử lý Boss Hươu AI...");
     }
-
-    try {
-      const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
-      const adminSid = user ? user.steamId : '76561199175571899';
-
-      const res = await fetch(`/api/boss/toggle?admin_steam_id=${adminSid}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'enable',
-          auto_ai: true,
-          species: 'Dryosaurus',
-          teleport: true
-        })
-      });
-
-      const resData = await res.json();
-      if (resData.ok) {
-        if (window.App && App.showToast) {
-          App.showToast(resData.message || "✅ Thả AI Boss tự động thành công!");
-        } else {
-          alert(resData.message || "✅ Thả AI Boss tự động thành công!");
-        }
-        await this.fetchData();
-      } else {
-        alert("❌ " + (resData.error || "Lỗi thao tác!"));
-      }
-    } catch (e) {
-      alert("❌ Lỗi kết nối khi thả AI Boss: " + e.message);
-    }
-  },
-
-  async adminToggle(action) {
-    const targetSidInput = document.getElementById('boss-admin-target-sid');
-    const targetSid = targetSidInput ? targetSidInput.value.trim() : '';
-    const teleport = document.getElementById('boss-admin-teleport') ? document.getElementById('boss-admin-teleport').checked : true;
-    const slay = document.getElementById('boss-admin-slay') ? document.getElementById('boss-admin-slay').checked : true;
-
-    if (action === 'enable' && !targetSid) {
-      alert('Vui lòng chọn hoặc nhập Steam ID của tài khoản để hóa thân thành Boss!');
-      return;
-    }
-
-    if (action === 'enable' && !confirm(`⚠️ XÁC NHẬN KÍCH HOẠT SĂN BOSS:\n\nBạn có chắc chắn muốn thả Boss Hươu AI 100.000 HP cho Steam ID ${targetSid}?\n\nBoss sẽ sống mãi cho đến khi bạn bấm Tắt!`)) {
-      return;
-    }
-
-    if (action === 'disable' && !confirm(`⚠️ XÁC NHẬN TẮT BOSS:\n\nBạn có chắc chắn muốn TẮT Boss và thu hồi khỏi Đấu Trường?`)) {
-      return;
-    }
-
-    App.showToast("⏳ Đang gửi lệnh máy chủ xử lý Boss...");
 
     try {
       const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
@@ -598,22 +494,33 @@ Bạn có muốn kích hoạt thả Boss Hươu AI 100.000 HP tại Đấu Trư�
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: action,
-          target_steam_id: targetSid,
-          teleport: teleport,
-          slay: slay
+          species: 'Deer'
         })
       });
 
       const resData = await res.json();
       if (resData.ok) {
-        App.showToast(resData.message || "✅ Thao tác Boss thành công!");
+        if (window.App && App.showToast) {
+          App.showToast(resData.message || "✅ Thao tác Boss Hươu AI thành công!");
+        } else {
+          alert(resData.message || "✅ Thao tác Boss Hươu AI thành công!");
+        }
         await this.fetchData();
       } else {
-        alert(resData.error || "Lỗi thao tác!");
+        alert("❌ " + (resData.error || "Lỗi thao tác!"));
       }
     } catch (e) {
-      alert("Lỗi kết nối máy chủ khi thực hiện lệnh Boss: " + e.message);
+      alert("❌ Lỗi kết nối khi gửi lệnh Boss: " + e.message);
     }
+  },
+
+  // Aliases for compatibility
+  async spawnAutoAiBoss() {
+    return this.toggleBossAi('enable');
+  },
+
+  async adminToggle(action) {
+    return this.toggleBossAi(action);
   },
 
   async teleportToBoss() {
