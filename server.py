@@ -2962,6 +2962,33 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 pass
         return int(balance)
 
+    def _translate_pilot_error(self, err_msg):
+        err_str = str(err_msg).lower()
+        if "not online" in err_str or "offline" in err_str or "player_offline" in err_str:
+            return "Khủng long của bạn chưa online trong server! Hãy vào game và đứng yên trước khi bấm dịch chuyển."
+        if "combat" in err_str:
+            return "Khủng long đang trong trạng thái combat (giao tranh)! Vui lòng đợi 30 giây hết combat rồi thử lại."
+        if "location" in err_str:
+            return "Địa điểm dịch chuyển không hợp lệ hoặc đang bị khóa."
+        if "rate limit" in err_str or "too many" in err_str:
+            return "Thao tác quá nhanh, vui lòng đợi vài giây rồi thử lại."
+        return str(err_msg)
+
+    def _is_teleport_success(self, res):
+        if not res or not isinstance(res, dict):
+            return False, "Không thể kết nối đến máy chủ game IslePilot."
+        if res.get("ok") is False:
+            err = res.get("error") or res.get("message") or "Lệnh dịch chuyển bị từ chối"
+            return False, self._translate_pilot_error(err)
+        if "statusCode" in res and res.get("statusCode") not in [200, 201]:
+            err = res.get("message") or res.get("error") or f"Lỗi HTTP {res.get('statusCode')}"
+            return False, self._translate_pilot_error(err)
+        if res.get("ok") is True or res.get("commandId") or res.get("success") is True:
+            return True, "Thành công"
+        if res.get("error"):
+            return False, self._translate_pilot_error(res.get("error"))
+        return False, "Máy chủ không xác nhận lệnh dịch chuyển."
+
     def handle_arena_get(self):
         query = urllib.parse.urlparse(self.path).query
         q_params = urllib.parse.parse_qs(query)
@@ -3371,18 +3398,48 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         elif path == "/api/arena/matches/teleport":
             steam_id = payload.get("steam_id") or self.get_active_steam_id()
             if not steam_id:
-                self.send_json_response({"ok": False, "error": "Vui lòng đăng nhập Steam!"}, status=400)
+                self.send_json_response({"ok": False, "error": "Vui lòng đăng nhập Steam để sử dụng dịch chuyển!"}, status=400)
                 return
 
+            steam_id = str(steam_id).strip()
+
+            # 1. Kiểm tra trạng thái thực tế của khủng long trên IslePilot
+            try:
+                p_info = self.fetch_islepilot(f"/players/{steam_id}")
+                if isinstance(p_info, dict):
+                    if p_info.get("online") is False:
+                        self.send_json_response({
+                            "ok": False,
+                            "error": "Khủng long của bạn chưa online trong server! Vui lòng vào game trước khi bấm dịch chuyển."
+                        }, status=400)
+                        return
+                    if p_info.get("inCombat") is True:
+                        self.send_json_response({
+                            "ok": False,
+                            "error": "Khủng long đang trong combat (giao tranh)! Vui lòng đợi 30s sau khi hết combat rồi thử lại."
+                        }, status=400)
+                        return
+            except Exception:
+                pass
+
+            # 2. Gửi lệnh dịch chuyển vào Đấu Trường tới IslePilot
             res = self.fetch_islepilot(f"/players/{steam_id}/teleport", method="POST", body_data={
                 "locationId": "cmvqtjyrr4ombph01vi8dknwg"
             })
-            if res and (res.get("ok") or not res.get("error")):
-                self.send_json_response({"ok": True, "message": "Đã gửi lệnh dịch chuyển tới ĐẤU TRƯỜNG thành công! Hãy đứng yên trong game."})
+            ok, msg = self._is_teleport_success(res)
+            if ok:
+                self.send_json_response({
+                    "ok": True,
+                    "message": "🚀 Đã gửi lệnh dịch chuyển vào ĐẤU TRƯỜNG thành công! Hãy ĐỨNG YÊN trong game 3-5 giây để máy chủ kéo khủng long tới sàn đấu."
+                })
             else:
-                err = res.get("error") if res else "Máy chủ bận hoặc đang trong combat"
-                self.send_json_response({"ok": False, "error": f"Dịch chuyển thất bại: {err}"}, status=400)
+                self.send_json_response({
+                    "ok": False,
+                    "error": msg
+                }, status=400)
             return
+
+
 
         # 6. Xác Định Kết Quả Trận Đấu (Resolve Match: Combat check / Concede / Admin)
         elif path == "/api/arena/matches/resolve":
@@ -4670,16 +4727,11 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 return
 
             res = self.fetch_islepilot(f"/players/{steam_id}/teleport", method="POST", body_data={"locationId": location_id})
-
-            if res and (res.get("ok") or not res.get("error")):
-
-                self.send_json_response({"success": True, "message": "Thành công"})
-
+            ok, msg = self._is_teleport_success(res)
+            if ok:
+                self.send_json_response({"success": True, "message": "🚀 Đã gửi lệnh dịch chuyển thành công! Hãy đứng yên trong game 3-5s."})
                 return
-
-            err_msg = res.get("error") if res else "Đang trong combat hoặc máy chủ bận."
-
-            self.send_json_response({"success": False, "message": "Thất bại"}, 400)
+            self.send_json_response({"success": False, "message": msg}, 400)
 
         except Exception as e:
 

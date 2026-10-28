@@ -946,6 +946,7 @@ const Arena = {
 
     const title = (match && match.title) ? this.escapeHtml(match.title) : 'Trận Đấu PK';
     const bet = (match && match.betAmount) ? match.betAmount : 50;
+    const oppSid = (match && match.opponent && match.opponent.steamId) ? String(match.opponent.steamId).trim() : (this.mySteamId || '');
 
     modalContainer.innerHTML = `
       <div class="modal-overlay active" id="arena-teleport-prompt-modal" style="display: flex; align-items: center; justify-content: center; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 10000; padding: 20px;">
@@ -962,13 +963,15 @@ const Arena = {
             Mức cược: <span style="color: #fbbf24; font-weight: 800;">🪙 ${bet} Xu</span> (Thắng nhận +${bet} Xu • Thua trừ -${bet} Xu).
           </p>
 
-          <div style="background: rgba(16, 185, 129, 0.1); border: 1px dashed rgba(16, 185, 129, 0.4); border-radius: 10px; padding: 14px; margin-bottom: 22px; font-size: 0.88rem; color: #a7f3d0; text-align: left; line-height: 1.5;">
+          <div style="background: rgba(16, 185, 129, 0.1); border: 1px dashed rgba(16, 185, 129, 0.4); border-radius: 10px; padding: 14px; margin-bottom: 20px; font-size: 0.88rem; color: #a7f3d0; text-align: left; line-height: 1.5;">
             📍 <b>Địa điểm thi đấu:</b> ĐẤU TRƯỜNG<br />
-            ⚠️ <b>Lưu ý:</b> Hãy đảm bảo bạn đang ở trong game và khủng long đang đứng yên an toàn trước khi bấm nút dịch chuyển!
+            ⚠️ <b>Quan trọng:</b> Hãy đảm bảo khủng long của bạn <b>đang online trong game và đứng yên</b> trước khi bấm lệnh dịch chuyển!
           </div>
 
+          <div id="modal-teleport-status-box" style="display: none; margin-bottom: 16px; padding: 12px; border-radius: 8px; font-size: 0.9rem; text-align: left; line-height: 1.4;"></div>
+
           <div style="display: flex; flex-direction: column; gap: 10px;">
-            <button onclick="Arena.teleportToArena(true); Arena.closeModal();" class="btn-primary" style="padding: 14px 20px; font-size: 1.05rem; font-weight: 800; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; cursor: pointer; box-shadow: 0 0 20px rgba(16, 185, 129, 0.5); border-radius: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <button id="btn-modal-teleport-action" onclick="Arena.handleTeleportPrompt('${oppSid}')" class="btn-primary" style="padding: 14px 20px; font-size: 1.05rem; font-weight: 800; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; cursor: pointer; box-shadow: 0 0 20px rgba(16, 185, 129, 0.5); border-radius: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;">
               <span>🚀</span> DỊCH CHUYỂN VÀO ĐẤU TRƯỜNG NGAY
             </button>
             <button onclick="Arena.closeModal()" class="btn-secondary" style="padding: 10px 16px; font-size: 0.88rem; cursor: pointer;">
@@ -978,6 +981,48 @@ const Arena = {
         </div>
       </div>
     `;
+  },
+
+  async handleTeleportPrompt(targetSid) {
+    const btn = document.getElementById('btn-modal-teleport-action');
+    const statusBox = document.getElementById('modal-teleport-status-box');
+
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<span>⏳</span> Đang gửi lệnh dịch chuyển...';
+    }
+
+    const sid = targetSid || this.mySteamId;
+    const ok = await this.teleportToArena(true, sid);
+
+    if (ok) {
+      if (btn) {
+        btn.innerHTML = '<span>✅</span> ĐÃ GỬI LỆNH THÀNH CÔNG!';
+        btn.style.background = '#059669';
+      }
+      if (statusBox) {
+        statusBox.style.display = 'block';
+        statusBox.style.background = 'rgba(16, 185, 129, 0.2)';
+        statusBox.style.border = '1px solid #10b981';
+        statusBox.style.color = '#a7f3d0';
+        statusBox.innerHTML = '🚀 <b>Đã gửi lệnh dịch chuyển tới game!</b><br />Vui lòng vào màn hình game và <b>ĐỨNG YÊN 3 - 5 GIÂY</b> để máy chủ chuyển bạn tới sàn đấu.';
+      }
+      setTimeout(() => {
+        this.closeModal();
+      }, 4000);
+    } else {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<span>🚀</span> Thử Dịch Chuyển Lại';
+      }
+      if (statusBox) {
+        statusBox.style.display = 'block';
+        statusBox.style.background = 'rgba(239, 68, 68, 0.15)';
+        statusBox.style.border = '1px solid #ef4444';
+        statusBox.style.color = '#fca5a5';
+        statusBox.innerHTML = '⚠️ <b>Dịch chuyển chưa thành công!</b><br />Hãy chắc chắn khủng long của bạn đã ở trong game, không bị combat và đang đứng yên.';
+      }
+    }
   },
 
   async cancelMatch(matchId) {
@@ -1197,20 +1242,22 @@ const Arena = {
     }
   },
 
-  async teleportToArena(skipConfirm = false) {
+  async teleportToArena(skipConfirm = false, customSteamId = null) {
     this.init();
-    if (!this.mySteamId) {
+    const sid = customSteamId || this.mySteamId;
+    if (!sid) {
+      const msg = 'Vui lòng đăng nhập Steam để gửi lệnh dịch chuyển!';
       if (window.App && window.App.showToast) {
-        window.App.showToast('Vui lòng đăng nhập Steam để gửi lệnh dịch chuyển!', 'warning');
+        window.App.showToast(msg, 'warning');
       } else {
-        alert('Vui lòng đăng nhập Steam để gửi lệnh dịch chuyển!');
+        alert(msg);
       }
-      return;
+      return false;
     }
 
     if (!skipConfirm) {
       if (!confirm('Dịch chuyển khủng long của bạn tới ĐẤU TRƯỜNG ngay bây giờ? Hãy chắc chắn bạn đang vào game và đứng yên an toàn!')) {
-        return;
+        return false;
       }
     }
 
@@ -1222,7 +1269,7 @@ const Arena = {
       const res = await fetch('/api/arena/matches/teleport', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ steam_id: this.mySteamId })
+        body: JSON.stringify({ steam_id: sid })
       });
       const data = await res.json();
       if (!data.ok) throw new Error(data.error || 'Lỗi dịch chuyển');
@@ -1232,8 +1279,14 @@ const Arena = {
       } else {
         alert(data.message || 'Đã gửi lệnh dịch chuyển thành công!');
       }
+      return true;
     } catch (err) {
-      alert(`Lỗi dịch chuyển: ${err.message}`);
+      const errMsg = err.message || 'Lỗi kết nối máy chủ';
+      if (window.App && window.App.showToast) {
+        window.App.showToast(`⚠️ ${errMsg}`, 'error');
+      }
+      alert(`⚠️ Không thể dịch chuyển: ${errMsg}`);
+      return false;
     }
   },
 
