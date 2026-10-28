@@ -1,6 +1,6 @@
 {
   "active": false,
-  "boss_steam_id": "76561199175571899",
+  "boss_steam_id": "76561198999999999",
   "boss_name": "👑 BOSS TRICERATOPS BẠO THẦN",
   "species": "Triceratops",
   "max_hp": 100000,
@@ -10,16 +10,42 @@
   "reward_xu": 5000,
   "location_id": "cmvqtjyrr4ombph01vi8dknwg",
   "location_name": "ĐẤU TRƯỜNG",
-  "spawned_at": "2026-10-28T15:48:12.854798",
+  "spawned_at": "2026-10-28T16:52:53.659050",
   "last_killer": {
-    "hit_id": "boss_fatal_hit_1793177293327",
-    "killer_steam_id": "76561198657515598",
-    "killer_name": "haigialam20375",
-    "reward_xu": 5000,
-    "killed_at": "2026-10-28T15:48:14.089325",
-    "ability": "Cắn xuyên giáp"
+    "killer_steam_id": "76561198000000002",
+    "killer_name": "DũngSĩ_0002",
+    "killed_at": "2026-10-28T16:52:56.434768",
+    "reward_xu": 3500,
+    "ability": "Cắn Đoạt Mạng"
   },
   "kill_history": [
+    {
+      "session_id": "boss_session_1793181176434",
+      "killed_at": "2026-10-28T16:52:56.434768",
+      "killer_steam_id": "76561198000000002",
+      "killer_name": "DũngSĩ_0002",
+      "total_damage": 100000,
+      "total_reward_xu": 5000,
+      "participants_count": 2,
+      "rewards": [
+        {
+          "steam_id": "76561198000000002",
+          "name": "DũngSĩ_0002",
+          "damage": 70000,
+          "damage_pct": 70.0,
+          "hits": 1,
+          "reward_xu": 3500
+        },
+        {
+          "steam_id": "76561198000000001",
+          "name": "DũngSĩ_0001",
+          "damage": 30000,
+          "damage_pct": 30.0,
+          "hits": 1,
+          "reward_xu": 1500
+        }
+      ]
+    },
     {
       "hit_id": "boss_fatal_hit_1793177293327",
       "killer_steam_id": "76561198657515598",
@@ -35,6 +61,27 @@
       "reward_xu": 5000,
       "killed_at": "2026-10-28T15:47:22.571456",
       "ability": "Cắn xuyên giáp"
+    }
+  ],
+  "damage_per_hit": 1000,
+  "is_settled": false,
+  "dps_ranking": [],
+  "last_rewards": [
+    {
+      "steam_id": "76561198000000002",
+      "name": "DũngSĩ_0002",
+      "damage": 70000,
+      "damage_pct": 70.0,
+      "hits": 1,
+      "reward_xu": 3500
+    },
+    {
+      "steam_id": "76561198000000001",
+      "name": "DũngSĩ_0001",
+      "damage": 30000,
+      "damage_pct": 30.0,
+      "hits": 1,
+      "reward_xu": 1500
     }
   ]
 }

@@ -3400,31 +3400,39 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         base_dir = os.path.dirname(os.path.abspath(__file__))
         primary_file = os.path.join(base_dir, "boss_state.json")
         backup_file = os.path.join(base_dir, ".persistent_boss_state.json")
-        for fpath in [backup_file, primary_file]:
-            if os.path.exists(fpath):
-                try:
-                    with open(fpath, "r", encoding="utf-8") as f:
-                        data = json.load(f)
-                        if isinstance(data, dict):
-                            return data
-                except Exception:
-                    pass
-        return {
+        defaults = {
             "active": False,
             "boss_steam_id": "76561199175571899",
             "boss_name": "👑 BOSS TRICERATOPS BẠO THẦN",
             "species": "Triceratops",
             "max_hp": 100000,
             "current_hp": 100000,
+            "damage_per_hit": 1000,
             "weight": 100000,
             "weight_label": "100.0 Tấn (100,000 kg)",
             "reward_xu": 5000,
             "location_id": "cmvqtjyrr4ombph01vi8dknwg",
             "location_name": "ĐẤU TRƯỜNG",
             "spawned_at": None,
+            "is_settled": False,
             "last_killer": None,
-            "kill_history": []
+            "dps_ranking": [],
+            "kill_history": [],
+            "last_rewards": []
         }
+        for fpath in [backup_file, primary_file]:
+            if os.path.exists(fpath):
+                try:
+                    with open(fpath, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                        if isinstance(data, dict):
+                            for k, v in defaults.items():
+                                if k not in data or data[k] is None:
+                                    data[k] = v
+                            return data
+                except Exception:
+                    pass
+        return defaults
 
     def _save_boss_db(self, data):
         base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -3461,8 +3469,10 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         except Exception:
             hits = []
 
-        rewarded_hit_ids = {str(k.get("hit_id")) for k in boss_db.get("kill_history", []) if k.get("hit_id")}
-        total_dmg = 0.0
+        # 1. Quét toàn bộ đòn cắn của người chơi vào Boss để trừ máu theo lực cắn
+        damage_by_attacker = {}
+        fatal_hit = None
+        total_dmg_taken = 0.0
 
         for h in hits:
             vic_sid = str(h.get("victimSteamId") or "")
@@ -3478,52 +3488,131 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 except Exception:
                     pass
 
+            # Bỏ qua các hit xảy ra trước khi boss xuất hiện trong phiên này
             if spawned_at_ts > 0 and hit_ts > 0 and hit_ts < (spawned_at_ts - 5.0):
                 continue
 
+            atk_sid = str(h.get("attackerSteamId") or "")
+            if not atk_sid or atk_sid == boss_sid:
+                continue
+
+            # Lấy lực cắn / sát thương thực tế của dino người chơi
             damage = float(h.get("damage") or 0.0)
-            total_dmg += damage
+            if damage <= 0:
+                damage = 100.0
 
-            if h.get("killed"):
-                hit_id = str(h.get("id") or f"{vic_sid}_{hit_ts}")
-                if hit_id in rewarded_hit_ids:
-                    continue
+            total_dmg_taken += damage
 
-                atk_sid = str(h.get("attackerSteamId") or "")
-                if not atk_sid:
-                    continue
-
-                killer_name = f"Chiến Binh_{atk_sid[-4:]}"
+            if atk_sid not in damage_by_attacker:
+                damage_by_attacker[atk_sid] = {
+                    "steam_id": atk_sid,
+                    "name": f"Player_{atk_sid[-4:]}",
+                    "damage": 0.0,
+                    "hits": 0,
+                    "last_ability": h.get("ability", "Cắn")
+                }
                 try:
                     kp = self.fetch_islepilot(f"/players/{atk_sid}")
                     if isinstance(kp, dict) and kp.get("name"):
-                        killer_name = kp["name"]
+                        damage_by_attacker[atk_sid]["name"] = kp["name"]
                 except Exception:
                     pass
 
-                reward_xu = int(boss_db.get("reward_xu", 5000))
-                # Tự động cộng 5000 Xu hệ thống cho người dứt điểm Boss
-                self._adjust_player_xu(atk_sid, reward_xu, f"Vinh danh hạ gục Boss Triceratops 100.000 HP")
+            damage_by_attacker[atk_sid]["damage"] += damage
+            damage_by_attacker[atk_sid]["hits"] += 1
+            damage_by_attacker[atk_sid]["last_ability"] = h.get("ability", "Cắn")
 
-                kill_record = {
-                    "hit_id": hit_id,
-                    "killer_steam_id": atk_sid,
-                    "killer_name": killer_name,
-                    "reward_xu": reward_xu,
-                    "killed_at": datetime.datetime.now().isoformat(),
-                    "ability": h.get("ability", "Tấn công")
-                }
-                boss_db.setdefault("kill_history", []).insert(0, kill_record)
-                boss_db["last_killer"] = kill_record
-                boss_db["current_hp"] = 0
-                self._save_boss_db(boss_db)
-                return
+            if h.get("killed"):
+                fatal_hit = h
 
-        # Nếu chưa chết, tính lượng máu còn lại theo thời gian thực
-        calc_hp = max(1, int(boss_db.get("max_hp", 100000) - total_dmg))
-        if boss_db.get("current_hp") != calc_hp and boss_db.get("current_hp", 0) > 0:
-            boss_db["current_hp"] = calc_hp
+        # Máu Boss bị trừ theo đúng tổng lực cắn của dino người chơi
+        max_hp = int(boss_db.get("max_hp", 100000))
+        calc_hp = max(0, int(max_hp - total_dmg_taken))
+        boss_db["current_hp"] = calc_hp
+
+        # Bảng xếp hạng sát thương (DPS Ranking) & ước tính tỷ lệ chia 5.000 Xu
+        dps_list = []
+        total_pool = int(boss_db.get("reward_xu", 5000))
+        sorted_attackers = sorted(damage_by_attacker.values(), key=lambda x: x["damage"], reverse=True)
+
+        for item in sorted_attackers:
+            ratio = (item["damage"] / total_dmg_taken) if total_dmg_taken > 0 else 0
+            pct = round(ratio * 100, 1)
+            est_xu = max(1, round(total_pool * ratio)) if total_dmg_taken > 0 else 0
+            dps_list.append({
+                "steam_id": item["steam_id"],
+                "name": item["name"],
+                "damage": round(item["damage"]),
+                "damage_pct": pct,
+                "hits": item["hits"],
+                "last_ability": item["last_ability"],
+                "estimated_xu": est_xu
+            })
+        boss_db["dps_ranking"] = dps_list
+
+        # 2. Xử lý khi Boss bị tiêu diệt: CHIA PHẦN THƯỞNG 5.000 XU CHO NHIỀU NGƯỜI THEO DAME
+        is_boss_dead = (fatal_hit is not None) or (calc_hp <= 0 and total_dmg_taken > 0)
+
+        if is_boss_dead and not boss_db.get("is_settled"):
+            reward_distribution = []
+            if total_dmg_taken > 0 and len(dps_list) > 0:
+                allocated = 0
+                for idx, p in enumerate(dps_list):
+                    ratio = p["damage"] / total_dmg_taken
+                    if idx == len(dps_list) - 1:
+                        share_xu = max(1, total_pool - allocated)
+                    else:
+                        share_xu = max(1, round(total_pool * ratio))
+                        allocated += share_xu
+
+                    # Tự động cộng Xu vào ví người chơi theo tỷ lệ dame gây ra
+                    self._adjust_player_xu(
+                        p["steam_id"],
+                        share_xu,
+                        f"Thưởng Săn Boss Triceratops: Gây {p['damage']:,} dame ({p['damage_pct']}%)"
+                    )
+
+                    reward_distribution.append({
+                        "steam_id": p["steam_id"],
+                        "name": p["name"],
+                        "damage": p["damage"],
+                        "damage_pct": p["damage_pct"],
+                        "hits": p["hits"],
+                        "reward_xu": share_xu
+                    })
+
+            killer_sid = str(fatal_hit.get("attackerSteamId")) if fatal_hit else (dps_list[0]["steam_id"] if dps_list else "")
+            killer_name = "Không xác định"
+            if killer_sid:
+                match_p = next((p for p in dps_list if p["steam_id"] == killer_sid), None)
+                killer_name = match_p["name"] if match_p else f"Player_{killer_sid[-4:]}"
+
+            kill_session = {
+                "session_id": f"boss_session_{int(time.time()*1000)}",
+                "killed_at": datetime.datetime.now().isoformat(),
+                "killer_steam_id": killer_sid,
+                "killer_name": killer_name,
+                "total_damage": round(total_dmg_taken),
+                "total_reward_xu": total_pool,
+                "participants_count": len(reward_distribution),
+                "rewards": reward_distribution
+            }
+
+            boss_db.setdefault("kill_history", []).insert(0, kill_session)
+            boss_db["last_rewards"] = reward_distribution
+            boss_db["last_killer"] = {
+                "killer_steam_id": killer_sid,
+                "killer_name": killer_name,
+                "killed_at": kill_session["killed_at"],
+                "reward_xu": next((r["reward_xu"] for r in reward_distribution if r["steam_id"] == killer_sid), 0),
+                "ability": fatal_hit.get("ability", "Tấn công") if fatal_hit else "Đòn kết liễu"
+            }
+            boss_db["current_hp"] = 0
+            boss_db["is_settled"] = True
             self._save_boss_db(boss_db)
+            return
+
+        self._save_boss_db(boss_db)
 
     def handle_boss_get(self):
         boss_db = self._get_boss_db()
@@ -3608,7 +3697,10 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 boss_db["boss_steam_id"] = target_sid
                 boss_db["max_hp"] = 100000
                 boss_db["current_hp"] = 100000
+                boss_db["damage_per_hit"] = 1000
                 boss_db["spawned_at"] = datetime.datetime.now().isoformat()
+                boss_db["is_settled"] = False
+                boss_db["dps_ranking"] = []
                 boss_db["last_killer"] = None
                 self._save_boss_db(boss_db)
 
@@ -3624,6 +3716,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 old_sid = str(boss_db.get("boss_steam_id") or "")
                 boss_db["active"] = False
                 boss_db["current_hp"] = 0
+                boss_db["is_settled"] = False
                 if old_sid and payload.get("slay", False):
                     try:
                         self.fetch_islepilot("/commands", method="POST", body_data={"action": "slay", "steamId": old_sid})
