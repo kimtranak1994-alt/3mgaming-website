@@ -1,6 +1,130 @@
 {
   "matches": [
     {
+      "id": "pk_1793209721176",
+      "createdAt": "2026-10-29T00:48:41.176263",
+      "status": "finished",
+      "title": "Kèo Đấu PK 2000 Xu",
+      "tier": "Apex (T-Rex / Giga / Spino)",
+      "rules": "Solo 1v1 đến chết",
+      "arenaLocationId": "cmvqtjyrr4ombph01vi8dknwg",
+      "arenaLocationName": "ĐẤU TRƯỜNG",
+      "creator": {
+        "steamId": "76561198000000010",
+        "name": "Player_0010",
+        "species": "Tyrannosaurus",
+        "growth": 100
+      },
+      "opponent": {
+        "steamId": "76561198000000020",
+        "name": "Player_0020",
+        "species": "Tyrannosaurus",
+        "growth": 100
+      },
+      "betAmount": 2000,
+      "totalFighterPool": 4000,
+      "spectatorBets": [
+        {
+          "steamId": "76561198000000088",
+          "name": "Khán giả_0088",
+          "chosenFighter": "creator",
+          "amount": 2000,
+          "timestamp": "2026-10-29T00:48:48.202328",
+          "payout": 4000,
+          "bonus": 2000,
+          "status": "won",
+          "settled": true
+        }
+      ],
+      "winner": "creator",
+      "winnerSteamId": "76561198000000010",
+      "winReason": "Đối thủ Player_0020 đã nhận thua (Concede).",
+      "startedAt": "2026-10-29T00:48:44.682886",
+      "finishedAt": "2026-10-29T00:48:53.390117",
+      "loserSteamId": "76561198000000020",
+      "loserName": "Player_0020",
+      "fightersSettled": true,
+      "settledSummary": {
+        "winnerSteamId": "76561198000000010",
+        "winnerName": "Player_0010",
+        "winnerBonusXu": 2000,
+        "loserSteamId": "76561198000000020",
+        "loserName": "Player_0020",
+        "loserDeductXu": 2000
+      },
+      "spectatorBetsSettled": true
+    },
+    {
+      "id": "pk_1793209588297",
+      "createdAt": "2026-10-29T00:46:28.297292",
+      "status": "in_progress",
+      "title": "Kèo Đấu PK 2000 Xu",
+      "tier": "Apex (T-Rex / Giga / Spino)",
+      "rules": "Solo 1v1 đến chết",
+      "arenaLocationId": "cmvqtjyrr4ombph01vi8dknwg",
+      "arenaLocationName": "ĐẤU TRƯỜNG",
+      "creator": {
+        "steamId": "76561198000000010",
+        "name": "Player_0010",
+        "species": "Tyrannosaurus",
+        "growth": 100
+      },
+      "opponent": {
+        "steamId": "76561198000000020",
+        "name": "Player_0020",
+        "species": "Tyrannosaurus",
+        "growth": 100
+      },
+      "betAmount": 2000,
+      "totalFighterPool": 4000,
+      "spectatorBets": [],
+      "winner": null,
+      "winnerSteamId": null,
+      "winReason": null,
+      "startedAt": "2026-10-29T00:46:31.857870",
+      "finishedAt": null
+    },
+    {
+      "id": "pk_1793209407516",
+      "createdAt": "2026-10-29T00:43:27.516732",
+      "status": "waiting",
+      "title": "Kèo Đấu Test 2,000 Xu 1v1",
+      "tier": "Apex (T-Rex / Giga / Spino)",
+      "rules": "Solo 1v1 đến chết",
+      "arenaLocationId": "cmvqtjyrr4ombph01vi8dknwg",
+      "arenaLocationName": "ĐẤU TRƯỜNG",
+      "creator": {
+        "steamId": "76561198000000010",
+        "name": "Player_0010",
+        "species": "Tyrannosaurus",
+        "growth": 100
+      },
+      "opponent": null,
+      "betAmount": 2000,
+      "totalFighterPool": 4000,
+      "spectatorBets": [
+        {
+          "steamId": "76561198000000088",
+          "name": "Khán giả_0088",
+          "chosenFighter": "creator",
+          "amount": 2000,
+          "timestamp": "2026-10-29T00:43:30.960922"
+        },
+        {
+          "steamId": "76561198000000099",
+          "name": "Khán giả_0099",
+          "chosenFighter": "opponent",
+          "amount": 500,
+          "timestamp": "2026-10-29T00:43:37.195913"
+        }
+      ],
+      "winner": null,
+      "winnerSteamId": null,
+      "winReason": null,
+      "startedAt": null,
+      "finishedAt": null
+    },
+    {
       "id": "pk_1793181980044",
       "createdAt": "2026-10-28T17:06:20.044911",
       "status": "finished",
@@ -32,7 +156,7 @@
     }
   ],
   "stats": {
-    "totalMatches": 5,
-    "totalXuWagered": 700
+    "totalMatches": 8,
+    "totalXuWagered": 12700
   }
 }

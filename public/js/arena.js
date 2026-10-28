@@ -708,7 +708,7 @@ const Arena = {
             <ul style="padding-left: 18px; font-size: 0.88rem; color: var(--text-muted);">
               <li>Khán giả có thể cược cho Đấu Sĩ A hoặc Đấu Sĩ B (tối thiểu <strong>5 Xu</strong>).</li>
               <li>Đấu sĩ trực tiếp tham gia trận đấu không được đặt cược khán giả vào trận của mình.</li>
-              <li>Số tiền thắng cược của khán giả: Tỷ lệ thưởng tối đa <strong>1:1</strong> (ví dụ cược 20 Xu thì khi thắng nhận lại 20 Xu gốc + tối đa 20 Xu lãi = 40 Xu).</li>
+              <li>Số tiền thắng cược của khán giả: Tỷ lệ thưởng chuẩn <strong>1:1</strong> (ví dụ cược 2,000 Xu thì khi thắng nhận lại đúng 2,000 Xu gốc + 2,000 Xu tiền lãi = 4,000 Xu tổng nhận về).</li>
             </ul>
           </div>
 
@@ -1196,16 +1196,17 @@ const Arena = {
             </div>
 
             <!-- Nút chọn nhanh mức cược -->
-            <div style="display: flex; gap: 6px; margin-bottom: 16px;">
-              ${[10, 20, 50, 100].map(val => `
+            <div style="display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap;">
+              ${[20, 50, 100, 500, 1000, 2000].map(val => `
                 <button type="button" onclick="document.getElementById('spectator-bet-amount').value=${val}" class="btn-secondary" style="padding: 4px 10px; font-size: 0.78rem; border-radius: 6px; cursor: pointer;">
-                  ${val} Xu
+                  ${val.toLocaleString()} Xu
                 </button>
               `).join('')}
             </div>
 
             <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 10px 14px; font-size: 0.82rem; color: #fbbf24; margin-bottom: 20px;">
-              🪙 Số dư hiện tại của bạn: <strong>${Number(this.myBalance).toLocaleString()} Xu</strong>
+              🪙 Số dư hiện tại của bạn: <strong>${Number(this.myBalance).toLocaleString()} Xu</strong><br />
+              💡 <b>Tỷ lệ thưởng 1:1 chuẩn xác:</b> Khi thắng, bạn nhận lại 100% tiền cược gốc + 100% tiền lãi (Ví dụ cược 2,000 Xu thắng nhận tổng 4,000 Xu, tăng đúng +2,000 Xu ròng).
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 10px;">

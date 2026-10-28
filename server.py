@@ -3110,7 +3110,6 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
         # Kiểm tra tự động kết quả cho các trận in_progress
         self._auto_check_in_progress_matches(matches)
-        self._save_arena_db(db)
 
         my_balance = self._get_player_xu_balance(steam_id) if steam_id else 0
 
@@ -3307,11 +3306,45 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
     def _settle_arena_match(self, m, winner_key, win_reason="Chiến thắng", hit_id=None):
         if not hasattr(DinoRequestHandler, "_arena_settle_lock"):
             DinoRequestHandler._arena_settle_lock = threading.Lock()
+        if not hasattr(DinoRequestHandler, "_settled_match_ids"):
+            DinoRequestHandler._settled_match_ids = set()
+
+        match_id = str(m.get("id") or "").strip()
+        if not match_id:
+            return
+
+        # Kiểm tra nhanh không cần lock
+        if match_id in DinoRequestHandler._settled_match_ids:
+            return
 
         with DinoRequestHandler._arena_settle_lock:
-            # Kiểm tra chống settle trùng lặp nếu trận đã kết thúc và đã trả thưởng
-            if m.get("status") == "finished" and m.get("spectatorBetsSettled") and m.get("fightersSettled"):
+            # Kiểm tra chống settle trùng lặp tuyệt đối giữa các thread và request song song
+            if match_id in DinoRequestHandler._settled_match_ids:
                 return
+
+            if m.get("status") == "finished" and m.get("fightersSettled") and m.get("spectatorBetsSettled"):
+                DinoRequestHandler._settled_match_ids.add(match_id)
+                return
+
+            # Kiểm tra thêm trong cơ sở dữ liệu trên đĩa và đồng bộ spectatorBets mới nhất
+            try:
+                db_check = self._get_arena_db()
+                disk_m = next((x for x in db_check.get("matches", []) if str(x.get("id")) == match_id), None)
+                if disk_m:
+                    if disk_m.get("status") == "finished" and disk_m.get("fightersSettled"):
+                        DinoRequestHandler._settled_match_ids.add(match_id)
+                        m["status"] = "finished"
+                        m["fightersSettled"] = True
+                        m["spectatorBetsSettled"] = True
+                        return
+                    # Đồng bộ đầy đủ danh sách cược khán giả mới nhất từ file đĩa
+                    if disk_m.get("spectatorBets"):
+                        m["spectatorBets"] = disk_m.get("spectatorBets", [])
+            except Exception:
+                pass
+
+            # Đánh dấu ngay lập tức đã vào quy trình settle để ngăn chặn mọi luồng khác
+            DinoRequestHandler._settled_match_ids.add(match_id)
 
             m["status"] = "finished"
             m["winner"] = winner_key
@@ -3371,56 +3404,54 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "loserDeductXu": bet_amount
             }
 
-            # 2. Xử lý trả thưởng Khán Giả (Có trần tối đa 1:1, chống cộng dồn/cộng lố và chống trùng lặp)
+            # 2. Xử lý trả thưởng Khán Giả (Tỷ lệ 1 ăn 1 chuẩn xác tuyệt đối: Cược X thắng nhận X tiền lời, tổng nhận về 2*X)
             if not m.get("spectatorBetsSettled"):
+                m["spectatorBetsSettled"] = True
                 spectator_bets = m.get("spectatorBets", [])
-                winner_bets = [b for b in spectator_bets if b.get("chosenFighter") == winner_key and not b.get("settled")]
-                loser_bets = [b for b in spectator_bets if b.get("chosenFighter") != winner_key and not b.get("settled")]
+                for b in spectator_bets:
+                    if b.get("settled"):
+                        continue
+                    b_amt = int(b.get("amount", 0))
+                    if b_amt <= 0:
+                        b["settled"] = True
+                        continue
 
-                total_win_pool = sum(int(b.get("amount", 0)) for b in winner_bets)
-                total_lose_pool = sum(int(b.get("amount", 0)) for b in loser_bets)
-
-                if total_win_pool > 0:
-                    for b in winner_bets:
-                        b_amt = int(b.get("amount", 0))
-                        # Tiền lãi bonus: Chia theo tỷ lệ từ quỹ thua nhưng TỐI ĐA BẰNG ĐÚNG TIỀN CƯỢC (Tỷ lệ 1 ăn 1)
-                        # Khắc phục hoàn toàn việc cược ít ăn quá nhiều Xu không kiểm soát
-                        raw_bonus = round((b_amt / total_win_pool) * total_lose_pool) if total_lose_pool > 0 else 0
-                        bonus = min(b_amt, raw_bonus)  # Giới hạn trần thưởng tối đa 1:1 (net +b_amt)
+                    if b.get("chosenFighter") == winner_key:
+                        # Người cược cho đấu thủ chiến thắng:
+                        # Nhận lại đúng tiền gốc (b_amt) + tiền thắng lãi tỷ lệ 1:1 (b_amt) -> Tổng nhận = 2 * b_amt
+                        # Ví dụ: cược 2,000 Xu -> Nhận lại 2,000 Xu gốc + 2,000 Xu lãi = 4,000 Xu tổng cộng (tài khoản tăng đúng +2,000 Xu ròng)
+                        bonus = b_amt
                         total_payout = b_amt + bonus
-                        
-                        self._adjust_player_xu(b.get("steamId"), total_payout, f"Thắng cược khán giả PK #{m['id']} (+{bonus} Xu lãi)")
+                        self._adjust_player_xu(
+                            b.get("steamId"),
+                            total_payout,
+                            f"Thắng cược khán giả PK #{match_id} (+{bonus} Xu lãi chuẩn 1:1)"
+                        )
                         b["payout"] = total_payout
                         b["bonus"] = bonus
                         b["status"] = "won"
                         b["settled"] = True
-                        print(f"[Spectator Payout] Khán giả {b.get('steamId')} cược {b_amt} Xu: Nhận lại {b_amt} gốc + {bonus} Xu lãi (Tổng: {total_payout} Xu)")
-                else:
-                    # Nếu bên thắng không có khán giả nào cược, hoàn tiền lại cho khán giả bên thua
-                    for b in loser_bets:
-                        b_amt = int(b.get("amount", 0))
-                        self._adjust_player_xu(b.get("steamId"), b_amt, f"Hoàn tiền cược khán giả PK #{m['id']}")
-                        b["payout"] = b_amt
-                        b["bonus"] = 0
-                        b["status"] = "refunded"
-                        b["settled"] = True
-
-                for b in loser_bets:
-                    if not b.get("settled"):
+                        print(f"[Spectator Payout] Khán giả {b.get('steamId')} cược {b_amt} Xu: Nhận lại {b_amt} gốc + {bonus} Xu lãi (Tổng nhận: {total_payout} Xu)")
+                    else:
+                        # Người cược cho đấu thủ thua cuộc:
+                        # Tiền đã bị trừ lúc đặt cược, payout = 0
                         b["payout"] = 0
                         b["bonus"] = 0
                         b["status"] = "lost"
                         b["settled"] = True
-
-                m["spectatorBetsSettled"] = True
+                        print(f"[Spectator Lost] Khán giả {b.get('steamId')} cược {b_amt} Xu cho bên thua cuộc.")
 
             # LƯU NGAY LẬP TỨC VÀO DATABASE
             try:
                 db = self._get_arena_db()
+                found = False
                 for idx, existing_m in enumerate(db.get("matches", [])):
-                    if existing_m.get("id") == m.get("id"):
+                    if str(existing_m.get("id")) == match_id:
                         db["matches"][idx] = m
+                        found = True
                         break
+                if not found:
+                    db.setdefault("matches", []).append(m)
                 self._save_arena_db(db)
             except Exception as e:
                 print(f"[Arena Settle Save DB Error]: {e}")
@@ -3592,7 +3623,15 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 self.send_json_response({"ok": False, "error": "Chỉ có thể hủy kèo khi chưa có người nhận!"}, status=400)
                 return
 
-            # Kèo chưa trừ tiền nên không cần hoàn lại
+            # Hoàn lại tiền cược khán giả nếu có
+            for b in target_match.get("spectatorBets", []):
+                if not b.get("settled"):
+                    b_amt = int(b.get("amount", 0))
+                    if b_amt > 0:
+                        self._adjust_player_xu(b.get("steamId"), b_amt, f"Hoàn tiền cược do kèo PK #{match_id} bị hủy")
+                    b["status"] = "refunded"
+                    b["settled"] = True
+
             target_match["status"] = "cancelled"
             target_match["finishedAt"] = datetime.datetime.now().isoformat()
             self._save_arena_db(db)
@@ -3615,6 +3654,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             target_match = next((m for m in matches if m.get("id") == match_id), None)
             if not target_match or target_match.get("status") not in ["waiting", "in_progress"]:
                 self.send_json_response({"ok": False, "error": "Kèo không hợp lệ để đặt cược!"}, status=400)
+                return
+            if chosen == "opponent" and not target_match.get("opponent"):
+                self.send_json_response({"ok": False, "error": "Kèo đấu này chưa có đối thủ tham gia để đặt cược!"}, status=400)
                 return
             creator_obj = target_match.get("creator") or {}
             opp_obj = target_match.get("opponent") or {}
@@ -3651,9 +3693,11 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             self._save_arena_db(db)
 
             new_balance = self._get_player_xu_balance(steam_id)
+            fighter_info = target_match.get(chosen) or {}
+            fighter_disp = fighter_info.get("name", "Đấu sĩ")
             self.send_json_response({
                 "ok": True,
-                "message": f"Đã cược thành công {amount} Xu cho {target_match.get(chosen, {}).get('name', chosen)}!",
+                "message": f"Đã cược thành công {amount} Xu cho {fighter_disp}!",
                 "balance": new_balance
             })
             return
@@ -7893,7 +7937,6 @@ def start_boss_ai_worker():
                 active_matches = [m for m in arena_db.get("matches", []) if m.get("status") == "in_progress"]
                 if active_matches:
                     req_handler._auto_check_in_progress_matches(arena_db.get("matches", []))
-                    req_handler._save_arena_db(arena_db)
 
                 # 2. Tự động kiểm tra và xử lý Boss AI (Puerta Max Size 100k HP)
                 boss_db = req_handler._get_boss_db()
