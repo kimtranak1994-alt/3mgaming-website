@@ -419,7 +419,7 @@ const BossHunt = {
   renderAdminControls(boss) {
     const isActive = !!boss.active;
     const curHp = boss.current_hp !== undefined ? boss.current_hp : 100000;
-    const configuredBotSid = (this.data && this.data.boss_bot_steam_id) || boss.boss_steam_id || '76561198975489051';
+    const configuredBotSid = (this.data && this.data.boss_bot_steam_id) || boss.boss_steam_id || '76561199175571899';
     const currentSpecies = boss.species || 'Puerta';
 
     return `
