@@ -1,6 +1,7 @@
 /**
  * 3MGAMING - Đấu Trường PK & Đặt Cược Xu (PvP Arena & System Coin Betting)
  * Đồng bộ thời gian thực với IslePilot API
+ * Cập nhật: Khi trận chiến kết thúc, người thắng được cộng Xu cược (+Xu), người thua tự động bị trừ Xu (-Xu) trong ví.
  */
 
 const Arena = {
@@ -62,7 +63,7 @@ const Arena = {
                 </span>
               </div>
               <p style="color: var(--text-muted); font-size: 0.92rem; margin: 0; max-width: 780px;">
-                Sàn đấu danh dự 1v1 dành riêng cho các chiến binh khủng long 3MGAMING. Tạo kèo thách đấu, dịch chuyển vào sân đấu, phân định thắng thua qua hệ thống Combat Log và nhận thưởng Xu tự động!
+                Sàn đấu danh dự 1v1 dành riêng cho các chiến binh khủng long 3MGAMING. Đặt cược thách đấu, dịch chuyển vào sân đấu, khi kết thúc người thắng được cộng Xu, người thua tự động bị trừ Xu trong ví!
               </p>
             </div>
 
@@ -335,7 +336,7 @@ const Arena = {
                 BẠN ĐANG CÓ TRẬN PK CHIẾN ĐẤU: <span style="color: #fbbf24;">${this.escapeHtml(myActiveMatch.title)}</span>
               </div>
               <div style="font-size: 0.85rem; color: #a7f3d0; margin-top: 2px;">
-                Quỹ thưởng: <b>${myActiveMatch.totalFighterPool} Xu</b> • Bấm nút bên phải để dịch chuyển khủng long vào Đấu Trường ngay!
+                Mức cược: <b>${myActiveMatch.betAmount} Xu</b> (Thắng: +${myActiveMatch.betAmount} Xu • Thua: -${myActiveMatch.betAmount} Xu)
               </div>
             </div>
           </div>
@@ -465,19 +466,20 @@ const Arena = {
             </div>
           </div>
 
-          <!-- Mức cược Xu & Quỹ Thưởng -->
+          <!-- Mức cược Xu & Cơ cấu Thưởng/Trừ -->
           <div style="background: rgba(245, 158, 11, 0.08); border: 1px dashed rgba(245, 158, 11, 0.35); border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
             <div>
-              <span style="font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase;">Mức cược:</span>
+              <span style="font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase;">Mức cược trận:</span>
               <div style="font-size: 1.05rem; font-weight: 800; color: #fbbf24;">
                 🪙 ${m.betAmount} Xu / người
               </div>
             </div>
             <div style="text-align: right;">
-              <span style="font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase;">Quỹ thưởng Đấu sĩ:</span>
+              <span style="font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase;">Thưởng chiến thắng:</span>
               <div style="font-size: 1.25rem; font-weight: 900; color: #34d399; text-shadow: 0 0 10px rgba(52, 211, 153, 0.4);">
-                🏆 ${m.totalFighterPool} Xu
+                🏆 +${m.betAmount} Xu
               </div>
+              <div style="font-size: 0.72rem; color: #f87171; font-weight: 600;">(Thua tự động trừ: -${m.betAmount} Xu)</div>
             </div>
           </div>
 
@@ -499,7 +501,12 @@ const Arena = {
               </div>
               ${m.status === 'finished' && m.winner === 'creator' ? `
                 <div style="margin-top: 6px; background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; font-weight: 800; font-size: 0.7rem; border-radius: 4px; padding: 2px 4px;">
-                  👑 CHIẾN THẮNG
+                  👑 CHIẾN THẮNG (+${m.betAmount} Xu)
+                </div>
+              ` : ''}
+              ${m.status === 'finished' && m.winner === 'opponent' ? `
+                <div style="margin-top: 6px; background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); font-weight: 700; font-size: 0.7rem; border-radius: 4px; padding: 2px 4px;">
+                  💀 THẤT BẠI (-${m.betAmount} Xu)
                 </div>
               ` : ''}
               <div style="margin-top: 4px; font-size: 0.72rem; color: #60a5fa;">
@@ -531,7 +538,12 @@ const Arena = {
                 </div>
                 ${m.status === 'finished' && m.winner === 'opponent' ? `
                   <div style="margin-top: 6px; background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; font-weight: 800; font-size: 0.7rem; border-radius: 4px; padding: 2px 4px;">
-                    👑 CHIẾN THẮNG
+                    👑 CHIẾN THẮNG (+${m.betAmount} Xu)
+                  </div>
+                ` : ''}
+                ${m.status === 'finished' && m.winner === 'creator' ? `
+                  <div style="margin-top: 6px; background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); font-weight: 700; font-size: 0.7rem; border-radius: 4px; padding: 2px 4px;">
+                    💀 THẤT BẠI (-${m.betAmount} Xu)
                   </div>
                 ` : ''}
                 <div style="margin-top: 4px; font-size: 0.72rem; color: #f87171;">
@@ -582,7 +594,7 @@ const Arena = {
         return `
           <div style="display: flex; gap: 8px;">
             <button onclick="Arena.cancelMatch('${m.id}')" class="btn-secondary" style="flex: 1; padding: 8px 12px; font-size: 0.84rem; color: #f87171; border-color: rgba(239,68,68,0.4); cursor: pointer;">
-              ❌ Hủy Kèo & Hoàn Xu
+              ❌ Hủy Kèo
             </button>
             <button onclick="Arena.teleportToArena()" class="btn-primary" style="padding: 8px 14px; font-size: 0.84rem; cursor: pointer; display: flex; align-items: center; gap: 6px;">
               🚀 Dịch Chuyển Vào Đấu Trường
@@ -634,10 +646,18 @@ const Arena = {
       }
     } else if (m.status === 'finished') {
       const winnerName = (m.winner && m[m.winner] && m[m.winner].name) ? m[m.winner].name : 'Đấu sĩ';
+      const loserName = m.loserName || ((m.winner === 'creator' && m.opponent) ? m.opponent.name : ((m.winner === 'opponent' && m.creator) ? m.creator.name : ''));
       return `
-        <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 6px; padding: 8px 12px; font-size: 0.8rem; color: #34d399; text-align: center;">
-          🏆 <strong>${this.escapeHtml(winnerName)}</strong> chiến thắng (+${m.totalFighterPool} Xu)
-          ${m.winReason ? `<div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;">${this.escapeHtml(m.winReason)}</div>` : ''}
+        <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 10px 14px; text-align: center;">
+          <div style="font-size: 0.88rem; color: #34d399; font-weight: 800;">
+            🏆 <strong>${this.escapeHtml(winnerName)}</strong> thắng trận (+${m.betAmount} Xu)
+          </div>
+          ${loserName ? `
+            <div style="font-size: 0.78rem; color: #f87171; margin-top: 3px; font-weight: 700;">
+              💀 <strong>${this.escapeHtml(loserName)}</strong> thua trận (đã trừ -${m.betAmount} Xu)
+            </div>
+          ` : ''}
+          ${m.winReason ? `<div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">${this.escapeHtml(m.winReason)}</div>` : ''}
         </div>
       `;
     }
@@ -658,7 +678,7 @@ const Arena = {
             </h3>
             <ul style="padding-left: 18px; font-size: 0.88rem; color: var(--text-muted);">
               <li>Người chơi có thể tạo bất kỳ kèo 1v1 nào với mức cược tối thiểu <strong>10 Xu</strong>.</li>
-              <li>Hệ thống tự động trừ tiền cược và tạm giữ trong Quỹ Đấu Trường (Escrow).</li>
+              <li>Hệ thống kiểm tra số dư ví nhưng <strong>không trừ Xu trước</strong>. Xu chỉ được cộng/trừ khi trận chiến kết thúc.</li>
               <li>Người nhận kèo phải có đủ số Xu bằng với mức cược của người tạo.</li>
               <li>Khi cả 2 đã vào trận, trận đấu chính thức bắt đầu và nút <strong>🚀 Dịch chuyển vào Đấu Trường</strong> sẽ hiện ngay lập tức!</li>
             </ul>
@@ -677,12 +697,12 @@ const Arena = {
 
           <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 18px;">
             <h3 style="font-size: 1.05rem; font-weight: 700; color: #34d399; margin-bottom: 10px;">
-              🏆 3. Phân Định Thắng Thua & Trả Thưởng
+              🏆 3. Phân Định Thắng Thua & Cộng/Trừ Xu
             </h3>
             <ul style="padding-left: 18px; font-size: 0.88rem; color: var(--text-muted);">
               <li><strong>Tự động 100%:</strong> Hệ thống quét IslePilot Live Combat Log. Đấu sĩ nào có đòn kết liễu hạ gục đối thủ sẽ lập tức được công nhận chiến thắng.</li>
-              <li>Đấu sĩ thắng nhận trọn vẹn <strong>100% Quỹ Thưởng (2x tiền cược)</strong> cộng thẳng vào ví.</li>
-              <li>Nếu một bên nhận thua (Concede), đối thủ sẽ lập tức được xử thắng.</li>
+              <li><strong>Cộng/Trừ Xu tự động:</strong> Khi trận chiến kết thúc, người thắng sẽ được cộng thêm Xu tương ứng mức cược (+X Xu), người thua sẽ bị hệ thống tự động trừ Xu trong ví (-X Xu).</li>
+              <li>Nếu một bên nhận thua (Concede), đối thủ sẽ lập tức được xử thắng và hệ thống xử lý cộng/trừ Xu ngay lập tức.</li>
             </ul>
           </div>
 
@@ -775,7 +795,8 @@ const Arena = {
 
             <!-- Thông báo số dư -->
             <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 10px 14px; font-size: 0.82rem; color: #fbbf24; margin-bottom: 20px;">
-              🪙 Số dư hiện tại của bạn: <strong>${Number(this.myBalance).toLocaleString()} Xu</strong>. Tiền cược sẽ được tạm giữ ngay khi tạo kèo.
+              🪙 Số dư hiện tại của bạn: <strong>${Number(this.myBalance).toLocaleString()} Xu</strong>.<br />
+              💡 <b>Lưu ý:</b> Hệ thống không trừ trước. Khi trận chiến kết thúc, người thắng sẽ được cộng (+Xu) và người thua sẽ tự động bị trừ (-Xu) trong ví!
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 10px;">
@@ -875,7 +896,7 @@ const Arena = {
       return;
     }
 
-    if (!confirm(`Bạn có chắc chắn muốn cược ${betAmount} Xu và nhận thách đấu trận PK này không?`)) {
+    if (!confirm(`Bạn có chắc chắn muốn nhận thách đấu trận PK này không?\n\n• Mức cược: ${betAmount} Xu\n• Khi kết thúc: Thắng được cộng +${betAmount} Xu, Thua bị tự động trừ -${betAmount} Xu trong ví.`)) {
       return;
     }
 
@@ -925,7 +946,6 @@ const Arena = {
 
     const title = (match && match.title) ? this.escapeHtml(match.title) : 'Trận Đấu PK';
     const bet = (match && match.betAmount) ? match.betAmount : 50;
-    const pool = (match && match.totalFighterPool) ? match.totalFighterPool : (bet * 2);
 
     modalContainer.innerHTML = `
       <div class="modal-overlay active" id="arena-teleport-prompt-modal" style="display: flex; align-items: center; justify-content: center; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 10000; padding: 20px;">
@@ -939,7 +959,7 @@ const Arena = {
           </h3>
           <p style="color: #cbd5e1; font-size: 0.95rem; margin: 0 0 16px; line-height: 1.5;">
             Bạn đã chấp nhận thách đấu kèo <b>${title}</b>.<br />
-            Quỹ thưởng trận đấu: <span style="color: #fbbf24; font-weight: 800;">🏆 ${pool} Xu</span>.
+            Mức cược: <span style="color: #fbbf24; font-weight: 800;">🪙 ${bet} Xu</span> (Thắng nhận +${bet} Xu • Thua trừ -${bet} Xu).
           </p>
 
           <div style="background: rgba(16, 185, 129, 0.1); border: 1px dashed rgba(16, 185, 129, 0.4); border-radius: 10px; padding: 14px; margin-bottom: 22px; font-size: 0.88rem; color: #a7f3d0; text-align: left; line-height: 1.5;">
@@ -961,7 +981,7 @@ const Arena = {
   },
 
   async cancelMatch(matchId) {
-    if (!confirm('Bạn có chắc chắn muốn hủy kèo này và nhận lại toàn bộ Xu cược không?')) {
+    if (!confirm('Bạn có chắc chắn muốn hủy kèo này không?')) {
       return;
     }
 
@@ -990,7 +1010,7 @@ const Arena = {
   },
 
   async concedeMatch(matchId) {
-    if (!confirm('Bạn có chắc chắn muốn đầu hàng (nhận thua) trong trận PK này không? Tiền cược sẽ thuộc về đối thủ.')) {
+    if (!confirm('Bạn có chắc chắn muốn đầu hàng (nhận thua) trong trận PK này không? Hệ thống sẽ tự động trừ Xu cược trong ví của bạn và cộng cho đối thủ.')) {
       return;
     }
 

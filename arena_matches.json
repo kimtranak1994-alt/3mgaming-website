@@ -1,7 +1,38 @@
 {
-  "matches": [],
+  "matches": [
+    {
+      "id": "pk_1793181980044",
+      "createdAt": "2026-10-28T17:06:20.044911",
+      "status": "finished",
+      "title": "Kèo Đấu Test Teleport Rex vs Giga",
+      "tier": "Apex (T-Rex / Giga / Spino)",
+      "rules": "Solo 1v1 đến chết",
+      "arenaLocationId": "cmvqtjyrr4ombph01vi8dknwg",
+      "arenaLocationName": "ĐẤU TRƯỜNG",
+      "creator": {
+        "steamId": "76561198000000010",
+        "name": "Player_0010",
+        "species": "Tyrannosaurus",
+        "growth": 100
+      },
+      "opponent": {
+        "steamId": "76561198000000020",
+        "name": "Player_0020",
+        "species": "Tyrannosaurus",
+        "growth": 100
+      },
+      "betAmount": 50,
+      "totalFighterPool": 100,
+      "spectatorBets": [],
+      "winner": "creator",
+      "winnerSteamId": "76561198000000010",
+      "winReason": "Đối thủ Player_0020 đã nhận thua (Concede).",
+      "startedAt": "2026-10-28T17:06:23.597494",
+      "finishedAt": "2026-10-28T17:06:31.232404"
+    }
+  ],
   "stats": {
-    "totalMatches": 0,
-    "totalXuWagered": 0
+    "totalMatches": 5,
+    "totalXuWagered": 700
   }
 }

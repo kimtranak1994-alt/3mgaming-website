@@ -2920,14 +2920,22 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         remainder = int(amount) - (applied if applied is not None else 0)
         if remainder != 0:
             try:
-                adj_file = "admin_wallet_adjustments.json"
-                adjs = {}
-                if os.path.exists(adj_file):
-                    with open(adj_file, "r", encoding="utf-8") as f:
-                        adjs = json.load(f)
-                adjs[steam_id] = round(adjs.get(steam_id, 0.0) + float(remainder), 1)
-                with open(adj_file, "w", encoding="utf-8") as f:
-                    json.dump(adjs, f, indent=2, ensure_ascii=False)
+                base_dir = os.path.dirname(os.path.abspath(__file__))
+                for adj_file in [os.path.join(base_dir, "admin_wallet_adjustments.json"), os.path.join(base_dir, "3mgaming-website", "admin_wallet_adjustments.json")]:
+                    try:
+                        adjs = {}
+                        if os.path.exists(adj_file):
+                            try:
+                                with open(adj_file, "r", encoding="utf-8") as f:
+                                    adjs = json.load(f)
+                            except Exception:
+                                adjs = {}
+                        adjs[steam_id] = round(adjs.get(steam_id, 0.0) + float(remainder), 1)
+                        os.makedirs(os.path.dirname(adj_file), exist_ok=True)
+                        with open(adj_file, "w", encoding="utf-8") as f:
+                            json.dump(adjs, f, indent=2, ensure_ascii=False)
+                    except Exception:
+                        pass
             except Exception as e:
                 print(f"[Arena Wallet Adjust Error] {e}")
         return True
@@ -2943,9 +2951,11 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     balance = wallet.get("balance", 0)
         except Exception:
             pass
-        if os.path.exists("admin_wallet_adjustments.json"):
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        adj_file = os.path.join(base_dir, "admin_wallet_adjustments.json")
+        if os.path.exists(adj_file):
             try:
-                with open("admin_wallet_adjustments.json", "r", encoding="utf-8") as f:
+                with open(adj_file, "r", encoding="utf-8") as f:
                     adjs = json.load(f)
                     balance = max(0, balance + adjs.get(str(steam_id), 0))
             except Exception:
@@ -3055,18 +3065,48 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             return
         m["status"] = "finished"
         m["winner"] = winner_key
-        m["winnerSteamId"] = m[winner_key]["steamId"]
+        m["winnerSteamId"] = m.get(winner_key, {}).get("steamId")
         m["winReason"] = win_reason
         m["finishedAt"] = datetime.datetime.now().isoformat()
         if hit_id:
             m["settledHitId"] = str(hit_id)
 
-        # 1. Trả thưởng cho Đấu sĩ chiến thắng (2x số tiền cược)
-        winner_sid = m[winner_key]["steamId"]
-        prize_pool = m.get("totalFighterPool", m.get("betAmount", 0) * 2)
-        self._adjust_player_xu(winner_sid, prize_pool, f"Vô địch Đấu Trường PK #{m['id']}")
+        loser_key = "opponent" if winner_key == "creator" else "creator"
+        winner_sid = str(m.get(winner_key, {}).get("steamId", "")).strip()
+        loser_sid = str(m.get(loser_key, {}).get("steamId", "")).strip()
+        winner_name = m.get(winner_key, {}).get("name", "Người chiến thắng")
+        loser_name = m.get(loser_key, {}).get("name", "Người thua cuộc")
+        bet_amount = int(m.get("betAmount", 0))
 
-        # 2. Trả thưởng cược khán giả
+        m["loserSteamId"] = loser_sid
+        m["loserName"] = loser_name
+
+        # 1. Người thua: Hệ thống tự trừ xu trong ví người chơi tương ứng số tiền đặt cược
+        if bet_amount > 0 and loser_sid:
+            self._adjust_player_xu(
+                loser_sid,
+                -bet_amount,
+                f"Thua trận PK #{m.get('id')} trước {winner_name}: Trừ {bet_amount} Xu cược"
+            )
+
+        # 2. Người thắng: Hệ thống cộng xu trong ví người chơi tương ứng số tiền đặt cược
+        if bet_amount > 0 and winner_sid:
+            self._adjust_player_xu(
+                winner_sid,
+                bet_amount,
+                f"Thắng trận PK #{m.get('id')} trước {loser_name}: Nhận thưởng +{bet_amount} Xu cược"
+            )
+
+        m["settledSummary"] = {
+            "winnerSteamId": winner_sid,
+            "winnerName": winner_name,
+            "winnerBonusXu": bet_amount,
+            "loserSteamId": loser_sid,
+            "loserName": loser_name,
+            "loserDeductXu": bet_amount
+        }
+
+        # 3. Trả thưởng cược khán giả (nếu có)
         spectator_bets = m.get("spectatorBets", [])
         winner_bets = [b for b in spectator_bets if b.get("chosenFighter") == winner_key]
         loser_bets = [b for b in spectator_bets if b.get("chosenFighter") != winner_key]
@@ -3083,7 +3123,6 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 b["payout"] = total_payout
                 b["status"] = "won"
         else:
-            # Nếu không ai cược người thắng, hoàn tiền cho bên cược
             for b in loser_bets:
                 self._adjust_player_xu(b.get("steamId"), b.get("amount", 0), f"Hoàn tiền cược khán giả PK #{m['id']}")
                 b["payout"] = b.get("amount", 0)
@@ -3139,8 +3178,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             except Exception:
                 pass
 
-            # Trừ tiền cược của creator
-            self._adjust_player_xu(steam_id, -bet_amount, f"Đặt cược tạo kèo PK: {title}")
+            # Không trừ Xu trước khi tạo kèo, Xu sẽ được cộng/trừ khi trận đấu kết thúc
 
             match_id = f"pk_{int(datetime.datetime.now().timestamp() * 1000)}"
             new_match = {
@@ -3177,7 +3215,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             new_balance = self._get_player_xu_balance(steam_id)
             self.send_json_response({
                 "ok": True,
-                "message": f"Tạo kèo PK '{title}' thành công! Đã trừ cược {bet_amount} Xu.",
+                "message": f"Tạo kèo PK '{title}' thành công! Mức cược {bet_amount} Xu (Xu sẽ được cộng/trừ khi kết thúc trận).",
                 "match": new_match,
                 "balance": new_balance
             })
@@ -3221,9 +3259,14 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             except Exception:
                 pass
 
-            # Trừ tiền cược của opponent
-            self._adjust_player_xu(steam_id, -bet_amount, f"Nhận thách đấu kèo PK #{match_id}")
+            # Kiểm tra người tạo kèo cũng còn đủ số dư cược
+            creator_sid = target_match.get("creator", {}).get("steamId")
+            creator_bal = self._get_player_xu_balance(creator_sid)
+            if creator_bal < bet_amount:
+                self.send_json_response({"ok": False, "error": f"Người tạo kèo hiện không còn đủ {bet_amount} Xu trong ví. Kèo không thể bắt đầu!"}, status=400)
+                return
 
+            # Không trừ Xu trước khi nhận kèo, Xu sẽ được cộng/trừ khi trận đấu kết thúc
             target_match["status"] = "in_progress"
             target_match["startedAt"] = datetime.datetime.now().isoformat()
             target_match["opponent"] = {
@@ -3258,8 +3301,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 self.send_json_response({"ok": False, "error": "Chỉ có thể hủy kèo khi chưa có người nhận!"}, status=400)
                 return
 
-            # Hoàn tiền cho creator
-            self._adjust_player_xu(steam_id, target_match.get("betAmount", 0), f"Hoàn tiền hủy kèo PK #{match_id}")
+            # Kèo chưa trừ tiền nên không cần hoàn lại
             target_match["status"] = "cancelled"
             target_match["finishedAt"] = datetime.datetime.now().isoformat()
             self._save_arena_db(db)
@@ -3267,7 +3309,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             new_balance = self._get_player_xu_balance(steam_id)
             self.send_json_response({
                 "ok": True,
-                "message": f"Đã hủy kèo và hoàn lại {target_match.get('betAmount')} Xu vào ví!",
+                "message": f"Đã hủy kèo PK #{match_id} thành công!",
                 "balance": new_balance
             })
             return
@@ -3355,7 +3397,15 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 self.send_json_response({"ok": False, "error": "Trận đấu không ở trạng thái đang diễn ra!"}, status=400)
                 return
 
-            if action == "concede":
+            if action in ["declare_winner", "admin_settle"] and payload.get("winner") in ["creator", "opponent"]:
+                winner_key = payload.get("winner")
+                win_reason = payload.get("reason", "Trọng tài phân định chiến thắng")
+                self._settle_arena_match(target_match, winner_key, win_reason)
+                self._save_arena_db(db)
+                self.send_json_response({"ok": True, "settled": True, "message": f"Đã xác nhận chiến thắng cho {winner_key}!", "match": target_match})
+                return
+
+            elif action == "concede":
                 creator_obj = target_match.get("creator") or {}
                 opp_obj = target_match.get("opponent") or {}
                 c_sid = str(creator_obj.get("steamId", ""))
