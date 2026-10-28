@@ -1,7 +1,7 @@
 {
   "active": false,
-  "boss_steam_id": "76561199175571899",
-  "boss_name": "👑 BOSS HƯƠU BẠO THẦN (100.000 HP)",
+  "boss_steam_id": "76561199259679997",
+  "boss_name": "👑 BOSS HƯƠU (ghoulhy205)",
   "species": "Dryosaurus",
   "max_hp": 100000,
   "current_hp": 0,
@@ -10,14 +10,8 @@
   "reward_xu": 5000,
   "location_id": "cmvqtjyrr4ombph01vi8dknwg",
   "location_name": "ĐẤU TRƯỜNG",
-  "spawned_at": "2026-10-28T16:52:53.659050",
-  "last_killer": {
-    "killer_steam_id": "76561198000000002",
-    "killer_name": "DũngSĩ_0002",
-    "killed_at": "2026-10-28T16:52:56.434768",
-    "reward_xu": 3500,
-    "ability": "Cắn Đoạt Mạng"
-  },
+  "spawned_at": "2026-10-28T19:49:31.708867",
+  "last_killer": null,
   "kill_history": [
     {
       "session_id": "boss_session_1793181176434",
@@ -83,5 +77,7 @@
       "hits": 1,
       "reward_xu": 1500
     }
-  ]
+  ],
+  "_last_proximity_scan": 1793191779.2389963,
+  "last_proximity_hits": {}
 }
