@@ -2845,26 +2845,31 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         steam_id = str(steam_id).strip()
         if not steam_id:
             return False
+        applied = None
         # 1. Gọi IslePilot /players/{steam_id}/currency
         try:
-            self.fetch_islepilot(f"/players/{steam_id}/currency", method="POST", body_data={
+            res = self.fetch_islepilot(f"/players/{steam_id}/currency", method="POST", body_data={
                 "amount": int(amount),
                 "reason": reason
             })
+            if res and res.get("ok") is True:
+                applied = res.get("applied")
         except Exception as e:
             print(f"[Arena Currency Error] {e}")
-        # 2. Cập nhật admin_wallet_adjustments.json làm cache đồng bộ tức thời
-        try:
-            adj_file = "admin_wallet_adjustments.json"
-            adjs = {}
-            if os.path.exists(adj_file):
-                with open(adj_file, "r", encoding="utf-8") as f:
-                    adjs = json.load(f)
-            adjs[steam_id] = round(adjs.get(steam_id, 0.0) + float(amount), 1)
-            with open(adj_file, "w", encoding="utf-8") as f:
-                json.dump(adjs, f, indent=2, ensure_ascii=False)
-        except Exception as e:
-            print(f"[Arena Wallet Adjust Error] {e}")
+        # 2. Tính phần chênh lệch còn lại cần cập nhật vào admin_wallet_adjustments.json
+        remainder = int(amount) - (applied if applied is not None else 0)
+        if remainder != 0:
+            try:
+                adj_file = "admin_wallet_adjustments.json"
+                adjs = {}
+                if os.path.exists(adj_file):
+                    with open(adj_file, "r", encoding="utf-8") as f:
+                        adjs = json.load(f)
+                adjs[steam_id] = round(adjs.get(steam_id, 0.0) + float(remainder), 1)
+                with open(adj_file, "w", encoding="utf-8") as f:
+                    json.dump(adjs, f, indent=2, ensure_ascii=False)
+            except Exception as e:
+                print(f"[Arena Wallet Adjust Error] {e}")
         return True
 
     def _get_player_xu_balance(self, steam_id):
@@ -3256,10 +3261,10 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 return
 
             if action == "concede":
-                c_sid = str(target_match.get("creator", {}).get("steamId"))
-            creator_obj = target_match.get("creator") or {}
-            opp_obj = target_match.get("opponent") or {}
-            if str(creator_obj.get("steamId")) == str(steam_id) or (opp_obj and str(opp_obj.get("steamId")) == str(steam_id)):
+                creator_obj = target_match.get("creator") or {}
+                opp_obj = target_match.get("opponent") or {}
+                c_sid = str(creator_obj.get("steamId", ""))
+                o_sid = str(opp_obj.get("steamId", ""))
                 if str(steam_id) == c_sid:
                     self._settle_arena_match(target_match, "opponent", f"Đối thủ {target_match['creator']['name']} đã nhận thua (Concede).")
                 elif str(steam_id) == o_sid:
