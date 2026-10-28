@@ -708,7 +708,7 @@ const Arena = {
             <ul style="padding-left: 18px; font-size: 0.88rem; color: var(--text-muted);">
               <li>Khán giả có thể cược cho Đấu Sĩ A hoặc Đấu Sĩ B (tối thiểu <strong>5 Xu</strong>).</li>
               <li>Đấu sĩ trực tiếp tham gia trận đấu không được đặt cược khán giả vào trận của mình.</li>
-              <li>Số tiền thắng cược của khán giả được chia theo tỷ lệ tổng quỹ cược của bên thua.</li>
+              <li>Số tiền thắng cược của khán giả: Tỷ lệ thưởng tối đa <strong>1:1</strong> (ví dụ cược 20 Xu thì khi thắng nhận lại 20 Xu gốc + tối đa 20 Xu lãi = 40 Xu).</li>
             </ul>
           </div>
 

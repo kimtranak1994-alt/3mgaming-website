@@ -3305,100 +3305,125 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     pass
 
     def _settle_arena_match(self, m, winner_key, win_reason="Chiến thắng", hit_id=None):
-        if m.get("status") == "finished":
-            return
-        m["status"] = "finished"
-        m["winner"] = winner_key
-        m["winnerSteamId"] = m.get(winner_key, {}).get("steamId")
-        m["winReason"] = win_reason
-        m["finishedAt"] = datetime.datetime.now().isoformat()
-        if hit_id:
-            m["settledHitId"] = str(hit_id)
+        if not hasattr(DinoRequestHandler, "_arena_settle_lock"):
+            DinoRequestHandler._arena_settle_lock = threading.Lock()
 
-        loser_key = "opponent" if winner_key == "creator" else "creator"
-        winner_sid = str(m.get(winner_key, {}).get("steamId", "")).strip()
-        loser_sid = str(m.get(loser_key, {}).get("steamId", "")).strip()
-        winner_name = m.get(winner_key, {}).get("name", "Người chiến thắng")
-        loser_name = m.get(loser_key, {}).get("name", "Người thua cuộc")
-        bet_amount = int(m.get("betAmount", 0))
+        with DinoRequestHandler._arena_settle_lock:
+            # Kiểm tra chống settle trùng lặp nếu trận đã kết thúc và đã trả thưởng
+            if m.get("status") == "finished" and m.get("spectatorBetsSettled") and m.get("fightersSettled"):
+                return
 
-        m["loserSteamId"] = loser_sid
-        m["loserName"] = loser_name
+            m["status"] = "finished"
+            m["winner"] = winner_key
+            m["winnerSteamId"] = m.get(winner_key, {}).get("steamId")
+            m["winReason"] = win_reason
+            m["finishedAt"] = datetime.datetime.now().isoformat()
+            if hit_id:
+                m["settledHitId"] = str(hit_id)
 
-        print(f"[Arena Match Settle] Trận #{m.get('id')}: {winner_name} THẮNG trước {loser_name}! Mức cược: {bet_amount} Xu.")
+            loser_key = "opponent" if winner_key == "creator" else "creator"
+            winner_sid = str(m.get(winner_key, {}).get("steamId", "")).strip()
+            loser_sid = str(m.get(loser_key, {}).get("steamId", "")).strip()
+            winner_name = m.get(winner_key, {}).get("name", "Người chiến thắng")
+            loser_name = m.get(loser_key, {}).get("name", "Người thua cuộc")
+            bet_amount = int(m.get("betAmount", 0))
 
-        # 1. Người thua: Hệ thống tự trừ xu trong ví người chơi tương ứng số tiền đặt cược
-        if bet_amount > 0 and loser_sid:
-            self._adjust_player_xu(
-                loser_sid,
-                -bet_amount,
-                f"Thua trận PK #{m.get('id')} trước {winner_name}: Trừ {bet_amount} Xu cược"
-            )
+            m["loserSteamId"] = loser_sid
+            m["loserName"] = loser_name
 
-        # 2. Người thắng: Hệ thống cộng xu trong ví người chơi tương ứng số tiền đặt cược
-        if bet_amount > 0 and winner_sid:
-            self._adjust_player_xu(
-                winner_sid,
-                bet_amount,
-                f"Thắng trận PK #{m.get('id')} trước {loser_name}: Nhận thưởng +{bet_amount} Xu cược"
-            )
+            print(f"[Arena Match Settle] Trận #{m.get('id')}: {winner_name} THẮNG trước {loser_name}! Mức cược: {bet_amount} Xu.")
 
-        # 3. Gửi thông báo toàn máy chủ vinh danh người chiến thắng
-        try:
-            self.fetch_islepilot("/commands", method="POST", body_data={
-                "action": "announce",
-                "message": f"🏆 [ĐẤU TRƯỜNG PK] {winner_name} đã đánh bại {loser_name} trong trận PK #{m.get('id')} và giành chiến thắng +{bet_amount} Xu!"
-            })
-        except Exception as e:
-            pass
+            # 1. Xử lý cộng/trừ Xu 2 Đấu Sĩ (Chỉ thực hiện đúng 1 lần duy nhất)
+            if not m.get("fightersSettled"):
+                # Người thua: Trừ Xu
+                if bet_amount > 0 and loser_sid:
+                    self._adjust_player_xu(
+                        loser_sid,
+                        -bet_amount,
+                        f"Thua trận PK #{m.get('id')} trước {winner_name}: Trừ {bet_amount} Xu cược"
+                    )
 
-        m["settledSummary"] = {
-            "winnerSteamId": winner_sid,
-            "winnerName": winner_name,
-            "winnerBonusXu": bet_amount,
-            "loserSteamId": loser_sid,
-            "loserName": loser_name,
-            "loserDeductXu": bet_amount
-        }
+                # Người thắng: Nhận Xu thưởng
+                if bet_amount > 0 and winner_sid:
+                    self._adjust_player_xu(
+                        winner_sid,
+                        bet_amount,
+                        f"Thắng trận PK #{m.get('id')} trước {loser_name}: Nhận thưởng +{bet_amount} Xu cược"
+                    )
 
-        # 4. Trả thưởng cược khán giả (nếu có)
-        spectator_bets = m.get("spectatorBets", [])
-        winner_bets = [b for b in spectator_bets if b.get("chosenFighter") == winner_key]
-        loser_bets = [b for b in spectator_bets if b.get("chosenFighter") != winner_key]
+                # Thông báo toàn server vinh danh người chiến thắng
+                try:
+                    self.fetch_islepilot("/commands", method="POST", body_data={
+                        "action": "announce",
+                        "message": f"🏆 [ĐẤU TRƯỜNG PK] {winner_name} đã đánh bại {loser_name} trong trận PK #{m.get('id')} và giành chiến thắng +{bet_amount} Xu!"
+                    })
+                except Exception as e:
+                    pass
 
-        total_win_pool = sum(b.get("amount", 0) for b in winner_bets)
-        total_lose_pool = sum(b.get("amount", 0) for b in loser_bets)
+                m["fightersSettled"] = True
 
-        if total_win_pool > 0:
-            for b in winner_bets:
-                b_amt = b.get("amount", 0)
-                bonus = round((b_amt / total_win_pool) * total_lose_pool) if total_lose_pool > 0 else 0
-                total_payout = b_amt + bonus
-                self._adjust_player_xu(b.get("steamId"), total_payout, f"Thắng cược khán giả PK #{m['id']}")
-                b["payout"] = total_payout
-                b["status"] = "won"
-        else:
-            for b in loser_bets:
-                self._adjust_player_xu(b.get("steamId"), b.get("amount", 0), f"Hoàn tiền cược khán giả PK #{m['id']}")
-                b["payout"] = b.get("amount", 0)
-                b["status"] = "refunded"
+            m["settledSummary"] = {
+                "winnerSteamId": winner_sid,
+                "winnerName": winner_name,
+                "winnerBonusXu": bet_amount,
+                "loserSteamId": loser_sid,
+                "loserName": loser_name,
+                "loserDeductXu": bet_amount
+            }
 
-        for b in loser_bets:
-            if "status" not in b:
-                b["payout"] = 0
-                b["status"] = "lost"
+            # 2. Xử lý trả thưởng Khán Giả (Có trần tối đa 1:1, chống cộng dồn/cộng lố và chống trùng lặp)
+            if not m.get("spectatorBetsSettled"):
+                spectator_bets = m.get("spectatorBets", [])
+                winner_bets = [b for b in spectator_bets if b.get("chosenFighter") == winner_key and not b.get("settled")]
+                loser_bets = [b for b in spectator_bets if b.get("chosenFighter") != winner_key and not b.get("settled")]
 
-        # LƯU NGAY LẬP TỨC VÀO DATABASE
-        try:
-            db = self._get_arena_db()
-            for idx, existing_m in enumerate(db.get("matches", [])):
-                if existing_m.get("id") == m.get("id"):
-                    db["matches"][idx] = m
-                    break
-            self._save_arena_db(db)
-        except Exception as e:
-            print(f"[Arena Settle Save DB Error]: {e}")
+                total_win_pool = sum(int(b.get("amount", 0)) for b in winner_bets)
+                total_lose_pool = sum(int(b.get("amount", 0)) for b in loser_bets)
 
+                if total_win_pool > 0:
+                    for b in winner_bets:
+                        b_amt = int(b.get("amount", 0))
+                        # Tiền lãi bonus: Chia theo tỷ lệ từ quỹ thua nhưng TỐI ĐA BẰNG ĐÚNG TIỀN CƯỢC (Tỷ lệ 1 ăn 1)
+                        # Khắc phục hoàn toàn việc cược ít ăn quá nhiều Xu không kiểm soát
+                        raw_bonus = round((b_amt / total_win_pool) * total_lose_pool) if total_lose_pool > 0 else 0
+                        bonus = min(b_amt, raw_bonus)  # Giới hạn trần thưởng tối đa 1:1 (net +b_amt)
+                        total_payout = b_amt + bonus
+                        
+                        self._adjust_player_xu(b.get("steamId"), total_payout, f"Thắng cược khán giả PK #{m['id']} (+{bonus} Xu lãi)")
+                        b["payout"] = total_payout
+                        b["bonus"] = bonus
+                        b["status"] = "won"
+                        b["settled"] = True
+                        print(f"[Spectator Payout] Khán giả {b.get('steamId')} cược {b_amt} Xu: Nhận lại {b_amt} gốc + {bonus} Xu lãi (Tổng: {total_payout} Xu)")
+                else:
+                    # Nếu bên thắng không có khán giả nào cược, hoàn tiền lại cho khán giả bên thua
+                    for b in loser_bets:
+                        b_amt = int(b.get("amount", 0))
+                        self._adjust_player_xu(b.get("steamId"), b_amt, f"Hoàn tiền cược khán giả PK #{m['id']}")
+                        b["payout"] = b_amt
+                        b["bonus"] = 0
+                        b["status"] = "refunded"
+                        b["settled"] = True
+
+                for b in loser_bets:
+                    if not b.get("settled"):
+                        b["payout"] = 0
+                        b["bonus"] = 0
+                        b["status"] = "lost"
+                        b["settled"] = True
+
+                m["spectatorBetsSettled"] = True
+
+            # LƯU NGAY LẬP TỨC VÀO DATABASE
+            try:
+                db = self._get_arena_db()
+                for idx, existing_m in enumerate(db.get("matches", [])):
+                    if existing_m.get("id") == m.get("id"):
+                        db["matches"][idx] = m
+                        break
+                self._save_arena_db(db)
+            except Exception as e:
+                print(f"[Arena Settle Save DB Error]: {e}")
     def handle_arena_post(self):
         try:
             length = int(self.headers.get("Content-Length", 0))
