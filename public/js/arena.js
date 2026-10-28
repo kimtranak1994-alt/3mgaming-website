@@ -12,10 +12,32 @@ const Arena = {
   autoRefreshTimer: null,
 
   init() {
+    let sid = '';
     const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
-    if (user && (user.steamId || user.steam_id)) {
-      this.mySteamId = String(user.steamId || user.steam_id);
+    if (user) {
+      sid = user.steamId || user.steam_id || user.id || user.steamid || '';
     }
+    if (!sid) {
+      // Thử đọc từ cookie steam_user
+      const m = document.cookie.match(/steam_user=([^;:]+)/);
+      if (m && m[1]) sid = decodeURIComponent(m[1]);
+    }
+    if (!sid && window.currentUser && window.currentUser.steamId) {
+      sid = window.currentUser.steamId;
+    }
+    if (sid) {
+      this.mySteamId = String(sid).trim();
+    }
+  },
+
+  isUserMatch(sid1, sid2) {
+    if (!sid1 || !sid2) return false;
+    return String(sid1).trim().toLowerCase() === String(sid2).trim().toLowerCase();
+  },
+
+  getFighterSteamId(fighter) {
+    if (!fighter) return '';
+    return String(fighter.steamId || fighter.steam_id || fighter.id || '').trim();
   },
 
   async render() {
@@ -60,8 +82,8 @@ const Arena = {
                 <span>➕</span> Tạo Kèo Thách Đấu
               </button>
 
-              <button id="btn-arena-teleport-hub" class="btn-secondary" style="padding: 10px 14px; font-size: 0.88rem; display: flex; align-items: center; gap: 6px; cursor: pointer;" title="Dịch chuyển dino của bạn tới ĐẤU TRƯỜNG">
-                <span>🚀</span> Vào Sân Đấu
+              <button id="btn-arena-teleport-hub" class="btn-secondary" style="padding: 10px 14px; font-size: 0.88rem; display: flex; align-items: center; gap: 6px; cursor: pointer; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); color: #34d399; font-weight: 700;" title="Dịch chuyển dino của bạn tới ĐẤU TRƯỜNG">
+                <span>🚀</span> Dịch Chuyển Vào Đấu Trường
               </button>
 
               <button id="btn-arena-refresh" class="btn-secondary" style="padding: 10px 14px; font-size: 0.88rem; cursor: pointer;" title="Làm mới dữ liệu">
@@ -70,6 +92,9 @@ const Arena = {
             </div>
           </div>
         </div>
+
+        <!-- Banner Thông Báo Nếu Bạn Có Trận PK Đang Chiến Đấu -->
+        <div id="arena-active-fighter-banner"></div>
 
         <!-- Thống Kê Tổng Quan Sàn Đấu (Stats Cards) -->
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px;">
@@ -212,12 +237,12 @@ const Arena = {
     this.autoRefreshTimer = setInterval(() => {
       const isArenaTab = window.location.hash === '#arena' || document.body.getAttribute('data-current-tab') === 'arena';
       if (isArenaTab) {
-        // Chỉ refresh nền nếu modal tạo kèo/đặt cược không mở
-        if (!document.getElementById('arena-create-modal') && !document.getElementById('arena-bet-modal')) {
+        // Chỉ refresh nền nếu modal tạo kèo/đặt cược/teleport không mở
+        if (!document.getElementById('arena-create-modal') && !document.getElementById('arena-bet-modal') && !document.getElementById('arena-teleport-prompt-modal')) {
           this.fetchData(true);
         }
       }
-    }, 4500);
+    }, 4000);
   },
 
   stopAutoRefresh() {
@@ -242,7 +267,7 @@ const Arena = {
       this.matches = data.matches || [];
       this.myBalance = data.my_balance || 0;
       if (!this.mySteamId && data.my_steam_id) {
-        this.mySteamId = String(data.my_steam_id);
+        this.mySteamId = String(data.my_steam_id).trim();
       }
 
       // Cập nhật số dư
@@ -260,6 +285,9 @@ const Arena = {
       if (activeEl) activeEl.textContent = stats.activeMatches || 0;
       if (wageredEl) wageredEl.textContent = `${Number(stats.totalXuWagered || 0).toLocaleString()} Xu`;
       if (totalEl) totalEl.textContent = stats.totalMatches || 0;
+
+      // Cập nhật banner active PK của chính mình
+      this.renderActiveFighterBanner();
 
       this.renderCurrentTabContent();
     } catch (err) {
@@ -279,6 +307,48 @@ const Arena = {
     }
   },
 
+  renderActiveFighterBanner() {
+    const bannerEl = document.getElementById('arena-active-fighter-banner');
+    if (!bannerEl) return;
+
+    if (!this.mySteamId) {
+      bannerEl.innerHTML = '';
+      return;
+    }
+
+    const myActiveMatch = this.matches.find(m => {
+      if (m.status !== 'in_progress') return false;
+      const cSid = this.getFighterSteamId(m.creator);
+      const oSid = this.getFighterSteamId(m.opponent);
+      return this.isUserMatch(this.mySteamId, cSid) || this.isUserMatch(this.mySteamId, oSid);
+    });
+
+    if (myActiveMatch) {
+      bannerEl.innerHTML = `
+        <div style="margin-bottom: 24px; padding: 16px 20px; border-radius: 12px; background: linear-gradient(135deg, rgba(16, 185, 129, 0.22), rgba(6, 78, 59, 0.4)); border: 2px solid #10b981; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; box-shadow: 0 0 25px rgba(16, 185, 129, 0.25);">
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <div style="width: 48px; height: 48px; border-radius: 50%; background: #10b981; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; box-shadow: 0 0 15px #10b981;">
+              ⚔️
+            </div>
+            <div>
+              <div style="font-weight: 800; color: #fff; font-size: 1.05rem;">
+                BẠN ĐANG CÓ TRẬN PK CHIẾN ĐẤU: <span style="color: #fbbf24;">${this.escapeHtml(myActiveMatch.title)}</span>
+              </div>
+              <div style="font-size: 0.85rem; color: #a7f3d0; margin-top: 2px;">
+                Quỹ thưởng: <b>${myActiveMatch.totalFighterPool} Xu</b> • Bấm nút bên phải để dịch chuyển khủng long vào Đấu Trường ngay!
+              </div>
+            </div>
+          </div>
+          <button onclick="Arena.teleportToArena(true)" class="btn-primary" style="background: linear-gradient(135deg, #10b981, #059669); font-weight: 900; padding: 12px 22px; border-radius: 8px; border: none; box-shadow: 0 0 20px rgba(16, 185, 129, 0.6); cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 0.95rem;">
+            <span>🚀</span> Dịch Chuyển Vào Đấu Trường Ngay
+          </button>
+        </div>
+      `;
+    } else {
+      bannerEl.innerHTML = '';
+    }
+  },
+
   renderCurrentTabContent() {
     const container = document.getElementById('arena-tab-content');
     const countEl = document.getElementById('arena-matches-count');
@@ -295,11 +365,14 @@ const Arena = {
       filteredMatches = this.matches.filter(m => m.status === 'waiting' || m.status === 'in_progress');
       if (countEl) countEl.innerHTML = `Đang có <strong>${filteredMatches.length}</strong> kèo đấu mở`;
     } else if (this.currentTab === 'my_matches') {
-      filteredMatches = this.matches.filter(m => 
-        (m.creator && String(m.creator.steamId) === String(this.mySteamId)) ||
-        (m.opponent && String(m.opponent.steamId) === String(this.mySteamId)) ||
-        (m.spectatorBets && m.spectatorBets.some(b => String(b.steamId) === String(this.mySteamId)))
-      );
+      const mySid = this.mySteamId || '';
+      filteredMatches = this.matches.filter(m => {
+        const cSid = this.getFighterSteamId(m.creator);
+        const oSid = this.getFighterSteamId(m.opponent);
+        const isParticipant = this.isUserMatch(mySid, cSid) || this.isUserMatch(mySid, oSid);
+        const isBettor = m.spectatorBets && m.spectatorBets.some(b => this.isUserMatch(mySid, b.steamId || b.steam_id));
+        return isParticipant || isBettor;
+      });
       if (countEl) countEl.innerHTML = `Bạn đang tham gia / đặt cược <strong>${filteredMatches.length}</strong> kèo`;
     } else if (this.currentTab === 'history') {
       filteredMatches = this.matches.filter(m => m.status === 'finished');
@@ -334,8 +407,12 @@ const Arena = {
   },
 
   renderMatchCard(m) {
-    const isCreator = this.mySteamId && m.creator && String(m.creator.steamId) === String(this.mySteamId);
-    const isOpponent = this.mySteamId && m.opponent && String(m.opponent.steamId) === String(this.mySteamId);
+    const mySid = this.mySteamId || '';
+    const cSid = this.getFighterSteamId(m.creator);
+    const oSid = this.getFighterSteamId(m.opponent);
+
+    const isCreator = this.isUserMatch(mySid, cSid);
+    const isOpponent = this.isUserMatch(mySid, oSid);
     const isFighter = isCreator || isOpponent;
 
     // Status Badge
@@ -367,8 +444,8 @@ const Arena = {
     const spectatorBets = m.spectatorBets || [];
     const creatorBets = spectatorBets.filter(b => b.chosenFighter === 'creator');
     const oppBets = spectatorBets.filter(b => b.chosenFighter === 'opponent');
-    const creatorBetTotal = creatorBets.reduce((sum, b) => sum + b.amount, 0);
-    const oppBetTotal = oppBets.reduce((sum, b) => sum + b.amount, 0);
+    const creatorBetTotal = creatorBets.reduce((sum, b) => sum + (b.amount || 0), 0);
+    const oppBetTotal = oppBets.reduce((sum, b) => sum + (b.amount || 0), 0);
 
     return `
       <div class="card match-card" style="padding: 20px; background: rgba(18, 14, 24, 0.85); border: 1px solid ${cardGlowBorder}; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 25px rgba(0,0,0,0.4)';" onmouseout="this.style.transform='none'; this.style.boxShadow='none';">
@@ -412,13 +489,13 @@ const Arena = {
                 🦖
               </div>
               <div style="font-weight: 800; font-size: 0.88rem; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                ${this.escapeHtml(m.creator.name)}
+                ${this.escapeHtml(m.creator ? m.creator.name : 'Người tạo')}
               </div>
               <div style="font-size: 0.75rem; color: var(--accent-gold); font-weight: 600;">
-                ${this.escapeHtml(m.creator.species)}
+                ${this.escapeHtml(m.creator ? m.creator.species : 'Dino')}
               </div>
               <div style="font-size: 0.7rem; color: var(--text-muted);">
-                ${m.creator.growth}% lớn
+                ${m.creator ? m.creator.growth : 100}% lớn
               </div>
               ${m.status === 'finished' && m.winner === 'creator' ? `
                 <div style="margin-top: 6px; background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; font-weight: 800; font-size: 0.7rem; border-radius: 4px; padding: 2px 4px;">
@@ -468,11 +545,22 @@ const Arena = {
                   Đang tìm đối thủ
                 </div>
                 <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">
-                  Bấm 'Nhận Kèo' bên dưới
+                  Bấm 'Nhận Thách Đấu' bên dưới
                 </div>
               `}
             </div>
           </div>
+
+          <!-- Nhãn Báo Bạn Đang Trong Trận PK Này -->
+          ${m.status === 'in_progress' && isFighter ? `
+            <div style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+              <span style="font-size: 0.82rem; font-weight: 800; color: #34d399; display: flex; align-items: center; gap: 6px;">
+                <span style="width: 8px; height: 8px; background: #34d399; border-radius: 50%; display: inline-block; box-shadow: 0 0 8px #34d399;"></span>
+                BẠN ĐANG TRONG TRẬN ĐẤU NÀY!
+              </span>
+              <span style="font-size: 0.75rem; color: #a7f3d0; font-weight: 600;">(Đấu Trường)</span>
+            </div>
+          ` : ''}
 
           <!-- Luật Đấu -->
           <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px;">
@@ -496,18 +584,18 @@ const Arena = {
             <button onclick="Arena.cancelMatch('${m.id}')" class="btn-secondary" style="flex: 1; padding: 8px 12px; font-size: 0.84rem; color: #f87171; border-color: rgba(239,68,68,0.4); cursor: pointer;">
               ❌ Hủy Kèo & Hoàn Xu
             </button>
-            <button onclick="Arena.teleportToArena()" class="btn-primary" style="padding: 8px 14px; font-size: 0.84rem; cursor: pointer;">
-              🚀 Vào Sân Chờ
+            <button onclick="Arena.teleportToArena()" class="btn-primary" style="padding: 8px 14px; font-size: 0.84rem; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+              🚀 Dịch Chuyển Vào Đấu Trường
             </button>
           </div>
         `;
       } else {
         return `
           <div style="display: flex; gap: 8px;">
-            <button onclick="Arena.acceptMatch('${m.id}', ${m.betAmount})" class="btn-primary" style="flex: 1; padding: 9px 14px; font-size: 0.88rem; font-weight: 800; background: linear-gradient(135deg, #ef4444 0%, #ff2a85 100%); border: none; cursor: pointer; box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);">
-              🥊 Nhận Thách Đấu (${m.betAmount} Xu)
+            <button onclick="Arena.acceptMatch('${m.id}', ${m.betAmount})" class="btn-primary" style="flex: 1; padding: 10px 14px; font-size: 0.88rem; font-weight: 800; background: linear-gradient(135deg, #ef4444 0%, #ff2a85 100%); border: none; cursor: pointer; box-shadow: 0 0 14px rgba(239, 68, 68, 0.4); display: flex; align-items: center; justify-content: center; gap: 6px;">
+              <span>🥊</span> Nhận Thách Đấu (${m.betAmount} Xu)
             </button>
-            <button onclick="Arena.openSpectatorBetModal('${m.id}')" class="btn-secondary" style="padding: 9px 12px; font-size: 0.84rem; cursor: pointer;" title="Đặt cược khán giả">
+            <button onclick="Arena.openSpectatorBetModal('${m.id}')" class="btn-secondary" style="padding: 10px 12px; font-size: 0.84rem; cursor: pointer;" title="Đặt cược khán giả">
               🎯 Cược
             </button>
           </div>
@@ -517,28 +605,30 @@ const Arena = {
       if (isFighter) {
         return `
           <div style="display: flex; flex-direction: column; gap: 8px;">
+            <button onclick="Arena.teleportToArena(true)" class="btn-primary" style="width: 100%; padding: 10px 14px; font-size: 0.92rem; font-weight: 800; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; cursor: pointer; box-shadow: 0 0 16px rgba(16, 185, 129, 0.5); display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 8px;">
+              <span>🚀</span> Dịch Chuyển Vào Đấu Trường Ngay
+            </button>
             <div style="display: flex; gap: 8px;">
-              <button onclick="Arena.teleportToArena()" class="btn-primary" style="flex: 1; padding: 8px 12px; font-size: 0.85rem; font-weight: 700; background: #10b981; border: none; cursor: pointer;">
-                🚀 Vào Sân Đấu PK
-              </button>
-              <button onclick="Arena.checkMatchResult('${m.id}')" class="btn-secondary" style="padding: 8px 12px; font-size: 0.85rem; cursor: pointer;" title="Quét combat log kiểm tra xem ai đã hạ gục ai">
+              <button onclick="Arena.checkMatchResult('${m.id}')" class="btn-secondary" style="flex: 1; padding: 8px 10px; font-size: 0.82rem; cursor: pointer;" title="Quét combat log kiểm tra xem ai đã hạ gục ai">
                 🔄 Kiểm Tra Kết Quả
               </button>
+              <button onclick="Arena.concedeMatch('${m.id}')" class="btn-secondary" style="padding: 8px 10px; font-size: 0.82rem; color: #f87171; border-color: rgba(239,68,68,0.3); cursor: pointer;">
+                🏳️ Đầu Hàng
+              </button>
             </div>
-            <button onclick="Arena.concedeMatch('${m.id}')" class="btn-secondary" style="padding: 6px 10px; font-size: 0.78rem; color: var(--text-muted); border-color: rgba(255,255,255,0.1); cursor: pointer;">
-              🏳️ Tôi nhận thua (Concede)
-            </button>
           </div>
         `;
       } else {
         return `
-          <div style="display: flex; gap: 8px;">
-            <button onclick="Arena.openSpectatorBetModal('${m.id}')" class="btn-primary" style="flex: 1; padding: 8px 14px; font-size: 0.85rem; font-weight: 700; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border: none; cursor: pointer;">
-              🎯 Đặt Cược Khán Giả
-            </button>
-            <button onclick="Arena.teleportToArena()" class="btn-secondary" style="padding: 8px 12px; font-size: 0.85rem; cursor: pointer;" title="Xem trực tiếp trong game">
-              👀 Khán Đài
-            </button>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; gap: 8px;">
+              <button onclick="Arena.openSpectatorBetModal('${m.id}')" class="btn-primary" style="flex: 1; padding: 9px 12px; font-size: 0.85rem; font-weight: 700; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border: none; cursor: pointer;">
+                🎯 Đặt Cược Khán Giả
+              </button>
+              <button onclick="Arena.teleportToArena()" class="btn-secondary" style="flex: 1; padding: 9px 12px; font-size: 0.85rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;" title="Dịch chuyển tới Đấu Trường xem trực tiếp">
+                <span>🚀</span> Vào Đấu Trường
+              </button>
+            </div>
           </div>
         `;
       }
@@ -570,7 +660,7 @@ const Arena = {
               <li>Người chơi có thể tạo bất kỳ kèo 1v1 nào với mức cược tối thiểu <strong>10 Xu</strong>.</li>
               <li>Hệ thống tự động trừ tiền cược và tạm giữ trong Quỹ Đấu Trường (Escrow).</li>
               <li>Người nhận kèo phải có đủ số Xu bằng với mức cược của người tạo.</li>
-              <li>Khi cả 2 đã vào trận, trận đấu chính thức bắt đầu và không thể hủy ngang.</li>
+              <li>Khi cả 2 đã vào trận, trận đấu chính thức bắt đầu và nút <strong>🚀 Dịch chuyển vào Đấu Trường</strong> sẽ hiện ngay lập tức!</li>
             </ul>
           </div>
 
@@ -601,7 +691,7 @@ const Arena = {
               🚀 4. Sân Đấu Đấu Trường (Arena)
             </h3>
             <ul style="padding-left: 18px; font-size: 0.88rem; color: var(--text-muted);">
-              <li>Bấm nút <strong>"🚀 Vào Sân Đấu"</strong> để hệ thống tự động gửi lệnh dịch chuyển dino của bạn vào khu vực <strong>ĐẤU TRƯỜNG</strong> trong game.</li>
+              <li>Bấm nút <strong>"🚀 Dịch Chuyển Vào Đấu Trường"</strong> để hệ thống tự động gửi lệnh dịch chuyển dino của bạn vào khu vực <strong>ĐẤU TRƯỜNG</strong> trong game.</li>
               <li>Hãy đứng yên 5 giây sau khi bấm lệnh để máy chủ xử lý dịch chuyển an toàn.</li>
             </ul>
           </div>
@@ -802,22 +892,72 @@ const Arena = {
       if (!data.ok) throw new Error(data.error || 'Lỗi nhận kèo');
 
       // Cập nhật ngay vào danh sách local
-      if (data.match) {
-        const idx = this.matches.findIndex(m => m.id === data.match.id);
-        if (idx !== -1) this.matches[idx] = data.match;
+      let targetMatch = data.match;
+      if (targetMatch) {
+        const idx = this.matches.findIndex(m => m.id === targetMatch.id);
+        if (idx !== -1) {
+          this.matches[idx] = targetMatch;
+        } else {
+          this.matches.unshift(targetMatch);
+        }
+      } else {
+        targetMatch = this.matches.find(m => m.id === matchId);
       }
 
       this.switchSubTab('open');
 
       if (window.App && window.App.showToast) {
         window.App.showToast('🎉 Đã nhận kèo PK thành công! Trận đấu bắt đầu.', 'success');
-      } else {
-        alert('Đã nhận kèo thành công! Trận đấu bắt đầu.');
       }
+
+      // HIỆN NGAY BẢNG MODAL HỎI DỊCH CHUYỂN VÀO ĐẤU TRƯỜNG
+      this.showTeleportPromptModal(targetMatch);
+
       await this.fetchData();
     } catch (err) {
       alert(`Lỗi: ${err.message}`);
     }
+  },
+
+  showTeleportPromptModal(match) {
+    const modalContainer = document.getElementById('arena-modal-container');
+    if (!modalContainer) return;
+
+    const title = (match && match.title) ? this.escapeHtml(match.title) : 'Trận Đấu PK';
+    const bet = (match && match.betAmount) ? match.betAmount : 50;
+    const pool = (match && match.totalFighterPool) ? match.totalFighterPool : (bet * 2);
+
+    modalContainer.innerHTML = `
+      <div class="modal-overlay active" id="arena-teleport-prompt-modal" style="display: flex; align-items: center; justify-content: center; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 10000; padding: 20px;">
+        <div class="card modal-content" style="max-width: 500px; width: 100%; background: linear-gradient(145deg, #181224 0%, #0d0a14 100%); border: 2px solid #10b981; box-shadow: 0 0 40px rgba(16, 185, 129, 0.4); border-radius: 16px; padding: 28px; text-align: center;">
+          <div style="width: 72px; height: 72px; border-radius: 50%; background: rgba(16, 185, 129, 0.2); border: 2px solid #10b981; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; margin: 0 auto 16px; box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);">
+            🥊
+          </div>
+
+          <h3 style="font-size: 1.45rem; font-weight: 900; color: #fff; margin: 0 0 8px;">
+            🎉 NHẬN KÈO PK THÀNH CÔNG!
+          </h3>
+          <p style="color: #cbd5e1; font-size: 0.95rem; margin: 0 0 16px; line-height: 1.5;">
+            Bạn đã chấp nhận thách đấu kèo <b>${title}</b>.<br />
+            Quỹ thưởng trận đấu: <span style="color: #fbbf24; font-weight: 800;">🏆 ${pool} Xu</span>.
+          </p>
+
+          <div style="background: rgba(16, 185, 129, 0.1); border: 1px dashed rgba(16, 185, 129, 0.4); border-radius: 10px; padding: 14px; margin-bottom: 22px; font-size: 0.88rem; color: #a7f3d0; text-align: left; line-height: 1.5;">
+            📍 <b>Địa điểm thi đấu:</b> ĐẤU TRƯỜNG<br />
+            ⚠️ <b>Lưu ý:</b> Hãy đảm bảo bạn đang ở trong game và khủng long đang đứng yên an toàn trước khi bấm nút dịch chuyển!
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <button onclick="Arena.teleportToArena(true); Arena.closeModal();" class="btn-primary" style="padding: 14px 20px; font-size: 1.05rem; font-weight: 800; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; cursor: pointer; box-shadow: 0 0 20px rgba(16, 185, 129, 0.5); border-radius: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <span>🚀</span> DỊCH CHUYỂN VÀO ĐẤU TRƯỜNG NGAY
+            </button>
+            <button onclick="Arena.closeModal()" class="btn-secondary" style="padding: 10px 16px; font-size: 0.88rem; cursor: pointer;">
+              Để sau (Tôi sẽ tự dịch chuyển)
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
   },
 
   async cancelMatch(matchId) {
@@ -949,8 +1089,8 @@ const Arena = {
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <label style="background: rgba(59, 130, 246, 0.1); border: 2px solid #3b82f6; border-radius: 8px; padding: 12px; cursor: pointer; text-align: center; display: block;">
                   <input type="radio" name="chosen_fighter" value="creator" checked style="margin-right: 6px;" />
-                  <div style="font-weight: 800; color: #fff; margin-top: 4px;">${this.escapeHtml(match.creator.name)}</div>
-                  <div style="font-size: 0.75rem; color: #60a5fa;">${this.escapeHtml(match.creator.species)}</div>
+                  <div style="font-weight: 800; color: #fff; margin-top: 4px;">${this.escapeHtml(match.creator ? match.creator.name : 'Người tạo')}</div>
+                  <div style="font-size: 0.75rem; color: #60a5fa;">${this.escapeHtml(match.creator ? match.creator.species : 'Dino')}</div>
                 </label>
 
                 <label style="background: rgba(239, 68, 68, 0.1); border: 2px solid #ef4444; border-radius: 8px; padding: 12px; cursor: pointer; text-align: center; display: block;">
@@ -1037,7 +1177,7 @@ const Arena = {
     }
   },
 
-  async teleportToArena() {
+  async teleportToArena(skipConfirm = false) {
     this.init();
     if (!this.mySteamId) {
       if (window.App && window.App.showToast) {
@@ -1048,8 +1188,14 @@ const Arena = {
       return;
     }
 
-    if (!confirm('Dịch chuyển khủng long của bạn tới ĐẤU TRƯỜNG ngay bây giờ? Hãy chắc chắn bạn đang vào game và đứng yên an toàn!')) {
-      return;
+    if (!skipConfirm) {
+      if (!confirm('Dịch chuyển khủng long của bạn tới ĐẤU TRƯỜNG ngay bây giờ? Hãy chắc chắn bạn đang vào game và đứng yên an toàn!')) {
+        return;
+      }
+    }
+
+    if (window.App && window.App.showToast) {
+      window.App.showToast('⏳ Đang gửi lệnh dịch chuyển vào Đấu Trường...', 'info');
     }
 
     try {
@@ -1062,9 +1208,9 @@ const Arena = {
       if (!data.ok) throw new Error(data.error || 'Lỗi dịch chuyển');
 
       if (window.App && window.App.showToast) {
-        window.App.showToast(data.message || 'Đã gửi lệnh dịch chuyển!', 'success');
+        window.App.showToast(data.message || '✅ Đã gửi lệnh dịch chuyển thành công!', 'success');
       } else {
-        alert(data.message || 'Đã gửi lệnh dịch chuyển!');
+        alert(data.message || 'Đã gửi lệnh dịch chuyển thành công!');
       }
     } catch (err) {
       alert(`Lỗi dịch chuyển: ${err.message}`);
