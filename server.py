@@ -3603,6 +3603,39 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             if not atk_sid or atk_sid == boss_sid:
                 continue
 
+            # CƠ CHẾ BOSS AI TỰ TẤN CÔNG / PHẢN ĐÒN (1.000 HP MỖI CÚ HÍT):
+            # Mỗi cú cắn của người chơi vào Boss sẽ bị Boss AI húc trả ngay lập tức 1000 dame!
+            hit_key = f"{h.get('at')}_{atk_sid}_{vic_sid}"
+            processed_keys = boss_db.setdefault("processed_hit_keys", [])
+            if hit_key not in processed_keys:
+                processed_keys.append(hit_key)
+                if len(processed_keys) > 300:
+                    boss_db["processed_hit_keys"] = processed_keys[-200:]
+
+                # Boss AI trừng phạt kẻ tấn công bằng 1 cú húc 1.000 dame
+                try:
+                    target_player = self.fetch_islepilot(f"/players/{atk_sid}")
+                    if isinstance(target_player, dict) and target_player.get("online"):
+                        cur_health = float(target_player.get("health", 0.0))
+                        damage_dealt = 1000.0
+                        if cur_health <= damage_dealt:
+                            self.fetch_islepilot("/commands", method="POST", body_data={
+                                "action": "slay",
+                                "steamId": atk_sid,
+                                "reason": "Bị Boss Triceratops AI húc chí mạng 1.000 dame tiêu diệt!"
+                            })
+                            print(f"[Boss AI Attack] Đã tiêu diệt người chơi {atk_sid} do hết máu (còn {cur_health} HP <= 1000)")
+                        else:
+                            new_health = max(1.0, round(cur_health - damage_dealt, 1))
+                            self.fetch_islepilot("/commands", method="POST", body_data={
+                                "action": "setstats",
+                                "steamId": atk_sid,
+                                "health": new_health
+                            })
+                            print(f"[Boss AI Attack] Boss húc người chơi {atk_sid}: {cur_health} -> {new_health} HP (-1000 HP)")
+                except Exception as e:
+                    print(f"[Boss AI Attack Error] Lỗi tự động tấn công: {e}")
+
             # Lấy lực cắn / sát thương thực tế của dino người chơi
             damage = float(h.get("damage") or 0.0)
             if damage <= 0:
@@ -3631,6 +3664,52 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
             if h.get("killed"):
                 fatal_hit = h
+
+        # 1.6. CƠ CHẾ PROXIMITY ATTACK: Boss AI tự động húc người chơi áp sát trong Đấu Trường
+        try:
+            now_ts = time.time()
+            last_prox_check = float(boss_db.get("_last_proximity_scan", 0.0))
+            if (now_ts - last_prox_check) >= 4.0: # Quét mỗi 4 giây
+                boss_db["_last_proximity_scan"] = now_ts
+                p_res = self.fetch_islepilot("/players") or {}
+                all_players = p_res.get("players", [])
+                boss_p = next((p for p in all_players if str(p.get("steamId")) == boss_sid), None)
+                if boss_p and boss_p.get("position"):
+                    bx = float(boss_p["position"].get("x", 0))
+                    by = float(boss_p["position"].get("y", 0))
+                    bz = float(boss_p["position"].get("z", 0))
+
+                    prox_hits = boss_db.setdefault("last_proximity_hits", {})
+                    for other_p in all_players:
+                        o_sid = str(other_p.get("steamId") or "")
+                        if not o_sid or o_sid == boss_sid or not other_p.get("online"):
+                            continue
+                        pos = other_p.get("position")
+                        if not pos:
+                            continue
+                        ox, oy, oz = float(pos.get("x", 0)), float(pos.get("y", 0)), float(pos.get("z", 0))
+                        dist_sq = (bx - ox)**2 + (by - oy)**2 + (bz - oz)**2
+                        # Bán kính cận chiến sừng Triceratops khổng lồ: 15 mét (1500 units)
+                        if dist_sq <= (1500.0 ** 2):
+                            last_hit_ts = float(prox_hits.get(o_sid, 0.0))
+                            if (now_ts - last_hit_ts) >= 4.0:
+                                prox_hits[o_sid] = now_ts
+                                o_health = float(other_p.get("health", 0.0))
+                                if o_health <= 1000.0:
+                                    self.fetch_islepilot("/commands", method="POST", body_data={
+                                        "action": "slay",
+                                        "steamId": o_sid,
+                                        "reason": "Bị Boss Triceratops AI húc chí mạng 1.000 dame tiêu diệt!"
+                                    })
+                                else:
+                                    self.fetch_islepilot("/commands", method="POST", body_data={
+                                        "action": "setstats",
+                                        "steamId": o_sid,
+                                        "health": max(1.0, round(o_health - 1000.0, 1))
+                                    })
+                                print(f"[Boss AI Proximity Strike] Boss húc {o_sid} ở cự ly {round(dist_sq**0.5 / 100, 1)}m (-1000 HP)")
+        except Exception as e:
+            print(f"[Boss Proximity Strike Error] {e}")
 
         # Máu Boss bị trừ theo đúng tổng lực cắn của dino người chơi
         max_hp = int(boss_db.get("max_hp", 100000))
@@ -7422,7 +7501,23 @@ def parse_evrima_skin_code(code):
 
     }
 
+def start_boss_ai_worker():
+    def boss_loop():
+        time.sleep(3.0)
+        req_handler = DinoRequestHandler.__new__(DinoRequestHandler)
+        while True:
+            try:
+                boss_db = req_handler._get_boss_db()
+                if boss_db and boss_db.get("active"):
+                    req_handler._auto_check_boss_status(boss_db)
+            except Exception as e:
+                pass
+            time.sleep(2.0)
+    t = threading.Thread(target=boss_loop, daemon=True, name="BossAIBackgroundWorker")
+    t.start()
+
 def run():
+    start_boss_ai_worker()
 
     host = config.get("HOST", "0.0.0.0")
 

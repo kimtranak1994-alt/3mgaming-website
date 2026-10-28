@@ -228,14 +228,18 @@ const BossHunt = {
         </div>
 
         <!-- LƯỚI THÔNG SỐ CHIẾN ĐẤU CẬP NHẬT -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin-top: 20px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; margin-top: 20px;">
           <div class="stat-chip">
             <div class="stat-chip-label">🛡️ Máu Tối Đa</div>
             <div class="stat-chip-val" style="color: #ef4444;">100.000 HP</div>
           </div>
           <div class="stat-chip">
-            <div class="stat-chip-label">⚔️ Sát Thương Của Boss</div>
+            <div class="stat-chip-label">⚔️ Sát Thương Boss</div>
             <div class="stat-chip-val" style="color: #f43f5e;">1.000 Dame / Hít</div>
+          </div>
+          <div class="stat-chip">
+            <div class="stat-chip-label">🤖 Cơ Chế AI Tấn Công</div>
+            <div class="stat-chip-val" style="color: #a855f7;">Tự Động Phản Đòn & Quét 15m</div>
           </div>
           <div class="stat-chip">
             <div class="stat-chip-label">🦷 Sát Thương Dino Người Chơi</div>
@@ -434,7 +438,7 @@ const BossHunt = {
                 BẢNG ĐIỀU KHIỂN BOSS DÀNH RIÊNG CHO QUẢN TRỊ VIÊN (ADMIN)
               </h3>
               <p style="margin: 2px 0 0; color: #94a3b8; font-size: 0.82rem;">
-                Chỉ Admin mới có thể bật/tắt thả Boss. Boss sống mãi cho đến khi Admin bấm Tắt!
+                Chỉ Admin mới có thể bật/tắt thả Boss. Boss tích hợp AI tự động phản đòn và quét cự ly 15m trừ 1.000 HP/hit không cần người lái!
               </p>
             </div>
           </div>
@@ -446,7 +450,7 @@ const BossHunt = {
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 20px;">
           <div>
             <label style="display: block; font-size: 0.85rem; color: #cbd5e1; margin-bottom: 6px; font-weight: 700;">
-              👤 Chọn tài khoản hóa thân thành Boss:
+              👤 Chọn tài khoản đặt làm vật chủ Boss AI:
             </label>
             <select id="boss-admin-target-select" class="form-input" style="width: 100%;" onchange="if(this.value !== 'custom') { document.getElementById('boss-admin-target-sid').value = this.value; }">
               <option value="${adminSid}" ${defaultSid === adminSid ? 'selected' : ''}>
@@ -477,7 +481,7 @@ const BossHunt = {
         <div style="display: flex; gap: 12px; flex-wrap: wrap;">
           ${!isActive ? `
             <button class="btn-primary" style="background: linear-gradient(135deg, #ef4444, #b91c1c); font-size: 1rem; font-weight: 800; padding: 12px 24px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 0 16px rgba(239, 68, 68, 0.4);" onclick="BossHunt.adminToggle('enable')">
-              🔥 THẢ BOSS TRICERATOPS 100.000 HP NGAY
+              🔥 THẢ BOSS TRICERATOPS AI (100.000 HP)
             </button>
           ` : `
             <button class="btn-primary" style="background: linear-gradient(135deg, #475569, #334155); font-size: 1rem; font-weight: 800; padding: 12px 24px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px;" onclick="BossHunt.adminToggle('disable')">
