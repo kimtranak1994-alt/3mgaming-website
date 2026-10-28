@@ -13,8 +13,8 @@ const Arena = {
 
   init() {
     const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
-    if (user && user.steamId) {
-      this.mySteamId = user.steamId;
+    if (user && (user.steamId || user.steam_id)) {
+      this.mySteamId = String(user.steamId || user.steam_id);
     }
   },
 
@@ -149,6 +149,7 @@ const Arena = {
     this.bindEvents();
     this.updateTabStyles();
     await this.fetchData();
+    this.startAutoRefresh();
   },
 
   bindEvents() {
@@ -156,11 +157,8 @@ const Arena = {
     const tabBtns = document.querySelectorAll('.arena-tab-btn');
     tabBtns.forEach(btn => {
       btn.addEventListener('click', () => {
-        tabBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        this.currentTab = btn.getAttribute('data-tab');
-        this.updateTabStyles();
-        this.renderCurrentTabContent();
+        const tab = btn.getAttribute('data-tab');
+        this.switchSubTab(tab);
       });
     });
 
@@ -183,16 +181,24 @@ const Arena = {
     }
   },
 
+  switchSubTab(tab) {
+    this.currentTab = tab;
+    this.updateTabStyles();
+    this.renderCurrentTabContent();
+  },
+
   updateTabStyles() {
     const tabBtns = document.querySelectorAll('.arena-tab-btn');
     tabBtns.forEach(btn => {
       const tab = btn.getAttribute('data-tab');
       if (tab === this.currentTab) {
+        btn.classList.add('active');
         btn.style.background = 'linear-gradient(135deg, #ef4444 0%, #ff2a85 100%)';
         btn.style.color = '#fff';
         btn.style.border = '1px solid #ff2a85';
         btn.style.boxShadow = '0 0 12px rgba(239, 68, 68, 0.4)';
       } else {
+        btn.classList.remove('active');
         btn.style.background = 'rgba(255, 255, 255, 0.05)';
         btn.style.color = 'var(--text-muted)';
         btn.style.border = '1px solid rgba(255, 255, 255, 0.1)';
@@ -201,12 +207,33 @@ const Arena = {
     });
   },
 
-  async fetchData() {
-    if (this.isLoading) return;
-    this.isLoading = true;
+  startAutoRefresh() {
+    this.stopAutoRefresh();
+    this.autoRefreshTimer = setInterval(() => {
+      const isArenaTab = window.location.hash === '#arena' || document.body.getAttribute('data-current-tab') === 'arena';
+      if (isArenaTab) {
+        // Chỉ refresh nền nếu modal tạo kèo/đặt cược không mở
+        if (!document.getElementById('arena-create-modal') && !document.getElementById('arena-bet-modal')) {
+          this.fetchData(true);
+        }
+      }
+    }, 4500);
+  },
+
+  stopAutoRefresh() {
+    if (this.autoRefreshTimer) {
+      clearInterval(this.autoRefreshTimer);
+      this.autoRefreshTimer = null;
+    }
+  },
+
+  async fetchData(isBackground = false) {
+    if (this.isLoading && !isBackground) return;
+    if (!isBackground) this.isLoading = true;
 
     try {
-      const url = `/api/arena/matches?steam_id=${encodeURIComponent(this.mySteamId || '')}`;
+      this.init();
+      const url = `/api/arena/matches?steam_id=${encodeURIComponent(this.mySteamId || '')}&_t=${Date.now()}`;
       const res = await fetch(url);
       const data = await res.json();
 
@@ -214,6 +241,9 @@ const Arena = {
 
       this.matches = data.matches || [];
       this.myBalance = data.my_balance || 0;
+      if (!this.mySteamId && data.my_steam_id) {
+        this.mySteamId = String(data.my_steam_id);
+      }
 
       // Cập nhật số dư
       const balanceEl = document.getElementById('arena-player-balance');
@@ -233,17 +263,19 @@ const Arena = {
 
       this.renderCurrentTabContent();
     } catch (err) {
-      console.error('Lỗi Arena fetchData:', err);
-      const content = document.getElementById('arena-tab-content');
-      if (content) {
-        content.innerHTML = `
-          <div class="card" style="text-align: center; padding: 40px; color: #f87171;">
-            ⚠️ Không thể kết nối dữ liệu Đấu Trường: ${err.message}. Hãy thử bấm làm mới.
-          </div>
-        `;
+      if (!isBackground) {
+        console.error('Lỗi Arena fetchData:', err);
+        const content = document.getElementById('arena-tab-content');
+        if (content) {
+          content.innerHTML = `
+            <div class="card" style="text-align: center; padding: 40px; color: #f87171;">
+              ⚠️ Không thể kết nối dữ liệu Đấu Trường: ${err.message}. Hãy thử bấm làm mới.
+            </div>
+          `;
+        }
       }
     } finally {
-      this.isLoading = false;
+      if (!isBackground) this.isLoading = false;
     }
   },
 
@@ -264,9 +296,9 @@ const Arena = {
       if (countEl) countEl.innerHTML = `Đang có <strong>${filteredMatches.length}</strong> kèo đấu mở`;
     } else if (this.currentTab === 'my_matches') {
       filteredMatches = this.matches.filter(m => 
-        (m.creator && m.creator.steamId === this.mySteamId) ||
-        (m.opponent && m.opponent.steamId === this.mySteamId) ||
-        (m.spectatorBets && m.spectatorBets.some(b => b.steamId === this.mySteamId))
+        (m.creator && String(m.creator.steamId) === String(this.mySteamId)) ||
+        (m.opponent && String(m.opponent.steamId) === String(this.mySteamId)) ||
+        (m.spectatorBets && m.spectatorBets.some(b => String(b.steamId) === String(this.mySteamId)))
       );
       if (countEl) countEl.innerHTML = `Bạn đang tham gia / đặt cược <strong>${filteredMatches.length}</strong> kèo`;
     } else if (this.currentTab === 'history') {
@@ -302,8 +334,8 @@ const Arena = {
   },
 
   renderMatchCard(m) {
-    const isCreator = this.mySteamId && m.creator && m.creator.steamId === this.mySteamId;
-    const isOpponent = this.mySteamId && m.opponent && m.opponent.steamId === this.mySteamId;
+    const isCreator = this.mySteamId && m.creator && String(m.creator.steamId) === String(this.mySteamId);
+    const isOpponent = this.mySteamId && m.opponent && String(m.opponent.steamId) === String(this.mySteamId);
     const isFighter = isCreator || isOpponent;
 
     // Status Badge
@@ -511,9 +543,10 @@ const Arena = {
         `;
       }
     } else if (m.status === 'finished') {
+      const winnerName = (m.winner && m[m.winner] && m[m.winner].name) ? m[m.winner].name : 'Đấu sĩ';
       return `
         <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 6px; padding: 8px 12px; font-size: 0.8rem; color: #34d399; text-align: center;">
-          🏆 <strong>${m[m.winner] ? m[m.winner].name : 'Đấu sĩ'}</strong> chiến thắng (+${m.totalFighterPool} Xu)
+          🏆 <strong>${this.escapeHtml(winnerName)}</strong> chiến thắng (+${m.totalFighterPool} Xu)
           ${m.winReason ? `<div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;">${this.escapeHtml(m.winReason)}</div>` : ''}
         </div>
       `;
@@ -670,6 +703,7 @@ const Arena = {
   },
 
   async submitCreateMatch() {
+    this.init();
     const title = document.getElementById('create-match-title').value.trim();
     const tier = document.getElementById('create-match-tier').value;
     const betAmount = parseInt(document.getElementById('create-match-bet').value, 10);
@@ -705,12 +739,25 @@ const Arena = {
       const data = await res.json();
       if (!data.ok) throw new Error(data.error || 'Lỗi tạo kèo');
 
+      // Đóng modal
       this.closeModal();
+
+      // Cập nhật ngay lập tức vào danh sách hiển thị
+      if (data.match) {
+        this.matches = this.matches.filter(m => m.id !== data.match.id);
+        this.matches.unshift(data.match);
+      }
+
+      // TỰ ĐỘNG CHUYỂN SANG TAB "SÀN ĐẤU ĐANG MỞ" ĐỂ HIỆN NGAY TRẬN VỪA TẠO
+      this.switchSubTab('open');
+
       if (window.App && window.App.showToast) {
         window.App.showToast(data.message || 'Tạo kèo thành công!', 'success');
       } else {
         alert(data.message || 'Tạo kèo thành công!');
       }
+
+      // Đồng bộ lại với máy chủ
       await this.fetchData();
     } catch (err) {
       alert(`Lỗi: ${err.message}`);
@@ -754,6 +801,14 @@ const Arena = {
       const data = await res.json();
       if (!data.ok) throw new Error(data.error || 'Lỗi nhận kèo');
 
+      // Cập nhật ngay vào danh sách local
+      if (data.match) {
+        const idx = this.matches.findIndex(m => m.id === data.match.id);
+        if (idx !== -1) this.matches[idx] = data.match;
+      }
+
+      this.switchSubTab('open');
+
       if (window.App && window.App.showToast) {
         window.App.showToast('🎉 Đã nhận kèo PK thành công! Trận đấu bắt đầu.', 'success');
       } else {
@@ -781,6 +836,9 @@ const Arena = {
       });
       const data = await res.json();
       if (!data.ok) throw new Error(data.error || 'Lỗi hủy kèo');
+
+      this.matches = this.matches.filter(m => m.id !== matchId);
+      this.switchSubTab('open');
 
       if (window.App && window.App.showToast) {
         window.App.showToast(data.message || 'Đã hủy kèo!', 'info');

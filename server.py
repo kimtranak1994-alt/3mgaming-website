@@ -2824,7 +2824,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
     # =========================================================================
 
     def _get_arena_db(self):
-        db_path = "arena_matches.json"
+        db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "arena_matches.json")
         if os.path.exists(db_path):
             try:
                 with open(db_path, "r", encoding="utf-8") as f:
@@ -2834,7 +2834,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         return {"matches": [], "stats": {"totalMatches": 0, "totalXuWagered": 0, "totalXuWon": 0}}
 
     def _save_arena_db(self, data):
-        db_path = "arena_matches.json"
+        db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "arena_matches.json")
         try:
             with open(db_path, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2, ensure_ascii=False)
@@ -2935,6 +2935,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         except Exception:
             hits = []
 
+        # Tập hợp các hit_id đã dùng để kết thúc các trận trước đó
+        used_hit_ids = {str(m.get("settledHitId")) for m in matches if m.get("settledHitId")}
+
         for m in matches:
             if m.get("status") != "in_progress":
                 continue
@@ -2943,21 +2946,51 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             if not c_sid or not o_sid:
                 continue
 
+            started_at_str = m.get("startedAt")
+            started_at_ts = 0.0
+            if started_at_str:
+                try:
+                    clean_str = started_at_str.replace("Z", "+00:00")
+                    dt = datetime.datetime.fromisoformat(clean_str)
+                    started_at_ts = dt.timestamp()
+                except Exception:
+                    pass
+
             # Kiểm tra đòn kết liễu trong hits
             for h in hits:
                 if not h.get("killed"):
                     continue
+                hit_id = str(h.get("id") or "")
+                # Bỏ qua nếu hit_id này đã được dùng để kết thúc một trận đấu trước đó
+                if hit_id and hit_id in used_hit_ids:
+                    continue
+
+                # Bỏ qua đòn đánh xảy ra TRƯỚC KHI trận đấu bắt đầu (cho phép lệch 10s trễ mạng)
+                hit_at = h.get("at")
+                if hit_at and started_at_ts > 0:
+                    try:
+                        clean_hit_at = hit_at.replace("Z", "+00:00")
+                        hit_dt = datetime.datetime.fromisoformat(clean_hit_at)
+                        if hit_dt.timestamp() < (started_at_ts - 10.0):
+                            continue
+                    except Exception:
+                        pass
+
                 atk_sid = str(h.get("attackerSteamId") or "")
                 vic_sid = str(h.get("victimSteamId") or "")
 
                 if atk_sid == c_sid and vic_sid == o_sid:
-                    self._settle_arena_match(m, "creator", f"Hạ gục đối thủ bằng chiêu {h.get('ability', 'tấn công')}!")
+                    self._settle_arena_match(m, "creator", f"Hạ gục đối thủ bằng chiêu {h.get('ability', 'tấn công')}!", hit_id=hit_id)
+                    if hit_id:
+                        used_hit_ids.add(hit_id)
                     break
                 elif atk_sid == o_sid and vic_sid == c_sid:
-                    self._settle_arena_match(m, "opponent", f"Hạ gục đối thủ bằng chiêu {h.get('ability', 'tấn công')}!")
+                    self._settle_arena_match(m, "opponent", f"Hạ gục đối thủ bằng chiêu {h.get('ability', 'tấn công')}!", hit_id=hit_id)
+                    if hit_id:
+                        used_hit_ids.add(hit_id)
                     break
 
-    def _settle_arena_match(self, m, winner_key, win_reason="Chiến thắng"):
+    def _settle_arena_match(self, m, winner_key, win_reason="Chiến thắng", hit_id=None):
         if m.get("status") == "finished":
             return
         m["status"] = "finished"
@@ -2965,6 +2998,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         m["winnerSteamId"] = m[winner_key]["steamId"]
         m["winReason"] = win_reason
         m["finishedAt"] = datetime.datetime.now().isoformat()
+        if hit_id:
+            m["settledHitId"] = str(hit_id)
 
         # 1. Trả thưởng cho Đấu sĩ chiến thắng (2x số tiền cược)
         winner_sid = m[winner_key]["steamId"]
