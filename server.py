@@ -3762,22 +3762,63 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             target_sid = str(payload.get("target_steam_id") or self.get_active_steam_id() or "76561199175571899").strip()
 
             if action in ["enable", "respawn"] or (action == "toggle" and not boss_db.get("active")):
-                # 1. Swap sang Triceratops Growth 1.0
+                # 0. Kiểm tra trạng thái thực tế của người chơi trên IslePilot
+                p_info = None
                 try:
-                    self.fetch_islepilot("/commands", method="POST", body_data={
+                    p_info = self.fetch_islepilot(f"/players/{target_sid}")
+                except Exception as e:
+                    print(f"[Boss Toggle] Lỗi kiểm tra player {target_sid}: {e}")
+
+                if not p_info or not isinstance(p_info, dict) or p_info.get("error") or p_info.get("online") is not True:
+                    p_name = target_sid
+                    if isinstance(p_info, dict) and p_info.get("name"):
+                        p_name = p_info.get("name")
+                    self.send_json_response({
+                        "ok": False,
+                        "error": f"Tài khoản {p_name} (Steam: {target_sid}) hiện CHƯA ONLINE trong game! Vui lòng vào game trước khi bấm Thả Boss."
+                    }, status=400)
+                    return
+
+                # 1. Swap sang loài Triceratops
+                try:
+                    swap_res = self.fetch_islepilot("/commands", method="POST", body_data={
                         "action": "swap",
                         "steamId": target_sid,
-                        "character": "Triceratops",
+                        "species": "Triceratops",
+                        "gender": "Female"
+                    })
+                    print(f"[Boss Spawn] Swap Triceratops cho {target_sid}: {swap_res}")
+                except Exception as e:
+                    print(f"[Boss Spawn] Lỗi swap: {e}")
+
+                time.sleep(1.0)
+
+                # 2. Đặt tăng trưởng Growth 1.0 (trưởng thành hoàn toàn)
+                try:
+                    self.fetch_islepilot("/commands", method="POST", body_data={
+                        "action": "setgrowth",
+                        "steamId": target_sid,
                         "growth": 1.0,
-                        "gender": "Female",
                         "frozen": False
                     })
-                except Exception:
-                    pass
+                except Exception as e:
+                    print(f"[Boss Spawn] Lỗi setgrowth: {e}")
 
                 time.sleep(0.3)
 
-                # 2. Đặt chỉ số siêu Boss 100.000 HP, 100 Tấn, bất tử đói khát
+                # 3. Phóng to kích cỡ Boss (Scale 1.35x khổng lồ)
+                try:
+                    self.fetch_islepilot("/commands", method="POST", body_data={
+                        "action": "scale",
+                        "steamId": target_sid,
+                        "scale": 1.35
+                    })
+                except Exception as e:
+                    print(f"[Boss Spawn] Lỗi scale: {e}")
+
+                time.sleep(0.3)
+
+                # 4. Đặt chỉ số siêu Boss 100.000 HP, 100 Tấn, bất tử đói khát
                 try:
                     self.fetch_islepilot("/commands", method="POST", body_data={
                         "action": "setstats",
@@ -3790,18 +3831,33 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                         "stamina": 1000,
                         "bleed": 0
                     })
-                except Exception:
-                    pass
+                except Exception as e:
+                    print(f"[Boss Spawn] Lỗi setstats: {e}")
 
-                # 3. Dịch chuyển đến Đấu Trường nếu tùy chọn bật
+                time.sleep(0.3)
+
+                # 5. Dịch chuyển đến Đấu Trường nếu tùy chọn bật
                 if payload.get("teleport", True):
                     try:
-                        self.fetch_islepilot(f"/players/{target_sid}/teleport", method="POST", body_data={"locationId": "cmvqtjyrr4ombph01vi8dknwg"})
-                    except Exception:
-                        pass
+                        tp_res = self.fetch_islepilot(f"/players/{target_sid}/teleport", method="POST", body_data={"locationId": "cmvqtjyrr4ombph01vi8dknwg"})
+                        print(f"[Boss Spawn] Dịch chuyển Boss {target_sid} vào Đấu Trường: {tp_res}")
+                    except Exception as e:
+                        print(f"[Boss Spawn] Lỗi teleport: {e}")
 
+                # 6. Thông báo toàn server trong game
+                try:
+                    self.fetch_islepilot("/commands", method="POST", body_data={
+                        "action": "announce",
+                        "message": "🔥 BOSS TRICERATOPS 100.000 HP ĐÃ XUẤT HIỆN TẠI ĐẤU TRƯỜNG! HÃY TẬP HỢP SĂN BOSS NHẬN 5.000 XU!"
+                    })
+                except Exception as e:
+                    print(f"[Boss Spawn] Lỗi announce: {e}")
+
+                boss_name = f"👑 BOSS TRICERATOPS ({p_info.get('name', 'Admin')})" if p_info.get('name') else "👑 BOSS TRICERATOPS BẠO THẦN"
                 boss_db["active"] = True
                 boss_db["boss_steam_id"] = target_sid
+                boss_db["boss_name"] = boss_name
+                boss_db["species"] = "Triceratops"
                 boss_db["max_hp"] = 100000
                 boss_db["current_hp"] = 100000
                 boss_db["damage_per_hit"] = 1000
@@ -3813,7 +3869,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
                 self.send_json_response({
                     "ok": True,
-                    "message": "🔥 ĐÃ KÍCH HOẠT THẢ BOSS TRICERATOPS (100.000 HP)! Boss đang sống và sẵn sàng chiến đấu tại Đấu Trường.",
+                    "message": f"🔥 ĐÃ KÍCH HOẠT THẢ {boss_name} (100.000 HP)! Boss đang sống và sẵn sàng chiến đấu tại Đấu Trường.",
                     "boss": boss_db
                 })
                 return
@@ -3827,8 +3883,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 if old_sid and payload.get("slay", False):
                     try:
                         self.fetch_islepilot("/commands", method="POST", body_data={"action": "slay", "steamId": old_sid})
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        print(f"[Boss Slay] Lỗi slay: {e}")
                 self._save_boss_db(boss_db)
 
                 self.send_json_response({
@@ -3845,12 +3901,32 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 self.send_json_response({"ok": False, "error": "Vui lòng đăng nhập Steam trước khi dịch chuyển!"}, status=401)
                 return
 
+            steam_id = str(steam_id).strip()
+            try:
+                p_info = self.fetch_islepilot(f"/players/{steam_id}")
+                if isinstance(p_info, dict):
+                    if p_info.get("online") is False:
+                        self.send_json_response({
+                            "ok": False,
+                            "error": "Khủng long của bạn chưa online trong server! Vui lòng vào game trước khi bấm dịch chuyển."
+                        }, status=400)
+                        return
+                    if p_info.get("inCombat") is True:
+                        self.send_json_response({
+                            "ok": False,
+                            "error": "Khủng long đang trong combat (giao tranh)! Vui lòng đợi 30s sau khi hết combat rồi thử lại."
+                        }, status=400)
+                        return
+            except Exception:
+                pass
+
             try:
                 res = self.fetch_islepilot(f"/players/{steam_id}/teleport", method="POST", body_data={"locationId": "cmvqtjyrr4ombph01vi8dknwg"})
-                if res and (res.get("ok") or res.get("success") or "commandId" in res):
-                    self.send_json_response({"ok": True, "message": "Đã dịch chuyển đến Đấu Trường Săn Boss thành công!"})
+                ok, msg = self._is_teleport_success(res)
+                if ok:
+                    self.send_json_response({"ok": True, "message": "🚀 Đã dịch chuyển đến Đấu Trường Săn Boss thành công! Hãy đứng yên 3-5 giây trong game."})
                 else:
-                    self.send_json_response({"ok": False, "error": "Không thể dịch chuyển tức thì, vui lòng thử lại sau ít giây!"}, status=400)
+                    self.send_json_response({"ok": False, "error": msg}, status=400)
             except Exception as e:
                 self.send_json_response({"ok": False, "error": f"Lỗi dịch chuyển: {e}"}, status=500)
             return

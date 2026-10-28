@@ -415,7 +415,14 @@ const BossHunt = {
   renderAdminControls(boss) {
     const isActive = !!boss.active;
     const onlinePlayers = (this.data && this.data.online_players) || [];
-    const defaultSid = boss.boss_steam_id || (onlinePlayers[0] ? onlinePlayers[0].steamId : '');
+    const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
+    const adminSid = (user && user.steamId) ? String(user.steamId).trim() : '76561199175571899';
+    const adminName = (user && (user.name || user.personaName)) ? (user.name || user.personaName) : 'Admin';
+
+    let defaultSid = adminSid;
+    if (boss.boss_steam_id && boss.boss_steam_id !== '76561198999999999') {
+      defaultSid = boss.boss_steam_id;
+    }
 
     return `
       <div class="card" style="border: 1px solid rgba(245, 158, 11, 0.4); background: linear-gradient(135deg, rgba(30, 20, 10, 0.6), rgba(15, 23, 42, 0.9)); margin-bottom: 24px;">
@@ -441,13 +448,16 @@ const BossHunt = {
             <label style="display: block; font-size: 0.85rem; color: #cbd5e1; margin-bottom: 6px; font-weight: 700;">
               👤 Chọn tài khoản hóa thân thành Boss:
             </label>
-            <select id="boss-admin-target-select" class="form-input" style="width: 100%;" onchange="document.getElementById('boss-admin-target-sid').value = this.value;">
-              ${onlinePlayers.map(p => `
+            <select id="boss-admin-target-select" class="form-input" style="width: 100%;" onchange="if(this.value !== 'custom') { document.getElementById('boss-admin-target-sid').value = this.value; }">
+              <option value="${adminSid}" ${defaultSid === adminSid ? 'selected' : ''}>
+                👑 Chính tôi (Admin: ${adminName}) [${adminSid}]
+              </option>
+              ${onlinePlayers.filter(p => p.steamId !== adminSid).map(p => `
                 <option value="${p.steamId}" ${p.steamId === defaultSid ? 'selected' : ''}>
                   ${p.name || 'Player'} (${p.species || 'Dino'}, Steam: ${p.steamId})
                 </option>
               `).join('')}
-              <option value="custom">-- Nhập Steam ID thủ công bên dưới --</option>
+              <option value="custom" ${defaultSid !== adminSid && !onlinePlayers.some(p => p.steamId === defaultSid) ? 'selected' : ''}>-- Nhập Steam ID thủ công bên dưới --</option>
             </select>
             <input type="text" id="boss-admin-target-sid" class="form-input" style="width: 100%; margin-top: 8px;" placeholder="Nhập Steam ID của tài khoản Boss..." value="${defaultSid}">
           </div>
