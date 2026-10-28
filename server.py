@@ -492,6 +492,11 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             self.handle_combat_log()
             return
 
+        # 9c. Đấu trường PK & Đặt Cược Xu (Live IslePilot)
+        elif self.path.startswith("/api/arena"):
+            self.handle_arena_get()
+            return
+
         # 10. Gara Khủng Long (Live từ IslePilot)
 
         elif self.path.startswith("/api/server/garage"):
@@ -876,6 +881,10 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
             self.send_json_response({"success": False, "message": "Lỗi dữ liệu đổi tên!"}, 400)
 
+            return
+
+        elif self.path.startswith("/api/arena/"):
+            self.handle_arena_post()
             return
 
         elif self.path == "/api/server/teleport":
@@ -2809,6 +2818,479 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "kills": total_kills_count
             }
         })
+
+    # =========================================================================
+    # ĐẤU TRƯỜNG PK & ĐẶT CƯỢC XU (PVP ARENA & SYSTEM COIN BETTING)
+    # =========================================================================
+
+    def _get_arena_db(self):
+        db_path = "arena_matches.json"
+        if os.path.exists(db_path):
+            try:
+                with open(db_path, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            except Exception:
+                pass
+        return {"matches": [], "stats": {"totalMatches": 0, "totalXuWagered": 0, "totalXuWon": 0}}
+
+    def _save_arena_db(self, data):
+        db_path = "arena_matches.json"
+        try:
+            with open(db_path, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+        except Exception as e:
+            print(f"[Arena DB Save Error] {e}")
+
+    def _adjust_player_xu(self, steam_id, amount, reason=""):
+        steam_id = str(steam_id).strip()
+        if not steam_id:
+            return False
+        # 1. Gọi IslePilot /players/{steam_id}/currency
+        try:
+            self.fetch_islepilot(f"/players/{steam_id}/currency", method="POST", body_data={
+                "amount": int(amount),
+                "reason": reason
+            })
+        except Exception as e:
+            print(f"[Arena Currency Error] {e}")
+        # 2. Cập nhật admin_wallet_adjustments.json làm cache đồng bộ tức thời
+        try:
+            adj_file = "admin_wallet_adjustments.json"
+            adjs = {}
+            if os.path.exists(adj_file):
+                with open(adj_file, "r", encoding="utf-8") as f:
+                    adjs = json.load(f)
+            adjs[steam_id] = round(adjs.get(steam_id, 0.0) + float(amount), 1)
+            with open(adj_file, "w", encoding="utf-8") as f:
+                json.dump(adjs, f, indent=2, ensure_ascii=False)
+        except Exception as e:
+            print(f"[Arena Wallet Adjust Error] {e}")
+        return True
+
+    def _get_player_xu_balance(self, steam_id):
+        steam_id = str(steam_id).strip()
+        balance = 0
+        try:
+            player_info = self.fetch_islepilot(f"/players/{steam_id}")
+            if isinstance(player_info, dict):
+                wallet = player_info.get("wallet", {})
+                if isinstance(wallet, dict) and "balance" in wallet:
+                    balance = wallet.get("balance", 0)
+        except Exception:
+            pass
+        if os.path.exists("admin_wallet_adjustments.json"):
+            try:
+                with open("admin_wallet_adjustments.json", "r", encoding="utf-8") as f:
+                    adjs = json.load(f)
+                    balance = max(0, balance + adjs.get(str(steam_id), 0))
+            except Exception:
+                pass
+        return int(balance)
+
+    def handle_arena_get(self):
+        query = urllib.parse.urlparse(self.path).query
+        q_params = urllib.parse.parse_qs(query)
+        steam_id = q_params.get("steam_id", [None])[0] or self.get_active_steam_id()
+
+        db = self._get_arena_db()
+        matches = db.get("matches", [])
+
+        # Kiểm tra tự động kết quả cho các trận in_progress
+        self._auto_check_in_progress_matches(matches)
+        self._save_arena_db(db)
+
+        my_balance = self._get_player_xu_balance(steam_id) if steam_id else 0
+
+        # Thống kê tổng quan
+        total_matches = len(matches)
+        active_count = sum(1 for m in matches if m.get("status") in ["waiting", "in_progress"])
+        total_wagered = sum(m.get("totalFighterPool", 0) + sum(b.get("amount", 0) for b in m.get("spectatorBets", [])) for m in matches)
+
+        self.send_json_response({
+            "ok": True,
+            "matches": matches,
+            "my_steam_id": steam_id,
+            "my_balance": my_balance,
+            "arena_location": {
+                "id": "cmvqtjyrr4ombph01vi8dknwg",
+                "name": "ĐẤU TRƯỜNG"
+            },
+            "stats": {
+                "totalMatches": total_matches,
+                "activeMatches": active_count,
+                "totalXuWagered": total_wagered
+            }
+        })
+
+    def _auto_check_in_progress_matches(self, matches):
+        # Tự động quét IslePilot Combat Log & Killfeed để xác định người chiến thắng
+        try:
+            remote_data = self.fetch_islepilot("/combat-log") or {}
+            hits = remote_data.get("hits", [])
+        except Exception:
+            hits = []
+
+        for m in matches:
+            if m.get("status") != "in_progress":
+                continue
+            c_sid = str(m.get("creator", {}).get("steamId", ""))
+            o_sid = str(m.get("opponent", {}).get("steamId", ""))
+            if not c_sid or not o_sid:
+                continue
+
+            # Kiểm tra đòn kết liễu trong hits
+            for h in hits:
+                if not h.get("killed"):
+                    continue
+                atk_sid = str(h.get("attackerSteamId") or "")
+                vic_sid = str(h.get("victimSteamId") or "")
+
+                if atk_sid == c_sid and vic_sid == o_sid:
+                    self._settle_arena_match(m, "creator", f"Hạ gục đối thủ bằng chiêu {h.get('ability', 'tấn công')}!")
+                    break
+                elif atk_sid == o_sid and vic_sid == c_sid:
+                    self._settle_arena_match(m, "opponent", f"Hạ gục đối thủ bằng chiêu {h.get('ability', 'tấn công')}!")
+                    break
+
+    def _settle_arena_match(self, m, winner_key, win_reason="Chiến thắng"):
+        if m.get("status") == "finished":
+            return
+        m["status"] = "finished"
+        m["winner"] = winner_key
+        m["winnerSteamId"] = m[winner_key]["steamId"]
+        m["winReason"] = win_reason
+        m["finishedAt"] = datetime.datetime.now().isoformat()
+
+        # 1. Trả thưởng cho Đấu sĩ chiến thắng (2x số tiền cược)
+        winner_sid = m[winner_key]["steamId"]
+        prize_pool = m.get("totalFighterPool", m.get("betAmount", 0) * 2)
+        self._adjust_player_xu(winner_sid, prize_pool, f"Vô địch Đấu Trường PK #{m['id']}")
+
+        # 2. Trả thưởng cược khán giả
+        spectator_bets = m.get("spectatorBets", [])
+        winner_bets = [b for b in spectator_bets if b.get("chosenFighter") == winner_key]
+        loser_bets = [b for b in spectator_bets if b.get("chosenFighter") != winner_key]
+
+        total_win_pool = sum(b.get("amount", 0) for b in winner_bets)
+        total_lose_pool = sum(b.get("amount", 0) for b in loser_bets)
+
+        if total_win_pool > 0:
+            for b in winner_bets:
+                b_amt = b.get("amount", 0)
+                bonus = round((b_amt / total_win_pool) * total_lose_pool) if total_lose_pool > 0 else 0
+                total_payout = b_amt + bonus
+                self._adjust_player_xu(b.get("steamId"), total_payout, f"Thắng cược khán giả PK #{m['id']}")
+                b["payout"] = total_payout
+                b["status"] = "won"
+        else:
+            # Nếu không ai cược người thắng, hoàn tiền cho bên cược
+            for b in loser_bets:
+                self._adjust_player_xu(b.get("steamId"), b.get("amount", 0), f"Hoàn tiền cược khán giả PK #{m['id']}")
+                b["payout"] = b.get("amount", 0)
+                b["status"] = "refunded"
+
+        for b in loser_bets:
+            if "status" not in b:
+                b["payout"] = 0
+                b["status"] = "lost"
+
+    def handle_arena_post(self):
+        try:
+            length = int(self.headers.get("Content-Length", 0))
+            payload = json.loads(self.rfile.read(length).decode("utf-8")) if length > 0 else {}
+        except Exception:
+            payload = {}
+
+        path = self.path.split("?")[0]
+        db = self._get_arena_db()
+        matches = db.setdefault("matches", [])
+
+        # 1. Tạo Kèo Đấu PK (Create Match)
+        if path == "/api/arena/matches/create":
+            steam_id = payload.get("steam_id") or self.get_active_steam_id()
+            if not steam_id:
+                self.send_json_response({"ok": False, "error": "Vui lòng đăng nhập Steam để tạo kèo!"}, status=400)
+                return
+
+            title = payload.get("title", "Kèo Đấu PK").strip() or "Kèo Đấu PK 1v1"
+            tier = payload.get("tier", "Tự do").strip()
+            rules = payload.get("rules", "Solo 1v1 đến chết").strip()
+            bet_amount = int(payload.get("bet_amount", 50))
+
+            if bet_amount < 10:
+                self.send_json_response({"ok": False, "error": "Mức cược tối thiểu là 10 Xu!"}, status=400)
+                return
+
+            current_balance = self._get_player_xu_balance(steam_id)
+            if current_balance < bet_amount:
+                self.send_json_response({"ok": False, "error": f"Số dư không đủ! Bạn có {current_balance} Xu, cần {bet_amount} Xu."}, status=400)
+                return
+
+            # Lấy thông tin khủng long active của creator
+            creator_name = f"Player_{str(steam_id)[-4:]}"
+            creator_species = "Tyrannosaurus"
+            creator_growth = 100
+            try:
+                p_info = self.fetch_islepilot(f"/players/{steam_id}")
+                if isinstance(p_info, dict):
+                    creator_name = p_info.get("name") or creator_name
+                    creator_species = p_info.get("species") or creator_species
+                    creator_growth = round(float(p_info.get("growth", 1.0)) * 100)
+            except Exception:
+                pass
+
+            # Trừ tiền cược của creator
+            self._adjust_player_xu(steam_id, -bet_amount, f"Đặt cược tạo kèo PK: {title}")
+
+            match_id = f"pk_{int(datetime.datetime.now().timestamp() * 1000)}"
+            new_match = {
+                "id": match_id,
+                "createdAt": datetime.datetime.now().isoformat(),
+                "status": "waiting",
+                "title": title,
+                "tier": tier,
+                "rules": rules,
+                "arenaLocationId": "cmvqtjyrr4ombph01vi8dknwg",
+                "arenaLocationName": "ĐẤU TRƯỜNG",
+                "creator": {
+                    "steamId": str(steam_id),
+                    "name": creator_name,
+                    "species": creator_species,
+                    "growth": creator_growth
+                },
+                "opponent": None,
+                "betAmount": bet_amount,
+                "totalFighterPool": bet_amount * 2,
+                "spectatorBets": [],
+                "winner": None,
+                "winnerSteamId": None,
+                "winReason": None,
+                "startedAt": None,
+                "finishedAt": None
+            }
+
+            matches.insert(0, new_match)
+            db["stats"]["totalMatches"] = db["stats"].get("totalMatches", 0) + 1
+            db["stats"]["totalXuWagered"] = db["stats"].get("totalXuWagered", 0) + bet_amount * 2
+            self._save_arena_db(db)
+
+            new_balance = self._get_player_xu_balance(steam_id)
+            self.send_json_response({
+                "ok": True,
+                "message": f"Tạo kèo PK '{title}' thành công! Đã trừ cược {bet_amount} Xu.",
+                "match": new_match,
+                "balance": new_balance
+            })
+            return
+
+        # 2. Nhận Kèo Đấu PK (Accept Match)
+        elif path == "/api/arena/matches/accept":
+            match_id = payload.get("match_id")
+            steam_id = payload.get("steam_id") or self.get_active_steam_id()
+            if not steam_id or not match_id:
+                self.send_json_response({"ok": False, "error": "Thiếu thông tin nhận kèo!"}, status=400)
+                return
+
+            target_match = next((m for m in matches if m.get("id") == match_id), None)
+            if not target_match:
+                self.send_json_response({"ok": False, "error": "Kèo đấu không tồn tại!"}, status=404)
+                return
+            if target_match.get("status") != "waiting":
+                self.send_json_response({"ok": False, "error": "Kèo này đã có người nhận hoặc đã kết thúc!"}, status=400)
+                return
+            if str(target_match.get("creator", {}).get("steamId")) == str(steam_id):
+                self.send_json_response({"ok": False, "error": "Bạn không thể tự nhận kèo của chính mình!"}, status=400)
+                return
+
+            bet_amount = target_match.get("betAmount", 0)
+            current_balance = self._get_player_xu_balance(steam_id)
+            if current_balance < bet_amount:
+                self.send_json_response({"ok": False, "error": f"Số dư không đủ! Bạn có {current_balance} Xu, cần {bet_amount} Xu."}, status=400)
+                return
+
+            # Lấy thông tin dino của opponent
+            opp_name = f"Player_{str(steam_id)[-4:]}"
+            opp_species = "Tyrannosaurus"
+            opp_growth = 100
+            try:
+                p_info = self.fetch_islepilot(f"/players/{steam_id}")
+                if isinstance(p_info, dict):
+                    opp_name = p_info.get("name") or opp_name
+                    opp_species = p_info.get("species") or opp_species
+                    opp_growth = round(float(p_info.get("growth", 1.0)) * 100)
+            except Exception:
+                pass
+
+            # Trừ tiền cược của opponent
+            self._adjust_player_xu(steam_id, -bet_amount, f"Nhận thách đấu kèo PK #{match_id}")
+
+            target_match["status"] = "in_progress"
+            target_match["startedAt"] = datetime.datetime.now().isoformat()
+            target_match["opponent"] = {
+                "steamId": str(steam_id),
+                "name": opp_name,
+                "species": opp_species,
+                "growth": opp_growth
+            }
+            self._save_arena_db(db)
+
+            new_balance = self._get_player_xu_balance(steam_id)
+            self.send_json_response({
+                "ok": True,
+                "message": f"Nhận kèo thành công! Hãy vào Đấu Trường để quyết chiến.",
+                "match": target_match,
+                "balance": new_balance
+            })
+            return
+
+        # 3. Hủy Kèo (Cancel Match)
+        elif path == "/api/arena/matches/cancel":
+            match_id = payload.get("match_id")
+            steam_id = payload.get("steam_id") or self.get_active_steam_id()
+            target_match = next((m for m in matches if m.get("id") == match_id), None)
+            if not target_match:
+                self.send_json_response({"ok": False, "error": "Kèo không tồn tại!"}, status=404)
+                return
+            if str(target_match.get("creator", {}).get("steamId")) != str(steam_id):
+                self.send_json_response({"ok": False, "error": "Chỉ người tạo kèo mới có quyền hủy!"}, status=403)
+                return
+            if target_match.get("status") != "waiting":
+                self.send_json_response({"ok": False, "error": "Chỉ có thể hủy kèo khi chưa có người nhận!"}, status=400)
+                return
+
+            # Hoàn tiền cho creator
+            self._adjust_player_xu(steam_id, target_match.get("betAmount", 0), f"Hoàn tiền hủy kèo PK #{match_id}")
+            target_match["status"] = "cancelled"
+            target_match["finishedAt"] = datetime.datetime.now().isoformat()
+            self._save_arena_db(db)
+
+            new_balance = self._get_player_xu_balance(steam_id)
+            self.send_json_response({
+                "ok": True,
+                "message": f"Đã hủy kèo và hoàn lại {target_match.get('betAmount')} Xu vào ví!",
+                "balance": new_balance
+            })
+            return
+
+        # 4. Đặt Cược Khán Giả (Spectator Bet)
+        elif path == "/api/arena/matches/bet":
+            match_id = payload.get("match_id")
+            steam_id = payload.get("steam_id") or self.get_active_steam_id()
+            chosen = payload.get("chosen_fighter") # "creator" hoặc "opponent"
+            amount = int(payload.get("amount", 20))
+
+            target_match = next((m for m in matches if m.get("id") == match_id), None)
+            if not target_match or target_match.get("status") not in ["waiting", "in_progress"]:
+                self.send_json_response({"ok": False, "error": "Kèo không hợp lệ để đặt cược!"}, status=400)
+                return
+            creator_obj = target_match.get("creator") or {}
+            opp_obj = target_match.get("opponent") or {}
+            if str(creator_obj.get("steamId")) == str(steam_id) or (opp_obj and str(opp_obj.get("steamId")) == str(steam_id)):
+                self.send_json_response({"ok": False, "error": "Đấu sĩ tham gia trận không được phép cược khán giả!"}, status=400)
+                return
+            if amount < 5:
+                self.send_json_response({"ok": False, "error": "Mức cược khán giả tối thiểu là 5 Xu!"}, status=400)
+                return
+
+            current_balance = self._get_player_xu_balance(steam_id)
+            if current_balance < amount:
+                self.send_json_response({"ok": False, "error": f"Số dư không đủ! Bạn có {current_balance} Xu, cần {amount} Xu."}, status=400)
+                return
+
+            # Trừ tiền cược
+            self._adjust_player_xu(steam_id, -amount, f"Cược khán giả PK #{match_id} cho {chosen}")
+
+            spectator_name = f"Khán giả_{str(steam_id)[-4:]}"
+            try:
+                p_info = self.fetch_islepilot(f"/players/{steam_id}")
+                if isinstance(p_info, dict) and p_info.get("name"):
+                    spectator_name = p_info.get("name")
+            except Exception:
+                pass
+
+            target_match.setdefault("spectatorBets", []).append({
+                "steamId": str(steam_id),
+                "name": spectator_name,
+                "chosenFighter": chosen,
+                "amount": amount,
+                "timestamp": datetime.datetime.now().isoformat()
+            })
+            self._save_arena_db(db)
+
+            new_balance = self._get_player_xu_balance(steam_id)
+            self.send_json_response({
+                "ok": True,
+                "message": f"Đã cược thành công {amount} Xu cho {target_match.get(chosen, {}).get('name', chosen)}!",
+                "balance": new_balance
+            })
+            return
+
+        # 5. Dịch Chuyển Vào Đấu Trường (Teleport to Arena)
+        elif path == "/api/arena/matches/teleport":
+            steam_id = payload.get("steam_id") or self.get_active_steam_id()
+            if not steam_id:
+                self.send_json_response({"ok": False, "error": "Vui lòng đăng nhập Steam!"}, status=400)
+                return
+
+            res = self.fetch_islepilot(f"/players/{steam_id}/teleport", method="POST", body_data={
+                "locationId": "cmvqtjyrr4ombph01vi8dknwg"
+            })
+            if res and (res.get("ok") or not res.get("error")):
+                self.send_json_response({"ok": True, "message": "Đã gửi lệnh dịch chuyển tới ĐẤU TRƯỜNG thành công! Hãy đứng yên trong game."})
+            else:
+                err = res.get("error") if res else "Máy chủ bận hoặc đang trong combat"
+                self.send_json_response({"ok": False, "error": f"Dịch chuyển thất bại: {err}"}, status=400)
+            return
+
+        # 6. Xác Định Kết Quả Trận Đấu (Resolve Match: Combat check / Concede / Admin)
+        elif path == "/api/arena/matches/resolve":
+            match_id = payload.get("match_id")
+            steam_id = payload.get("steam_id") or self.get_active_steam_id()
+            action = payload.get("action", "check_combat") # "check_combat", "concede"
+            target_match = next((m for m in matches if m.get("id") == match_id), None)
+            if not target_match:
+                self.send_json_response({"ok": False, "error": "Kèo không tồn tại!"}, status=404)
+                return
+            if target_match.get("status") != "in_progress":
+                self.send_json_response({"ok": False, "error": "Trận đấu không ở trạng thái đang diễn ra!"}, status=400)
+                return
+
+            if action == "concede":
+                c_sid = str(target_match.get("creator", {}).get("steamId"))
+            creator_obj = target_match.get("creator") or {}
+            opp_obj = target_match.get("opponent") or {}
+            if str(creator_obj.get("steamId")) == str(steam_id) or (opp_obj and str(opp_obj.get("steamId")) == str(steam_id)):
+                if str(steam_id) == c_sid:
+                    self._settle_arena_match(target_match, "opponent", f"Đối thủ {target_match['creator']['name']} đã nhận thua (Concede).")
+                elif str(steam_id) == o_sid:
+                    self._settle_arena_match(target_match, "creator", f"Đối thủ {target_match['opponent']['name']} đã nhận thua (Concede).")
+                else:
+                    self.send_json_response({"ok": False, "error": "Bạn không phải là đấu sĩ trong trận này!"}, status=403)
+                    return
+                self._save_arena_db(db)
+                self.send_json_response({"ok": True, "message": "Đã xác nhận kết quả đầu hàng!", "match": target_match})
+                return
+
+            elif action == "check_combat":
+                self._auto_check_in_progress_matches([target_match])
+                self._save_arena_db(db)
+                if target_match.get("status") == "finished":
+                    self.send_json_response({
+                        "ok": True, 
+                        "settled": True,
+                        "message": f"Trận đấu đã kết thúc! Người thắng: {target_match[target_match['winner']]['name']}.",
+                        "match": target_match
+                    })
+                else:
+                    self.send_json_response({
+                        "ok": True, 
+                        "settled": False,
+                        "message": "Chưa ghi nhận đòn kết liễu trong hệ thống combat log. Trận đấu vẫn đang tiếp diễn!",
+                        "match": target_match
+                    })
+                return
+
+        self.send_json_response({"ok": False, "error": "Endpoint không tồn tại"}, status=404)
 
     def handle_garage(self):
 
