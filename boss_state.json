@@ -1,21 +1,20 @@
 {
   "active": false,
-  "boss_steam_id": "AI_DEER_BOSS",
-  "boss_name": "🦌 SIÊU BOSS HƯƠU AI (100.000 HP)",
-  "species": "Deer",
+  "boss_steam_id": "76561198975489051",
+  "boss_name": "👑 SIÊU BOSS TRICERATOPS AI (100.000 HP)",
+  "species": "Triceratops",
   "max_hp": 100000,
-  "current_hp": 0,
+  "current_hp": 100000,
   "weight": 100000,
   "weight_label": "100.0 Tấn (100,000 kg)",
   "reward_xu": 5000,
   "location_id": "cmvqtjyrr4ombph01vi8dknwg",
   "location_name": "ĐẤU TRƯỜNG",
-  "spawned_at": "2026-10-28T20:07:55.781112",
+  "spawned_at": null,
   "damage_per_hit": 1000,
   "is_settled": false,
   "last_killer": null,
   "dps_ranking": [],
   "kill_history": [],
-  "last_rewards": [],
-  "processed_hit_keys": []
+  "last_rewards": []
 }

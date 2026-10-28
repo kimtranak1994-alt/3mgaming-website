@@ -419,18 +419,20 @@ const BossHunt = {
   renderAdminControls(boss) {
     const isActive = !!boss.active;
     const curHp = boss.current_hp !== undefined ? boss.current_hp : 100000;
+    const configuredBotSid = (this.data && this.data.boss_bot_steam_id) || boss.boss_steam_id || '76561198975489051';
+    const currentSpecies = boss.species || 'Triceratops';
 
     return `
-      <div class="card" style="border: 1px solid rgba(245, 158, 11, 0.4); background: linear-gradient(135deg, rgba(30, 20, 10, 0.6), rgba(15, 23, 42, 0.9)); margin-bottom: 24px;">
+      <div class="card" style="border: 1px solid rgba(245, 158, 11, 0.4); background: linear-gradient(135deg, rgba(30, 20, 10, 0.65), rgba(15, 23, 42, 0.95)); margin-bottom: 24px;">
         <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 16px;">
           <div style="display: flex; align-items: center; gap: 10px;">
             <span style="font-size: 1.6rem;">👑</span>
             <div>
               <h3 style="margin: 0; color: #fbbf24; font-size: 1.15rem; font-weight: 800;">
-                BẢNG ĐIỀU KHIỂN BOSS DÀNH RIÊNG CHO QUẢN TRỊ VIÊN (ADMIN)
+                BẢNG ĐIỀU KHIỂN BOSS DÀNH CHO QUẢN TRỊ VIÊN (ADMIN)
               </h3>
               <p style="margin: 2px 0 0; color: #94a3b8; font-size: 0.82rem;">
-                Chuẩn Bot AI tự động hoàn toàn — Không cần lựa chọn người chơi hay admin làm vật chủ!
+                Triển khai Bot Boss chuyên dụng tự động — Nhân vật chơi của Admin được bảo toàn 100% không bị ảnh hưởng!
               </p>
             </div>
           </div>
@@ -439,13 +441,49 @@ const BossHunt = {
           </span>
         </div>
 
+        <!-- CẤU HÌNH BOT BOSS CHUYÊN DỤNG CỐ ĐỊNH -->
+        <div style="background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 14px 18px; margin-bottom: 16px;">
+          <div style="font-weight: 800; color: #cbd5e1; font-size: 0.9rem; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+            <span>⚙️</span> CẤU HÌNH TÀI KHOẢN BOT PHỤ LÀM BOSS (CỐ ĐỊNH)
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; align-items: flex-end;">
+            <div>
+              <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 4px; font-weight: 700;">
+                🤖 Steam ID Tài Khoản Bot Boss Phụ:
+              </label>
+              <input type="text" id="boss-bot-steam-id-input" class="form-input" style="width: 100%;" value="${configuredBotSid}" placeholder="Nhập Steam ID của tài khoản Bot phụ...">
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 4px; font-weight: 700;">
+                🦖 Chủng Loài Siêu Boss:
+              </label>
+              <select id="boss-bot-species-select" class="form-input" style="width: 100%;">
+                <option value="Triceratops" ${currentSpecies === 'Triceratops' ? 'selected' : ''}>👑 Triceratops (Trice Sừng Khổng Lồ 1.8x - Chuẩn)</option>
+                <option value="Stegosaurus" ${currentSpecies === 'Stegosaurus' ? 'selected' : ''}>Stegosaurus (Gai Đuôi)</option>
+                <option value="Tenontosaurus" ${currentSpecies === 'Tenontosaurus' ? 'selected' : ''}>Tenontosaurus (Khủng Long Ăn Cỏ)</option>
+                <option value="Ceratosaurus" ${currentSpecies === 'Ceratosaurus' ? 'selected' : ''}>Ceratosaurus</option>
+                <option value="Carnotaurus" ${currentSpecies === 'Carnotaurus' ? 'selected' : ''}>Carnotaurus</option>
+              </select>
+            </div>
+            <div>
+              <button class="btn-primary" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); font-size: 0.85rem; padding: 10px 16px; border-radius: 6px; cursor: pointer;" onclick="BossHunt.saveBotConfig()">
+                💾 Lưu Cấu Hình Bot
+              </button>
+            </div>
+          </div>
+          <p style="margin: 8px 0 0; color: #64748b; font-size: 0.78rem;">
+            * Tài khoản Bot này sẽ tự động biến hình và dịch chuyển vào Đấu Trường. Bạn không cần phải chọn lại nhiều lần.
+          </p>
+        </div>
+
+        <!-- THAO TÁC THẢ / TẮT BOSS -->
         <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(6, 78, 59, 0.3)); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 12px; padding: 18px 22px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
           <div>
             <div style="font-weight: 900; color: #34d399; font-size: 1.15rem; display: flex; align-items: center; gap: 8px;">
-              <span>🦌</span> SIÊU BOSS HƯƠU AI 100.000 HP (CHUẨN BOT AI TỰ ĐỘNG)
+              <span>⚡</span> SIÊU BOSS AI 100.000 HP (TỰ ĐỘNG PHẢN ĐÒN & QUÉT 15M)
             </div>
             <p style="margin: 6px 0 0; color: #cbd5e1; font-size: 0.88rem; line-height: 1.5;">
-              • Chủng loại: <b style="color: #fbbf24;">Hươu AI (Deer)</b> &bull; Máu tối đa: <b style="color: #ef4444;">100.000 HP</b> &bull; Phản đòn: <b style="color: #f43f5e;">1.000 Dame/hit</b><br>
+              • Chủng loại: <b style="color: #fbbf24;">${currentSpecies} (Khổng lồ 1.8x)</b> &bull; Máu tối đa: <b style="color: #ef4444;">100.000 HP</b> &bull; Phản đòn: <b style="color: #f43f5e;">1.000 Dame/hit</b><br>
               • Vị trí: <b style="color: #38bdf8;">ĐẤU TRƯỜNG</b> &bull; Phần thưởng: <b style="color: #10b981;">5.000 Xu chia theo % sát thương</b><br>
               • Trạng thái hiện tại: <b>${isActive ? (curHp > 0 ? '🟢 Đang hoạt động (' + curHp.toLocaleString('vi-VN') + ' HP)' : '💀 Đã bị tiêu diệt') : '⚪ Đang Tắt'}</b>
             </p>
@@ -453,11 +491,11 @@ const BossHunt = {
           <div style="display: flex; gap: 12px; flex-wrap: wrap;">
             ${!isActive ? `
               <button class="btn-primary" style="background: linear-gradient(135deg, #10b981, #047857); font-size: 1.05rem; font-weight: 900; padding: 14px 28px; border-radius: 10px; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 0 20px rgba(16, 185, 129, 0.4); cursor: pointer;" onclick="BossHunt.toggleBossAi('enable')">
-                🚀 BẬT THẢ BOSS HƯƠU AI 100.000 HP
+                🚀 BẬT THẢ BOSS AI 100.000 HP
               </button>
             ` : `
               <button class="btn-primary" style="background: linear-gradient(135deg, #ef4444, #b91c1c); font-size: 0.95rem; font-weight: 800; padding: 12px 22px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;" onclick="BossHunt.toggleBossAi('disable')">
-                🛑 TẮT BOSS HƯƠU AI
+                🛑 TẮT BOSS AI / THU HỒI
               </button>
               <button class="btn-primary" style="background: linear-gradient(135deg, #d97706, #b45309); font-size: 0.95rem; font-weight: 800; padding: 12px 22px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;" onclick="BossHunt.toggleBossAi('respawn')">
                 🔄 HỒI ĐẦY 100K HP
@@ -469,20 +507,57 @@ const BossHunt = {
     `;
   },
 
+  async saveBotConfig() {
+    const botSidInput = document.getElementById('boss-bot-steam-id-input');
+    const speciesSelect = document.getElementById('boss-bot-species-select');
+    const botSid = botSidInput ? botSidInput.value.trim() : '';
+    const species = speciesSelect ? speciesSelect.value : 'Triceratops';
+
+    if (!botSid) {
+      alert("Vui lòng nhập Steam ID của tài khoản Bot!");
+      return;
+    }
+
+    try {
+      const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
+      const adminSid = user ? user.steamId : '';
+      const res = await fetch(`/api/boss/save-bot?admin_steam_id=${adminSid}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ boss_bot_steam_id: botSid, species: species })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        if (window.App && App.showToast) App.showToast(data.message);
+        else alert(data.message);
+        await this.fetchData();
+      } else {
+        alert("❌ " + (data.error || "Lỗi lưu cấu hình!"));
+      }
+    } catch (e) {
+      alert("❌ Lỗi: " + e.message);
+    }
+  },
+
   async toggleBossAi(action) {
+    const botSidInput = document.getElementById('boss-bot-steam-id-input');
+    const speciesSelect = document.getElementById('boss-bot-species-select');
+    const botSid = botSidInput ? botSidInput.value.trim() : '';
+    const species = speciesSelect ? speciesSelect.value : 'Triceratops';
+
     let confirmMsg = "";
     if (action === 'enable') {
-      confirmMsg = "⚠️ XÁC NHẬN THẢ BOSS HƯƠU AI 100.000 HP:\n\nBạn có muốn kích hoạt thả Boss Hươu AI 100.000 HP tại Đấu Trường ngay bây giờ?\n\n⭐ Chuẩn AI tự động hoàn toàn, Boss tự phản đòn 1.000 dame và chia 5.000 Xu theo dame!";
+      confirmMsg = "⚠️ XÁC NHẬN THẢ BOSS AI 100.000 HP:\n\nBạn có muốn kích hoạt thả Siêu Boss AI 100.000 HP tại Đấu Trường ngay bây giờ?\n\n⭐ Tài khoản Bot (" + botSid + ") sẽ hóa thân thành Boss Khổng Lồ 1.8x, tự phản đòn 1.000 dame và chia 5.000 Xu!";
     } else if (action === 'disable') {
-      confirmMsg = "⚠️ XÁC NHẬN TẮT BOSS HƯƠU AI:\n\nBạn có chắc chắn muốn TẮT Boss Hươu AI và thu hồi khỏi Đấu Trường?";
+      confirmMsg = "⚠️ XÁC NHẬN TẮT BOSS AI:\n\nBạn có chắc chắn muốn TẮT Boss AI và thu hồi khỏi Đấu Trường?";
     } else {
-      confirmMsg = "⚠️ XÁC NHẬN HỒI ĐẦY MÁU BOSS:\n\nBạn có muốn hồi phục đầy đủ 100.000 HP cho Boss Hươu AI?";
+      confirmMsg = "⚠️ XÁC NHẬN HỒI ĐẦY MÁU BOSS:\n\nBạn có muốn hồi phục đầy đủ 100.000 HP cho Boss AI?";
     }
 
     if (!confirm(confirmMsg)) return;
 
     if (window.App && App.showToast) {
-      App.showToast("⏳ Đang gửi lệnh máy chủ xử lý Boss Hươu AI...");
+      App.showToast("⏳ Đang gửi lệnh máy chủ xử lý Boss AI...");
     }
 
     try {
@@ -494,16 +569,17 @@ const BossHunt = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: action,
-          species: 'Deer'
+          boss_bot_steam_id: botSid,
+          species: species
         })
       });
 
       const resData = await res.json();
       if (resData.ok) {
         if (window.App && App.showToast) {
-          App.showToast(resData.message || "✅ Thao tác Boss Hươu AI thành công!");
+          App.showToast(resData.message || "✅ Thao tác Boss AI thành công!");
         } else {
-          alert(resData.message || "✅ Thao tác Boss Hươu AI thành công!");
+          alert(resData.message || "✅ Thao tác Boss AI thành công!");
         }
         await this.fetchData();
       } else {

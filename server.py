@@ -3538,16 +3538,20 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
     # =========================================================================
     # MODULE SĂN BOSS HƯƠU AI (DEER) 100.000 HP & PHẦN THƯỞNG 5.000 XU
     # =========================================================================
+    # MODULE SĂN BOSS AI TỰ ĐỘNG (100.000 HP, DAME 1.000, THƯỞNG 5.000 XU)
+    # Tích hợp tài khoản Bot phụ chuyên dụng không ảnh hưởng nhân vật của Admin
+    # =========================================================================
 
     def _get_boss_db(self):
         base_dir = os.path.dirname(os.path.abspath(__file__))
         primary_file = os.path.join(base_dir, "boss_state.json")
         backup_file = os.path.join(base_dir, ".persistent_boss_state.json")
+        default_bot_sid = str(config.get("BOSS_BOT_STEAM_ID", "76561198975489051")).strip()
         defaults = {
             "active": False,
-            "boss_steam_id": "AI_DEER_BOSS",
-            "boss_name": "🦌 SIÊU BOSS HƯƠU AI (100.000 HP)",
-            "species": "Deer",
+            "boss_steam_id": default_bot_sid,
+            "boss_name": "👑 SIÊU BOSS TRICERATOPS AI (100.000 HP)",
+            "species": "Triceratops",
             "max_hp": 100000,
             "current_hp": 100000,
             "damage_per_hit": 1000,
@@ -3593,8 +3597,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
     def _auto_check_boss_status(self, boss_db):
         if not boss_db or not boss_db.get("active"):
             return
-        boss_sid = str(boss_db.get("boss_steam_id") or "AI_DEER_BOSS")
-        target_species = str(boss_db.get("species") or "Deer").strip().lower()
+        boss_sid = str(boss_db.get("boss_steam_id") or config.get("BOSS_BOT_STEAM_ID", "76561198975489051")).strip()
+        target_species = str(boss_db.get("species") or "Triceratops").strip().lower()
 
         spawned_at_str = boss_db.get("spawned_at")
         spawned_at_ts = 0.0
@@ -3623,18 +3627,18 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             if DinoRequestHandler._combat_log_cached_data:
                 hits = DinoRequestHandler._combat_log_cached_data.get("hits", [])
 
-        # 1. Quét toàn bộ đòn cắn của người chơi vào Boss AI Hươu (Deer)
+        # 1. Quét toàn bộ đòn cắn của người chơi vào Boss AI
         damage_by_attacker = {}
         fatal_hit = None
         total_dmg_taken = 0.0
 
         for h in hits:
-            vic_sid = str(h.get("victimSteamId") or "")
+            vic_sid = str(h.get("victimSteamId") or "").strip()
             vic_spec = str(h.get("victimSpecies") or "").strip().lower()
-            atk_sid = str(h.get("attackerSteamId") or "")
+            atk_sid = str(h.get("attackerSteamId") or "").strip()
 
-            # Kiểm tra xem đây có phải là đòn tấn công vào Boss Hươu AI (Deer) hoặc boss_sid
-            is_boss_hit = (vic_spec == target_species) or (vic_spec == "deer") or (boss_sid and vic_sid == boss_sid)
+            # Nhận diện mục tiêu Boss: Tài khoản Bot Boss HOẶC Hươu AI tự nhiên
+            is_boss_hit = (boss_sid and vic_sid == boss_sid) or (vic_spec == target_species and target_species == "deer") or (vic_spec == "deer")
             if not is_boss_hit:
                 continue
 
@@ -3655,15 +3659,14 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 continue
 
             # CƠ CHẾ BOSS AI TỰ TẤN CÔNG / PHẢN ĐÒN (1.000 HP MỖI CÚ HÍT):
-            # Mỗi cú cắn của người chơi vào Boss Hươu AI sẽ bị Boss húc trả ngay lập tức 1000 dame!
-            hit_key = str(h.get("id") or f"{hit_at}_{atk_sid}_{vic_spec}")
+            hit_key = str(h.get("id") or f"{hit_at}_{atk_sid}_{vic_sid}")
             processed_keys = boss_db.setdefault("processed_hit_keys", [])
             if hit_key not in processed_keys:
                 processed_keys.append(hit_key)
                 if len(processed_keys) > 400:
                     boss_db["processed_hit_keys"] = processed_keys[-250:]
 
-                # Boss AI trừng phạt kẻ tấn công bằng 1 cú húc 1.000 dame
+                # Boss AI phản đòn người chơi bằng 1 cú húc 1.000 dame
                 try:
                     target_player = self.fetch_islepilot(f"/players/{atk_sid}")
                     if isinstance(target_player, dict) and target_player.get("online"):
@@ -3673,9 +3676,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                             self.fetch_islepilot("/commands", method="POST", body_data={
                                 "action": "slay",
                                 "steamId": atk_sid,
-                                "reason": "Bị Boss Hươu AI đá/húc chí mạng 1.000 dame tiêu diệt!"
+                                "reason": "Bị Siêu Boss AI đá/húc chí mạng 1.000 dame tiêu diệt!"
                             })
-                            print(f"[Boss AI Attack] Đã tiêu diệt người chơi {atk_sid} do hết máu (còn {cur_health} HP <= 1000)")
+                            print(f"[Boss AI Retaliation] Tiêu diệt người chơi {atk_sid} ({cur_health} HP <= 1000)")
                         else:
                             new_health = max(1.0, round(cur_health - damage_dealt, 1))
                             self.fetch_islepilot("/commands", method="POST", body_data={
@@ -3683,9 +3686,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                                 "steamId": atk_sid,
                                 "health": new_health
                             })
-                            print(f"[Boss AI Attack] Boss Hươu húc người chơi {atk_sid}: {cur_health} -> {new_health} HP (-1000 HP)")
+                            print(f"[Boss AI Retaliation] Boss húc {atk_sid}: {cur_health} -> {new_health} HP (-1000 HP)")
                 except Exception as e:
-                    print(f"[Boss AI Attack Error] Lỗi tự động tấn công: {e}")
+                    print(f"[Boss AI Retaliation Error]: {e}")
 
             # Lấy lực cắn / sát thương thực tế của dino người chơi
             damage = float(h.get("damage") or 0.0)
@@ -3710,6 +3713,52 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
             if h.get("killed"):
                 fatal_hit = h
+
+        # 1.5. CƠ CHẾ PROXIMITY STRIKE: Boss AI tự động quét và tấn công mục tiêu áp sát 15m trong Đấu Trường
+        try:
+            now_ts = time.time()
+            last_prox_check = float(boss_db.get("_last_proximity_scan", 0.0))
+            if (now_ts - last_prox_check) >= 4.0:
+                boss_db["_last_proximity_scan"] = now_ts
+                p_res = self.fetch_islepilot("/players") or {}
+                all_players = p_res.get("players", [])
+                boss_p = next((p for p in all_players if str(p.get("steamId")) == boss_sid), None)
+                if boss_p and boss_p.get("position"):
+                    bx = float(boss_p["position"].get("x", 0))
+                    by = float(boss_p["position"].get("y", 0))
+                    bz = float(boss_p["position"].get("z", 0))
+
+                    prox_hits = boss_db.setdefault("last_proximity_hits", {})
+                    for other_p in all_players:
+                        o_sid = str(other_p.get("steamId") or "")
+                        if not o_sid or o_sid == boss_sid or not other_p.get("online"):
+                            continue
+                        pos = other_p.get("position")
+                        if not pos:
+                            continue
+                        ox, oy, oz = float(pos.get("x", 0)), float(pos.get("y", 0)), float(pos.get("z", 0))
+                        dist_sq = (bx - ox)**2 + (by - oy)**2 + (bz - oz)**2
+                        # Bán kính cận chiến Boss 15 mét (1500 units)
+                        if dist_sq <= (1500.0 ** 2):
+                            last_hit_ts = float(prox_hits.get(o_sid, 0.0))
+                            if (now_ts - last_hit_ts) >= 4.0:
+                                prox_hits[o_sid] = now_ts
+                                o_health = float(other_p.get("health", 0.0))
+                                if o_health <= 1000.0:
+                                    self.fetch_islepilot("/commands", method="POST", body_data={
+                                        "action": "slay",
+                                        "steamId": o_sid,
+                                        "reason": "Bị Siêu Boss AI quất đuôi/húc sừng chí mạng 1.000 dame tiêu diệt!"
+                                    })
+                                else:
+                                    self.fetch_islepilot("/commands", method="POST", body_data={
+                                        "action": "setstats",
+                                        "steamId": o_sid,
+                                        "health": max(1.0, round(o_health - 1000.0, 1))
+                                    })
+                                print(f"[Boss AI Proximity Strike] Boss húc {o_sid} ở cự ly {round(dist_sq**0.5 / 100, 1)}m (-1000 HP)")
+        except Exception as e:
+            pass
 
         # Máu Boss bị trừ theo đúng tổng lực cắn của dino người chơi
         max_hp = int(boss_db.get("max_hp", 100000))
@@ -3755,7 +3804,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     self._adjust_player_xu(
                         p["steam_id"],
                         share_xu,
-                        f"Thưởng Săn Boss Hươu AI: Gây {p['damage']:,} dame ({p['damage_pct']}%)"
+                        f"Thưởng Săn Boss AI: Gây {p['damage']:,} dame ({p['damage_pct']}%)"
                     )
 
                     reward_distribution.append({
@@ -3796,11 +3845,22 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             boss_db["current_hp"] = 0
             boss_db["is_settled"] = True
 
+            # Hạ gục nhân vật Bot Boss
+            if boss_sid:
+                try:
+                    self.fetch_islepilot("/commands", method="POST", body_data={
+                        "action": "slay",
+                        "steamId": boss_sid,
+                        "reason": f"Siêu Boss AI đã bị các dũng sĩ tiêu diệt!"
+                    })
+                except Exception:
+                    pass
+
             # Gửi thông báo toàn server khi Boss bị hạ
             try:
                 self.fetch_islepilot("/commands", method="POST", body_data={
                     "action": "announce",
-                    "message": f"🎉 BOSS HƯƠU AI 100.000 HP ĐÃ BỊ TIÊU DIỆT! Dũng sĩ kết liễu: {killer_name}. Đã chia 5.000 Xu cho các thợ săn!"
+                    "message": f"🎉 SIÊU BOSS AI 100.000 HP ĐÃ BỊ TIÊU DIỆT! Dũng sĩ kết liễu: {killer_name}. Đã chia 5.000 Xu cho các thợ săn!"
                 })
             except Exception:
                 pass
@@ -3823,10 +3883,13 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             except Exception:
                 pass
 
+        default_bot_sid = str(config.get("BOSS_BOT_STEAM_ID", "76561198975489051")).strip()
+
         self.send_json_response({
             "ok": True,
             "boss": boss_db,
             "is_admin": is_admin,
+            "boss_bot_steam_id": default_bot_sid,
             "online_players": online_players
         })
 
@@ -3840,7 +3903,40 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         path = self.path.split("?")[0]
         boss_db = self._get_boss_db()
 
-        # 1. Bật / Tắt / Hồi Sinh Boss Hươu AI (Chỉ Admin)
+        # 1. Lưu cấu hình Bot Boss cố định
+        if path == "/api/boss/save-bot":
+            is_admin, _ = self.is_admin_request()
+            if not is_admin:
+                self.send_json_response({"ok": False, "error": "Chỉ Quản Trị Viên (Admin) mới có quyền lưu cấu hình Bot!"}, status=403)
+                return
+            new_bot_sid = str(payload.get("boss_bot_steam_id") or "").strip()
+            new_species = str(payload.get("species") or "Triceratops").strip()
+            if not new_bot_sid:
+                self.send_json_response({"ok": False, "error": "Steam ID không hợp lệ!"}, status=400)
+                return
+            config["BOSS_BOT_STEAM_ID"] = new_bot_sid
+            boss_db["boss_steam_id"] = new_bot_sid
+            boss_db["species"] = new_species
+            self._save_boss_db(boss_db)
+            try:
+                base_dir = os.path.dirname(os.path.abspath(__file__))
+                cfg_path = os.path.join(base_dir, "config.json")
+                with open(cfg_path, "w", encoding="utf-8") as f:
+                    json.dump(config, f, indent=2, ensure_ascii=False)
+                sub_cfg = os.path.join(base_dir, "3mgaming-website", "config.json")
+                if os.path.exists(os.path.dirname(sub_cfg)):
+                    with open(sub_cfg, "w", encoding="utf-8") as f:
+                        json.dump(config, f, indent=2, ensure_ascii=False)
+            except Exception:
+                pass
+            self.send_json_response({
+                "ok": True,
+                "message": f"✅ Đã lưu Bot Boss cố định: Steam {new_bot_sid} ({new_species})",
+                "boss": boss_db
+            })
+            return
+
+        # 2. Bật / Tắt / Hồi Sinh Boss AI tại Đấu Trường (Chỉ Admin)
         if path == "/api/boss/toggle":
             is_admin, _ = self.is_admin_request()
             if not is_admin:
@@ -3848,13 +3944,103 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 return
 
             action = payload.get("action", "toggle") # enable, disable, respawn
+            bot_sid = str(payload.get("boss_bot_steam_id") or config.get("BOSS_BOT_STEAM_ID") or boss_db.get("boss_steam_id") or "76561198975489051").strip()
+            chosen_species = str(payload.get("species") or boss_db.get("species") or "Triceratops").strip()
 
             if action in ["enable", "respawn"] or (action == "toggle" and not boss_db.get("active")):
-                boss_name = "🦌 SIÊU BOSS HƯƠU AI (100.000 HP)"
+                # Kiểm tra tài khoản Bot có đang online trong game không
+                bot_info = None
+                try:
+                    bot_info = self.fetch_islepilot(f"/players/{bot_sid}")
+                except Exception as e:
+                    print(f"[Boss Toggle] Lỗi kiểm tra bot player {bot_sid}: {e}")
+
+                is_bot_online = isinstance(bot_info, dict) and bot_info.get("online") is True
+                bot_name = bot_info.get("name") if (isinstance(bot_info, dict) and bot_info.get("name")) else f"Bot_{bot_sid[-4:]}"
+
+                if not is_bot_online:
+                    self.send_json_response({
+                        "ok": False,
+                        "error": f"⚠️ Tài khoản Bot Boss ({bot_name} - Steam: {bot_sid}) hiện CHƯA VÀO GAME!\n\nVui lòng đăng nhập tài khoản Bot này vào server trước khi bấm Thả Boss để Boss có thể xuất hiện tại Đấu Trường."
+                    }, status=400)
+                    return
+
+                # Triển khai Bot thành Boss Khổng Lồ 100.000 HP tại Đấu Trường
+                print(f"[Boss Spawn] Triển khai Bot {bot_sid} thành Boss {chosen_species} 100.000 HP...")
+                try:
+                    self.fetch_islepilot("/commands", method="POST", body_data={
+                        "action": "swap",
+                        "steamId": bot_sid,
+                        "species": chosen_species,
+                        "gender": "Female"
+                    })
+                except Exception as e:
+                    print(f"[Boss Spawn] Lỗi swap: {e}")
+
+                time.sleep(0.8)
+
+                try:
+                    self.fetch_islepilot("/commands", method="POST", body_data={
+                        "action": "setgrowth",
+                        "steamId": bot_sid,
+                        "growth": 1.0,
+                        "frozen": False
+                    })
+                except Exception as e:
+                    print(f"[Boss Spawn] Lỗi setgrowth: {e}")
+
+                time.sleep(0.3)
+
+                try:
+                    self.fetch_islepilot("/commands", method="POST", body_data={
+                        "action": "scale",
+                        "steamId": bot_sid,
+                        "scale": 1.8
+                    })
+                except Exception as e:
+                    print(f"[Boss Spawn] Lỗi scale: {e}")
+
+                time.sleep(0.3)
+
+                try:
+                    self.fetch_islepilot("/commands", method="POST", body_data={
+                        "action": "setstats",
+                        "steamId": bot_sid,
+                        "growth": 1.0,
+                        "health": 100000,
+                        "maxHealth": 100000,
+                        "hunger": 5000,
+                        "thirst": 1000,
+                        "stamina": 1000,
+                        "bleed": 0
+                    })
+                except Exception as e:
+                    print(f"[Boss Spawn] Lỗi setstats: {e}")
+
+                time.sleep(0.3)
+
+                # Dịch chuyển vào Đấu Trường
+                try:
+                    self.fetch_islepilot(f"/players/{bot_sid}/teleport", method="POST", body_data={"locationId": "cmvqtjyrr4ombph01vi8dknwg"})
+                except Exception as e:
+                    print(f"[Boss Spawn] Lỗi teleport: {e}")
+
+                time.sleep(0.3)
+
+                species_vi = "TRICERATOPS KHỔNG LỒ" if chosen_species.lower() == "triceratops" else chosen_species.upper()
+                try:
+                    self.fetch_islepilot("/commands", method="POST", body_data={
+                        "action": "announce",
+                        "message": f"🔥 SIÊU BOSS {species_vi} AI 100.000 HP ĐÃ XUẤT HIỆN TẠI ĐẤU TRƯỜNG! DŨNG SĨ HÃY TẬP HỢP SĂN BOSS NHẬN 5.000 XU!"
+                    })
+                except Exception:
+                    pass
+
+                boss_name = f"👑 SIÊU BOSS {species_vi} AI (100.000 HP)"
                 boss_db["active"] = True
-                boss_db["boss_steam_id"] = "AI_DEER_BOSS"
+                boss_db["boss_steam_id"] = bot_sid
                 boss_db["boss_name"] = boss_name
-                boss_db["species"] = "Deer"
+                boss_db["species"] = chosen_species
                 boss_db["max_hp"] = 100000
                 boss_db["current_hp"] = 100000
                 boss_db["damage_per_hit"] = 1000
@@ -3868,34 +4054,34 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 boss_db["dps_ranking"] = []
                 boss_db["last_killer"] = None
                 boss_db["processed_hit_keys"] = []
-
-                # Thông báo toàn server trong game
-                try:
-                    self.fetch_islepilot("/commands", method="POST", body_data={
-                        "action": "announce",
-                        "message": "🔥 SIÊU BOSS HƯƠU AI (100.000 HP) ĐÃ XUẤT HIỆN TẠI ĐẤU TRƯỜNG! DŨNG SĨ HÃY TẬP HỢP SĂN BOSS NHẬN 5.000 XU!"
-                    })
-                except Exception as e:
-                    print(f"[Boss Spawn] Lỗi announce: {e}")
-
                 self._save_boss_db(boss_db)
 
                 self.send_json_response({
                     "ok": True,
-                    "message": f"🔥 ĐÃ KÍCH HOẠT THẢ {boss_name}! Chuẩn Bot AI tự động hoàn toàn, tự xuất chiêu phản đòn 1.000 dame và sẵn sàng chiến đấu tại Đấu Trường.",
+                    "message": f"🔥 ĐÃ THẢ THÀNH CÔNG {boss_name} TẠI ĐẤU TRƯỜNG!\n\nBot ({bot_name}) đã biến hình to lớn 1.8x, máu 100.000 HP, tự phản đòn 1.000 dame và sẵn sàng chiến đấu.",
                     "boss": boss_db
                 })
                 return
 
             else:
                 # TẮT BOSS / THU HỒI
+                old_sid = str(boss_db.get("boss_steam_id") or bot_sid or "")
                 boss_db["active"] = False
                 boss_db["current_hp"] = 0
                 boss_db["is_settled"] = False
+                if old_sid:
+                    try:
+                        self.fetch_islepilot("/commands", method="POST", body_data={
+                            "action": "slay",
+                            "steamId": old_sid,
+                            "reason": "Boss AI đã được Admin thu hồi."
+                        })
+                    except Exception as e:
+                        pass
                 try:
                     self.fetch_islepilot("/commands", method="POST", body_data={
                         "action": "announce",
-                        "message": "🛑 BOSS HƯƠU AI ĐÃ ĐƯỢC THU HỒI KHỎI ĐẤU TRƯỜNG!"
+                        "message": "🛑 SIÊU BOSS AI ĐÃ ĐƯỢC THU HỒI KHỎI ĐẤU TRƯỜNG!"
                     })
                 except Exception as e:
                     pass
@@ -3903,7 +4089,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
                 self.send_json_response({
                     "ok": True,
-                    "message": "🛑 ĐÃ TẮT BOSS HƯƠU AI THÀNH CÔNG! Boss đã được thu hồi khỏi Đấu Trường.",
+                    "message": "🛑 ĐÃ TẮT VÀ THU HỒI BOSS AI THÀNH CÔNG!",
                     "boss": boss_db
                 })
                 return

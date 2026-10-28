@@ -7,15 +7,11 @@
   "SERVER_IP": "103.179.189.50",
   "SERVER_PORT": 7777,
   "MAX_SLOTS": 100,
+  "MAX_GARAGE_SLOTS": 5,
+  "GARAGE_PARK_SECONDS": 30,
   "DISCORD_URL": "https://discord.gg/f3R9mMAfms",
-  "BANK_INFO": {
-    "BANK_NAME": "VCB",
-    "ACCOUNT_NUMBER": "9899996836",
-    "ACCOUNT_HOLDER": "CHỦ SỞ HỮU SERVER",
-    "TRANSFER_NOTE": "ĐỂ MẶC ĐỊNH",
-    "QR_IMAGE": "assets/images/donate_qr.png",
-    "MOMO_PHONE": "0987654321"
-  },
+  "PORT": 8000,
+  "HOST": "0.0.0.0",
   "ADMIN_STEAM_IDS": [
     "76561199175571899",
     "76561199196418178",
@@ -26,7 +22,14 @@
     "749270027605114922"
   ],
   "ADMIN_PASSCODE": "admin3m",
-  "MAX_GARAGE_SLOTS": 5,
-  "GARAGE_PARK_SECONDS": 30,
-  "DOMAIN": "3mgaming.vn"
+  "BANK_INFO": {
+    "BANK_NAME": "VCB",
+    "ACCOUNT_NUMBER": "9899996836",
+    "ACCOUNT_HOLDER": "CHỦ SỞ HỮU SERVER",
+    "TRANSFER_NOTE": "ĐỂ MẶC ĐỊNH",
+    "QR_IMAGE": "assets/images/donate_qr.png",
+    "MOMO_PHONE": "0987654321"
+  },
+  "DOMAIN": "3mgaming.vn",
+  "BOSS_BOT_STEAM_ID": "76561198975489051"
 }
