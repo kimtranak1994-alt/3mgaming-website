@@ -1,8 +1,8 @@
 {
   "active": false,
   "boss_steam_id": "76561199175571899",
-  "boss_name": "👑 BOSS TRICERATOPS BẠO THẦN",
-  "species": "Triceratops",
+  "boss_name": "👑 BOSS HƯƠU BẠO THẦN (100.000 HP)",
+  "species": "Dryosaurus",
   "max_hp": 100000,
   "current_hp": 0,
   "weight": 100000,

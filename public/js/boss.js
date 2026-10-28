@@ -163,11 +163,11 @@ const BossHunt = {
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
               <span style="font-size: 2rem;">👑</span>
               <h1 style="font-size: 1.8rem; font-weight: 900; margin: 0; background: linear-gradient(90deg, #f87171, #fbbf24, #f43f5e); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-                ĐẤU TRƯỜNG SĂN BOSS THẦN THOẠI
+                ĐẤU TRƯỜNG SĂN BOSS HƯƠU THẦN THOẠI
               </h1>
             </div>
             <p style="color: #cbd5e1; font-size: 0.95rem; margin: 0;">
-              Thách thức <b>Boss Triceratops 100.000 HP</b> • Sát thương mặc định <b>1.000 Dame / Hít</b> • Kho thưởng <b>💰 5.000 Xu</b> chia đều theo tỉ lệ sát thương đóng góp!
+              Thách thức <b>Boss Hươu AI 100.000 HP</b> • Sát thương mặc định <b>1.000 Dame / Hít</b> • Kho thưởng <b>💰 5.000 Xu</b> chia đều theo tỉ lệ sát thương đóng góp!
             </p>
           </div>
           <div>
@@ -181,15 +181,15 @@ const BossHunt = {
         <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px;">
           <div style="display: flex; align-items: center; gap: 18px;">
             <div style="width: 80px; height: 80px; border-radius: 16px; background: radial-gradient(circle, rgba(239, 68, 68, 0.4), rgba(0,0,0,0.8)); border: 2px solid #ef4444; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);">
-              🦏
+              🦌
             </div>
             <div>
               <div style="display: flex; align-items: center; gap: 8px;">
                 <h2 style="font-size: 1.5rem; font-weight: 900; margin: 0; color: #fff;">
-                  ${boss.boss_name || '👑 BOSS TRICERATOPS BẠO THẦN'}
+                  ${boss.boss_name || '👑 BOSS HƯƠU BẠO THẦN (100.000 HP)'}
                 </h2>
                 <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); font-size: 0.75rem; font-weight: 800;">
-                  BẠO THẦN 100K HP
+                  BẠO THẦN HƯƠU 100K HP
                 </span>
               </div>
               <p style="color: #94a3b8; font-size: 0.88rem; margin: 4px 0 0;">
@@ -481,7 +481,7 @@ const BossHunt = {
         <div style="display: flex; gap: 12px; flex-wrap: wrap;">
           ${!isActive ? `
             <button class="btn-primary" style="background: linear-gradient(135deg, #ef4444, #b91c1c); font-size: 1rem; font-weight: 800; padding: 12px 24px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 0 16px rgba(239, 68, 68, 0.4);" onclick="BossHunt.adminToggle('enable')">
-              🔥 THẢ BOSS TRICERATOPS AI (100.000 HP)
+              🔥 THẢ BOSS HƯƠU AI (100.000 HP)
             </button>
           ` : `
             <button class="btn-primary" style="background: linear-gradient(135deg, #475569, #334155); font-size: 1rem; font-weight: 800; padding: 12px 24px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px;" onclick="BossHunt.adminToggle('disable')">
@@ -507,7 +507,7 @@ const BossHunt = {
       return;
     }
 
-    if (action === 'enable' && !confirm(`⚠️ XÁC NHẬN KÍCH HOẠT SĂN BOSS:\n\nBạn có chắc chắn muốn thả Boss Triceratops 100.000 HP cho Steam ID ${targetSid}?\n\nBoss sẽ sống mãi cho đến khi bạn bấm Tắt!`)) {
+    if (action === 'enable' && !confirm(`⚠️ XÁC NHẬN KÍCH HOẠT SĂN BOSS:\n\nBạn có chắc chắn muốn thả Boss Hươu AI 100.000 HP cho Steam ID ${targetSid}?\n\nBoss sẽ sống mãi cho đến khi bạn bấm Tắt!`)) {
       return;
     }
 

@@ -3542,8 +3542,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         defaults = {
             "active": False,
             "boss_steam_id": "76561199175571899",
-            "boss_name": "👑 BOSS TRICERATOPS BẠO THẦN",
-            "species": "Triceratops",
+            "boss_name": "👑 BOSS HƯƠU BẠO THẦN (100.000 HP)",
+            "species": "Dryosaurus",
             "max_hp": 100000,
             "current_hp": 100000,
             "damage_per_hit": 1000,
@@ -3654,7 +3654,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                             self.fetch_islepilot("/commands", method="POST", body_data={
                                 "action": "slay",
                                 "steamId": atk_sid,
-                                "reason": "Bị Boss Triceratops AI húc chí mạng 1.000 dame tiêu diệt!"
+                                "reason": "Bị Boss Hươu AI đá/húc chí mạng 1.000 dame tiêu diệt!"
                             })
                             print(f"[Boss AI Attack] Đã tiêu diệt người chơi {atk_sid} do hết máu (còn {cur_health} HP <= 1000)")
                         else:
@@ -3731,7 +3731,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                                     self.fetch_islepilot("/commands", method="POST", body_data={
                                         "action": "slay",
                                         "steamId": o_sid,
-                                        "reason": "Bị Boss Triceratops AI húc chí mạng 1.000 dame tiêu diệt!"
+                                        "reason": "Bị Boss Hươu AI đá/húc chí mạng 1.000 dame tiêu diệt!"
                                     })
                                 else:
                                     self.fetch_islepilot("/commands", method="POST", body_data={
@@ -3739,7 +3739,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                                         "steamId": o_sid,
                                         "health": max(1.0, round(o_health - 1000.0, 1))
                                     })
-                                print(f"[Boss AI Proximity Strike] Boss húc {o_sid} ở cự ly {round(dist_sq**0.5 / 100, 1)}m (-1000 HP)")
+                                print(f"[Boss AI Proximity Strike] Boss Hươu đá {o_sid} ở cự ly {round(dist_sq**0.5 / 100, 1)}m (-1000 HP)")
         except Exception as e:
             print(f"[Boss Proximity Strike Error] {e}")
 
@@ -3787,7 +3787,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     self._adjust_player_xu(
                         p["steam_id"],
                         share_xu,
-                        f"Thưởng Săn Boss Triceratops: Gây {p['damage']:,} dame ({p['damage_pct']}%)"
+                        f"Thưởng Săn Boss Hươu: Gây {p['damage']:,} dame ({p['damage_pct']}%)"
                     )
 
                     reward_distribution.append({
@@ -3890,15 +3890,15 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     }, status=400)
                     return
 
-                # 1. Swap sang loài Triceratops
+                # 1. Swap sang loài Hươu (Dryosaurus)
                 try:
                     swap_res = self.fetch_islepilot("/commands", method="POST", body_data={
                         "action": "swap",
                         "steamId": target_sid,
-                        "species": "Triceratops",
+                        "species": payload.get("species") or "Dryosaurus",
                         "gender": "Female"
                     })
-                    print(f"[Boss Spawn] Swap Triceratops cho {target_sid}: {swap_res}")
+                    print(f"[Boss Spawn] Swap Dryosaurus (Hươu) cho {target_sid}: {swap_res}")
                 except Exception as e:
                     print(f"[Boss Spawn] Lỗi swap: {e}")
 
@@ -3922,7 +3922,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     self.fetch_islepilot("/commands", method="POST", body_data={
                         "action": "scale",
                         "steamId": target_sid,
-                        "scale": 1.35
+                        "scale": 1.8
                     })
                 except Exception as e:
                     print(f"[Boss Spawn] Lỗi scale: {e}")
@@ -3959,16 +3959,16 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 try:
                     self.fetch_islepilot("/commands", method="POST", body_data={
                         "action": "announce",
-                        "message": "🔥 BOSS TRICERATOPS 100.000 HP ĐÃ XUẤT HIỆN TẠI ĐẤU TRƯỜNG! HÃY TẬP HỢP SĂN BOSS NHẬN 5.000 XU!"
+                        "message": "🔥 BOSS HƯƠU THẦN THOẠI 100.000 HP ĐÃ XUẤT HIỆN TẠI ĐẤU TRƯỜNG! HÃY TẬP HỢP SĂN BOSS NHẬN 5.000 XU!"
                     })
                 except Exception as e:
                     print(f"[Boss Spawn] Lỗi announce: {e}")
 
-                boss_name = f"👑 BOSS TRICERATOPS ({p_info.get('name', 'Admin')})" if p_info.get('name') else "👑 BOSS TRICERATOPS BẠO THẦN"
+                boss_name = f"👑 BOSS HƯƠU ({p_info.get('name', 'Admin')})" if p_info.get('name') else "👑 BOSS HƯƠU BẠO THẦN (100.000 HP)"
                 boss_db["active"] = True
                 boss_db["boss_steam_id"] = target_sid
                 boss_db["boss_name"] = boss_name
-                boss_db["species"] = "Triceratops"
+                boss_db["species"] = payload.get("species") or "Dryosaurus"
                 boss_db["max_hp"] = 100000
                 boss_db["current_hp"] = 100000
                 boss_db["damage_per_hit"] = 1000
@@ -5872,7 +5872,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                         "name": "triceraptor",
                         "price": 0,
                         "price_display": "$ 0",
-                        "species": "Triceratops",
+                        "species": payload.get("species") or "Dryosaurus",
                         "species_name": "Triceratops",
                         "image": "https://islepilot.eu/cdn/dino-art/render/Triceratops.webp",
                         "description": "Xác tươi, cho thịt · Triceratops · kích cỡ 100%"
