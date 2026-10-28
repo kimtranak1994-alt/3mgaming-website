@@ -556,6 +556,11 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             self.handle_arena_get()
             return
 
+        # 9d. Săn Boss Thần Thoại & Phần Thưởng 5.000 Xu
+        elif self.path.startswith("/api/boss"):
+            self.handle_boss_get()
+            return
+
         # 10. Gara Khủng Long (Live từ IslePilot)
 
         elif self.path.startswith("/api/server/garage"):
@@ -946,6 +951,10 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
         elif self.path.startswith("/api/arena/"):
             self.handle_arena_post()
+            return
+
+        elif self.path.startswith("/api/boss/"):
+            self.handle_boss_post()
             return
 
         elif self.path == "/api/server/teleport":
@@ -3380,6 +3389,271 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                         "match": target_match
                     })
                 return
+
+        self.send_json_response({"ok": False, "error": "Endpoint không tồn tại"}, status=404)
+
+    # =========================================================================
+    # MODULE SĂN BOSS TRICERATOPS 100.000 HP & PHẦN THƯỞNG 5.000 XU
+    # =========================================================================
+
+    def _get_boss_db(self):
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        primary_file = os.path.join(base_dir, "boss_state.json")
+        backup_file = os.path.join(base_dir, ".persistent_boss_state.json")
+        for fpath in [backup_file, primary_file]:
+            if os.path.exists(fpath):
+                try:
+                    with open(fpath, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                        if isinstance(data, dict):
+                            return data
+                except Exception:
+                    pass
+        return {
+            "active": False,
+            "boss_steam_id": "76561199175571899",
+            "boss_name": "👑 BOSS TRICERATOPS BẠO THẦN",
+            "species": "Triceratops",
+            "max_hp": 100000,
+            "current_hp": 100000,
+            "weight": 100000,
+            "weight_label": "100.0 Tấn (100,000 kg)",
+            "reward_xu": 5000,
+            "location_id": "cmvqtjyrr4ombph01vi8dknwg",
+            "location_name": "ĐẤU TRƯỜNG",
+            "spawned_at": None,
+            "last_killer": None,
+            "kill_history": []
+        }
+
+    def _save_boss_db(self, data):
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        primary_file = os.path.join(base_dir, "boss_state.json")
+        sub_file = os.path.join(base_dir, "3mgaming-website", "boss_state.json")
+        backup_file = os.path.join(base_dir, ".persistent_boss_state.json")
+        for fpath in [primary_file, sub_file, backup_file]:
+            try:
+                os.makedirs(os.path.dirname(fpath), exist_ok=True)
+                with open(fpath, "w", encoding="utf-8") as f:
+                    json.dump(data, f, ensure_ascii=False, indent=2)
+            except Exception:
+                pass
+
+    def _auto_check_boss_status(self, boss_db):
+        if not boss_db.get("active"):
+            return
+        boss_sid = str(boss_db.get("boss_steam_id") or "")
+        if not boss_sid:
+            return
+
+        spawned_at_str = boss_db.get("spawned_at")
+        spawned_at_ts = 0.0
+        if spawned_at_str:
+            try:
+                clean_str = spawned_at_str.replace("Z", "+00:00")
+                spawned_at_ts = datetime.datetime.fromisoformat(clean_str).timestamp()
+            except Exception:
+                pass
+
+        try:
+            remote_data = self.fetch_islepilot("/combat-log") or {}
+            hits = remote_data.get("hits", [])
+        except Exception:
+            hits = []
+
+        rewarded_hit_ids = {str(k.get("hit_id")) for k in boss_db.get("kill_history", []) if k.get("hit_id")}
+        total_dmg = 0.0
+
+        for h in hits:
+            vic_sid = str(h.get("victimSteamId") or "")
+            if vic_sid != boss_sid:
+                continue
+
+            hit_at = h.get("at")
+            hit_ts = 0.0
+            if hit_at:
+                try:
+                    clean_hit_at = hit_at.replace("Z", "+00:00")
+                    hit_ts = datetime.datetime.fromisoformat(clean_hit_at).timestamp()
+                except Exception:
+                    pass
+
+            if spawned_at_ts > 0 and hit_ts > 0 and hit_ts < (spawned_at_ts - 5.0):
+                continue
+
+            damage = float(h.get("damage") or 0.0)
+            total_dmg += damage
+
+            if h.get("killed"):
+                hit_id = str(h.get("id") or f"{vic_sid}_{hit_ts}")
+                if hit_id in rewarded_hit_ids:
+                    continue
+
+                atk_sid = str(h.get("attackerSteamId") or "")
+                if not atk_sid:
+                    continue
+
+                killer_name = f"Chiến Binh_{atk_sid[-4:]}"
+                try:
+                    kp = self.fetch_islepilot(f"/players/{atk_sid}")
+                    if isinstance(kp, dict) and kp.get("name"):
+                        killer_name = kp["name"]
+                except Exception:
+                    pass
+
+                reward_xu = int(boss_db.get("reward_xu", 5000))
+                # Tự động cộng 5000 Xu hệ thống cho người dứt điểm Boss
+                self._adjust_player_xu(atk_sid, reward_xu, f"Vinh danh hạ gục Boss Triceratops 100.000 HP")
+
+                kill_record = {
+                    "hit_id": hit_id,
+                    "killer_steam_id": atk_sid,
+                    "killer_name": killer_name,
+                    "reward_xu": reward_xu,
+                    "killed_at": datetime.datetime.now().isoformat(),
+                    "ability": h.get("ability", "Tấn công")
+                }
+                boss_db.setdefault("kill_history", []).insert(0, kill_record)
+                boss_db["last_killer"] = kill_record
+                boss_db["current_hp"] = 0
+                self._save_boss_db(boss_db)
+                return
+
+        # Nếu chưa chết, tính lượng máu còn lại theo thời gian thực
+        calc_hp = max(1, int(boss_db.get("max_hp", 100000) - total_dmg))
+        if boss_db.get("current_hp") != calc_hp and boss_db.get("current_hp", 0) > 0:
+            boss_db["current_hp"] = calc_hp
+            self._save_boss_db(boss_db)
+
+    def handle_boss_get(self):
+        boss_db = self._get_boss_db()
+        self._auto_check_boss_status(boss_db)
+
+        is_admin, _ = self.is_admin_request()
+        online_players = []
+        if is_admin:
+            try:
+                p_res = self.fetch_islepilot("/players") or {}
+                online_players = p_res.get("players", [])
+            except Exception:
+                pass
+
+        self.send_json_response({
+            "ok": True,
+            "boss": boss_db,
+            "is_admin": is_admin,
+            "online_players": online_players
+        })
+
+    def handle_boss_post(self):
+        try:
+            length = int(self.headers.get("Content-Length", 0))
+            payload = json.loads(self.rfile.read(length).decode("utf-8")) if length > 0 else {}
+        except Exception:
+            payload = {}
+
+        path = self.path.split("?")[0]
+        boss_db = self._get_boss_db()
+
+        # 1. Bật / Tắt / Hồi Sinh Boss (Chỉ Admin)
+        if path == "/api/boss/toggle":
+            is_admin, _ = self.is_admin_request()
+            if not is_admin:
+                self.send_json_response({"ok": False, "error": "Chỉ Quản Trị Viên (Admin) mới có quyền bật/tắt Boss!"}, status=403)
+                return
+
+            action = payload.get("action", "toggle") # enable, disable, respawn
+            target_sid = str(payload.get("target_steam_id") or self.get_active_steam_id() or "76561199175571899").strip()
+
+            if action in ["enable", "respawn"] or (action == "toggle" and not boss_db.get("active")):
+                # 1. Swap sang Triceratops Growth 1.0
+                try:
+                    self.fetch_islepilot("/commands", method="POST", body_data={
+                        "action": "swap",
+                        "steamId": target_sid,
+                        "character": "Triceratops",
+                        "growth": 1.0,
+                        "gender": "Female",
+                        "frozen": False
+                    })
+                except Exception:
+                    pass
+
+                time.sleep(0.3)
+
+                # 2. Đặt chỉ số siêu Boss 100.000 HP, 100 Tấn, bất tử đói khát
+                try:
+                    self.fetch_islepilot("/commands", method="POST", body_data={
+                        "action": "setstats",
+                        "steamId": target_sid,
+                        "growth": 1.0,
+                        "health": 100000,
+                        "maxHealth": 100000,
+                        "hunger": 5000,
+                        "thirst": 1000,
+                        "stamina": 1000,
+                        "bleed": 0
+                    })
+                except Exception:
+                    pass
+
+                # 3. Dịch chuyển đến Đấu Trường nếu tùy chọn bật
+                if payload.get("teleport", True):
+                    try:
+                        self.fetch_islepilot(f"/players/{target_sid}/teleport", method="POST", body_data={"locationId": "cmvqtjyrr4ombph01vi8dknwg"})
+                    except Exception:
+                        pass
+
+                boss_db["active"] = True
+                boss_db["boss_steam_id"] = target_sid
+                boss_db["max_hp"] = 100000
+                boss_db["current_hp"] = 100000
+                boss_db["spawned_at"] = datetime.datetime.now().isoformat()
+                boss_db["last_killer"] = None
+                self._save_boss_db(boss_db)
+
+                self.send_json_response({
+                    "ok": True,
+                    "message": "🔥 ĐÃ KÍCH HOẠT THẢ BOSS TRICERATOPS (100.000 HP)! Boss đang sống và sẵn sàng chiến đấu tại Đấu Trường.",
+                    "boss": boss_db
+                })
+                return
+
+            else:
+                # TẮT BOSS / THU HỒI
+                old_sid = str(boss_db.get("boss_steam_id") or "")
+                boss_db["active"] = False
+                boss_db["current_hp"] = 0
+                if old_sid and payload.get("slay", False):
+                    try:
+                        self.fetch_islepilot("/commands", method="POST", body_data={"action": "slay", "steamId": old_sid})
+                    except Exception:
+                        pass
+                self._save_boss_db(boss_db)
+
+                self.send_json_response({
+                    "ok": True,
+                    "message": "🛑 ĐÃ TẮT BOSS THÀNH CÔNG! Boss đã được thu hồi khỏi Đấu Trường.",
+                    "boss": boss_db
+                })
+                return
+
+        # 2. Người chơi dịch chuyển đến Đấu Trường Săn Boss
+        elif path == "/api/boss/teleport":
+            steam_id = payload.get("steam_id") or self.get_active_steam_id()
+            if not steam_id:
+                self.send_json_response({"ok": False, "error": "Vui lòng đăng nhập Steam trước khi dịch chuyển!"}, status=401)
+                return
+
+            try:
+                res = self.fetch_islepilot(f"/players/{steam_id}/teleport", method="POST", body_data={"locationId": "cmvqtjyrr4ombph01vi8dknwg"})
+                if res and (res.get("ok") or res.get("success") or "commandId" in res):
+                    self.send_json_response({"ok": True, "message": "Đã dịch chuyển đến Đấu Trường Săn Boss thành công!"})
+                else:
+                    self.send_json_response({"ok": False, "error": "Không thể dịch chuyển tức thì, vui lòng thử lại sau ít giây!"}, status=400)
+            except Exception as e:
+                self.send_json_response({"ok": False, "error": f"Lỗi dịch chuyển: {e}"}, status=500)
+            return
 
         self.send_json_response({"ok": False, "error": "Endpoint không tồn tại"}, status=404)
 

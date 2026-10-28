@@ -1,0 +1,40 @@
+{
+  "active": false,
+  "boss_steam_id": "76561199175571899",
+  "boss_name": "👑 BOSS TRICERATOPS BẠO THẦN",
+  "species": "Triceratops",
+  "max_hp": 100000,
+  "current_hp": 0,
+  "weight": 100000,
+  "weight_label": "100.0 Tấn (100,000 kg)",
+  "reward_xu": 5000,
+  "location_id": "cmvqtjyrr4ombph01vi8dknwg",
+  "location_name": "ĐẤU TRƯỜNG",
+  "spawned_at": "2026-10-28T15:48:12.854798",
+  "last_killer": {
+    "hit_id": "boss_fatal_hit_1793177293327",
+    "killer_steam_id": "76561198657515598",
+    "killer_name": "haigialam20375",
+    "reward_xu": 5000,
+    "killed_at": "2026-10-28T15:48:14.089325",
+    "ability": "Cắn xuyên giáp"
+  },
+  "kill_history": [
+    {
+      "hit_id": "boss_fatal_hit_1793177293327",
+      "killer_steam_id": "76561198657515598",
+      "killer_name": "haigialam20375",
+      "reward_xu": 5000,
+      "killed_at": "2026-10-28T15:48:14.089325",
+      "ability": "Cắn xuyên giáp"
+    },
+    {
+      "hit_id": "boss_fatal_hit_1793177242569",
+      "killer_steam_id": "76561198657515598",
+      "killer_name": "Dũng Sĩ Huyền Thoại",
+      "reward_xu": 5000,
+      "killed_at": "2026-10-28T15:47:22.571456",
+      "ability": "Cắn xuyên giáp"
+    }
+  ]
+}
