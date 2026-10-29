@@ -525,7 +525,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             return True, "passcode"
 
         admin_steam_ids = [str(sid) for sid in config.get("ADMIN_STEAM_IDS", [
-            "76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684"
+            "76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684", "76561199319732549"
         ])]
         admin_discord_ids = [str(did) for did in config.get("ADMIN_DISCORD_IDS", [
             "749270027605114922"
@@ -1207,7 +1207,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
             if not is_admin:
                 admin_steam_ids = [str(sid) for sid in config.get("ADMIN_STEAM_IDS", [
-                    "76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684"
+                    "76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684", "76561199319732549"
                 ])]
                 req_admin_sid = str(payload.get("admin_steam_id") or self.headers.get("X-Admin-Steam-Id") or "")
                 req_passcode = str(payload.get("passcode") or self.headers.get("X-Admin-Passcode") or "")
@@ -5769,7 +5769,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
                 ref_code = found
 
-            elif steam_id in ["76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684"]:
+            elif steam_id in ["76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684", "76561199319732549"]:
 
                 ref_code = "JCD9JR"
 
@@ -6116,7 +6116,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
                 ref_code = found
 
-            elif steam_id in ["76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684"]:
+            elif steam_id in ["76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684", "76561199319732549"]:
 
                 ref_code = "JCD9JR"
 
@@ -6618,7 +6618,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
                 ref_code = found
 
-            elif steam_id in ["76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684"]:
+            elif steam_id in ["76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684", "76561199319732549"]:
 
                 ref_code = "JCD9JR"
 
@@ -6965,7 +6965,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
                 ref_code = found
 
-            elif steam_id in ["76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684"]:
+            elif steam_id in ["76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684", "76561199319732549"]:
 
                 ref_code = "JCD9JR"
 
@@ -7321,7 +7321,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
                 ref_code = found
 
-            elif steam_id in ["76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684"]:
+            elif steam_id in ["76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684", "76561199319732549"]:
 
                 ref_code = "JCD9JR"
 
@@ -7668,7 +7668,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
                 ref_code = found
 
-            elif steam_id in ["76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684"]:
+            elif steam_id in ["76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684", "76561199319732549"]:
 
                 ref_code = "JCD9JR"
 
@@ -8170,7 +8170,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
                 ref_code = found
 
-            elif steam_id in ["76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684"]:
+            elif steam_id in ["76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684", "76561199319732549"]:
 
                 ref_code = "JCD9JR"
 
@@ -8517,7 +8517,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
                 ref_code = found
 
-            elif steam_id in ["76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684"]:
+            elif steam_id in ["76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684", "76561199319732549"]:
 
                 ref_code = "JCD9JR"
 
@@ -8880,7 +8880,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
                 ref_code = found
 
-            elif steam_id in ["76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684"]:
+            elif steam_id in ["76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684", "76561199319732549"]:
 
                 ref_code = "JCD9JR"
 
