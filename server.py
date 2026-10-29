@@ -297,21 +297,114 @@ def save_custom_name(dino_id, name):
 
 CLAIMED_QUESTS_FILE = os.path.join(os.path.dirname(__file__), "claimed_quests.json")
 
+def _get_claimed_quests_paths():
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    primary_file = os.path.join(base_dir, "claimed_quests.json")
+    sub_file = os.path.join(base_dir, "3mgaming-website", "claimed_quests.json")
+    backup_file = os.path.join(base_dir, ".persistent_claimed_quests.json")
+    return [backup_file, primary_file, sub_file]
+
 def load_claimed_quests():
-    if os.path.exists(CLAIMED_QUESTS_FILE):
-        try:
-            with open(CLAIMED_QUESTS_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except:
-            pass
-    return {}
+    paths = _get_claimed_quests_paths()
+    merged = {}
+    for fpath in paths:
+        if os.path.exists(fpath):
+            try:
+                with open(fpath, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    if isinstance(data, dict):
+                        for sid, val in data.items():
+                            sid_str = str(sid).strip()
+                            if sid_str not in merged:
+                                merged[sid_str] = val
+                            elif isinstance(val, dict) and isinstance(merged[sid_str], dict):
+                                merged[sid_str].update(val)
+                            elif isinstance(val, list) and isinstance(merged[sid_str], list):
+                                for item in val:
+                                    if item not in merged[sid_str]:
+                                        merged[sid_str].append(item)
+            except Exception:
+                pass
+    return merged
 
 def save_claimed_quests(data):
-    try:
-        with open(CLAIMED_QUESTS_FILE, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-    except Exception as e:
-        print(f"Error saving claimed_quests: {e}")
+    paths = _get_claimed_quests_paths()
+    for fpath in paths:
+        try:
+            os.makedirs(os.path.dirname(fpath), exist_ok=True)
+            with open(fpath, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            print(f"Error saving claimed_quests to {fpath}: {e}")
+
+def _is_quest_claimed(steam_id, quest_id, period_key, progress_id, claimed_db):
+    sid = str(steam_id).strip()
+    qid = str(quest_id).strip()
+    pkey = str(period_key or "").strip()
+    pid = str(progress_id or "").strip()
+
+    user_claims = claimed_db.get(sid)
+    if not user_claims:
+        return False, None
+
+    # 1. Trường hợp lưu kiểu Dict (Mới, chuẩn xác theo ngày/tuần)
+    if isinstance(user_claims, dict):
+        if pkey:
+            claim_key = f"{qid}_{pkey}"
+            if claim_key in user_claims:
+                rec = user_claims[claim_key]
+                return True, rec.get("claimed_at") if isinstance(rec, dict) else str(rec)
+        if pid and pid in user_claims:
+            rec = user_claims[pid]
+            return True, rec.get("claimed_at") if isinstance(rec, dict) else str(rec)
+        if pkey:
+            for k, rec in user_claims.items():
+                if isinstance(rec, dict) and str(rec.get("quest_id")) == qid and str(rec.get("period_key")) == pkey:
+                    return True, rec.get("claimed_at")
+
+    # 2. Trường hợp tương thích ngược dữ liệu List cũ
+    elif isinstance(user_claims, list):
+        if pkey and f"{qid}_{pkey}" in user_claims:
+            return True, None
+        if pid and pid in user_claims:
+            return True, None
+        if qid in user_claims:
+            return True, None
+
+    return False, None
+
+def _record_quest_claim(steam_id, quest_id, period_key, progress_id, quest_name, amount, claimed_db):
+    sid = str(steam_id).strip()
+    qid = str(quest_id).strip()
+    today_vn = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=7))).strftime("%Y-%m-%d")
+    pkey = str(period_key or today_vn).strip()
+    pid = str(progress_id or "").strip()
+
+    if sid not in claimed_db or not isinstance(claimed_db[sid], dict):
+        # Chuyển đổi list cũ sang dict nếu cần
+        old_list = claimed_db.get(sid, []) if isinstance(claimed_db.get(sid), list) else []
+        claimed_db[sid] = {}
+        for old_id in old_list:
+            claimed_db[sid][str(old_id)] = {"quest_id": str(old_id), "period_key": pkey, "claimed_at": None}
+
+    user_claims = claimed_db[sid]
+    now_iso = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=7))).isoformat()
+
+    record = {
+        "quest_id": qid,
+        "quest_name": quest_name,
+        "period_key": pkey,
+        "progress_id": pid,
+        "amount": amount,
+        "claimed_at": now_iso
+    }
+
+    claim_key = f"{qid}_{pkey}"
+    user_claims[claim_key] = record
+    if pid:
+        user_claims[pid] = record
+
+    save_claimed_quests(claimed_db)
 
 def srgb_byte_to_linear(b):
 
@@ -5592,6 +5685,1558 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
             print(f"[Quest Claim Error] {e}")
 
+            self.send_json_response({"ok": False, "message": f"Lỗi xử lý nhận thưởng: {e}"}, 500)
+
+    def handle_player_skins(self):
+
+        steam_id = self.get_active_steam_id()
+
+        remote = self.fetch_islepilot(f"/players/{steam_id}/skins")
+
+        if remote and "skins" in remote:
+
+            raw_skins = remote.get("skins", [])
+
+            skins = [self.enrich_skin_data(s) for s in raw_skins]
+
+            self.send_json_response({"skins": skins})
+
+            return
+
+        self.send_json_response({"skins": []})
+
+    def handle_referral(self):
+
+        steam_id = self.get_active_steam_id()
+
+        data = load_referrals()
+
+        # Xác định mã giới thiệu
+
+        ref_code = "JCD9JR"
+
+        if steam_id:
+
+            found = None
+
+            for c, info in data.get("codes", {}).items():
+
+                if info.get("owner_steam_id") == steam_id:
+
+                    found = c
+
+                    break
+
+            if found:
+
+                ref_code = found
+
+            elif steam_id in ["76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684"]:
+
+                ref_code = "JCD9JR"
+
+                data.setdefault("codes", {})["JCD9JR"] = {"owner_steam_id": steam_id, "owner_name": "Admin Server 3MGAMING"}
+
+                save_referrals(data)
+
+            else:
+
+                import hashlib
+
+                h = hashlib.sha256(steam_id.encode()).hexdigest().upper()
+
+                chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+
+                ref_code = "".join(chars[int(h[i*2:i*2+2], 16) % len(chars)] for i in range(6))
+
+                data.setdefault("codes", {})[ref_code] = {"owner_steam_id": steam_id}
+
+                save_referrals(data)
+
+        # Trỏ liên kết trực tiếp bằng Web của server (không trỏ trang cũ islepilot.eu)
+
+        host = self.headers.get("Host") or "localhost:8000"
+
+        proto = "https" if self.headers.get("X-Forwarded-Proto") == "https" else "http"
+
+        referral_link = f"{proto}://{host}/#referral?ref={ref_code}"
+
+        invites_list = data.get("invites", {}).get(ref_code, [])
+
+        invited_count = len(invites_list)
+
+        rewarded_count = sum(1 for inv in invites_list if inv.get("rewarded") or inv.get("playtime_minutes", 0) >= 60)
+
+        earned = rewarded_count * 5000
+
+        applied_code = data.get("applied", {}).get(steam_id, None)
+
+        self.send_json_response({
+
+            "ok": True,
+
+            "steam_id": steam_id,
+
+            "code": ref_code,
+
+            "referral_code": ref_code,
+
+            "referral_link": referral_link,
+
+            "invited_count": invited_count,
+
+            "rewarded_count": rewarded_count,
+
+            "earned": earned,
+
+            "min_minutes": 60,
+
+            "for_referrer": {"amount": "5,000", "currency": "3M"},
+
+            "for_referee": {"amount": "700", "currency": "3M"},
+
+            "invites": invites_list,
+
+            "applied_code": applied_code
+
+        })
+
+    def handle_referral_apply(self):
+
+        try:
+
+            length = int(self.headers.get("Content-Length", 0))
+
+            payload = json.loads(self.rfile.read(length).decode("utf-8")) if length > 0 else {}
+
+            code = payload.get("code", "").strip().upper()
+
+            steam_id = payload.get("steam_id") or self.get_active_steam_id()
+
+            name = payload.get("name") or "Người chơi"
+
+            if not code:
+
+                self.send_json_response({"ok": False, "error": "Vui lòng nhập mã giới thiệu!"}, 400)
+
+                return
+
+            data = load_referrals()
+
+            code_info = data.get("codes", {}).get(code)
+
+            if not code_info and code != "JCD9JR":
+
+                self.send_json_response({"ok": False, "error": f"Mã giới thiệu '{code}' không hợp lệ hoặc không tồn tại!"}, 400)
+
+                return
+
+            owner_id = code_info.get("owner_steam_id") if code_info else "76561199575258338"
+
+            if steam_id and steam_id == owner_id:
+
+                self.send_json_response({"ok": False, "error": "Bạn không thể tự dùng mã giới thiệu của chính mình!"}, 400)
+
+                return
+
+            applied_map = data.setdefault("applied", {})
+
+            if steam_id in applied_map:
+
+                current_code = applied_map[steam_id]
+
+                self.send_json_response({
+
+                    "ok": True,
+
+                    "already": True,
+
+                    "code": current_code,
+
+                    "message": f"Bạn đã áp dụng mã giới thiệu '{current_code}' rồi."
+
+                })
+
+                return
+
+            # Ghi nhận người được mời vào hệ thống
+
+            applied_map[steam_id] = code
+
+            invites = data.setdefault("invites", {}).setdefault(code, [])
+
+            if not any(i.get("steam_id") == steam_id for i in invites):
+
+                invites.append({
+
+                    "steam_id": steam_id,
+
+                    "name": name,
+
+                    "joined_at": int(time.time()),
+
+                    "playtime_minutes": 20,
+
+                    "status": "Đang tham gia · 20/60 phút",
+
+                    "rewarded": False
+
+                })
+
+            save_referrals(data)
+
+            self.send_json_response({
+
+                "ok": True,
+
+                "success": True,
+
+                "code": code,
+
+                "message": f"Áp dụng mã '{code}' thành công! Khi chơi đủ 60 phút bạn sẽ nhận 700 3M và người mời nhận 5,000 3M."
+
+            })
+
+        except Exception as e:
+
+            print(f"[Referral Apply Error] {e}")
+
+            self.send_json_response({"ok": False, "error": "Lỗi xử lý máy chủ khi áp dụng mã."}, 500)
+
+    def handle_quests(self):
+
+        steam_id = self.get_active_steam_id()
+
+        remote = self.fetch_islepilot(f"/players/{steam_id}/quests")
+
+        if remote and "quests" in remote:
+
+            claimed_db = load_claimed_quests()
+
+            user_claimed = claimed_db.get(steam_id, [])
+
+            for q in remote["quests"]:
+
+                q_id = q.get("id")
+
+                prog_id = q.get("progressId")
+
+                if (q_id in user_claimed or (prog_id and prog_id in user_claimed)) and not q.get("claimedAt"):
+
+                    q["claimedAt"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+            self.send_json_response(remote)
+
+            return
+
+        self.send_json_response({"quests": []})
+
+    def handle_claim_quest(self):
+
+        try:
+
+            content_length = int(self.headers.get("Content-Length", 0))
+
+            body = self.rfile.read(content_length).decode("utf-8") if content_length > 0 else "{}"
+
+            payload = json.loads(body) if body else {}
+
+            steam_id = str(payload.get("steam_id") or self.get_active_steam_id()).strip()
+
+            quest_id = str(payload.get("quest_id") or "").strip()
+
+            progress_id = str(payload.get("progress_id") or "").strip()
+
+            amount = int(payload.get("amount", 0))
+
+            quest_name = str(payload.get("quest_name") or "Nhiệm vụ").strip()
+
+            if not quest_id:
+
+                self.send_json_response({"ok": False, "message": "Thiếu mã nhiệm vụ!"}, 400)
+
+                return
+
+            claimed_db = load_claimed_quests()
+
+            user_claimed = claimed_db.get(steam_id, [])
+
+            if quest_id in user_claimed or (progress_id and progress_id in user_claimed):
+
+                self.send_json_response({"ok": False, "message": "Nhiệm vụ này đã nhận thưởng trước đó!"}, 400)
+
+                return
+
+            # 1. Thử gọi API IslePilot /quests/claim nếu có progressId
+            if progress_id:
+
+                try:
+
+                    self.fetch_islepilot(f"/players/{steam_id}/quests/claim", method="POST", body_data={"progressId": progress_id})
+
+                except Exception as e:
+
+                    print(f"[Quest Claim IslePilot Notice] {e}")
+
+            # 2. Cộng tiền Xu trực tiếp vào ví người chơi trên IslePilot qua /currency (Scope: currency:grant)
+            new_balance = None
+
+            if amount > 0:
+
+                cur_res = self.fetch_islepilot(
+
+                    f"/players/{steam_id}/currency",
+
+                    method="POST",
+
+                    body_data={"amount": amount, "reason": f"Thưởng hoàn thành nhiệm vụ: {quest_name}"}
+
+                )
+
+                if cur_res and "balance" in cur_res:
+
+                    new_balance = cur_res.get("balance")
+
+            # 3. Lưu lại tiến trình đã nhận thưởng vào cache
+            if steam_id not in claimed_db:
+
+                claimed_db[steam_id] = []
+
+            if quest_id not in claimed_db[steam_id]:
+
+                claimed_db[steam_id].append(quest_id)
+
+            if progress_id and progress_id not in claimed_db[steam_id]:
+
+                claimed_db[steam_id].append(progress_id)
+
+            save_claimed_quests(claimed_db)
+
+            self.send_json_response({
+
+                "ok": True,
+
+                "success": True,
+
+                "message": f"Nhận thành công +{amount} Xu!",
+
+                "reward_amount": amount,
+
+                "balance": new_balance,
+
+                "quest_id": quest_id
+
+            })
+
+        except Exception as e:
+
+            print(f"[Quest Claim Error] {e}")
+
+            self.send_json_response({"ok": False, "message": f"Lỗi xử lý nhận thưởng: {e}"}, 500)
+
+    def handle_player_skins(self):
+
+        steam_id = self.get_active_steam_id()
+
+        remote = self.fetch_islepilot(f"/players/{steam_id}/skins")
+
+        if remote and "skins" in remote:
+
+            raw_skins = remote.get("skins", [])
+
+            skins = [self.enrich_skin_data(s) for s in raw_skins]
+
+            self.send_json_response({"skins": skins})
+
+            return
+
+        self.send_json_response({"skins": []})
+
+    def handle_referral(self):
+
+        steam_id = self.get_active_steam_id()
+
+        data = load_referrals()
+
+        # Xác định mã giới thiệu
+
+        ref_code = "JCD9JR"
+
+        if steam_id:
+
+            found = None
+
+            for c, info in data.get("codes", {}).items():
+
+                if info.get("owner_steam_id") == steam_id:
+
+                    found = c
+
+                    break
+
+            if found:
+
+                ref_code = found
+
+            elif steam_id in ["76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684"]:
+
+                ref_code = "JCD9JR"
+
+                data.setdefault("codes", {})["JCD9JR"] = {"owner_steam_id": steam_id, "owner_name": "Admin Server 3MGAMING"}
+
+                save_referrals(data)
+
+            else:
+
+                import hashlib
+
+                h = hashlib.sha256(steam_id.encode()).hexdigest().upper()
+
+                chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+
+                ref_code = "".join(chars[int(h[i*2:i*2+2], 16) % len(chars)] for i in range(6))
+
+                data.setdefault("codes", {})[ref_code] = {"owner_steam_id": steam_id}
+
+                save_referrals(data)
+
+        # Trỏ liên kết trực tiếp bằng Web của server (không trỏ trang cũ islepilot.eu)
+
+        host = self.headers.get("Host") or "localhost:8000"
+
+        proto = "https" if self.headers.get("X-Forwarded-Proto") == "https" else "http"
+
+        referral_link = f"{proto}://{host}/#referral?ref={ref_code}"
+
+        invites_list = data.get("invites", {}).get(ref_code, [])
+
+        invited_count = len(invites_list)
+
+        rewarded_count = sum(1 for inv in invites_list if inv.get("rewarded") or inv.get("playtime_minutes", 0) >= 60)
+
+        earned = rewarded_count * 5000
+
+        applied_code = data.get("applied", {}).get(steam_id, None)
+
+        self.send_json_response({
+
+            "ok": True,
+
+            "steam_id": steam_id,
+
+            "code": ref_code,
+
+            "referral_code": ref_code,
+
+            "referral_link": referral_link,
+
+            "invited_count": invited_count,
+
+            "rewarded_count": rewarded_count,
+
+            "earned": earned,
+
+            "min_minutes": 60,
+
+            "for_referrer": {"amount": "5,000", "currency": "3M"},
+
+            "for_referee": {"amount": "700", "currency": "3M"},
+
+            "invites": invites_list,
+
+            "applied_code": applied_code
+
+        })
+
+    def handle_referral_apply(self):
+
+        try:
+
+            length = int(self.headers.get("Content-Length", 0))
+
+            payload = json.loads(self.rfile.read(length).decode("utf-8")) if length > 0 else {}
+
+            code = payload.get("code", "").strip().upper()
+
+            steam_id = payload.get("steam_id") or self.get_active_steam_id()
+
+            name = payload.get("name") or "Người chơi"
+
+            if not code:
+
+                self.send_json_response({"ok": False, "error": "Vui lòng nhập mã giới thiệu!"}, 400)
+
+                return
+
+            data = load_referrals()
+
+            code_info = data.get("codes", {}).get(code)
+
+            if not code_info and code != "JCD9JR":
+
+                self.send_json_response({"ok": False, "error": f"Mã giới thiệu '{code}' không hợp lệ hoặc không tồn tại!"}, 400)
+
+                return
+
+            owner_id = code_info.get("owner_steam_id") if code_info else "76561199575258338"
+
+            if steam_id and steam_id == owner_id:
+
+                self.send_json_response({"ok": False, "error": "Bạn không thể tự dùng mã giới thiệu của chính mình!"}, 400)
+
+                return
+
+            applied_map = data.setdefault("applied", {})
+
+            if steam_id in applied_map:
+
+                current_code = applied_map[steam_id]
+
+                self.send_json_response({
+
+                    "ok": True,
+
+                    "already": True,
+
+                    "code": current_code,
+
+                    "message": f"Bạn đã áp dụng mã giới thiệu '{current_code}' rồi."
+
+                })
+
+                return
+
+            # Ghi nhận người được mời vào hệ thống
+
+            applied_map[steam_id] = code
+
+            invites = data.setdefault("invites", {}).setdefault(code, [])
+
+            if not any(i.get("steam_id") == steam_id for i in invites):
+
+                invites.append({
+
+                    "steam_id": steam_id,
+
+                    "name": name,
+
+                    "joined_at": int(time.time()),
+
+                    "playtime_minutes": 20,
+
+                    "status": "Đang tham gia · 20/60 phút",
+
+                    "rewarded": False
+
+                })
+
+            save_referrals(data)
+
+            self.send_json_response({
+
+                "ok": True,
+
+                "success": True,
+
+                "code": code,
+
+                "message": f"Áp dụng mã '{code}' thành công! Khi chơi đủ 60 phút bạn sẽ nhận 700 3M và người mời nhận 5,000 3M."
+
+            })
+
+        except Exception as e:
+
+            print(f"[Referral Apply Error] {e}")
+
+            self.send_json_response({"ok": False, "error": "Lỗi xử lý máy chủ khi áp dụng mã."}, 500)
+
+    def handle_carcass_offers(self):
+        query = urllib.parse.urlparse(self.path).query
+        q_params = urllib.parse.parse_qs(query)
+        active_steam_id = q_params.get("steam_id", [None])[0] or self.get_active_steam_id()
+
+        remote_data = None
+        if active_steam_id:
+            try:
+                remote_data = self.fetch_islepilot(f"/players/{active_steam_id}/carcass")
+            except Exception as e:
+                pass
+
+        if remote_data and isinstance(remote_data, dict) and "offers" in remote_data:
+            self.send_json_response({
+                "ok": True,
+                "offers": remote_data.get("offers", []),
+                "cooldown_seconds": remote_data.get("cooldownSeconds", 300),
+                "daily_limit": remote_data.get("dailyLimit", 5),
+                "server_id": config.get("SERVER_ID", "cmv3zzfix02g3pj01yay0hw4g")
+            })
+            return
+
+        # Đồng bộ 100% đầy đủ 6 gói xác mới nhất từ IslePilot của server 3MGAMING
+        offers = [
+            {
+                        "id": "omv572un0",
+                        "name": "Carcass",
+                        "price": 0,
+                        "price_display": "$ 0",
+                        "species": "Tenontosaurus",
+                        "species_name": "Tenontosaurus",
+                        "image": "https://islepilot.eu/cdn/dino-art/render/Tenontosaurus.webp",
+                        "description": "Xác tươi, cho thịt · hợp với chế độ ăn của bạn · kích cỡ 100%"
+            },
+            {
+                        "id": "omv6uqesm",
+                        "name": "triceraptor",
+                        "price": 0,
+                        "price_display": "$ 0",
+                        "species": payload.get("species") or "Dryosaurus",
+                        "species_name": "Triceratops",
+                        "image": "https://islepilot.eu/cdn/dino-art/render/Triceratops.webp",
+                        "description": "Xác tươi, cho thịt · Triceratops · kích cỡ 100%"
+            },
+            {
+                        "id": "omv6viaxj",
+                        "name": "stegosarus",
+                        "price": 0,
+                        "price_display": "$ 0",
+                        "species": "Stegosaurus",
+                        "species_name": "Stegosaurus",
+                        "image": "https://islepilot.eu/cdn/dino-art/render/Stegosaurus.webp",
+                        "description": "Xác tươi, cho thịt · Stegosaurus · kích cỡ 100%"
+            },
+            {
+                        "id": "omvqituv4",
+                        "name": "carnotaurus",
+                        "price": 0,
+                        "price_display": "$ 0",
+                        "species": "Carnotaurus",
+                        "species_name": "Carnotaurus",
+                        "image": "https://islepilot.eu/cdn/dino-art/render/Carnotaurus.webp",
+                        "description": "Xác tươi, cho thịt · Carnotaurus · kích cỡ 100%"
+            },
+            {
+                        "id": "omvqiuffy",
+                        "name": "ceratosaurus",
+                        "price": 0,
+                        "price_display": "$ 0",
+                        "species": "Ceratosaurus",
+                        "species_name": "Ceratosaurus",
+                        "image": "https://islepilot.eu/cdn/dino-art/render/Ceratosaurus.webp",
+                        "description": "Xác tươi, cho thịt · Ceratosaurus · kích cỡ 100%"
+            },
+            {
+                        "id": "omvqiuphi",
+                        "name": "tyrannosaurus",
+                        "price": 0,
+                        "price_display": "$ 0",
+                        "species": "Tyrannosaurus",
+                        "species_name": "Tyrannosaurus",
+                        "image": "https://islepilot.eu/cdn/dino-art/render/Tyrannosaurus.webp",
+                        "description": "Xác tươi, cho thịt · Tyrannosaurus · kích cỡ 100%"
+            }
+]
+
+        self.send_json_response({
+            "ok": True,
+            "offers": offers,
+            "cooldown_seconds": 300,
+            "server_id": config.get("SERVER_ID", "cmv3zzfix02g3pj01yay0hw4g")
+        })
+
+    def handle_carcass(self):
+        try:
+            length = int(self.headers.get("Content-Length", 0))
+            payload = json.loads(self.rfile.read(length).decode("utf-8")) if length > 0 else {}
+            offer_id = payload.get("offerId") or payload.get("offer_id") or "omv572un0"
+            steam_id = payload.get("steam_id") or self.get_active_steam_id()
+
+            if not steam_id:
+                self.send_json_response({
+                    "success": False,
+                    "ok": False,
+                    "message": "Vui lòng đăng nhập Steam trước khi nhận xác!"
+                }, 401)
+                return
+
+            # Ánh xạ chuẩn 6 loài khủng long của 6 gói thả xác theo đúng server IslePilot
+            species_map = {
+                "omv572un0": "Tenontosaurus",
+                "omv6uqesm": "Triceratops",
+                "omv6viaxj": "Stegosaurus",
+                "omvqituv4": "Carnotaurus",
+                "omvqiuffy": "Ceratosaurus",
+                "omvqiuphi": "Tyrannosaurus"
+            }
+            target_species = species_map.get(offer_id, payload.get("species", "Tenontosaurus"))
+
+            # Gửi lệnh thực thi thả xác trực tiếp tới game server qua IslePilot commands
+            cmd_payload = {
+                "action": "carcass",
+                "steamId": steam_id,
+                "species": target_species,
+                "growth": 1.0,
+                "offerId": offer_id
+            }
+            res = self.fetch_islepilot("/commands", method="POST", body_data=cmd_payload)
+
+            # Dự phòng gọi endpoint carcass của player nếu có
+            if not res or not (res.get("ok") or res.get("commandId")):
+                res2 = self.fetch_islepilot(f"/players/{steam_id}/carcass", method="POST", body_data={"offerId": offer_id})
+                if res2 and (res2.get("ok") or res2.get("commandId")):
+                    res = res2
+
+            if res and (res.get("ok") is True or res.get("success") is True or "commandId" in res):
+                self.send_json_response({
+                    "success": True,
+                    "ok": True,
+                    "commandId": res.get("commandId"),
+                    "message": "Thành công"
+                })
+                return
+
+            err = res.get("error") if (res and isinstance(res, dict)) else "Không thể kết nối đến máy chủ game."
+            self.send_json_response({
+                "success": False,
+                "ok": False,
+                "message": "Thất bại"
+            }, 400)
+
+        except Exception as e:
+            print(f"[Handle Carcass Error] {e}")
+            self.send_json_response({"success": False, "ok": False, "message": "Thất bại"}, 500)
+
+    def handle_quests(self):
+
+        steam_id = self.get_active_steam_id()
+
+        remote = self.fetch_islepilot(f"/players/{steam_id}/quests")
+
+        if remote and "quests" in remote:
+
+            claimed_db = load_claimed_quests()
+
+            user_claimed = claimed_db.get(steam_id, [])
+
+            for q in remote["quests"]:
+
+                q_id = q.get("id")
+
+                prog_id = q.get("progressId")
+
+                if (q_id in user_claimed or (prog_id and prog_id in user_claimed)) and not q.get("claimedAt"):
+
+                    q["claimedAt"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+            self.send_json_response(remote)
+
+            return
+
+        self.send_json_response({"quests": []})
+
+    def handle_claim_quest(self):
+
+        try:
+
+            content_length = int(self.headers.get("Content-Length", 0))
+
+            body = self.rfile.read(content_length).decode("utf-8") if content_length > 0 else "{}"
+
+            payload = json.loads(body) if body else {}
+
+            steam_id = str(payload.get("steam_id") or self.get_active_steam_id()).strip()
+
+            quest_id = str(payload.get("quest_id") or "").strip()
+
+            progress_id = str(payload.get("progress_id") or "").strip()
+
+            amount = int(payload.get("amount", 0))
+
+            quest_name = str(payload.get("quest_name") or "Nhiệm vụ").strip()
+
+            if not quest_id:
+
+                self.send_json_response({"ok": False, "message": "Thiếu mã nhiệm vụ!"}, 400)
+
+                return
+
+            claimed_db = load_claimed_quests()
+
+            user_claimed = claimed_db.get(steam_id, [])
+
+            if quest_id in user_claimed or (progress_id and progress_id in user_claimed):
+
+                self.send_json_response({"ok": False, "message": "Nhiệm vụ này đã nhận thưởng trước đó!"}, 400)
+
+                return
+
+            # 1. Thử gọi API IslePilot /quests/claim nếu có progressId
+            if progress_id:
+
+                try:
+
+                    self.fetch_islepilot(f"/players/{steam_id}/quests/claim", method="POST", body_data={"progressId": progress_id})
+
+                except Exception as e:
+
+                    print(f"[Quest Claim IslePilot Notice] {e}")
+
+            # 2. Cộng tiền Xu trực tiếp vào ví người chơi trên IslePilot qua /currency (Scope: currency:grant)
+            new_balance = None
+
+            if amount > 0:
+
+                cur_res = self.fetch_islepilot(
+
+                    f"/players/{steam_id}/currency",
+
+                    method="POST",
+
+                    body_data={"amount": amount, "reason": f"Thưởng hoàn thành nhiệm vụ: {quest_name}"}
+
+                )
+
+                if cur_res and "balance" in cur_res:
+
+                    new_balance = cur_res.get("balance")
+
+            # 3. Lưu lại tiến trình đã nhận thưởng vào cache
+            if steam_id not in claimed_db:
+
+                claimed_db[steam_id] = []
+
+            if quest_id not in claimed_db[steam_id]:
+
+                claimed_db[steam_id].append(quest_id)
+
+            if progress_id and progress_id not in claimed_db[steam_id]:
+
+                claimed_db[steam_id].append(progress_id)
+
+            save_claimed_quests(claimed_db)
+
+            self.send_json_response({
+
+                "ok": True,
+
+                "success": True,
+
+                "message": f"Nhận thành công +{amount} Xu!",
+
+                "reward_amount": amount,
+
+                "balance": new_balance,
+
+                "quest_id": quest_id
+
+            })
+
+        except Exception as e:
+
+            print(f"[Quest Claim Error] {e}")
+
+            self.send_json_response({"ok": False, "message": f"Lỗi xử lý nhận thưởng: {e}"}, 500)
+
+    def handle_player_skins(self):
+
+        steam_id = self.get_active_steam_id()
+
+        remote = self.fetch_islepilot(f"/players/{steam_id}/skins")
+
+        if remote and "skins" in remote:
+
+            raw_skins = remote.get("skins", [])
+
+            skins = [self.enrich_skin_data(s) for s in raw_skins]
+
+            self.send_json_response({"skins": skins})
+
+            return
+
+        self.send_json_response({"skins": []})
+
+    def handle_referral(self):
+
+        steam_id = self.get_active_steam_id()
+
+        data = load_referrals()
+
+        # Xác định mã giới thiệu
+
+        ref_code = "JCD9JR"
+
+        if steam_id:
+
+            found = None
+
+            for c, info in data.get("codes", {}).items():
+
+                if info.get("owner_steam_id") == steam_id:
+
+                    found = c
+
+                    break
+
+            if found:
+
+                ref_code = found
+
+            elif steam_id in ["76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684"]:
+
+                ref_code = "JCD9JR"
+
+                data.setdefault("codes", {})["JCD9JR"] = {"owner_steam_id": steam_id, "owner_name": "Admin Server 3MGAMING"}
+
+                save_referrals(data)
+
+            else:
+
+                import hashlib
+
+                h = hashlib.sha256(steam_id.encode()).hexdigest().upper()
+
+                chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+
+                ref_code = "".join(chars[int(h[i*2:i*2+2], 16) % len(chars)] for i in range(6))
+
+                data.setdefault("codes", {})[ref_code] = {"owner_steam_id": steam_id}
+
+                save_referrals(data)
+
+        # Trỏ liên kết trực tiếp bằng Web của server (không trỏ trang cũ islepilot.eu)
+
+        host = self.headers.get("Host") or "localhost:8000"
+
+        proto = "https" if self.headers.get("X-Forwarded-Proto") == "https" else "http"
+
+        referral_link = f"{proto}://{host}/#referral?ref={ref_code}"
+
+        invites_list = data.get("invites", {}).get(ref_code, [])
+
+        invited_count = len(invites_list)
+
+        rewarded_count = sum(1 for inv in invites_list if inv.get("rewarded") or inv.get("playtime_minutes", 0) >= 60)
+
+        earned = rewarded_count * 5000
+
+        applied_code = data.get("applied", {}).get(steam_id, None)
+
+        self.send_json_response({
+
+            "ok": True,
+
+            "steam_id": steam_id,
+
+            "code": ref_code,
+
+            "referral_code": ref_code,
+
+            "referral_link": referral_link,
+
+            "invited_count": invited_count,
+
+            "rewarded_count": rewarded_count,
+
+            "earned": earned,
+
+            "min_minutes": 60,
+
+            "for_referrer": {"amount": "5,000", "currency": "3M"},
+
+            "for_referee": {"amount": "700", "currency": "3M"},
+
+            "invites": invites_list,
+
+            "applied_code": applied_code
+
+        })
+
+    def handle_referral_apply(self):
+
+        try:
+
+            length = int(self.headers.get("Content-Length", 0))
+
+            payload = json.loads(self.rfile.read(length).decode("utf-8")) if length > 0 else {}
+
+            code = payload.get("code", "").strip().upper()
+
+            steam_id = payload.get("steam_id") or self.get_active_steam_id()
+
+            name = payload.get("name") or "Người chơi"
+
+            if not code:
+
+                self.send_json_response({"ok": False, "error": "Vui lòng nhập mã giới thiệu!"}, 400)
+
+                return
+
+            data = load_referrals()
+
+            code_info = data.get("codes", {}).get(code)
+
+            if not code_info and code != "JCD9JR":
+
+                self.send_json_response({"ok": False, "error": f"Mã giới thiệu '{code}' không hợp lệ hoặc không tồn tại!"}, 400)
+
+                return
+
+            owner_id = code_info.get("owner_steam_id") if code_info else "76561199575258338"
+
+            if steam_id and steam_id == owner_id:
+
+                self.send_json_response({"ok": False, "error": "Bạn không thể tự dùng mã giới thiệu của chính mình!"}, 400)
+
+                return
+
+            applied_map = data.setdefault("applied", {})
+
+            if steam_id in applied_map:
+
+                current_code = applied_map[steam_id]
+
+                self.send_json_response({
+
+                    "ok": True,
+
+                    "already": True,
+
+                    "code": current_code,
+
+                    "message": f"Bạn đã áp dụng mã giới thiệu '{current_code}' rồi."
+
+                })
+
+                return
+
+            # Ghi nhận người được mời vào hệ thống
+
+            applied_map[steam_id] = code
+
+            invites = data.setdefault("invites", {}).setdefault(code, [])
+
+            if not any(i.get("steam_id") == steam_id for i in invites):
+
+                invites.append({
+
+                    "steam_id": steam_id,
+
+                    "name": name,
+
+                    "joined_at": int(time.time()),
+
+                    "playtime_minutes": 20,
+
+                    "status": "Đang tham gia · 20/60 phút",
+
+                    "rewarded": False
+
+                })
+
+            save_referrals(data)
+
+            self.send_json_response({
+
+                "ok": True,
+
+                "success": True,
+
+                "code": code,
+
+                "message": f"Áp dụng mã '{code}' thành công! Khi chơi đủ 60 phút bạn sẽ nhận 700 3M và người mời nhận 5,000 3M."
+
+            })
+
+        except Exception as e:
+
+            print(f"[Referral Apply Error] {e}")
+
+            self.send_json_response({"ok": False, "error": "Lỗi xử lý máy chủ khi áp dụng mã."}, 500)
+
+    def handle_quests(self):
+
+        steam_id = self.get_active_steam_id()
+
+        remote = self.fetch_islepilot(f"/players/{steam_id}/quests")
+
+        if remote and "quests" in remote:
+
+            claimed_db = load_claimed_quests()
+
+            user_claimed = claimed_db.get(steam_id, [])
+
+            for q in remote["quests"]:
+
+                q_id = q.get("id")
+
+                prog_id = q.get("progressId")
+
+                if (q_id in user_claimed or (prog_id and prog_id in user_claimed)) and not q.get("claimedAt"):
+
+                    q["claimedAt"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+            self.send_json_response(remote)
+
+            return
+
+        self.send_json_response({"quests": []})
+
+    def handle_claim_quest(self):
+
+        try:
+
+            content_length = int(self.headers.get("Content-Length", 0))
+
+            body = self.rfile.read(content_length).decode("utf-8") if content_length > 0 else "{}"
+
+            payload = json.loads(body) if body else {}
+
+            steam_id = str(payload.get("steam_id") or self.get_active_steam_id()).strip()
+
+            quest_id = str(payload.get("quest_id") or "").strip()
+
+            progress_id = str(payload.get("progress_id") or "").strip()
+
+            amount = int(payload.get("amount", 0))
+
+            quest_name = str(payload.get("quest_name") or "Nhiệm vụ").strip()
+
+            if not quest_id:
+
+                self.send_json_response({"ok": False, "message": "Thiếu mã nhiệm vụ!"}, 400)
+
+                return
+
+            claimed_db = load_claimed_quests()
+
+            user_claimed = claimed_db.get(steam_id, [])
+
+            if quest_id in user_claimed or (progress_id and progress_id in user_claimed):
+
+                self.send_json_response({"ok": False, "message": "Nhiệm vụ này đã nhận thưởng trước đó!"}, 400)
+
+                return
+
+            # 1. Thử gọi API IslePilot /quests/claim nếu có progressId
+            if progress_id:
+
+                try:
+
+                    self.fetch_islepilot(f"/players/{steam_id}/quests/claim", method="POST", body_data={"progressId": progress_id})
+
+                except Exception as e:
+
+                    print(f"[Quest Claim IslePilot Notice] {e}")
+
+            # 2. Cộng tiền Xu trực tiếp vào ví người chơi trên IslePilot qua /currency (Scope: currency:grant)
+            new_balance = None
+
+            if amount > 0:
+
+                cur_res = self.fetch_islepilot(
+
+                    f"/players/{steam_id}/currency",
+
+                    method="POST",
+
+                    body_data={"amount": amount, "reason": f"Thưởng hoàn thành nhiệm vụ: {quest_name}"}
+
+                )
+
+                if cur_res and "balance" in cur_res:
+
+                    new_balance = cur_res.get("balance")
+
+            # 3. Lưu lại tiến trình đã nhận thưởng vào cache
+            if steam_id not in claimed_db:
+
+                claimed_db[steam_id] = []
+
+            if quest_id not in claimed_db[steam_id]:
+
+                claimed_db[steam_id].append(quest_id)
+
+            if progress_id and progress_id not in claimed_db[steam_id]:
+
+                claimed_db[steam_id].append(progress_id)
+
+            save_claimed_quests(claimed_db)
+
+            self.send_json_response({
+
+                "ok": True,
+
+                "success": True,
+
+                "message": f"Nhận thành công +{amount} Xu!",
+
+                "reward_amount": amount,
+
+                "balance": new_balance,
+
+                "quest_id": quest_id
+
+            })
+
+        except Exception as e:
+
+            print(f"[Quest Claim Error] {e}")
+
+            self.send_json_response({"ok": False, "message": f"Lỗi xử lý nhận thưởng: {e}"}, 500)
+
+    def handle_player_skins(self):
+
+        steam_id = self.get_active_steam_id()
+
+        remote = self.fetch_islepilot(f"/players/{steam_id}/skins")
+
+        if remote and "skins" in remote:
+
+            raw_skins = remote.get("skins", [])
+
+            skins = [self.enrich_skin_data(s) for s in raw_skins]
+
+            self.send_json_response({"skins": skins})
+
+            return
+
+        self.send_json_response({"skins": []})
+
+    def handle_referral(self):
+
+        steam_id = self.get_active_steam_id()
+
+        data = load_referrals()
+
+        # Xác định mã giới thiệu
+
+        ref_code = "JCD9JR"
+
+        if steam_id:
+
+            found = None
+
+            for c, info in data.get("codes", {}).items():
+
+                if info.get("owner_steam_id") == steam_id:
+
+                    found = c
+
+                    break
+
+            if found:
+
+                ref_code = found
+
+            elif steam_id in ["76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684"]:
+
+                ref_code = "JCD9JR"
+
+                data.setdefault("codes", {})["JCD9JR"] = {"owner_steam_id": steam_id, "owner_name": "Admin Server 3MGAMING"}
+
+                save_referrals(data)
+
+            else:
+
+                import hashlib
+
+                h = hashlib.sha256(steam_id.encode()).hexdigest().upper()
+
+                chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+
+                ref_code = "".join(chars[int(h[i*2:i*2+2], 16) % len(chars)] for i in range(6))
+
+                data.setdefault("codes", {})[ref_code] = {"owner_steam_id": steam_id}
+
+                save_referrals(data)
+
+        # Trỏ liên kết trực tiếp bằng Web của server (không trỏ trang cũ islepilot.eu)
+
+        host = self.headers.get("Host") or "localhost:8000"
+
+        proto = "https" if self.headers.get("X-Forwarded-Proto") == "https" else "http"
+
+        referral_link = f"{proto}://{host}/#referral?ref={ref_code}"
+
+        invites_list = data.get("invites", {}).get(ref_code, [])
+
+        invited_count = len(invites_list)
+
+        rewarded_count = sum(1 for inv in invites_list if inv.get("rewarded") or inv.get("playtime_minutes", 0) >= 60)
+
+        earned = rewarded_count * 5000
+
+        applied_code = data.get("applied", {}).get(steam_id, None)
+
+        self.send_json_response({
+
+            "ok": True,
+
+            "steam_id": steam_id,
+
+            "code": ref_code,
+
+            "referral_code": ref_code,
+
+            "referral_link": referral_link,
+
+            "invited_count": invited_count,
+
+            "rewarded_count": rewarded_count,
+
+            "earned": earned,
+
+            "min_minutes": 60,
+
+            "for_referrer": {"amount": "5,000", "currency": "3M"},
+
+            "for_referee": {"amount": "700", "currency": "3M"},
+
+            "invites": invites_list,
+
+            "applied_code": applied_code
+
+        })
+
+    def handle_referral_apply(self):
+
+        try:
+
+            length = int(self.headers.get("Content-Length", 0))
+
+            payload = json.loads(self.rfile.read(length).decode("utf-8")) if length > 0 else {}
+
+            code = payload.get("code", "").strip().upper()
+
+            steam_id = payload.get("steam_id") or self.get_active_steam_id()
+
+            name = payload.get("name") or "Người chơi"
+
+            if not code:
+
+                self.send_json_response({"ok": False, "error": "Vui lòng nhập mã giới thiệu!"}, 400)
+
+                return
+
+            data = load_referrals()
+
+            code_info = data.get("codes", {}).get(code)
+
+            if not code_info and code != "JCD9JR":
+
+                self.send_json_response({"ok": False, "error": f"Mã giới thiệu '{code}' không hợp lệ hoặc không tồn tại!"}, 400)
+
+                return
+
+            owner_id = code_info.get("owner_steam_id") if code_info else "76561199575258338"
+
+            if steam_id and steam_id == owner_id:
+
+                self.send_json_response({"ok": False, "error": "Bạn không thể tự dùng mã giới thiệu của chính mình!"}, 400)
+
+                return
+
+            applied_map = data.setdefault("applied", {})
+
+            if steam_id in applied_map:
+
+                current_code = applied_map[steam_id]
+
+                self.send_json_response({
+
+                    "ok": True,
+
+                    "already": True,
+
+                    "code": current_code,
+
+                    "message": f"Bạn đã áp dụng mã giới thiệu '{current_code}' rồi."
+
+                })
+
+                return
+
+            # Ghi nhận người được mời vào hệ thống
+
+            applied_map[steam_id] = code
+
+            invites = data.setdefault("invites", {}).setdefault(code, [])
+
+            if not any(i.get("steam_id") == steam_id for i in invites):
+
+                invites.append({
+
+                    "steam_id": steam_id,
+
+                    "name": name,
+
+                    "joined_at": int(time.time()),
+
+                    "playtime_minutes": 20,
+
+                    "status": "Đang tham gia · 20/60 phút",
+
+                    "rewarded": False
+
+                })
+
+            save_referrals(data)
+
+            self.send_json_response({
+
+                "ok": True,
+
+                "success": True,
+
+                "code": code,
+
+                "message": f"Áp dụng mã '{code}' thành công! Khi chơi đủ 60 phút bạn sẽ nhận 700 3M và người mời nhận 5,000 3M."
+
+            })
+
+        except Exception as e:
+
+            print(f"[Referral Apply Error] {e}")
+
+            self.send_json_response({"ok": False, "error": "Lỗi xử lý máy chủ khi áp dụng mã."}, 500)
+
+    def handle_quests(self):
+        steam_id = self.get_active_steam_id()
+        if not steam_id:
+            self.send_json_response({"quests": []})
+            return
+
+        remote = self.fetch_islepilot(f"/players/{steam_id}/quests")
+        if remote and isinstance(remote, dict) and "quests" in remote:
+            claimed_db = load_claimed_quests()
+            today_vn = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=7))).strftime("%Y-%m-%d")
+            week_vn = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=7))).strftime("%Y-W%W")
+
+            for q in remote["quests"]:
+                q_id = str(q.get("id") or "").strip()
+                prog_id = str(q.get("progressId") or "").strip()
+                period = str(q.get("period") or "daily").strip().lower()
+                period_key = q.get("periodKey")
+                if not period_key:
+                    period_key = week_vn if period == "weekly" else today_vn
+
+                # Kiểm tra nhiệm vụ đã nhận thưởng trong chu kỳ hôm nay/tuần này chưa
+                is_claimed, claimed_at = _is_quest_claimed(steam_id, q_id, period_key, prog_id, claimed_db)
+                if is_claimed and not q.get("claimedAt"):
+                    q["claimedAt"] = claimed_at or datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+            self.send_json_response(remote)
+            return
+
+        self.send_json_response({"quests": []})
+
+    def handle_claim_quest(self):
+        try:
+            content_length = int(self.headers.get("Content-Length", 0))
+            body = self.rfile.read(content_length).decode("utf-8") if content_length > 0 else "{}"
+            payload = json.loads(body) if body else {}
+
+            steam_id = str(payload.get("steam_id") or self.get_active_steam_id() or "").strip()
+            quest_id = str(payload.get("quest_id") or "").strip()
+            progress_id = str(payload.get("progress_id") or "").strip()
+            client_amount = int(payload.get("amount", 0))
+            quest_name = str(payload.get("quest_name") or "Nhiệm vụ").strip()
+
+            if not steam_id:
+                self.send_json_response({"ok": False, "message": "Vui lòng đăng nhập Steam trước khi nhận thưởng!"}, 401)
+                return
+
+            if not quest_id:
+                self.send_json_response({"ok": False, "message": "Thiếu mã nhiệm vụ!"}, 400)
+                return
+
+            today_vn = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=7))).strftime("%Y-%m-%d")
+            week_vn = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=7))).strftime("%Y-W%W")
+
+            # 1. Xác thực với IslePilot: Kiểm tra nhiệm vụ thực tế của người chơi
+            remote = self.fetch_islepilot(f"/players/{steam_id}/quests")
+            matching_quest = None
+            if remote and isinstance(remote, dict) and "quests" in remote:
+                for q in remote["quests"]:
+                    if str(q.get("id")).strip() == quest_id or (progress_id and str(q.get("progressId")).strip() == progress_id):
+                        matching_quest = q
+                        break
+
+            period = "daily"
+            period_key = today_vn
+            reward_coins = client_amount
+
+            if matching_quest:
+                period = str(matching_quest.get("period") or "daily").strip().lower()
+                period_key = matching_quest.get("periodKey") or (week_vn if period == "weekly" else today_vn)
+                if not progress_id and matching_quest.get("progressId"):
+                    progress_id = str(matching_quest.get("progressId")).strip()
+                if matching_quest.get("name"):
+                    quest_name = matching_quest.get("name")
+
+                # Lấy phần thưởng chuẩn từ cấu hình nhiệm vụ trên IslePilot
+                if matching_quest.get("rewards") and isinstance(matching_quest["rewards"], list) and len(matching_quest["rewards"]) > 0:
+                    cfg_amt = int(matching_quest["rewards"][0].get("amount", 0))
+                    if cfg_amt > 0:
+                        reward_coins = cfg_amt
+
+                # Kiểm tra tiến độ nhiệm vụ đã hoàn thành thực sự trong game chưa
+                is_completed = (
+                    matching_quest.get("completedAt") is not None
+                    or any(c.get("done") for c in matching_quest.get("conditions", []))
+                    or (matching_quest.get("conditions") and matching_quest.get("progress", 0) >= matching_quest.get("conditions", [{}])[0].get("target", 1))
+                )
+
+                if matching_quest.get("claimedAt"):
+                    self.send_json_response({"ok": False, "message": "Nhiệm vụ này đã được nhận thưởng trước đó!"}, 400)
+                    return
+
+                if not is_completed:
+                    self.send_json_response({"ok": False, "message": "Bạn chưa hoàn thành tiến độ nhiệm vụ này trong game!"}, 400)
+                    return
+
+            # 2. Kiểm tra bộ nhớ cache khóa theo chu kỳ ngày / tuần
+            claimed_db = load_claimed_quests()
+            is_claimed, _ = _is_quest_claimed(steam_id, quest_id, period_key, progress_id, claimed_db)
+            if is_claimed:
+                time_unit = "ngày hôm nay" if period == "daily" else "tuần này"
+                self.send_json_response({
+                    "ok": False,
+                    "message": f"Nhiệm vụ này bạn đã nhận thưởng trong {time_unit} rồi! Hãy quay lại sau khi làm mới nhiệm vụ."
+                }, 400)
+                return
+
+            # 3. Thử gọi API IslePilot /quests/claim nếu có progressId (dù có thể thiếu scope, vẫn thử)
+            if progress_id:
+                try:
+                    self.fetch_islepilot(f"/players/{steam_id}/quests/claim", method="POST", body_data={"progressId": progress_id})
+                except Exception:
+                    pass
+
+            # 4. Cộng Xu an toàn và cập nhật số dư ví
+            if reward_coins > 0:
+                self._adjust_player_xu(
+                    steam_id,
+                    reward_coins,
+                    f"Thưởng hoàn thành nhiệm vụ: {quest_name} ({period_key})"
+                )
+
+            # 5. Ghi nhận đã nhận thưởng theo ngày/chu kỳ vào cơ sở dữ liệu bền vững
+            _record_quest_claim(steam_id, quest_id, period_key, progress_id, quest_name, reward_coins, claimed_db)
+
+            new_balance = self._get_player_xu_balance(steam_id)
+
+            self.send_json_response({
+                "ok": True,
+                "success": True,
+                "message": f"Nhận thành công +{reward_coins:,} Xu!",
+                "reward_amount": reward_coins,
+                "balance": new_balance,
+                "quest_id": quest_id,
+                "period_key": period_key
+            })
+
+        except Exception as e:
+            print(f"[Quest Claim Error] {e}")
             self.send_json_response({"ok": False, "message": f"Lỗi xử lý nhận thưởng: {e}"}, 500)
 
     def handle_player_skins(self):

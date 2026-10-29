@@ -4813,12 +4813,17 @@ const Quests = {
           this.displayQuests();
         }
       } else {
-        App.showToast(data.message || 'Không thể nhận thưởng, vui lòng thử lại sau!', 'error');
-        if (btnEl) {
+        App.showToast(data.message || 'Không thể nhận thưởng, vui lòng thử lại sau!', 'warning');
+        if (data.message && (data.message.includes('đã nhận thưởng') || data.message.includes('đã được nhận'))) {
+          const q = this.quests.find(item => item.id === questId);
+          if (q) {
+            q.claimedAt = new Date().toISOString();
+          }
+          this.displayQuests();
+        } else if (btnEl) {
           btnEl.disabled = false;
           btnEl.innerHTML = `🎁 Nhận ${amount} Xu`;
         }
-      }
     } catch (e) {
       console.error('Lỗi nhận thưởng:', e);
       App.showToast('Lỗi kết nối khi nhận thưởng, vui lòng thử lại!', 'error');
