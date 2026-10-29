@@ -8652,134 +8652,150 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             self.send_json_response({"ok": False, "error": "Lỗi xử lý máy chủ khi áp dụng mã."}, 500)
 
     def handle_quests(self):
+        query = urllib.parse.urlparse(self.path).query
+        q_params = urllib.parse.parse_qs(query)
+        passed_steam_id = q_params.get("steam_id", [None])[0]
+        active_steam_id = self.get_active_steam_id()
+        is_guest = not passed_steam_id
 
-        steam_id = self.get_active_steam_id()
+        target_steam_id = passed_steam_id or active_steam_id or "76561199483156684"
+        remote = self.fetch_islepilot(f"/players/{target_steam_id}/quests")
+        if not (remote and isinstance(remote, dict) and "quests" in remote):
+            # Thử lại với ID admin dự phòng nếu người chơi mới chưa có hồ sơ
+            remote = self.fetch_islepilot("/players/76561199483156684/quests")
 
-        remote = self.fetch_islepilot(f"/players/{steam_id}/quests")
-
-        if remote and "quests" in remote:
-
+        if remote and isinstance(remote, dict) and "quests" in remote:
             claimed_db = load_claimed_quests()
-
-            user_claimed = claimed_db.get(steam_id, [])
+            today_vn = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=7))).strftime("%Y-%m-%d")
+            week_vn = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=7))).strftime("%Y-W%W")
 
             for q in remote["quests"]:
+                q_id = str(q.get("id") or "").strip()
+                prog_id = str(q.get("progressId") or "").strip()
+                period = str(q.get("period") or "daily").strip().lower()
+                period_key = q.get("periodKey")
+                if not period_key:
+                    period_key = week_vn if period == "weekly" else today_vn
 
-                q_id = q.get("id")
-
-                prog_id = q.get("progressId")
-
-                if (q_id in user_claimed or (prog_id and prog_id in user_claimed)) and not q.get("claimedAt"):
-
-                    q["claimedAt"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+                if is_guest:
+                    # Khách chưa đăng nhập: hiển thị trạng thái chưa nhận để người chơi xem danh sách nhiệm vụ
+                    q["claimedAt"] = None
+                else:
+                    is_claimed, claimed_at = _is_quest_claimed(target_steam_id, q_id, period_key, prog_id, claimed_db)
+                    if is_claimed and not q.get("claimedAt"):
+                        q["claimedAt"] = claimed_at or datetime.datetime.now(datetime.timezone.utc).isoformat()
 
             self.send_json_response(remote)
-
             return
 
         self.send_json_response({"quests": []})
 
     def handle_claim_quest(self):
-
         try:
-
             content_length = int(self.headers.get("Content-Length", 0))
-
             body = self.rfile.read(content_length).decode("utf-8") if content_length > 0 else "{}"
-
             payload = json.loads(body) if body else {}
 
-            steam_id = str(payload.get("steam_id") or self.get_active_steam_id()).strip()
-
+            steam_id = str(payload.get("steam_id") or self.get_active_steam_id() or "").strip()
             quest_id = str(payload.get("quest_id") or "").strip()
-
             progress_id = str(payload.get("progress_id") or "").strip()
-
-            amount = int(payload.get("amount", 0))
-
+            client_amount = int(payload.get("amount", 0))
             quest_name = str(payload.get("quest_name") or "Nhiệm vụ").strip()
 
+            if not steam_id:
+                self.send_json_response({"ok": False, "message": "Vui lòng đăng nhập Steam trước khi nhận thưởng!"}, 401)
+                return
+
             if not quest_id:
-
                 self.send_json_response({"ok": False, "message": "Thiếu mã nhiệm vụ!"}, 400)
-
                 return
 
-            claimed_db = load_claimed_quests()
+            today_vn = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=7))).strftime("%Y-%m-%d")
+            week_vn = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=7))).strftime("%Y-W%W")
 
-            user_claimed = claimed_db.get(steam_id, [])
+            # 1. Xác thực với IslePilot: Kiểm tra nhiệm vụ thực tế của người chơi
+            remote = self.fetch_islepilot(f"/players/{steam_id}/quests")
+            matching_quest = None
+            if remote and isinstance(remote, dict) and "quests" in remote:
+                for q in remote["quests"]:
+                    if str(q.get("id")).strip() == quest_id or (progress_id and str(q.get("progressId")).strip() == progress_id):
+                        matching_quest = q
+                        break
 
-            if quest_id in user_claimed or (progress_id and progress_id in user_claimed):
+            period = "daily"
+            period_key = today_vn
+            reward_coins = client_amount
 
-                self.send_json_response({"ok": False, "message": "Nhiệm vụ này đã nhận thưởng trước đó!"}, 400)
+            if matching_quest:
+                period = str(matching_quest.get("period") or "daily").strip().lower()
+                period_key = matching_quest.get("periodKey") or (week_vn if period == "weekly" else today_vn)
+                if not progress_id and matching_quest.get("progressId"):
+                    progress_id = str(matching_quest.get("progressId")).strip()
+                if matching_quest.get("name"):
+                    quest_name = matching_quest.get("name")
 
-                return
+                if matching_quest.get("rewards") and isinstance(matching_quest["rewards"], list) and len(matching_quest["rewards"]) > 0:
+                    cfg_amt = int(matching_quest["rewards"][0].get("amount", 0))
+                    if cfg_amt > 0:
+                        reward_coins = cfg_amt
 
-            # 1. Thử gọi API IslePilot /quests/claim nếu có progressId
-            if progress_id:
-
-                try:
-
-                    self.fetch_islepilot(f"/players/{steam_id}/quests/claim", method="POST", body_data={"progressId": progress_id})
-
-                except Exception as e:
-
-                    print(f"[Quest Claim IslePilot Notice] {e}")
-
-            # 2. Cộng tiền Xu trực tiếp vào ví người chơi trên IslePilot qua /currency (Scope: currency:grant)
-            new_balance = None
-
-            if amount > 0:
-
-                cur_res = self.fetch_islepilot(
-
-                    f"/players/{steam_id}/currency",
-
-                    method="POST",
-
-                    body_data={"amount": amount, "reason": f"Thưởng hoàn thành nhiệm vụ: {quest_name}"}
-
+                is_completed = (
+                    matching_quest.get("completedAt") is not None
+                    or any(c.get("done") for c in matching_quest.get("conditions", []))
+                    or (matching_quest.get("conditions") and matching_quest.get("progress", 0) >= matching_quest.get("conditions", [{}])[0].get("target", 1))
                 )
 
-                if cur_res and "balance" in cur_res:
+                if matching_quest.get("claimedAt"):
+                    self.send_json_response({"ok": False, "message": "Nhiệm vụ này đã được nhận thưởng trước đó!"}, 400)
+                    return
 
-                    new_balance = cur_res.get("balance")
+                if not is_completed:
+                    self.send_json_response({"ok": False, "message": "Bạn chưa hoàn thành tiến độ nhiệm vụ này trong game!"}, 400)
+                    return
 
-            # 3. Lưu lại tiến trình đã nhận thưởng vào cache
-            if steam_id not in claimed_db:
+            # 2. Kiểm tra bộ nhớ cache khóa theo chu kỳ ngày / tuần
+            claimed_db = load_claimed_quests()
+            is_claimed, _ = _is_quest_claimed(steam_id, quest_id, period_key, progress_id, claimed_db)
+            if is_claimed:
+                time_unit = "ngày hôm nay" if period == "daily" else "tuần này"
+                self.send_json_response({
+                    "ok": False,
+                    "message": f"Nhiệm vụ này bạn đã nhận thưởng trong {time_unit} rồi! Hãy quay lại sau khi làm mới nhiệm vụ."
+                }, 400)
+                return
 
-                claimed_db[steam_id] = []
+            # 3. Thử gọi API IslePilot /quests/claim nếu có progressId
+            if progress_id:
+                try:
+                    self.fetch_islepilot(f"/players/{steam_id}/quests/claim", method="POST", body_data={"progressId": progress_id})
+                except Exception:
+                    pass
 
-            if quest_id not in claimed_db[steam_id]:
+            # 4. Cộng Xu an toàn và cập nhật số dư ví
+            if reward_coins > 0:
+                self._adjust_player_xu(
+                    steam_id,
+                    reward_coins,
+                    f"Thưởng hoàn thành nhiệm vụ: {quest_name} ({period_key})"
+                )
 
-                claimed_db[steam_id].append(quest_id)
+            # 5. Ghi nhận đã nhận thưởng theo ngày/chu kỳ vào cơ sở dữ liệu bền vững
+            _record_quest_claim(steam_id, quest_id, period_key, progress_id, quest_name, reward_coins, claimed_db)
 
-            if progress_id and progress_id not in claimed_db[steam_id]:
-
-                claimed_db[steam_id].append(progress_id)
-
-            save_claimed_quests(claimed_db)
+            new_balance = self._get_player_xu_balance(steam_id)
 
             self.send_json_response({
-
                 "ok": True,
-
                 "success": True,
-
-                "message": f"Nhận thành công +{amount} Xu!",
-
-                "reward_amount": amount,
-
+                "message": f"Nhận thành công +{reward_coins:,} Xu!",
+                "reward_amount": reward_coins,
                 "balance": new_balance,
-
-                "quest_id": quest_id
-
+                "quest_id": quest_id,
+                "period_key": period_key
             })
 
         except Exception as e:
-
             print(f"[Quest Claim Error] {e}")
-
             self.send_json_response({"ok": False, "message": f"Lỗi xử lý nhận thưởng: {e}"}, 500)
 
     def handle_player_skins(self):

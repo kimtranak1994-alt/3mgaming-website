@@ -4635,61 +4635,40 @@ const Teleport = {
 // 6. NHIỆM VỤ (ISLEPILOT REAL QUESTS API)
 
 const Quests = {
-
   quests: [],
-
   activeFilter: 'all',
 
-
-
   async render() {
-
     const container = document.getElementById('quests-container');
-
     if (!container) return;
 
-
-
-    container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">Đang tải danh sách nhiệm vụ từ máy chủ IslePilot...</div>';
-
-
+    container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);"><i class="fas fa-spinner fa-spin" style="margin-right: 8px;"></i> Đang tải danh sách nhiệm vụ từ máy chủ IslePilot...</div>';
 
     const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
-
-    const steamId = user ? user.steamId : '76561199259679997';
-
-
+    const steamId = user ? user.steamId : '';
 
     try {
-
-      const res = await fetch(`/api/server/quests?steam_id=${steamId}`);
-
+      const url = steamId ? `/api/server/quests?steam_id=${encodeURIComponent(steamId)}` : '/api/server/quests';
+      const res = await fetch(url);
       const data = await res.json();
-
       this.quests = data.quests || [];
-
     } catch (e) {
-
       console.warn("Lỗi tải nhiệm vụ:", e);
-
       this.quests = [];
-
     }
 
-
-
     this.displayQuests();
-
   },
-
-
 
   displayQuests() {
     const container = document.getElementById('quests-container');
     if (!container) return;
 
-    // Tự động ẩn các nhiệm vụ đã nhận thưởng để không làm rối giao diện
-    let list = (this.quests || []).filter(q => !q.claimedAt);
+    const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
+    const isLoggedIn = !!(user && user.steamId);
+
+    // Luôn hiển thị đầy đủ danh sách nhiệm vụ (không lọc bỏ nhiệm vụ đã nhận thưởng)
+    let list = this.quests || [];
 
     if (this.activeFilter === 'daily') {
       list = list.filter(q => q.period === 'daily');
@@ -4700,25 +4679,54 @@ const Quests = {
     if (list.length === 0) {
       container.innerHTML = `
         <div class="card" style="text-align: center; padding: 45px 20px; color: var(--text-muted); background: rgba(7, 19, 14, 0.75); border: 1px dashed rgba(255, 42, 133, 0.35); border-radius: 12px;">
-          <div style="font-size: 2.2rem; margin-bottom: 10px;">🎉</div>
-          <div style="font-size: 1.1rem; font-weight: 700; color: #fff;">Đã hoàn thành và nhận hết nhiệm vụ!</div>
-          <div style="margin-top: 6px; font-size: 0.88rem; color: #9ca3af;">Các nhiệm vụ đã nhận thưởng đã được cất đi. Hãy quay lại vào đợt làm mới tiếp theo nhé!</div>
+          <div style="font-size: 2.2rem; margin-bottom: 10px;">📜</div>
+          <div style="font-size: 1.1rem; font-weight: 700; color: #fff;">Chưa có nhiệm vụ nào!</div>
+          <div style="margin-top: 6px; font-size: 0.88rem; color: #9ca3af;">Hiện tại hệ thống chưa phát hành nhiệm vụ trong mục này. Vui lòng quay lại sau!</div>
         </div>
       `;
       return;
     }
 
-    container.innerHTML = list.map(q => {
+    let loginBannerHtml = '';
+    if (!isLoggedIn) {
+      loginBannerHtml = `
+        <div style="margin-bottom: 16px; padding: 12px 18px; background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.35); border-radius: 10px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+          <div style="font-size: 0.88rem; color: #93c5fd; display: flex; align-items: center; gap: 8px;">
+            <i class="fab fa-steam" style="font-size: 1.2rem;"></i>
+            <span>Đang xem danh sách nhiệm vụ của Server. Hãy <b>đăng nhập Steam</b> để đồng bộ tiến độ cá nhân và nhận Xu thưởng!</span>
+          </div>
+          <a href="/api/player/steam/login?redirect=%2F" class="btn-primary" style="font-size: 0.8rem; padding: 6px 14px; text-decoration: none; border-radius: 6px;">
+            Đăng nhập Steam
+          </a>
+        </div>
+      `;
+    }
+
+    // Sắp xếp ưu tiên: Nhiệm vụ xong chờ nhận -> Nhiệm vụ đang làm -> Nhiệm vụ đã nhận thưởng
+    const sortedList = [...list].sort((a, b) => {
+      const aDone = a.completedAt !== null || (a.conditions && a.conditions[0] && a.conditions[0].done);
+      const bDone = b.completedAt !== null || (b.conditions && b.conditions[0] && b.conditions[0].done);
+      const aClaimed = !!a.claimedAt;
+      const bClaimed = !!b.claimedAt;
+
+      if (aDone && !aClaimed && (!bDone || bClaimed)) return -1;
+      if (bDone && !bClaimed && (!aDone || aClaimed)) return 1;
+      if (!aClaimed && bClaimed) return -1;
+      if (aClaimed && !bClaimed) return 1;
+      return 0;
+    });
+
+    const cardsHtml = sortedList.map(q => {
       const rewardCoins = (q.rewards && q.rewards[0]) ? q.rewards[0].amount : 100;
       const isDone = q.completedAt !== null || (q.conditions && q.conditions[0] && q.conditions[0].done);
-      const isClaimed = q.claimedAt !== null;
+      const isClaimed = !!q.claimedAt;
 
       let progressText = '';
       let progressPct = 0;
       if (q.conditions && q.conditions[0] && q.conditions[0].target) {
         const cur = q.progress || 0;
         const tgt = q.conditions[0].target;
-        progressPct = Math.min(100, Math.round((cur / tgt) * 100));
+        progressPct = isDone ? 100 : Math.min(100, Math.round((cur / tgt) * 100));
         progressText = `${cur} / ${tgt} (${q.conditions[0].label || ''})`;
       } else {
         progressPct = isDone ? 100 : Math.min(100, (q.progress || 0) * 50);
@@ -4728,8 +4736,21 @@ const Quests = {
       const qNameSafe = (q.name || '').replace(/'/g, "\\'");
       const qDescSafe = q.description || '';
 
+      let cardBorder = 'border: 1px solid var(--border-color);';
+      let cardBg = 'background: rgba(7, 19, 14, 0.75);';
+      let cardOpacity = 'opacity: 1;';
+
+      if (isClaimed) {
+        cardBorder = 'border: 1px solid rgba(34, 197, 94, 0.35);';
+        cardBg = 'background: rgba(6, 26, 16, 0.65);';
+        cardOpacity = 'opacity: 0.88;';
+      } else if (isDone) {
+        cardBorder = 'border: 1px solid rgba(234, 179, 8, 0.65); box-shadow: 0 0 15px rgba(234, 179, 8, 0.15);';
+        cardBg = 'background: rgba(20, 24, 10, 0.8);';
+      }
+
       return `
-        <div class="card" id="quest-card-${q.id}" style="padding: 20px; margin-bottom: 14px; border: 1px solid var(--border-color); background: rgba(7, 19, 14, 0.75); transition: opacity 0.3s ease, transform 0.3s ease;">
+        <div class="card" id="quest-card-${q.id}" style="padding: 20px; margin-bottom: 14px; ${cardBorder} ${cardBg} ${cardOpacity} transition: all 0.3s ease; border-radius: 12px;">
           <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px;">
             <div>
               <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
@@ -4737,6 +4758,11 @@ const Quests = {
                   ${q.period === 'weekly' ? '📅 Hàng Tuần' : '⭐ Hàng Ngày'}
                 </span>
                 <h3 style="color: #fff; font-size: 1.05rem; font-weight: 700; text-transform: capitalize;">${q.name}</h3>
+                ${isClaimed ? `
+                  <span style="background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.4); font-size: 0.72rem; padding: 2px 8px; border-radius: 4px; font-weight: 700;">
+                    ✔ Đã nhận
+                  </span>
+                ` : ''}
               </div>
               <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">${qDescSafe}</p>
             </div>
@@ -4748,26 +4774,34 @@ const Quests = {
 
           <div style="margin-top: 14px;">
             <div style="display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--text-muted); margin-bottom: 6px;">
-              <span>Tiến độ: <b style="color: #d1d5db;">${progressText}</b></span>
-              <span style="color: var(--accent); font-weight: 700;">${progressPct}%</span>
+              <span>Tiến độ: <b style="color: ${isDone ? '#4ade80' : '#d1d5db'};">${isDone ? 'Đã hoàn thành' : progressText}</b></span>
+              <span style="color: ${isDone ? '#4ade80' : 'var(--accent)'}; font-weight: 700;">${progressPct}%</span>
             </div>
             <div class="stat-bar" style="height: 8px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden;">
-              <div class="stat-fill" style="width: ${progressPct}%; background: ${isDone ? 'var(--accent)' : '#3b82f6'};"></div>
+              <div class="stat-fill" style="width: ${progressPct}%; background: ${isClaimed ? '#22c55e' : (isDone ? '#eab308' : '#3b82f6')};"></div>
             </div>
           </div>
 
-          <div style="margin-top: 14px; display: flex; justify-content: flex-end;">
-            ${isDone ? `
-              <button class="btn-primary" style="padding: 7px 18px; font-size: 0.85rem; font-weight: 700;" onclick="Quests.claimReward('${q.id}', '${q.progressId || ''}', ${rewardCoins}, '${qNameSafe}', this)">
+          <div style="margin-top: 14px; display: flex; justify-content: flex-end; align-items: center; gap: 10px;">
+            ${isClaimed ? `
+              <span style="color: #4ade80; font-size: 0.85rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: rgba(34, 197, 94, 0.12); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 6px;">
+                ✔ Đã nhận thưởng (+${rewardCoins} Xu)
+              </span>
+            ` : (isDone ? `
+              <button class="btn-primary" style="padding: 8px 20px; font-size: 0.88rem; font-weight: 700; background: linear-gradient(135deg, #eab308, #ca8a04); border: none; cursor: pointer; box-shadow: 0 2px 10px rgba(234, 179, 8, 0.3);" onclick="Quests.claimReward('${q.id}', '${q.progressId || ''}', ${rewardCoins}, '${qNameSafe}', this)">
                 🎁 Nhận ${rewardCoins} Xu
               </button>
             ` : `
-              <span style="color: #9ca3af; font-size: 0.82rem;">Đang thực hiện trong game</span>
-            `}
+              <span style="color: #9ca3af; font-size: 0.82rem; font-style: italic;">
+                ⏳ Đang thực hiện trong game
+              </span>
+            `)}
           </div>
         </div>
       `;
     }).join('');
+
+    container.innerHTML = loginBannerHtml + cardsHtml;
   },
 
   filter(period, btn) {
@@ -4812,7 +4846,6 @@ const Quests = {
       if (res.ok && (data.ok || data.success)) {
         App.showToast(`🎉 Chúc mừng! Bạn đã nhận thành công +${amount} Xu vào tài khoản!`, 'success');
 
-        // Cập nhật số dư xu trên giao diện
         if (data.balance !== undefined && data.balance !== null) {
           App.updateUserBalanceUI(data.balance);
           if (user) {
@@ -4823,38 +4856,21 @@ const Quests = {
           App.refreshBalance();
         }
 
-        // Đánh dấu nhiệm vụ này đã nhận thưởng
         const q = this.quests.find(item => item.id === questId);
         if (q) {
           q.claimedAt = new Date().toISOString();
         }
-
-        // Hiệu ứng biến mất mượt mà của thẻ nhiệm vụ
-        const card = document.getElementById(`quest-card-${questId}`);
-        if (card) {
-          card.style.opacity = '0';
-          card.style.transform = 'scale(0.95)';
-          setTimeout(() => {
-            this.displayQuests();
-          }, 350);
-        } else {
-          this.displayQuests();
-        }
+        this.displayQuests();
       } else {
-        App.showToast(data.message || 'Không thể nhận thưởng, vui lòng thử lại sau!', 'warning');
-        if (data.message && (data.message.includes('đã nhận thưởng') || data.message.includes('đã được nhận'))) {
-          const q = this.quests.find(item => item.id === questId);
-          if (q) {
-            q.claimedAt = new Date().toISOString();
-          }
-          this.displayQuests();
-        } else if (btnEl) {
+        App.showToast(data.message || data.error || 'Nhận thưởng thất bại. Hãy thử lại!', 'error');
+        if (btnEl) {
           btnEl.disabled = false;
           btnEl.innerHTML = `🎁 Nhận ${amount} Xu`;
         }
+      }
     } catch (e) {
-      console.error('Lỗi nhận thưởng:', e);
-      App.showToast('Lỗi kết nối khi nhận thưởng, vui lòng thử lại!', 'error');
+      console.warn("Lỗi nhận thưởng:", e);
+      App.showToast('Lỗi kết nối máy chủ khi nhận thưởng!', 'error');
       if (btnEl) {
         btnEl.disabled = false;
         btnEl.innerHTML = `🎁 Nhận ${amount} Xu`;
