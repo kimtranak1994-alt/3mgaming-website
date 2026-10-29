@@ -4310,3 +4310,12 @@ body[data-current-tab="admin"] .nav-links {
   display: flex;
   justify-content: flex-end;
 }
+
+.carcass-card-plant:hover {
+  transform: translateY(-3px);
+  border-color: rgba(16, 185, 129, 0.5) !important;
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.2) !important;
+}
+.carcass-card-plant .carcass-btn-buy:hover {
+  background: #059669 !important;
+}

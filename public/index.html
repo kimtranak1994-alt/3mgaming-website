@@ -126,7 +126,7 @@
           <li class="nav-item-player"><a href="#teleport" class="nav-btn" data-tab="teleport">🚀 Dịch chuyển</a></li>
           <li class="nav-item-player"><a href="#quests" class="nav-btn" data-tab="quests">📜 Nhiệm vụ</a></li>
           <li class="nav-item-player"><a href="#buydino" class="nav-btn" data-tab="buydino">🛒 Mua dino</a></li>
-          <li class="nav-item-player"><a href="#carcass" class="nav-btn" data-tab="carcass">🥩 Thả xác</a></li>
+          <li class="nav-item-player"><a href="#carcass" class="nav-btn" data-tab="carcass">🥩 Thả xác & Trồng cây</a></li>
           <li id="nav-item-map"><a href="#map" class="nav-btn" data-tab="map">🗺️ Bản đồ Gateway</a></li>
           <li class="nav-item-player"><a href="#guide" class="nav-btn" data-tab="guide">📖 Hướng dẫn</a></li>
           <li class="nav-item-player" id="nav-item-damage"><a href="#damage" class="nav-btn" data-tab="damage">⚔️ Check Dame</a></li>
@@ -1967,13 +1967,28 @@
 
     <section id="view-carcass" class="view-section">
 
-      <div style="max-width: 1024px; margin: 0 auto;">
+      <div style="max-width: 1100px; margin: 0 auto;">
 
-        <div style="margin-bottom: 24px;">
-          <h1 style="font-size: 1.5rem; font-weight: 700; color: #fff; margin-bottom: 6px;">Thả xác</h1>
+        <div style="margin-bottom: 20px;">
+          <h1 style="font-size: 1.5rem; font-weight: 700; color: #fff; margin-bottom: 6px; display: flex; align-items: center; gap: 10px;">
+            <span>🥩</span> Thả Xác & <span>🌿</span> Trồng Cây Thức Ăn
+          </h1>
           <p style="font-size: 0.9rem; color: #94a3b8; line-height: 1.5; margin: 0;">
-            Mua một cái xác và nó sẽ rơi ngay trước mặt bạn trong game. Bạn phải online thì xác mới tới. Mỗi 300 giây mua được một lần.
+            Cung cấp thức ăn trực tiếp trước mặt bạn trong game. Động vật ăn thịt nhận xác tươi (Carcass) và động vật ăn cỏ trồng cây thảo mộc dinh dưỡng (Flora). Bạn phải đang online trong game. Thời gian giãn cách: 300 giây/lần.
           </p>
+        </div>
+
+        <!-- Bộ lọc Chế độ Ăn (Diet Filter Tabs) -->
+        <div class="carcass-diet-tabs" style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+          <button type="button" class="map-filter-btn active" id="carcass-filter-all" onclick="Carcass.switchCategory('all', this)">
+            🌐 Tất Cả Nguồn Thức Ăn
+          </button>
+          <button type="button" class="map-filter-btn" id="carcass-filter-carnivore" onclick="Carcass.switchCategory('carnivore', this)">
+            🍖 Động Vật Ăn Thịt (Thả Xác)
+          </button>
+          <button type="button" class="map-filter-btn" id="carcass-filter-herbivore" onclick="Carcass.switchCategory('herbivore', this)" style="border-color: rgba(16, 185, 129, 0.4); color: #34d399;">
+            🌿 Động Vật Ăn Cỏ (Trồng Cây)
+          </button>
         </div>
 
         <div class="carcass-grid" id="carcass-grid-container"></div>

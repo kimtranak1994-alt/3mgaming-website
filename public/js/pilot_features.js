@@ -820,7 +820,7 @@ const SkinShop = {
 
       if (data.success || data.ok) {
 
-        App.showToast("Thành công");
+        App.showToast(data.message || "Thành công");
 
         this.render();
 
@@ -5073,9 +5073,18 @@ const Carcass = {
 
   offers: [],
 
+  currentCategory: 'all',
+
   cooldownEnd: 0,
 
   cooldownTimer: null,
+
+  switchCategory(category, btn) {
+    this.currentCategory = category;
+    document.querySelectorAll('.carcass-diet-tabs .map-filter-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    this.displayCards();
+  },
 
 
 
@@ -5190,84 +5199,61 @@ const Carcass = {
 
     const remainingSec = Math.max(0, Math.ceil((this.cooldownEnd - Date.now()) / 1000));
 
+    const filtered = (this.offers || []).filter(item => {
+      if (this.currentCategory === 'all') return true;
+      return item.category === this.currentCategory;
+    });
 
-
-    container.innerHTML = this.offers.map((item) => {
-
-      const dinoImg = item.image || (window.Garage ? Garage.getDinoImageUrl(item.species) : `https://islepilot.eu/cdn/dino-art/render/${item.species || 'Tyrannosaurus'}.webp`);
-
-
-
-      return `
-
-        <div class="carcass-card">
-
-          <div class="carcass-banner">
-
-            <img src="${dinoImg}" alt="${item.name}" class="carcass-img-render" onerror="this.src='https://islepilot.eu/cdn/dino-art/render/Tyrannosaurus.webp'">
-
-            <span class="growth-badge" style="background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #10b981;">
-
-              🥩 100% Kích Cỡ
-
-            </span>
-
-            <span class="growth-badge" style="right: auto; left: 10px; background: rgba(0, 240, 118, 0.15); border-color: var(--accent); color: var(--accent);">
-
-              ${item.species || 'Evrima'}
-
-            </span>
-
-          </div>
-
-
-
-          <div class="carcass-body">
-
-            <div class="carcass-card-header">
-
-              <span class="carcass-card-name">${item.name}</span>
-
-              <span class="carcass-card-price">${item.price_display || '$ 0'}</span>
-
-            </div>
-
-
-
-            <p class="carcass-card-desc">
-
-              ${item.description}
-
-            </p>
-
-
-
-            <div style="margin-top: auto; padding-top: 8px;">
-
-              <button id="carcass-btn-${item.id}" class="carcass-btn-buy" ${isCooldown ? 'disabled' : ''} onclick="Carcass.actionDrop('${item.id}', '${item.name}')">
-
-                ${isCooldown ? `Chờ (${remainingSec}s)` : 'Mua'}
-
-              </button>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      `;
-
-    }).join('');
-
-
-
-    if (isCooldown && !this.cooldownTimer) {
-
-      this.startCooldownInterval();
-
+    if (filtered.length === 0) {
+      container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);">Không tìm thấy gói thức ăn nào phù hợp.</div>';
+      return;
     }
 
+    container.innerHTML = filtered.map((item) => {
+      const isPlant = item.type === 'plant' || item.category === 'herbivore';
+      const dinoImg = item.image || (window.Garage ? Garage.getDinoImageUrl(item.species) : `https://islepilot.eu/cdn/dino-art/render/${item.species || 'Tenontosaurus'}.webp`);
+      const cardBorder = isPlant ? 'border-color: rgba(16, 185, 129, 0.35); background: rgba(10, 24, 18, 0.88);' : '';
+      const bannerBg = isPlant ? 'background: radial-gradient(circle at center, rgba(16, 185, 129, 0.18) 0%, rgba(8, 20, 15, 0.95) 100%);' : '';
+      const topBadgeColor = isPlant ? 'background: rgba(16, 185, 129, 0.25); border-color: #10b981; color: #34d399;' : 'background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #10b981;';
+      const subBadgeColor = isPlant ? 'background: rgba(52, 211, 153, 0.15); border-color: #34d399; color: #6ee7b7;' : 'background: rgba(255, 42, 133, 0.15); border-color: var(--accent); color: var(--accent);';
+      const btnStyle = isPlant ? 'background: #10b981; color: #fff;' : 'background: #ff2a85; color: #000;';
+      const btnText = isCooldown ? `Chờ (${remainingSec}s)` : (isPlant ? '🌱 Trồng Cây' : '🥩 Thả Xác');
+
+      return `
+        <div class="carcass-card ${isPlant ? 'carcass-card-plant' : ''}" style="${cardBorder}">
+          <div class="carcass-banner" style="${bannerBg}">
+            <img src="${dinoImg}" alt="${item.name}" class="carcass-img-render" onerror="this.src='https://islepilot.eu/cdn/dino-art/render/Tenontosaurus.webp'">
+            <span class="growth-badge" style="${topBadgeColor}">
+              ${item.badge || (isPlant ? '🌿 Thảo Mộc' : '🥩 100% Kích Cỡ')}
+            </span>
+            <span class="growth-badge" style="right: auto; left: 10px; ${subBadgeColor}">
+              ${item.sub_badge || item.species || (isPlant ? 'Ăn Cỏ' : 'Ăn Thịt')}
+            </span>
+          </div>
+
+          <div class="carcass-body">
+            <div class="carcass-card-header">
+              <span class="carcass-card-name">${isPlant ? (item.icon ? item.icon + ' ' : '🌿 ') : '🥩 '}${item.name}</span>
+              <span class="carcass-card-price" style="${isPlant ? 'color: #34d399;' : ''}">${item.price_display || '$ 0'}</span>
+            </div>
+
+            <p class="carcass-card-desc">
+              ${item.description}
+            </p>
+
+            <div style="margin-top: auto; padding-top: 8px;">
+              <button id="carcass-btn-${item.id}" class="carcass-btn-buy" style="${btnStyle}" ${isCooldown ? 'disabled' : ''} onclick="Carcass.actionDrop('${item.id}', '${item.name}')">
+                ${btnText}
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    if (isCooldown && !this.cooldownTimer) {
+      this.startCooldownInterval();
+    }
   },
 
 
