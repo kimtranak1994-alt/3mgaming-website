@@ -114,6 +114,13 @@ const BossHunt = {
 
     if (remainingSec <= 0) {
       cdElem.innerHTML = `<span style="color: #10b981; font-size: 1rem;">🎉 Đang tự động trao thưởng & sang ngày mới...</span>`;
+      if (!this._resetFetching) {
+        this._resetFetching = true;
+        setTimeout(() => {
+          this._resetFetching = false;
+          this.fetchData();
+        }, 3000);
+      }
       return;
     }
 
