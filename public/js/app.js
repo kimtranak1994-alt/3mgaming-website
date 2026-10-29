@@ -254,7 +254,7 @@ const App = {
     // Cập nhật huy hiệu nổi phía dưới góc màn hình
     const floatingPill = document.getElementById('floating-guest-pill');
     if (floatingPill) {
-      floatingPill.style.display = (window.realAdminVerified && isGuest) ? 'flex' : 'none';
+      floatingPill.style.display = 'none';
     }
 
     // Ẩn/hiện nút Quản Trị trên menu

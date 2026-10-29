@@ -3025,6 +3025,7 @@ body:has(#view-admin.active) .main-wrapper,
 
 /* Floating Guest Mode Indicator for Admin */
 .floating-guest-indicator {
+  display: none !important;
   position: fixed;
   bottom: 24px;
   right: 24px;
