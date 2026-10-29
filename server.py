@@ -1365,8 +1365,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                                 "mutations": [],
                                 "active": ["None", "None", "None", "None"],
                                 "parent": ["None", "None", "None", "None"],
-                                "elderA": ["None", "None"],
-                                "elderB": ["None", "None"]
+                                "elderA": ["None", "None", "None", "None"],
+                                "elderB": ["None", "None", "None", "None"]
                             })
                             print(f"[mutations] Đã gửi lệnh xóa đột biến cho {sid_str}: {res}")
                         threading.Thread(target=async_clear_mutations, daemon=True).start()
@@ -1420,8 +1420,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                             "steamId": sid_str,
                             "active": all_muts["active"][:4],
                             "parent": all_muts["parent"][:4],
-                            "elderA": all_muts["elderA"][:2],
-                            "elderB": all_muts["elderB"][:2]
+                            "elderA": all_muts["elderA"][:4],
+                            "elderB": all_muts["elderB"][:4]
                         })
                         print(f"[mutations] Đã gửi lệnh cập nhật đột biến cho {sid_str}: {res}")
 
@@ -1880,7 +1880,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
         self.wfile.write(body)
 
-    def apply_dino_in_game_worker(self, steam_id, species, gender, growth_val, is_prime, mutations, needs_swap=True, preserve_vitals=False):
+    def apply_dino_in_game_worker(self, steam_id, species, gender, growth_val, is_prime, mutations, needs_swap=True, preserve_vitals=False, mutation_slots=None):
         def worker():
             try:
                 sid = str(steam_id).strip()
@@ -1965,12 +1965,20 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                                 })
 
                         # 3. Gửi mutationSlots hoàn chỉnh
-                        full_mutation_slots = {
-                            "active": clean_muts + ["None"] * (4 - len(clean_muts)),
-                            "parent": ["None", "None", "None", "None"],
-                            "elderA": (clean_muts + ["None"] * (4 - len(clean_muts))) if is_prime else ["None", "None", "None", "None"],
-                            "elderB": ["None", "None", "None", "None"]
-                        }
+                        if mutation_slots and isinstance(mutation_slots, dict):
+                            full_mutation_slots = {
+                                "active": list(mutation_slots.get("active") or ["None"] * 4)[:4],
+                                "parent": list(mutation_slots.get("parent") or ["None"] * 4)[:4],
+                                "elderA": list(mutation_slots.get("elderA") or ["None"] * 4)[:4],
+                                "elderB": list(mutation_slots.get("elderB") or ["None"] * 4)[:4]
+                            }
+                        else:
+                            full_mutation_slots = {
+                                "active": clean_muts + ["None"] * (4 - len(clean_muts)),
+                                "parent": ["None", "None", "None", "None"],
+                                "elderA": (clean_muts + ["None"] * (4 - len(clean_muts))) if is_prime else ["None", "None", "None", "None"],
+                                "elderB": ["None", "None", "None", "None"]
+                            }
                         self.fetch_islepilot("/commands", method="POST", body_data={
                             "action": "mutations",
                             "steamId": sid,
@@ -4858,12 +4866,20 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     or {}
                 )
 
-            # Chuẩn hóa toàn bộ 4 nhóm đột biến: active, parent, elderA, elderB (bảo toàn 100%)
+            local_saved = (
+                saved_muts_map.get(f"{steam_id}_{dino_id}")
+                or saved_muts_map.get(str(dino_id))
+                or saved_muts_map.get(f"{steam_id}_{dino_spec}")
+                or saved_muts_map.get(f"{steam_id}_last_parked")
+                or {}
+            )
+
+            # Chuẩn hóa toàn bộ 4 nhóm đột biến: active, parent, elderA, elderB (kết hợp cả remote và local để bảo toàn đủ 16 slot)
             full_slots = {
-                "active": list(dino_mutation_slots.get("active") or ["None", "None", "None", "None"]),
-                "parent": list(dino_mutation_slots.get("parent") or ["None", "None", "None", "None"]),
-                "elderA": list(dino_mutation_slots.get("elderA") or ["None", "None", "None", "None"]),
-                "elderB": list(dino_mutation_slots.get("elderB") or ["None", "None", "None", "None"])
+                "active": list((dino_mutation_slots.get("active") if dino_mutation_slots else None) or local_saved.get("active") or ["None", "None", "None", "None"]),
+                "parent": list((dino_mutation_slots.get("parent") if dino_mutation_slots else None) or local_saved.get("parent") or ["None", "None", "None", "None"]),
+                "elderA": list((dino_mutation_slots.get("elderA") if dino_mutation_slots else None) or local_saved.get("elderA") or ["None", "None", "None", "None"]),
+                "elderB": list((dino_mutation_slots.get("elderB") if dino_mutation_slots else None) or local_saved.get("elderB") or ["None", "None", "None", "None"])
             }
             for k in ["active", "parent", "elderA", "elderB"]:
                 full_slots[k] = [(str(m).strip() if m else "None") for m in full_slots[k][:4]]
@@ -4890,8 +4906,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                         "steamId": str(steam_id),
                         "active": full_slots["active"][:4],
                         "parent": full_slots["parent"][:4],
-                        "elderA": full_slots["elderA"][:2],
-                        "elderB": full_slots["elderB"][:2],
+                        "elderA": full_slots["elderA"][:4],
+                        "elderB": full_slots["elderB"][:4],
                         "mutationSlots": full_slots
                     }
                     r1 = self.fetch_islepilot("/commands", method="POST", body_data=body_muts)
@@ -5111,6 +5127,17 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             if res and isinstance(res, dict):
 
                 if res.get("ok") or res.get("success"):
+                    try:
+                        p_muts = load_garage_saved_mutations().get(f"{steam_id}_last_parked")
+                        if p_muts:
+                            fresh_garage = self.fetch_islepilot(f"/players/{steam_id}/garage") or {}
+                            gar_list = fresh_garage.get("garage", [])
+                            if gar_list:
+                                latest_dino = gar_list[-1]
+                                if latest_dino.get("id"):
+                                    save_garage_saved_mutation(f"{steam_id}_{latest_dino['id']}", p_muts)
+                    except Exception:
+                        pass
 
                     self.send_json_response({
 

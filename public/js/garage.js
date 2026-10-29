@@ -483,7 +483,18 @@ const Garage = {
 
     const isCarno = this.isCarnivore(dino.species);
 
-    const validMutations = (dino.mutations || []).filter(m => m && m !== 'None' && String(m).trim() !== '');
+    const slots = dino.mutationSlots || {};
+    const activeMut = (slots.active && slots.active.length > 0) ? slots.active : (dino.mutations || []);
+    const parentMut = slots.parent || [];
+    const elderAMut = slots.elderA || [];
+    const elderBMut = slots.elderB || [];
+    const isVal = (m) => m && m !== 'None' && String(m).trim() !== '';
+    const validActive = activeMut.filter(isVal);
+    const validParent = parentMut.filter(isVal);
+    const validElderA = elderAMut.filter(isVal);
+    const validElderB = elderBMut.filter(isVal);
+    const totalMutations = validActive.length + validParent.length + validElderA.length + validElderB.length;
+    const validMutations = validActive;
 
 
 
@@ -500,6 +511,7 @@ const Garage = {
           <span class="growth-badge">${dino.stage || 'Adult'} (${dino.growth_percent}%)</span>
 
           ${dino.is_prime_elder ? '<span class="growth-badge" style="right: auto; left: 10px; background: rgba(245, 158, 11, 0.25); border-color: #f59e0b; color: #fbbf24;">👑 Prime Elder</span>' : ''}
+          <span class="growth-badge" style="right: auto; left: ${dino.is_prime_elder ? '135px' : '10px'}; background: rgba(16, 185, 129, 0.25); border-color: #10b981; color: #34d399;">🧬 ${totalMutations}/16 Đột biến</span>
 
         </div>
 
@@ -615,9 +627,9 @@ const Garage = {
 
           </div>
 
-          <button type="button" class="btn-mutations-view" onclick="Garage.showMutationsModal('${dino.id}')" title="Xem chi tiết các đột biến gen đã cộng">
+          <button type="button" class="btn-mutations-view" onclick="Garage.showMutationsModal('${dino.id}')" title="Xem chi tiết toàn bộ 16 ô đột biến gen (Active, Parent, Elder A, Elder B)">
 
-            🔀 Đột biến
+            🔀 Đột biến (${totalMutations}/16)
 
           </button>
 
@@ -1293,7 +1305,7 @@ const Garage = {
 
     let html = `
       <div class="mut-total-badge">
-        <span>📊 Tổng số đột biến gen đã cộng: <b style="color: #10b981; font-size: 1.05rem;">${totalValid}</b> đột biến</span>
+        <span>📊 Tổng số đột biến gen đã cộng: <b style="color: #10b981; font-size: 1.05rem;">${totalValid}/16</b> đột biến</span>
         <span style="font-size: 0.78rem; color: #94a3b8;">Đồng bộ 100% từ máy chủ game IslePilot</span>
       </div>
 
@@ -1319,15 +1331,25 @@ const Garage = {
         </div>
       </div>
 
-      <!-- 3. ELDER A & B MUTATIONS (8 SLOTS) -->
+      <!-- 3. ELDER A MUTATIONS (4 SLOTS) -->
       <div class="mut-group-section">
         <div class="mut-group-title" style="color: #fbbf24;">
-          <span>👑 Đột Biến Trưởng Lão (Elder A & B Mutations)</span>
-          <span class="mut-count-pill" style="border: 1px solid rgba(251,191,36,0.3); color: #fbbf24;">${validElderA.length + validElderB.length}/8</span>
+          <span>👑 Đột Biến Trưởng Lão A (Elder A Mutations)</span>
+          <span class="mut-count-pill" style="border: 1px solid rgba(251,191,36,0.3); color: #fbbf24;">${validElderA.length}/4</span>
         </div>
         <div class="mut-slots-grid">
           ${[1, 2, 3, 4].map(i => renderSlotItem(elderAMut[i - 1], i, "#fbbf24", "Elder A")).join("")}
-          ${[1, 2, 3, 4].map(i => renderSlotItem(elderBMut[i - 1], i + 4, "#f59e0b", "Elder B")).join("")}
+        </div>
+      </div>
+
+      <!-- 4. ELDER B MUTATIONS (4 SLOTS) -->
+      <div class="mut-group-section">
+        <div class="mut-group-title" style="color: #f59e0b;">
+          <span>👑 Đột Biến Trưởng Lão B (Elder B Mutations)</span>
+          <span class="mut-count-pill" style="border: 1px solid rgba(245,158,11,0.3); color: #f59e0b;">${validElderB.length}/4</span>
+        </div>
+        <div class="mut-slots-grid">
+          ${[1, 2, 3, 4].map(i => renderSlotItem(elderBMut[i - 1], i, "#f59e0b", "Elder B")).join("")}
         </div>
       </div>
     `;

@@ -596,5 +596,577 @@
       "None",
       "None"
     ]
+  },
+  "76561199483156684_cmvtqkqsc70ffqg017eir3h7j": {
+    "active": [
+      "Enlarged meniscus",
+      "Sustained Hydration",
+      "Cellular Regeneration",
+      "Hematophagy"
+    ],
+    "parent": [
+      "Enhanced Digestion",
+      "Photosynthetic Tissue",
+      "Nocturnal",
+      "Cannibalistic"
+    ],
+    "elderA": [
+      "Epidermal Fibrosis",
+      "Hypermetabolic Inanition",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "Accelerated Prey Drive",
+      "Multichambered Lungs",
+      "None",
+      "None"
+    ]
+  },
+  "cmvtqkqsc70ffqg017eir3h7j": {
+    "active": [
+      "Enlarged meniscus",
+      "Sustained Hydration",
+      "Cellular Regeneration",
+      "Hematophagy"
+    ],
+    "parent": [
+      "Enhanced Digestion",
+      "Photosynthetic Tissue",
+      "Nocturnal",
+      "Cannibalistic"
+    ],
+    "elderA": [
+      "Epidermal Fibrosis",
+      "Hypermetabolic Inanition",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "Accelerated Prey Drive",
+      "Multichambered Lungs",
+      "None",
+      "None"
+    ]
+  },
+  "76561199483156684_Carnotaurus": {
+    "active": [
+      "Enlarged meniscus",
+      "Sustained Hydration",
+      "Cellular Regeneration",
+      "Hematophagy"
+    ],
+    "parent": [
+      "Enhanced Digestion",
+      "Photosynthetic Tissue",
+      "Nocturnal",
+      "Cannibalistic"
+    ],
+    "elderA": [
+      "Epidermal Fibrosis",
+      "Hypermetabolic Inanition",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "Accelerated Prey Drive",
+      "Multichambered Lungs",
+      "None",
+      "None"
+    ]
+  },
+  "76561199483156684_cmvtpw5pn6z5fmq01qmg1xjwt": {
+    "active": [
+      "Efficient Digestion",
+      "Cannibalistic",
+      "Hydrodynamic",
+      "Heightened Ghrelin"
+    ],
+    "parent": [
+      "Congenital Hypoalgesia",
+      "Hypermetabolic Inanition",
+      "Nocturnal",
+      "Gastronomic Regeneration"
+    ],
+    "elderA": [
+      "Osteosclerosis",
+      "Cellular Regeneration",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "Accelerated Prey Drive",
+      "Multichambered Lungs",
+      "None",
+      "None"
+    ]
+  },
+  "cmvtpw5pn6z5fmq01qmg1xjwt": {
+    "active": [
+      "Efficient Digestion",
+      "Cannibalistic",
+      "Hydrodynamic",
+      "Heightened Ghrelin"
+    ],
+    "parent": [
+      "Congenital Hypoalgesia",
+      "Hypermetabolic Inanition",
+      "Nocturnal",
+      "Gastronomic Regeneration"
+    ],
+    "elderA": [
+      "Osteosclerosis",
+      "Cellular Regeneration",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "Accelerated Prey Drive",
+      "Multichambered Lungs",
+      "None",
+      "None"
+    ]
+  },
+  "76561199483156684_Spinosaurus": {
+    "active": [
+      "Efficient Digestion",
+      "Cannibalistic",
+      "Hydrodynamic",
+      "Heightened Ghrelin"
+    ],
+    "parent": [
+      "Congenital Hypoalgesia",
+      "Hypermetabolic Inanition",
+      "Nocturnal",
+      "Gastronomic Regeneration"
+    ],
+    "elderA": [
+      "Osteosclerosis",
+      "Cellular Regeneration",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "Accelerated Prey Drive",
+      "Multichambered Lungs",
+      "None",
+      "None"
+    ]
+  },
+  "76561199483156684_cmvt3jqou3sxzn201cinowyv9": {
+    "active": [
+      "Enhanced Digestion",
+      "Photosynthetic Tissue",
+      "Nocturnal",
+      "Heightened Ghrelin"
+    ],
+    "parent": [
+      "Congenital Hypoalgesia",
+      "Epidermal Fibrosis",
+      "Osteosclerosis",
+      "Gastronomic Regeneration"
+    ],
+    "elderA": [
+      "Accelerated Prey Drive",
+      "Hemomania",
+      "Multichambered Lungs",
+      "Hypermetabolic Inanition"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "cmvt3jqou3sxzn201cinowyv9": {
+    "active": [
+      "Enhanced Digestion",
+      "Photosynthetic Tissue",
+      "Nocturnal",
+      "Heightened Ghrelin"
+    ],
+    "parent": [
+      "Congenital Hypoalgesia",
+      "Epidermal Fibrosis",
+      "Osteosclerosis",
+      "Gastronomic Regeneration"
+    ],
+    "elderA": [
+      "Accelerated Prey Drive",
+      "Hemomania",
+      "Multichambered Lungs",
+      "Hypermetabolic Inanition"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "76561199483156684_Tyrannosaurus": {
+    "active": [
+      "Enhanced Digestion",
+      "Photosynthetic Tissue",
+      "Nocturnal",
+      "Heightened Ghrelin"
+    ],
+    "parent": [
+      "Congenital Hypoalgesia",
+      "Epidermal Fibrosis",
+      "Osteosclerosis",
+      "Gastronomic Regeneration"
+    ],
+    "elderA": [
+      "Accelerated Prey Drive",
+      "Hemomania",
+      "Multichambered Lungs",
+      "Hypermetabolic Inanition"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "76561199483156684_cmvryisvp01nxny01j17ynrhz": {
+    "active": [
+      "Nocturnal",
+      "Cannibalistic",
+      "Multichambered Lungs",
+      "Efficient Digestion"
+    ],
+    "parent": [
+      "Enhanced Digestion",
+      "Gastronomic Regeneration",
+      "Enlarged meniscus",
+      "Photosynthetic Tissue"
+    ],
+    "elderA": [
+      "Epidermal Fibrosis",
+      "Hypermetabolic Inanition",
+      "Cellular Regeneration",
+      "Heightened Ghrelin"
+    ],
+    "elderB": [
+      "Hemomania",
+      "Congenital Hypoalgesia",
+      "Accelerated Prey Drive",
+      "Osteosclerosis"
+    ]
+  },
+  "cmvryisvp01nxny01j17ynrhz": {
+    "active": [
+      "Nocturnal",
+      "Cannibalistic",
+      "Multichambered Lungs",
+      "Efficient Digestion"
+    ],
+    "parent": [
+      "Enhanced Digestion",
+      "Gastronomic Regeneration",
+      "Enlarged meniscus",
+      "Photosynthetic Tissue"
+    ],
+    "elderA": [
+      "Epidermal Fibrosis",
+      "Hypermetabolic Inanition",
+      "Cellular Regeneration",
+      "Heightened Ghrelin"
+    ],
+    "elderB": [
+      "Hemomania",
+      "Congenital Hypoalgesia",
+      "Accelerated Prey Drive",
+      "Osteosclerosis"
+    ]
+  },
+  "76561199483156684_Allosaurus": {
+    "active": [
+      "Nocturnal",
+      "Cannibalistic",
+      "Multichambered Lungs",
+      "Efficient Digestion"
+    ],
+    "parent": [
+      "Enhanced Digestion",
+      "Gastronomic Regeneration",
+      "Enlarged meniscus",
+      "Photosynthetic Tissue"
+    ],
+    "elderA": [
+      "Epidermal Fibrosis",
+      "Hypermetabolic Inanition",
+      "Cellular Regeneration",
+      "Heightened Ghrelin"
+    ],
+    "elderB": [
+      "Hemomania",
+      "Congenital Hypoalgesia",
+      "Accelerated Prey Drive",
+      "Osteosclerosis"
+    ]
+  },
+  "76561199483156684_cmvqpwemp3z3tmg01dg0ysa71": {
+    "active": [
+      "Cellular Regeneration",
+      "Accelerated Prey Drive",
+      "Multichambered Lungs",
+      "Efficient Digestion"
+    ],
+    "parent": [
+      "Osteosclerosis",
+      "Sustained Hydration",
+      "Congenital Hypoalgesia",
+      "Truculency"
+    ],
+    "elderA": [
+      "Multichambered Lungs",
+      "Enlarged meniscus",
+      "Hypermetabolic Inanition",
+      "Hemomania"
+    ],
+    "elderB": [
+      "Hemomania",
+      "Epidermal Fibrosis",
+      "Gastronomic Regeneration",
+      "Hydrodynamic"
+    ]
+  },
+  "cmvqpwemp3z3tmg01dg0ysa71": {
+    "active": [
+      "Cellular Regeneration",
+      "Accelerated Prey Drive",
+      "Multichambered Lungs",
+      "Efficient Digestion"
+    ],
+    "parent": [
+      "Osteosclerosis",
+      "Sustained Hydration",
+      "Congenital Hypoalgesia",
+      "Truculency"
+    ],
+    "elderA": [
+      "Multichambered Lungs",
+      "Enlarged meniscus",
+      "Hypermetabolic Inanition",
+      "Hemomania"
+    ],
+    "elderB": [
+      "Hemomania",
+      "Epidermal Fibrosis",
+      "Gastronomic Regeneration",
+      "Hydrodynamic"
+    ]
+  },
+  "76561199483156684_Deinosuchus": {
+    "active": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "parent": [
+      "Hemomania",
+      "Gastronomic Regeneration",
+      "Hydrodynamic",
+      "Gastronomic Regeneration"
+    ],
+    "elderA": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "76561199483156684_cmvp314023c17p801ooow9s8d": {
+    "active": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "parent": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderA": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "cmvp314023c17p801ooow9s8d": {
+    "active": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "parent": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderA": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "76561199483156684_Troodon": {
+    "active": [
+      "Multichambered Lungs",
+      "Hematophagy",
+      "Accelerated Prey Drive",
+      "Congenital Hypoalgesia"
+    ],
+    "parent": [
+      "Multichambered Lungs",
+      "Accelerated Prey Drive",
+      "Hemomania",
+      "None"
+    ],
+    "elderA": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "76561199483156684_cmvoz3geb2tpbpe01boaemy2r": {
+    "active": [
+      "Multichambered Lungs",
+      "Hematophagy",
+      "Accelerated Prey Drive",
+      "Congenital Hypoalgesia"
+    ],
+    "parent": [
+      "Multichambered Lungs",
+      "Accelerated Prey Drive",
+      "Hemomania",
+      "None"
+    ],
+    "elderA": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "cmvoz3geb2tpbpe01boaemy2r": {
+    "active": [
+      "Multichambered Lungs",
+      "Hematophagy",
+      "Accelerated Prey Drive",
+      "Congenital Hypoalgesia"
+    ],
+    "parent": [
+      "Multichambered Lungs",
+      "Accelerated Prey Drive",
+      "Hemomania",
+      "None"
+    ],
+    "elderA": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "76561199483156684_cmv6dfttf00czqj018sa2ndtb": {
+    "active": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "parent": [
+      "Hemomania",
+      "Gastronomic Regeneration",
+      "Hydrodynamic",
+      "Gastronomic Regeneration"
+    ],
+    "elderA": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "cmv6dfttf00czqj018sa2ndtb": {
+    "active": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "parent": [
+      "Hemomania",
+      "Gastronomic Regeneration",
+      "Hydrodynamic",
+      "Gastronomic Regeneration"
+    ],
+    "elderA": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
   }
 }
