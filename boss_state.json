@@ -7,7 +7,7 @@
   "season_id": "Mùa 1 (Ngày 29/10)",
   "started_at": "2026-10-29T00:00:00",
   "expires_at": "2026-10-30T00:00:00",
-  "time_remaining_seconds": 30070,
+  "time_remaining_seconds": 30058,
   "auto_reward_enabled": true,
   "ended_at": null,
   "is_settled": false,
@@ -205,10 +205,10 @@
     "Compsognathus": 8
   },
   "processed_kill_ids": [
-    "6275548",
-    "6261611",
     "6268616",
+    "6261611",
     "6275375",
+    "6275548",
     "6277458",
     "6260194",
     "6277747",
