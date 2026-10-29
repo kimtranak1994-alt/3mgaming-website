@@ -2,4 +2,13 @@ __pycache__/
 *.pyc
 .env
 .persistent_*.json
-
+ai_hunt_state.json
+boss_state.json
+arena_matches.json
+player_wallet_cache.json
+admin_wallet_adjustments.json
+claimed_quests.json
+referrals.json
+deleted_garage_dinos.json
+user_gift_dinos.json
+scratch_*.json

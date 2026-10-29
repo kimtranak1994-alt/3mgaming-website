@@ -3907,13 +3907,16 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         primary_file = os.path.join(base_dir, "ai_hunt_state.json")
         sub_file = os.path.join(base_dir, "3mgaming-website", "ai_hunt_state.json")
         backup_file = os.path.join(base_dir, ".persistent_ai_hunt_state.json")
-        legacy_file = os.path.join(base_dir, "boss_state.json")
-        legacy_sub = os.path.join(base_dir, "3mgaming-website", "boss_state.json")
-        for fpath in [primary_file, sub_file, backup_file, legacy_file, legacy_sub]:
+
+        # Loại bỏ time_remaining_seconds trước khi lưu ra file để tránh ghi đĩa liên tục mỗi giây
+        data_to_save = dict(data)
+        data_to_save.pop("time_remaining_seconds", None)
+
+        for fpath in [primary_file, sub_file, backup_file]:
             try:
                 os.makedirs(os.path.dirname(fpath), exist_ok=True)
                 with open(fpath, "w", encoding="utf-8") as f:
-                    json.dump(data, f, ensure_ascii=False, indent=2)
+                    json.dump(data_to_save, f, ensure_ascii=False, indent=2)
             except Exception:
                 pass
 
@@ -3921,6 +3924,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         if not db or not db.get("active"):
             return
 
+        has_changes = False
         now_ts = time.time()
         hits = []
         try:
@@ -3954,7 +3958,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         if not started_at_ts:
             started_at_ts = now_ts
             db["started_at"] = datetime.datetime.fromtimestamp(now_ts).isoformat()
+            has_changes = True
 
+        new_kills = 0
         # Quét và ghi nhận các đòn hạ gục khủng long AI
         if hits:
             for h in hits:
@@ -3994,6 +4000,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     continue
 
                 processed_ids.add(hit_id)
+                new_kills += 1
 
                 atk_name = h.get("attackerName") or f"Player_{atk_sid[-4:]}"
                 atk_species = h.get("attackerSpecies") or "Dinosaur"
@@ -4022,37 +4029,41 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
                 prey_summary[vic_species] = prey_summary.get(vic_species, 0) + 1
 
-        db["processed_kill_ids"] = list(processed_ids)[-1000:]
-        db["prey_summary"] = prey_summary
+        if new_kills > 0:
+            has_changes = True
+            db["processed_kill_ids"] = list(processed_ids)[-1000:]
+            db["prey_summary"] = prey_summary
 
-        # Sắp xếp Bảng Xếp Hạng: Số AI tiêu diệt giảm dần, ai đạt mốc sớm hơn đứng trước
-        sorted_hunters = sorted(
-            hunters.values(),
-            key=lambda x: (-x.get("kills", 0), x.get("last_kill_at", ""))
-        )
+            # Sắp xếp Bảng Xếp Hạng: Số AI tiêu diệt giảm dần, ai đạt mốc sớm hơn đứng trước
+            sorted_hunters = sorted(
+                hunters.values(),
+                key=lambda x: (-x.get("kills", 0), x.get("last_kill_at", ""))
+            )
 
-        total_kills_all = sum(h.get("kills", 0) for h in sorted_hunters)
-        db["total_ai_kills"] = total_kills_all
+            total_kills_all = sum(h.get("kills", 0) for h in sorted_hunters)
+            db["total_ai_kills"] = total_kills_all
 
-        reward_xu = int(db.get("reward_xu", 1000))
-        leaderboard = []
-        for idx, h in enumerate(sorted_hunters):
-            is_top1 = (idx == 0 and h.get("kills", 0) > 0)
-            leaderboard.append({
-                "rank": idx + 1,
-                "steam_id": h.get("steam_id"),
-                "name": h.get("name"),
-                "species": h.get("species"),
-                "kills": h.get("kills", 0),
-                "prey_breakdown": h.get("prey_breakdown", {}),
-                "last_kill_at": h.get("last_kill_at"),
-                "last_prey": h.get("last_prey"),
-                "is_top1": is_top1,
-                "reward_xu": reward_xu if is_top1 else 0
-            })
+            reward_xu = int(db.get("reward_xu", 1000))
+            leaderboard = []
+            for idx, h in enumerate(sorted_hunters):
+                is_top1 = (idx == 0 and h.get("kills", 0) > 0)
+                leaderboard.append({
+                    "rank": idx + 1,
+                    "steam_id": h.get("steam_id"),
+                    "name": h.get("name"),
+                    "species": h.get("species"),
+                    "kills": h.get("kills", 0),
+                    "prey_breakdown": h.get("prey_breakdown", {}),
+                    "last_kill_at": h.get("last_kill_at"),
+                    "last_prey": h.get("last_prey"),
+                    "is_top1": is_top1,
+                    "reward_xu": reward_xu if is_top1 else 0
+                })
 
-        db["leaderboard"] = leaderboard
-        db["top_hunter"] = leaderboard[0] if (leaderboard and leaderboard[0]["kills"] > 0) else None
+            db["leaderboard"] = leaderboard
+            db["top_hunter"] = leaderboard[0] if (leaderboard and leaderboard[0]["kills"] > 0) else None
+
+        leaderboard = db.get("leaderboard", [])
 
         # KIỂM TRA CHU KỲ 1 NGÀY (24 GIỜ): TỰ ĐỘNG CHỐT VÀ TRAO 1.000 XU CHO TOP 1
         duration_sec = int(db.get("duration_seconds", 86400))
@@ -4063,8 +4074,10 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         db["expires_at"] = datetime.datetime.fromtimestamp(expires_at_ts).isoformat()
 
         if started_at_ts > 0 and now_ts >= expires_at_ts:
+            has_changes = True
             print(f"[AI Hunt Daily Auto-Settle] ĐÃ HẾT 1 NGÀY (now={now_ts} >= expires={expires_at_ts})! Đang tự động trao thưởng 1.000 Xu cho Top 1...")
             top_hunter = leaderboard[0] if (leaderboard and leaderboard[0].get("kills", 0) > 0) else None
+            reward_xu = int(db.get("reward_xu", 1000))
 
             if top_hunter:
                 winner_sid = str(top_hunter.get("steam_id")).strip()
@@ -4136,17 +4149,38 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             except Exception:
                 pass
 
-        self._save_ai_hunt_db(db)
+        # CHỈ GHI RA ĐĨA KHI CÓ THAY ĐỔI THỰC SỰ (CÓ HIT MỚI HOẶC HẾT NGÀY RESET)
+        if has_changes:
+            self._save_ai_hunt_db(db)
 
     def handle_ai_hunt_get(self):
         db = self._get_ai_hunt_db()
         self._auto_check_ai_hunt_status(db)
 
+        # Tính toán time_remaining_seconds động trong bộ nhớ trước khi trả về
+        now_ts = time.time()
+        started_at_str = db.get("started_at")
+        started_at_ts = 0.0
+        if started_at_str:
+            try:
+                clean_str = started_at_str.replace("Z", "+00:00")
+                started_at_ts = datetime.datetime.fromisoformat(clean_str).timestamp()
+            except Exception:
+                pass
+        duration_sec = int(db.get("duration_seconds", 86400))
+        if started_at_ts > 0:
+            time_left = max(0, int((started_at_ts + duration_sec) - now_ts))
+        else:
+            time_left = duration_sec
+
+        resp_db = dict(db)
+        resp_db["time_remaining_seconds"] = time_left
+
         is_admin, _ = self.is_admin_request()
         self.send_json_response({
             "ok": True,
-            "ai_hunt": db,
-            "boss": db,
+            "ai_hunt": resp_db,
+            "boss": resp_db,
             "is_admin": is_admin
         })
 
