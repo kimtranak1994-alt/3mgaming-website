@@ -1925,7 +1925,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                         self.fetch_islepilot("/commands", method="POST", body_data={
                             "action": "scale",
                             "steamId": sid,
-                            "scale": 1.37
+                            "scale": 1.0
                         })
                         time.sleep(0.3)
 
@@ -2073,7 +2073,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     self.fetch_islepilot("/commands", method="POST", body_data={
                         "action": "scale",
                         "steamId": sid,
-                        "scale": 1.37
+                        "scale": 1.0
                     })
                     time.sleep(0.4)
                 
@@ -4908,6 +4908,15 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             if res and (res.get("ok") is True or "commandId" in res):
                 # KHỞI CHẠY TIẾN TRÌNH KHÔI PHỤC VÀ KHÓA 100% ĐỘT BIẾN GEN (GIỮ NGUYÊN NHƯ LÚC CẤT)
                 def restore_mutations_task():
+                    # Đặt kích thước khủng long về size 1x mặc định (scale 1.0)
+                    try:
+                        self.fetch_islepilot("/commands", method="POST", body_data={
+                            "action": "scale",
+                            "steamId": str(steam_id),
+                            "scale": 1.0
+                        })
+                    except Exception:
+                        pass
                     # Đợi 4.0 giây để nhân vật Evrima load vào bản đồ game hoàn chỉnh
                     time.sleep(4.0)
 
@@ -4938,7 +4947,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                         self.fetch_islepilot("/commands", method="POST", body_data={
                             "action": "scale",
                             "steamId": str(steam_id),
-                            "scale": 1.37
+                            "scale": 1.0
                         })
 
                     # Bổ trợ lần 2 sau 3 giây để đảm bảo ăn vĩnh viễn vào file nhân vật server

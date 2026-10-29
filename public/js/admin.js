@@ -2263,14 +2263,14 @@ const AdminPanel = {
       stacks: eligible ? 10 : 0 
     });
     if (eligible) {
-      await this.executeCommand('scale', steamId, { scale: 1.37 }, true);
+      await this.executeCommand('scale', steamId, { scale: 1.0 }, true);
     }
   },
 
   async modSetElderStacks(steamId) {
     const stacks = parseInt(document.getElementById('mod-val-elder-stacks')?.value || 10);
     await this.executeCommand('setprime', steamId, { eligible: true, conditions: 10, isElder: true, stacks });
-    await this.executeCommand('scale', steamId, { scale: 1.37 }, true);
+    await this.executeCommand('scale', steamId, { scale: 1.0 }, true);
   },
 
   async modHeal(steamId, maxH, maxHu, maxT) {
