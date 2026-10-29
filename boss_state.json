@@ -7,11 +7,11 @@
   "season_id": "Mùa 1 (Ngày 29/10)",
   "started_at": "2026-10-29T00:00:00",
   "expires_at": "2026-10-30T00:00:00",
-  "time_remaining_seconds": 30040,
+  "time_remaining_seconds": 30028,
   "auto_reward_enabled": true,
   "ended_at": null,
   "is_settled": false,
-  "total_ai_kills": 71,
+  "total_ai_kills": 72,
   "hunters": {
     "76561198435078947": {
       "steam_id": "76561198435078947",
@@ -32,19 +32,19 @@
       "steam_id": "76561199483156684",
       "name": "Thich Du Thư",
       "species": "Carnotaurus",
-      "kills": 27,
+      "kills": 28,
       "prey_breakdown": {
         "Chicken": 2,
         "Deer": 3,
-        "Dryosaurus": 1,
+        "Dryosaurus": 2,
         "Boar": 9,
         "Rabbit": 1,
         "Psittacosaurus_Plains": 3,
         "Psittacosaurus_Coastal": 1,
         "Compsognathus": 7
       },
-      "last_kill_at": "2026-10-29T08:28:11.015Z",
-      "last_prey": "Deer"
+      "last_kill_at": "2026-10-29T08:39:24.986Z",
+      "last_prey": "Dryosaurus"
     },
     "76561198647188052": {
       "steam_id": "76561198647188052",
@@ -117,19 +117,19 @@
       "steam_id": "76561199483156684",
       "name": "Thich Du Thư",
       "species": "Carnotaurus",
-      "kills": 27,
+      "kills": 28,
       "prey_breakdown": {
         "Chicken": 2,
         "Deer": 3,
-        "Dryosaurus": 1,
+        "Dryosaurus": 2,
         "Boar": 9,
         "Rabbit": 1,
         "Psittacosaurus_Plains": 3,
         "Psittacosaurus_Coastal": 1,
         "Compsognathus": 7
       },
-      "last_kill_at": "2026-10-29T08:28:11.015Z",
-      "last_prey": "Deer",
+      "last_kill_at": "2026-10-29T08:39:24.986Z",
+      "last_prey": "Dryosaurus",
       "is_top1": false,
       "reward_xu": 0
     },
@@ -196,7 +196,7 @@
     "Seaturtle": 27,
     "Chicken": 3,
     "Deer": 7,
-    "Dryosaurus": 3,
+    "Dryosaurus": 4,
     "Boar": 15,
     "Rabbit": 1,
     "Psittacosaurus_Plains": 5,
@@ -205,8 +205,8 @@
     "Compsognathus": 8
   },
   "processed_kill_ids": [
-    "6268616",
     "6275548",
+    "6268616",
     "6261611",
     "6275375",
     "6277458",
@@ -250,6 +250,7 @@
     "6257537",
     "6260073",
     "6257309",
+    "6284048",
     "6260107",
     "6254268",
     "6281290",
