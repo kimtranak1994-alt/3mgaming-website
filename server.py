@@ -3612,14 +3612,19 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         elif path == "/api/arena/matches/cancel":
             match_id = payload.get("match_id")
             steam_id = payload.get("steam_id") or self.get_active_steam_id()
+            is_adm, _ = self.is_admin_request()
+            admin_sids = [str(sid) for sid in config.get("ADMIN_STEAM_IDS", ["76561199175571899"])]
+            if steam_id and str(steam_id) in admin_sids:
+                is_adm = True
+
             target_match = next((m for m in matches if m.get("id") == match_id), None)
             if not target_match:
                 self.send_json_response({"ok": False, "error": "Kèo không tồn tại!"}, status=404)
                 return
-            if str(target_match.get("creator", {}).get("steamId")) != str(steam_id):
-                self.send_json_response({"ok": False, "error": "Chỉ người tạo kèo mới có quyền hủy!"}, status=403)
+            if not is_adm and str(target_match.get("creator", {}).get("steamId")) != str(steam_id):
+                self.send_json_response({"ok": False, "error": "Chỉ người tạo kèo hoặc Admin mới có quyền hủy!"}, status=403)
                 return
-            if target_match.get("status") != "waiting":
+            if not is_adm and target_match.get("status") != "waiting":
                 self.send_json_response({"ok": False, "error": "Chỉ có thể hủy kèo khi chưa có người nhận!"}, status=400)
                 return
 
@@ -3642,6 +3647,34 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "message": f"Đã hủy kèo PK #{match_id} thành công!",
                 "balance": new_balance
             })
+            return
+
+        # 3.1. Xóa Vĩnh Viễn Kèo Đấu (Delete Match - Dành cho Admin)
+        elif path == "/api/arena/matches/delete":
+            match_id = payload.get("match_id")
+            steam_id = payload.get("steam_id") or self.get_active_steam_id()
+            is_adm, _ = self.is_admin_request()
+            admin_sids = [str(sid) for sid in config.get("ADMIN_STEAM_IDS", ["76561199175571899"])]
+            if steam_id and str(steam_id) in admin_sids:
+                is_adm = True
+
+            if not is_adm:
+                self.send_json_response({"ok": False, "error": "Chỉ Admin mới có quyền xóa vĩnh viễn kèo đấu!"}, status=403)
+                return
+
+            target_match = next((m for m in matches if m.get("id") == match_id), None)
+            if target_match:
+                for b in target_match.get("spectatorBets", []):
+                    if not b.get("settled"):
+                        b_amt = int(b.get("amount", 0))
+                        if b_amt > 0:
+                            self._adjust_player_xu(b.get("steamId"), b_amt, f"Hoàn tiền cược do kèo PK #{match_id} bị xóa")
+                        b["status"] = "refunded"
+                        b["settled"] = True
+
+            db["matches"] = [m for m in db.get("matches", []) if str(m.get("id")) != str(match_id)]
+            self._save_arena_db(db)
+            self.send_json_response({"ok": True, "message": f"Đã xóa vĩnh viễn kèo PK #{match_id} thành công!"})
             return
 
         # 4. Đặt Cược Khán Giả (Spectator Bet)

@@ -518,5 +518,83 @@
       "None",
       "None"
     ]
+  },
+  "76561199175571899_cmvqhuzrz2udnp101nzgeqrbn": {
+    "active": [
+      "Accelerated Prey Drive",
+      "Cannibalistic",
+      "Barometric Sensitivity",
+      "Cellular Regeneration"
+    ],
+    "parent": [
+      "Augmented Tapetum",
+      "Barometric Sensitivity",
+      "Cellular Regeneration",
+      "Congenital Hypoalgesia"
+    ],
+    "elderA": [
+      "Barometric Sensitivity",
+      "Advanced Gestation",
+      "Cannibalistic",
+      "Epidermal Fibrosis"
+    ],
+    "elderB": [
+      "Cellular Regeneration",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "cmvqhuzrz2udnp101nzgeqrbn": {
+    "active": [
+      "Accelerated Prey Drive",
+      "Cannibalistic",
+      "Barometric Sensitivity",
+      "Cellular Regeneration"
+    ],
+    "parent": [
+      "Augmented Tapetum",
+      "Barometric Sensitivity",
+      "Cellular Regeneration",
+      "Congenital Hypoalgesia"
+    ],
+    "elderA": [
+      "Barometric Sensitivity",
+      "Advanced Gestation",
+      "Cannibalistic",
+      "Epidermal Fibrosis"
+    ],
+    "elderB": [
+      "Cellular Regeneration",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "76561199175571899_Allosaurus": {
+    "active": [
+      "Accelerated Prey Drive",
+      "Cannibalistic",
+      "Barometric Sensitivity",
+      "Cellular Regeneration"
+    ],
+    "parent": [
+      "Augmented Tapetum",
+      "Barometric Sensitivity",
+      "Cellular Regeneration",
+      "Congenital Hypoalgesia"
+    ],
+    "elderA": [
+      "Barometric Sensitivity",
+      "Advanced Gestation",
+      "Cannibalistic",
+      "Epidermal Fibrosis"
+    ],
+    "elderB": [
+      "Cellular Regeneration",
+      "None",
+      "None",
+      "None"
+    ]
   }
 }

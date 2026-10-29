@@ -41,6 +41,41 @@ const Arena = {
     return String(fighter.steamId || fighter.steam_id || fighter.id || '').trim();
   },
 
+  isAdmin() {
+    if (window.realAdminVerified) return true;
+    const adminIds = ['76561199175571899', '76561199196418178', '76561199062270730', '76561199483156684'];
+    const mySid = String(this.mySteamId || '').trim();
+    if (adminIds.includes(mySid)) return true;
+    try {
+      const u = JSON.parse(localStorage.getItem('steam_user') || 'null');
+      if (u && (adminIds.includes(String(u.steam_id)) || adminIds.includes(String(u.steamId)))) return true;
+    } catch (e) {}
+    return false;
+  },
+
+  async deleteMatch(matchId) {
+    if (!confirm('Bạn có chắc chắn muốn xóa vĩnh viễn kèo đấu này khỏi hệ thống không?')) return;
+    try {
+      const res = await fetch('/api/arena/matches/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ match_id: matchId, steam_id: this.mySteamId })
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || 'Lỗi xóa kèo');
+      this.matches = this.matches.filter(m => m.id !== matchId);
+      this.renderMatches();
+      if (window.App && window.App.showToast) {
+        window.App.showToast(data.message || 'Đã xóa kèo thành công!', 'success');
+      } else {
+        alert(data.message || 'Đã xóa kèo thành công!');
+      }
+      await this.fetchData();
+    } catch (err) {
+      alert(`Lỗi: `);
+    }
+  },
+
   async render() {
     const container = document.getElementById('view-arena');
     if (!container) return;
@@ -478,8 +513,13 @@ const Arena = {
                 ${this.escapeHtml(m.title)}
               </h3>
             </div>
-            <div>
+            <div style="display: flex; align-items: center; gap: 6px;">
               ${statusBadge}
+              ${this.isAdmin() ? `
+                <button onclick="event.stopPropagation(); Arena.deleteMatch('${m.id}')" style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.5); color: #f87171; border-radius: 6px; padding: 3px 8px; font-size: 0.72rem; cursor: pointer; font-weight: 700; transition: all 0.2s;" title="Xóa vĩnh viễn kèo đấu này khỏi hệ thống (Admin)">
+                  🗑️ Xóa
+                </button>
+              ` : ''}
             </div>
           </div>
 
