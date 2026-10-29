@@ -9,29 +9,42 @@ const BossHunt = {
   pollTimer: null,
   countdownTimer: null,
 
-  speciesDict: {
-    'dryosaurus': { name: 'Dryosaurus', icon: '🦎' },
-    'deer': { name: 'Hươu Rừng', icon: '🦌' },
-    'boar': { name: 'Lợn Rừng', icon: '🐗' },
-    'goat': { name: 'Dê Núi', icon: '🐐' },
-    'gallimimus': { name: 'Gallimimus', icon: '🦤' },
-    'pachycephalosaurus': { name: 'Pachycephalosaurus', icon: '🦏' },
-    'tenontosaurus': { name: 'Tenontosaurus', icon: '🦕' },
-    'turtle': { name: 'Rùa Biển', icon: '🐢' },
-    'seaturtle': { name: 'Rùa Biển', icon: '🐢' },
-    'frog': { name: 'Ếch AI', icon: '🐸' },
-    'compsognathus': { name: 'Compy AI', icon: '🦎' },
-    'compy': { name: 'Compy AI', icon: '🦎' }
+  // Nhận diện thông minh tất cả loài AI / Động vật / Khủng long trên đảo
+  getSpeciesInfo(rawSpecies) {
+    if (!rawSpecies) return { name: 'Động vật AI', icon: '🦖' };
+    const clean = String(rawSpecies).toLowerCase().replace(/_/g, ' ').trim();
+
+    if (clean.includes('deer')) return { name: 'Hươu Rừng', icon: '🦌' };
+    if (clean.includes('boar') || clean.includes('pig')) return { name: 'Lợn Rừng', icon: '🐗' };
+    if (clean.includes('goat')) return { name: 'Dê Núi', icon: '🐐' };
+    if (clean.includes('dryo')) return { name: 'Dryosaurus', icon: '🦎' };
+    if (clean.includes('turtle')) return { name: 'Rùa Biển', icon: '🐢' };
+    if (clean.includes('chicken')) return { name: 'Gà Rừng', icon: '🐔' };
+    if (clean.includes('rabbit')) return { name: 'Thỏ Rừng', icon: '🐇' };
+    if (clean.includes('psittaco') || clean.includes('taco')) return { name: 'Taco (Két)', icon: '🦜' };
+    if (clean.includes('compy') || clean.includes('compsognathus')) return { name: 'Compy AI', icon: '🦎' };
+    if (clean.includes('galli')) return { name: 'Gallimimus', icon: '🦤' };
+    if (clean.includes('pachy')) return { name: 'Pachy', icon: '🦏' };
+    if (clean.includes('tenonto')) return { name: 'Tenonto', icon: '🦕' };
+    if (clean.includes('tyranno') || clean.includes('trex')) return { name: 'T-Rex AI', icon: '🦖' };
+    if (clean.includes('spino')) return { name: 'Spino AI', icon: '🐊' };
+    if (clean.includes('giga')) return { name: 'Giga AI', icon: '🦖' };
+    if (clean.includes('carno')) return { name: 'Carno AI', icon: '🐂' };
+    if (clean.includes('cerato')) return { name: 'Cerato AI', icon: '🦏' };
+    if (clean.includes('stego')) return { name: 'Stego AI', icon: '🦕' };
+    if (clean.includes('frog')) return { name: 'Ếch AI', icon: '🐸' };
+    if (clean.includes('crab')) return { name: 'Cua Biển', icon: '🦀' };
+
+    return { name: rawSpecies.replace(/_/g, ' '), icon: '🦖' };
   },
 
   getSpeciesBadge(rawSpecies, count) {
     if (!rawSpecies) return '';
-    const sLower = String(rawSpecies).toLowerCase().trim();
-    const info = this.speciesDict[sLower] || { name: rawSpecies, icon: '🦖' };
-    return `<span style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 6px; padding: 3px 8px; font-size: 0.78rem; color: #cbd5e1; display: inline-flex; align-items: center; gap: 4px; margin: 2px;">
+    const info = this.getSpeciesInfo(rawSpecies);
+    return `<span style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 6px; padding: 4px 9px; font-size: 0.78rem; color: #cbd5e1; display: inline-flex; align-items: center; gap: 5px; margin: 2px;">
       <span>${info.icon}</span>
       <span>${info.name}:</span>
-      <b style="color: #38bdf8;">${count}</b>
+      <b style="color: #38bdf8; font-size: 0.85rem;">${count}</b>
     </span>`;
   },
 
@@ -100,7 +113,7 @@ const BossHunt = {
     }
 
     if (remainingSec <= 0) {
-      cdElem.innerHTML = `<span style="color: #10b981; font-size: 1rem;">🎉 Đang tự động trao thưởng & reset ngày mới...</span>`;
+      cdElem.innerHTML = `<span style="color: #10b981; font-size: 1rem;">🎉 Đang tự động trao thưởng & sang ngày mới...</span>`;
       return;
     }
 
@@ -138,10 +151,6 @@ const BossHunt = {
         🏆 ĐÃ TRAO THƯỞNG (+1.000 XU)
       </span>`;
     }
-
-    const sortedPrey = Object.entries(preySummary).sort((a, b) => b[1] - a[1]);
-    const topPreyName = sortedPrey.length > 0 ? sortedPrey[0][0] : 'Khủng Long AI';
-    const topPreyCount = sortedPrey.length > 0 ? sortedPrey[0][1] : 0;
 
     container.innerHTML = `
       <style>
@@ -194,7 +203,7 @@ const BossHunt = {
               </h1>
             </div>
             <p style="color: #cbd5e1; font-size: 0.95rem; margin: 0 0 8px;">
-              Săn lùng các loài khủng long và động vật AI trên toàn bản đồ &bull; <b>Ai săn được nhiều AI nhất trong ngày sẽ được hệ thống TỰ ĐỘNG trao thưởng 💰 1.000 XU!</b>
+              Săn lùng các loài khủng long và động vật AI trên toàn bản đồ Gateway &bull; <b>Ai săn được nhiều AI nhất trong ngày sẽ được hệ thống TỰ ĐỘNG trao thưởng 💰 1.000 XU!</b>
             </p>
             <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
               ${statusBadge}
@@ -241,7 +250,7 @@ const BossHunt = {
                 ${topHunter ? `
                   <span>Steam: <b style="color: #cbd5e1;">${topHunter.steam_id}</b></span> &bull;
                   <span>Dino sử dụng: <b style="color: #38bdf8;">${topHunter.species || 'Dinosaur'}</b></span> &bull;
-                  <span>Con mồi gần nhất: <b style="color: #f43f5e;">${topHunter.last_prey || 'AI'}</b></span>
+                  <span>Con mồi gần nhất: <b style="color: #f43f5e;">${this.getSpeciesInfo(topHunter.last_prey).name}</b></span>
                 ` : `
                   <span>Hãy vào game săn khủng long AI ngay để đứng đầu bảng hôm nay và ẵm 1.000 Xu!</span>
                 `}
@@ -261,7 +270,7 @@ const BossHunt = {
         </div>
 
         ${topHunter && topHunter.prey_breakdown && Object.keys(topHunter.prey_breakdown).length > 0 ? `
-          <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, 0.08); display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+          <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, 0.08); display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
             <span style="font-size: 0.82rem; color: #94a3b8; font-weight: 700;">CHI TIẾT CON MỒI ĐÃ SĂN:</span>
             ${Object.entries(topHunter.prey_breakdown).map(([sp, cnt]) => this.getSpeciesBadge(sp, cnt)).join('')}
           </div>
@@ -300,7 +309,7 @@ const BossHunt = {
                 <span>🎯</span> BẢNG XẾP HẠNG SĂN AI TRONG NGÀY (TOP 1 NHẬN 1.000 XU)
               </h2>
               <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">
-                Tự động ghi nhận số lượng khủng long AI bị cắn chết. Khi hết 1 ngày, hệ thống sẽ tự động trao 1.000 Xu cho Top 1!
+                Tự động ghi nhận số lượng khủng long AI bị cắn chết trên toàn server. Khi hết 1 ngày, hệ thống sẽ tự động trao 1.000 Xu cho Top 1!
               </p>
             </div>
             <div style="display: flex; gap: 8px;">

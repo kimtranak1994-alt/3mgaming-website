@@ -3927,7 +3927,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             if DinoRequestHandler._combat_log_cached_data and (now_ts - DinoRequestHandler._combat_log_cache_time < 3.0):
                 hits = DinoRequestHandler._combat_log_cached_data.get("hits", [])
             else:
-                remote_data = self.fetch_islepilot("/combat-log")
+                remote_data = self.fetch_islepilot("/combat-log?limit=500")
                 if isinstance(remote_data, dict):
                     DinoRequestHandler._combat_log_cached_data = remote_data
                     DinoRequestHandler._combat_log_cache_time = now_ts

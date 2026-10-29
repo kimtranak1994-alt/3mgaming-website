@@ -1,20 +1,96 @@
 {
   "active": true,
-  "season_id": "Mùa 2 (Ngày 29/10)",
-  "started_at": "2026-10-29T14:43:17.976892",
-  "duration_seconds": 86400,
+  "title": "🏹 SỰ KIỆN SĂN KHỦNG LONG AI TOÀN SERVER",
+  "description": "Sự kiện diễn ra theo ngày (24 giờ). Người chơi săn được nhiều AI nhất sẽ được hệ thống TỰ ĐỘNG trao thưởng 1.000 Xu!",
   "reward_xu": 1000,
+  "duration_seconds": 86400,
+  "season_id": "Mùa 1 (Ngày 29/10)",
+  "started_at": "2026-10-29T00:00:00",
+  "expires_at": "2026-10-30T00:00:00",
+  "time_remaining_seconds": 30070,
+  "auto_reward_enabled": true,
+  "ended_at": null,
+  "is_settled": false,
+  "total_ai_kills": 71,
   "hunters": {
     "76561198435078947": {
       "steam_id": "76561198435078947",
       "name": "thienchung1712",
       "species": "IndoRex",
+      "kills": 31,
+      "prey_breakdown": {
+        "Seaturtle": 24,
+        "Psittacosaurus_Plains": 2,
+        "Boar": 3,
+        "Compsognathus": 1,
+        "Dryosaurus": 1
+      },
+      "last_kill_at": "2026-10-29T08:38:44.909Z",
+      "last_prey": "Seaturtle"
+    },
+    "76561199483156684": {
+      "steam_id": "76561199483156684",
+      "name": "Thich Du Thư",
+      "species": "Carnotaurus",
+      "kills": 27,
+      "prey_breakdown": {
+        "Chicken": 2,
+        "Deer": 3,
+        "Dryosaurus": 1,
+        "Boar": 9,
+        "Rabbit": 1,
+        "Psittacosaurus_Plains": 3,
+        "Psittacosaurus_Coastal": 1,
+        "Compsognathus": 7
+      },
+      "last_kill_at": "2026-10-29T08:28:11.015Z",
+      "last_prey": "Deer"
+    },
+    "76561198647188052": {
+      "steam_id": "76561198647188052",
+      "name": "minh redbull",
+      "species": "Spinosaurus",
+      "kills": 8,
+      "prey_breakdown": {
+        "Boar": 3,
+        "Tyrannosaurus": 1,
+        "Deer": 4
+      },
+      "last_kill_at": "2026-10-29T06:03:29.644Z",
+      "last_prey": "Deer"
+    },
+    "76561199175571899": {
+      "steam_id": "76561199175571899",
+      "name": "ông 6 hồ wesrell",
+      "species": "Ceratosaurus",
+      "kills": 1,
+      "prey_breakdown": {
+        "Dryosaurus": 1
+      },
+      "last_kill_at": "2026-10-29T06:17:27.983Z",
+      "last_prey": "Dryosaurus"
+    },
+    "76561198655251333": {
+      "steam_id": "76561198655251333",
+      "name": "QuocThinhhYeuEM",
+      "species": "IndoRex",
       "kills": 3,
       "prey_breakdown": {
         "Seaturtle": 3
       },
-      "last_kill_at": "2026-10-29T07:52:02.948Z",
+      "last_kill_at": "2026-10-29T05:52:33.306Z",
       "last_prey": "Seaturtle"
+    },
+    "76561199580968218": {
+      "steam_id": "76561199580968218",
+      "name": "Thông Lê",
+      "species": "Tyrannosaurus",
+      "kills": 1,
+      "prey_breakdown": {
+        "Chicken": 1
+      },
+      "last_kill_at": "2026-10-29T06:03:30.700Z",
+      "last_prey": "Chicken"
     }
   },
   "leaderboard": [
@@ -23,77 +99,203 @@
       "steam_id": "76561198435078947",
       "name": "thienchung1712",
       "species": "IndoRex",
+      "kills": 31,
+      "prey_breakdown": {
+        "Seaturtle": 24,
+        "Psittacosaurus_Plains": 2,
+        "Boar": 3,
+        "Compsognathus": 1,
+        "Dryosaurus": 1
+      },
+      "last_kill_at": "2026-10-29T08:38:44.909Z",
+      "last_prey": "Seaturtle",
+      "is_top1": true,
+      "reward_xu": 1000
+    },
+    {
+      "rank": 2,
+      "steam_id": "76561199483156684",
+      "name": "Thich Du Thư",
+      "species": "Carnotaurus",
+      "kills": 27,
+      "prey_breakdown": {
+        "Chicken": 2,
+        "Deer": 3,
+        "Dryosaurus": 1,
+        "Boar": 9,
+        "Rabbit": 1,
+        "Psittacosaurus_Plains": 3,
+        "Psittacosaurus_Coastal": 1,
+        "Compsognathus": 7
+      },
+      "last_kill_at": "2026-10-29T08:28:11.015Z",
+      "last_prey": "Deer",
+      "is_top1": false,
+      "reward_xu": 0
+    },
+    {
+      "rank": 3,
+      "steam_id": "76561198647188052",
+      "name": "minh redbull",
+      "species": "Spinosaurus",
+      "kills": 8,
+      "prey_breakdown": {
+        "Boar": 3,
+        "Tyrannosaurus": 1,
+        "Deer": 4
+      },
+      "last_kill_at": "2026-10-29T06:03:29.644Z",
+      "last_prey": "Deer",
+      "is_top1": false,
+      "reward_xu": 0
+    },
+    {
+      "rank": 4,
+      "steam_id": "76561198655251333",
+      "name": "QuocThinhhYeuEM",
+      "species": "IndoRex",
       "kills": 3,
       "prey_breakdown": {
         "Seaturtle": 3
       },
-      "last_kill_at": "2026-10-29T07:52:02.948Z",
+      "last_kill_at": "2026-10-29T05:52:33.306Z",
       "last_prey": "Seaturtle",
-      "is_top1": true,
-      "reward_xu": 1000
-    }
-  ],
-  "processed_kill_ids": [
-    "6272643",
-    "6270774",
-    "6272526"
-  ],
-  "reward_history": [
+      "is_top1": false,
+      "reward_xu": 0
+    },
     {
-      "season_id": "Mùa Test",
-      "settled_at": "2026-10-29T14:43:17.976887",
-      "winner_steam_id": "76561198435078947",
-      "winner_name": "thienchung1712",
-      "species": "IndoRex",
-      "kills": 10,
+      "rank": 5,
+      "steam_id": "76561199580968218",
+      "name": "Thông Lê",
+      "species": "Tyrannosaurus",
+      "kills": 1,
       "prey_breakdown": {
-        "Boar": 10
+        "Chicken": 1
       },
-      "reward_xu": 1000,
-      "total_participants": 1,
-      "total_ai_kills": 10,
-      "auto_settled": true
+      "last_kill_at": "2026-10-29T06:03:30.700Z",
+      "last_prey": "Chicken",
+      "is_top1": false,
+      "reward_xu": 0
+    },
+    {
+      "rank": 6,
+      "steam_id": "76561199175571899",
+      "name": "ông 6 hồ wesrell",
+      "species": "Ceratosaurus",
+      "kills": 1,
+      "prey_breakdown": {
+        "Dryosaurus": 1
+      },
+      "last_kill_at": "2026-10-29T06:17:27.983Z",
+      "last_prey": "Dryosaurus",
+      "is_top1": false,
+      "reward_xu": 0
     }
   ],
-  "filter_since_start": true,
   "prey_summary": {
-    "Seaturtle": 3
+    "Seaturtle": 27,
+    "Chicken": 3,
+    "Deer": 7,
+    "Dryosaurus": 3,
+    "Boar": 15,
+    "Rabbit": 1,
+    "Psittacosaurus_Plains": 5,
+    "Psittacosaurus_Coastal": 1,
+    "Tyrannosaurus": 1,
+    "Compsognathus": 8
   },
-  "total_ai_kills": 3,
+  "processed_kill_ids": [
+    "6275548",
+    "6261611",
+    "6268616",
+    "6275375",
+    "6277458",
+    "6260194",
+    "6277747",
+    "6254944",
+    "6260369",
+    "6279023",
+    "6253571",
+    "6264520",
+    "6270774",
+    "6277490",
+    "6275518",
+    "6253463",
+    "6254297",
+    "6262616",
+    "6272526",
+    "6279407",
+    "6277775",
+    "6253999",
+    "6276175",
+    "6278514",
+    "6257651",
+    "6251917",
+    "6259518",
+    "6266527",
+    "6259883",
+    "6277399",
+    "6275610",
+    "6277498",
+    "6260096",
+    "6255824",
+    "6260086",
+    "6254837",
+    "6276767",
+    "6276574",
+    "6275571",
+    "6283894",
+    "6280046",
+    "6275845",
+    "6257537",
+    "6260073",
+    "6257309",
+    "6260107",
+    "6254268",
+    "6281290",
+    "6253394",
+    "6277014",
+    "6281448",
+    "6252345",
+    "6253994",
+    "6265050",
+    "6255528",
+    "6275547",
+    "6251874",
+    "6251417",
+    "6260289",
+    "6278407",
+    "6254077",
+    "6279294",
+    "6256410",
+    "6260164",
+    "6256936",
+    "6278622",
+    "6260155",
+    "6265849",
+    "6276801",
+    "6266861",
+    "6272643"
+  ],
+  "reward_history": [],
   "top_hunter": {
     "rank": 1,
     "steam_id": "76561198435078947",
     "name": "thienchung1712",
     "species": "IndoRex",
-    "kills": 3,
+    "kills": 31,
     "prey_breakdown": {
-      "Seaturtle": 3
+      "Seaturtle": 24,
+      "Psittacosaurus_Plains": 2,
+      "Boar": 3,
+      "Compsognathus": 1,
+      "Dryosaurus": 1
     },
-    "last_kill_at": "2026-10-29T07:52:02.948Z",
+    "last_kill_at": "2026-10-29T08:38:44.909Z",
     "last_prey": "Seaturtle",
     "is_top1": true,
     "reward_xu": 1000
   },
-  "time_remaining_seconds": 85211,
-  "expires_at": "2026-10-30T14:43:17.976892",
-  "last_winner": {
-    "season_id": "Mùa Test",
-    "settled_at": "2026-10-29T14:43:17.976887",
-    "winner_steam_id": "76561198435078947",
-    "winner_name": "thienchung1712",
-    "species": "IndoRex",
-    "kills": 10,
-    "prey_breakdown": {
-      "Boar": 10
-    },
-    "reward_xu": 1000,
-    "total_participants": 1,
-    "total_ai_kills": 10,
-    "auto_settled": true
-  },
-  "ended_at": null,
-  "is_settled": false,
-  "title": "🏹 SỰ KIỆN SĂN KHỦNG LONG AI TOÀN SERVER",
-  "description": "Sự kiện diễn ra theo ngày (24 giờ). Người chơi săn được nhiều AI nhất sẽ được hệ thống TỰ ĐỘNG trao thưởng 1.000 Xu!",
-  "auto_reward_enabled": true
+  "last_winner": null,
+  "filter_since_start": false
 }
