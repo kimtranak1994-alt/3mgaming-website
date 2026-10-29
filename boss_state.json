@@ -7,25 +7,25 @@
   "season_id": "Mùa 1 (Ngày 29/10)",
   "started_at": "2026-10-29T00:00:00",
   "expires_at": "2026-10-30T00:00:00",
-  "time_remaining_seconds": 30016,
+  "time_remaining_seconds": 29992,
   "auto_reward_enabled": true,
   "ended_at": null,
   "is_settled": false,
-  "total_ai_kills": 72,
+  "total_ai_kills": 73,
   "hunters": {
     "76561198435078947": {
       "steam_id": "76561198435078947",
       "name": "thienchung1712",
       "species": "IndoRex",
-      "kills": 31,
+      "kills": 32,
       "prey_breakdown": {
-        "Seaturtle": 24,
+        "Seaturtle": 25,
         "Psittacosaurus_Plains": 2,
         "Boar": 3,
         "Compsognathus": 1,
         "Dryosaurus": 1
       },
-      "last_kill_at": "2026-10-29T08:38:44.909Z",
+      "last_kill_at": "2026-10-29T08:40:03.997Z",
       "last_prey": "Seaturtle"
     },
     "76561199483156684": {
@@ -99,15 +99,15 @@
       "steam_id": "76561198435078947",
       "name": "thienchung1712",
       "species": "IndoRex",
-      "kills": 31,
+      "kills": 32,
       "prey_breakdown": {
-        "Seaturtle": 24,
+        "Seaturtle": 25,
         "Psittacosaurus_Plains": 2,
         "Boar": 3,
         "Compsognathus": 1,
         "Dryosaurus": 1
       },
-      "last_kill_at": "2026-10-29T08:38:44.909Z",
+      "last_kill_at": "2026-10-29T08:40:03.997Z",
       "last_prey": "Seaturtle",
       "is_top1": true,
       "reward_xu": 1000
@@ -193,7 +193,7 @@
     }
   ],
   "prey_summary": {
-    "Seaturtle": 27,
+    "Seaturtle": 28,
     "Chicken": 3,
     "Deer": 7,
     "Dryosaurus": 4,
@@ -210,6 +210,7 @@
     "6261611",
     "6275375",
     "6277458",
+    "6284148",
     "6260194",
     "6277747",
     "6254944",
@@ -284,15 +285,15 @@
     "steam_id": "76561198435078947",
     "name": "thienchung1712",
     "species": "IndoRex",
-    "kills": 31,
+    "kills": 32,
     "prey_breakdown": {
-      "Seaturtle": 24,
+      "Seaturtle": 25,
       "Psittacosaurus_Plains": 2,
       "Boar": 3,
       "Compsognathus": 1,
       "Dryosaurus": 1
     },
-    "last_kill_at": "2026-10-29T08:38:44.909Z",
+    "last_kill_at": "2026-10-29T08:40:03.997Z",
     "last_prey": "Seaturtle",
     "is_top1": true,
     "reward_xu": 1000
