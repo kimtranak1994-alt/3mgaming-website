@@ -1,13 +1,38 @@
 // =========================================================================
-// MODULE SĂN BOSS TRICERATOPS 100.000 HP (BOSS HUNTING & PROPORTIONAL REWARDS)
-// Sát thương Boss mặc định: 1.000 Dame / Hít
-// Trừ HP Boss theo đúng lực cắn / dame dino của người chơi
-// Phần thưởng 5.000 Xu chia cho tất cả người chơi tham gia cắn theo tỉ lệ Dame
+// MODULE SĂN KHỦNG LONG AI TOÀN SERVER (AI DINOSAUR HUNTING EVENT)
+// Người chơi săn được nhiều AI nhất sẽ nhận phần thưởng 1.000 Xu!
+// Tự động quét /combat-log và cập nhật bảng xếp hạng thời gian thực
 // =========================================================================
 
 const BossHunt = {
   data: null,
   pollTimer: null,
+
+  // Từ điển tên loài AI tiếng Việt & Icon thân thiện
+  speciesDict: {
+    'dryosaurus': { name: 'Dryosaurus', icon: '🦎' },
+    'deer': { name: 'Hươu Rừng', icon: '🦌' },
+    'boar': { name: 'Lợn Rừng', icon: '🐗' },
+    'goat': { name: 'Dê Núi', icon: '🐐' },
+    'gallimimus': { name: 'Gallimimus', icon: '🦤' },
+    'pachycephalosaurus': { name: 'Pachycephalosaurus', icon: '🦏' },
+    'tenontosaurus': { name: 'Tenontosaurus', icon: '🦕' },
+    'turtle': { name: 'Rùa Biển', icon: '🐢' },
+    'frog': { name: 'Ếch AI', icon: '🐸' },
+    'compsognathus': { name: 'Compy AI', icon: '🦎' },
+    'compy': { name: 'Compy AI', icon: '🦎' }
+  },
+
+  getSpeciesBadge(rawSpecies, count) {
+    if (!rawSpecies) return '';
+    const sLower = String(rawSpecies).toLowerCase().trim();
+    const info = this.speciesDict[sLower] || { name: rawSpecies, icon: '🦖' };
+    return `<span style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 6px; padding: 3px 8px; font-size: 0.78rem; color: #cbd5e1; display: inline-flex; align-items: center; gap: 4px; margin: 2px;">
+      <span>${info.icon}</span>
+      <span>${info.name}:</span>
+      <b style="color: #38bdf8;">${count}</b>
+    </span>`;
+  },
 
   async render() {
     const container = document.getElementById('view-boss');
@@ -16,7 +41,7 @@ const BossHunt = {
     container.innerHTML = `
       <div style="text-align: center; padding: 60px 20px;">
         <div class="spinner" style="margin: 0 auto 16px;"></div>
-        <p style="color: #94a3b8; font-size: 1.05rem;">Đang kết nối dữ liệu Săn Boss từ máy chủ...</p>
+        <p style="color: #94a3b8; font-size: 1.05rem;">Đang kết nối dữ liệu Săn AI từ máy chủ...</p>
       </div>
     `;
 
@@ -30,20 +55,21 @@ const BossHunt = {
     const adminParam = (user && user.steamId) ? `&admin_steam_id=${user.steamId}` : '';
 
     try {
-      const res = await fetch(`/api/boss?_t=${Date.now()}${steamParam}${adminParam}`);
+      const res = await fetch(`/api/ai-hunt?_t=${Date.now()}${steamParam}${adminParam}`);
       if (res.ok) {
         this.data = await res.json();
         this.renderUI();
       }
     } catch (e) {
-      console.error("[BossHunt] Lỗi nạp dữ liệu:", e);
+      console.error("[AIHunt] Lỗi nạp dữ liệu:", e);
     }
   },
 
   startAutoRefresh() {
     if (this.pollTimer) clearInterval(this.pollTimer);
     this.pollTimer = setInterval(() => {
-      if (document.body.getAttribute('data-current-tab') === 'boss') {
+      const curTab = document.body.getAttribute('data-current-tab');
+      if (curTab === 'boss' || curTab === 'ai-hunt') {
         this.fetchData();
       }
     }, 3500);
@@ -53,75 +79,53 @@ const BossHunt = {
     const container = document.getElementById('view-boss');
     if (!container || !this.data) return;
 
-    const boss = this.data.boss || {};
+    const hunt = this.data.ai_hunt || this.data.boss || {};
     const isAdmin = this.data.is_admin || window.isUserAdmin || false;
-    const isActive = !!boss.active;
-    const maxHp = boss.max_hp || 100000;
-    const curHp = isActive ? Math.max(0, boss.current_hp !== undefined ? boss.current_hp : maxHp) : 0;
-    const hpPct = Math.min(100, Math.max(0, Math.round((curHp / maxHp) * 100)));
-    const killHistory = boss.kill_history || [];
-    const dpsRanking = boss.dps_ranking || [];
-    const lastRewards = boss.last_rewards || [];
+    const isSettled = !!hunt.is_settled;
+    const leaderboard = hunt.leaderboard || [];
+    const topHunter = hunt.top_hunter || (leaderboard.length > 0 && leaderboard[0].kills > 0 ? leaderboard[0] : null);
+    const rewardXu = hunt.reward_xu || 1000;
+    const totalAiKills = hunt.total_ai_kills || 0;
+    const preySummary = hunt.prey_summary || {};
+    const rewardHistory = hunt.reward_history || [];
+    const seasonId = hunt.season_id || 'Mùa 1';
 
     let statusBadge = '';
-    if (isActive && curHp > 0) {
+    if (!isSettled) {
       statusBadge = `<span style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px;">
         <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981; animation: pulse 1.5s infinite;"></span>
-        🟢 ĐANG HOẠT ĐỘNG (SẴN SÀNG CHIẾN ĐẤU)
-      </span>`;
-    } else if (isActive && curHp <= 0) {
-      statusBadge = `<span style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 0.85rem;">
-        💀 VỪA BỊ HẠ GỤC (+5.000 XU ĐÃ CHIA THƯỞNG)
+        🟢 MÙA SĂN ĐANG DIỄN RA (${seasonId.toUpperCase()})
       </span>`;
     } else {
-      statusBadge = `<span style="background: rgba(148, 163, 184, 0.2); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.3); padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 0.85rem;">
-        ⚪ CHƯA KÍCH HOẠT (CHỜ ADMIN THẢ BOSS)
+      statusBadge = `<span style="background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px;">
+        🏆 MÙA SĂN ĐÃ TRAO THƯỞNG (+1.000 XU)
       </span>`;
     }
 
+    // Top con mồi phổ biến nhất
+    const sortedPrey = Object.entries(preySummary).sort((a, b) => b[1] - a[1]);
+    const topPreyName = sortedPrey.length > 0 ? sortedPrey[0][0] : 'Khủng Long AI';
+    const topPreyCount = sortedPrey.length > 0 ? sortedPrey[0][1] : 0;
+
     container.innerHTML = `
       <style>
-        .boss-card {
-          background: linear-gradient(145deg, rgba(26, 16, 37, 0.85), rgba(15, 10, 24, 0.95));
-          border: 1px solid rgba(255, 42, 133, 0.3);
+        .ai-hunt-card {
+          background: linear-gradient(145deg, rgba(20, 24, 40, 0.85), rgba(12, 16, 28, 0.95));
+          border: 1px solid rgba(56, 189, 248, 0.25);
           border-radius: 14px;
-          padding: 28px;
+          padding: 24px;
           margin-bottom: 24px;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 42, 133, 0.1);
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(56, 189, 248, 0.08);
           position: relative;
-          overflow: hidden;
         }
-        .boss-hp-track {
-          width: 100%;
-          height: 34px;
-          background: rgba(0, 0, 0, 0.65);
-          border-radius: 8px;
-          overflow: hidden;
-          border: 1px solid rgba(255, 255, 255, 0.15);
+        .spotlight-card {
+          background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(15, 23, 42, 0.95));
+          border: 2px solid rgba(245, 158, 11, 0.5);
+          border-radius: 14px;
+          padding: 24px;
+          margin-bottom: 24px;
+          box-shadow: 0 0 25px rgba(245, 158, 11, 0.2);
           position: relative;
-          box-shadow: inset 0 2px 6px rgba(0,0,0,0.8);
-          margin: 16px 0;
-        }
-        .boss-hp-bar {
-          height: 100%;
-          background: linear-gradient(90deg, #dc2626, #ef4444, #f59e0b, #ec4899);
-          transition: width 0.4s ease;
-          box-shadow: 0 0 16px rgba(239, 68, 68, 0.6);
-        }
-        .boss-hp-text {
-          position: absolute;
-          width: 100%;
-          top: 0;
-          left: 0;
-          height: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: 800;
-          font-size: 0.95rem;
-          color: #ffffff;
-          text-shadow: 0 2px 4px rgba(0,0,0,0.95);
-          letter-spacing: 0.5px;
         }
         .stat-chip {
           background: rgba(255, 255, 255, 0.04);
@@ -137,160 +141,122 @@ const BossHunt = {
           margin-bottom: 4px;
         }
         .stat-chip-val {
-          font-size: 1.15rem;
+          font-size: 1.25rem;
           font-weight: 800;
           color: #fff;
         }
-        .dps-bar-bg {
-          width: 100%;
-          height: 8px;
-          background: rgba(255, 255, 255, 0.08);
-          border-radius: 4px;
-          overflow: hidden;
-          margin-top: 6px;
-        }
-        .dps-bar-fill {
-          height: 100%;
-          background: linear-gradient(90deg, #3b82f6, #ec4899);
-          border-radius: 4px;
-        }
       </style>
 
-      <!-- HERO BANNER SĂN BOSS -->
-      <div class="card" style="margin-bottom: 24px; background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(15, 23, 42, 0.9)); border: 1px solid rgba(239, 68, 68, 0.4);">
+      <!-- HERO BANNER SỰ KIỆN SĂN AI -->
+      <div class="card" style="margin-bottom: 24px; background: linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(15, 23, 42, 0.95)); border: 1px solid rgba(14, 165, 233, 0.4);">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
           <div>
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
-              <span style="font-size: 2rem;">👑</span>
-              <h1 style="font-size: 1.8rem; font-weight: 900; margin: 0; background: linear-gradient(90deg, #f87171, #fbbf24, #f43f5e); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-                ĐẤU TRƯỜNG SĂN BOSS HƯƠU THẦN THOẠI
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
+              <span style="font-size: 2.2rem;">🏹</span>
+              <h1 style="font-size: 1.85rem; font-weight: 900; margin: 0; background: linear-gradient(90deg, #38bdf8, #818cf8, #fbbf24); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                SỰ KIỆN SĂN KHỦNG LONG AI TOÀN SERVER
               </h1>
             </div>
             <p style="color: #cbd5e1; font-size: 0.95rem; margin: 0;">
-              Thách thức <b>Boss Hươu AI 100.000 HP</b> • Sát thương mặc định <b>1.000 Dame / Hít</b> • Kho thưởng <b>💰 5.000 Xu</b> chia đều theo tỉ lệ sát thương đóng góp!
+              Săn lùng động vật và khủng long AI (Dryo, Hươu, Lợn, Dê...) trên toàn bản đồ &bull; <b>Ai săn được nhiều AI nhất sẽ nhận độc đắc 💰 1.000 Xu!</b>
             </p>
           </div>
-          <div>
+          <div style="display: flex; align-items: center; gap: 10px;">
             ${statusBadge}
           </div>
         </div>
       </div>
 
-      <!-- CARD THÔNG TIN BOSS VÀ THANH MÁU -->
-      <div class="boss-card">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px;">
+      <!-- SPOTLIGHT TOP 1 THỢ SĂN ĐỈNH CAO -->
+      <div class="spotlight-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
           <div style="display: flex; align-items: center; gap: 18px;">
-            <div style="width: 80px; height: 80px; border-radius: 16px; background: radial-gradient(circle, rgba(239, 68, 68, 0.4), rgba(0,0,0,0.8)); border: 2px solid #ef4444; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);">
-              🦌
+            <div style="width: 76px; height: 76px; border-radius: 16px; background: radial-gradient(circle, rgba(245, 158, 11, 0.4), rgba(0,0,0,0.8)); border: 2px solid #fbbf24; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);">
+              👑
             </div>
             <div>
               <div style="display: flex; align-items: center; gap: 8px;">
-                <h2 style="font-size: 1.5rem; font-weight: 900; margin: 0; color: #fff;">
-                  ${boss.boss_name || '👑 BOSS HƯƠU BẠO THẦN (100.000 HP)'}
-                </h2>
-                <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); font-size: 0.75rem; font-weight: 800;">
-                  BẠO THẦN HƯƠU 100K HP
+                <span style="font-size: 0.8rem; font-weight: 800; background: rgba(245, 158, 11, 0.25); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); padding: 2px 8px; border-radius: 4px;">
+                  TOP 1 THỢ SĂN AI HIỆN TẠI
                 </span>
+                <span style="font-size: 0.8rem; color: #94a3b8;">(${isSettled ? 'Đã nhận thưởng' : 'Ứng viên nhận 1.000 Xu'})</span>
               </div>
-              <p style="color: #94a3b8; font-size: 0.88rem; margin: 4px 0 0;">
-                Khu vực xuất hiện: <b style="color: #38bdf8;">📍 ${boss.location_name || 'ĐẤU TRƯỜNG'}</b> &bull; Boss sống mãi đến khi Admin bấm Tắt!
-              </p>
-            </div>
-          </div>
-
-          <div style="display: flex; gap: 10px;">
-            <button class="btn-primary" style="background: linear-gradient(135deg, #0284c7, #0369a1); display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; font-weight: 700; border-radius: 8px;" onclick="BossHunt.teleportToBoss()">
-              🚀 Dịch Chuyển Đến Đấu Trường
-            </button>
-            <button class="btn-primary" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; font-weight: 700; border-radius: 8px;" onclick="BossHunt.fetchData()">
-              🔄 Làm Mới
-            </button>
-          </div>
-        </div>
-
-        <!-- THANH MÁU BOSS 100K HP -->
-        <div style="margin-top: 24px;">
-          <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 6px;">
-            <span style="font-weight: 800; font-size: 0.95rem; color: #ef4444; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
-              <span>🩸 SINH LỰC BOSS:</span>
-            </span>
-            <span style="font-size: 0.9rem; color: #f1f5f9; font-weight: 700;">
-              ${curHp.toLocaleString('vi-VN')} / ${maxHp.toLocaleString('vi-VN')} HP (${hpPct}%)
-            </span>
-          </div>
-
-          <div class="boss-hp-track">
-            <div class="boss-hp-bar" style="width: ${hpPct}%;"></div>
-            <div class="boss-hp-text">
-              ${isActive ? (curHp > 0 ? `${curHp.toLocaleString('vi-VN')} / ${maxHp.toLocaleString('vi-VN')} HP` : '💀 ĐÃ BỊ TIÊU DIỆT') : 'CHƯA KÍCH HOẠT'}
-            </div>
-          </div>
-        </div>
-
-        <!-- LƯỚI THÔNG SỐ CHIẾN ĐẤU CẬP NHẬT -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; margin-top: 20px;">
-          <div class="stat-chip">
-            <div class="stat-chip-label">🛡️ Máu Tối Đa</div>
-            <div class="stat-chip-val" style="color: #ef4444;">100.000 HP</div>
-          </div>
-          <div class="stat-chip">
-            <div class="stat-chip-label">⚔️ Sát Thương Boss</div>
-            <div class="stat-chip-val" style="color: #f43f5e;">1.000 Dame / Hít</div>
-          </div>
-          <div class="stat-chip">
-            <div class="stat-chip-label">🤖 Cơ Chế AI Tấn Công</div>
-            <div class="stat-chip-val" style="color: #a855f7;">Tự Động Phản Đòn & Quét 15m</div>
-          </div>
-          <div class="stat-chip">
-            <div class="stat-chip-label">🦷 Sát Thương Dino Người Chơi</div>
-            <div class="stat-chip-val" style="color: #38bdf8;">Trừ HP theo Lực Cắn</div>
-          </div>
-          <div class="stat-chip">
-            <div class="stat-chip-label">💰 Tổng Kho Thưởng Xu</div>
-            <div class="stat-chip-val" style="color: #10b981;">5.000 Xu (Chia theo % Dame)</div>
-          </div>
-        </div>
-
-        ${lastRewards && lastRewards.length > 0 ? `
-          <div style="margin-top: 20px; padding: 16px 20px; border-radius: 10px; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3);">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-size: 1.3rem;">🎉</span>
-                <span style="font-weight: 800; color: #10b981; font-size: 0.95rem;">CHI TIẾT PHÂN CHIA THƯỞNG 5.000 XU LƯỢT VỪA QUA:</span>
+              <h2 style="font-size: 1.6rem; font-weight: 900; margin: 4px 0 2px; color: #fff;">
+                ${topHunter ? topHunter.name : 'Chưa có thợ săn nào ghi điểm'}
+              </h2>
+              <div style="color: #94a3b8; font-size: 0.85rem; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                ${topHunter ? `
+                  <span>Steam: <b style="color: #cbd5e1;">${topHunter.steam_id}</b></span> &bull;
+                  <span>Dino sử dụng: <b style="color: #38bdf8;">${topHunter.species || 'Dinosaur'}</b></span> &bull;
+                  <span>Con mồi gần nhất: <b style="color: #f43f5e;">${topHunter.last_prey || 'AI'}</b></span>
+                ` : `
+                  <span>Hãy vào game săn AI ngay để đứng đầu bảng xếp hạng và ẵm 1.000 Xu!</span>
+                `}
               </div>
-              <span style="font-size: 0.85rem; color: #94a3b8;">${lastRewards.length} dũng sĩ đã nhận thưởng</span>
             </div>
-            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-              ${lastRewards.map(r => `
-                <div style="background: rgba(0,0,0,0.4); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 8px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 8px;">
-                  <span style="font-weight: 700; color: #fff;">${r.name || 'Người chơi'}</span>
-                  <span style="color: #94a3b8; font-size: 0.8rem;">(${r.damage_pct !== undefined ? r.damage_pct : (r.percent !== undefined ? r.percent : 0)}%)</span>
-                  <span style="color: #fbbf24; font-weight: 800;">+${(r.reward_xu || 0).toLocaleString('vi-VN')} Xu</span>
-                </div>
-              `).join('')}
+          </div>
+
+          <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+            <div style="font-size: 0.85rem; color: #94a3b8; text-transform: uppercase; font-weight: 700;">Thành tích & Phần thưởng</div>
+            <div style="font-size: 1.8rem; font-weight: 900; color: #fbbf24; text-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);">
+              ${topHunter ? `${topHunter.kills} CON AI` : '0 CON'}
             </div>
+            <div style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 8px; padding: 4px 12px; color: #10b981; font-weight: 800; font-size: 0.95rem;">
+              🎁 THƯỞNG: +1.000 XU
+            </div>
+          </div>
+        </div>
+
+        ${topHunter && topHunter.prey_breakdown && Object.keys(topHunter.prey_breakdown).length > 0 ? `
+          <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, 0.08); display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <span style="font-size: 0.82rem; color: #94a3b8; font-weight: 700;">CHI TIẾT CON MỒI ĐÃ SĂN:</span>
+            ${Object.entries(topHunter.prey_breakdown).map(([sp, cnt]) => this.getSpeciesBadge(sp, cnt)).join('')}
           </div>
         ` : ''}
       </div>
 
-      <!-- BẢNG ĐIỀU KHIỂN DÀNH CHO ADMIN (NẾU LÀ ADMIN) -->
-      ${isAdmin ? this.renderAdminControls(boss) : ''}
+      <!-- LƯỚI THÔNG SỐ SỰ KIỆN SĂN AI -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin-bottom: 24px;">
+        <div class="stat-chip">
+          <div class="stat-chip-label">🎯 Tổng AI Đã Bị Săn</div>
+          <div class="stat-chip-val" style="color: #38bdf8;">${totalAiKills.toLocaleString('vi-VN')} Con</div>
+        </div>
+        <div class="stat-chip">
+          <div class="stat-chip-label">💰 Giải Thưởng Top 1</div>
+          <div class="stat-chip-val" style="color: #fbbf24;">${rewardXu.toLocaleString('vi-VN')} Xu</div>
+        </div>
+        <div class="stat-chip">
+          <div class="stat-chip-label">🏹 Thợ Săn Đua Top</div>
+          <div class="stat-chip-val" style="color: #10b981;">${leaderboard.length} Người Chơi</div>
+        </div>
+        <div class="stat-chip">
+          <div class="stat-chip-label">🦖 Con Mồi Bị Săn Nhiều Nhất</div>
+          <div class="stat-chip-val" style="color: #ec4899; font-size: 1.05rem;">
+            ${sortedPrey.length > 0 ? `${topPreyName} (${topPreyCount} con)` : 'Đang cập nhật'}
+          </div>
+        </div>
+      </div>
 
-      <!-- BẢNG THEO DÕI SÁT THƯƠNG THỜI GIAN THỰC (LIVE DPS RANKING & CHIA THƯỞNG DỰ KIẾN) -->
+      <!-- BẢNG ĐIỀU KHIỂN DÀNH CHO ADMIN -->
+      ${isAdmin ? this.renderAdminControls(hunt, topHunter) : ''}
+
+      <!-- BẢNG XẾP HẠNG THỢ SĂN AI (LIVE LEADERBOARD) -->
       <div class="card" style="margin-bottom: 24px;">
         <div class="card-header" style="border: none; padding-bottom: 0;">
           <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 12px;">
             <div>
               <h2 class="card-title" style="display: flex; align-items: center; gap: 8px;">
-                <span>🎯</span> BẢNG XẾP HẠNG GÂY DAME & ƯỚC TÍNH PHẦN THƯỞNG
+                <span>🎯</span> BẢNG XẾP HẠNG THỢ SĂN AI (ĐUA TOP 1.000 XU)
               </h2>
               <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">
-                Mỗi cú cắn của bạn làm tụt HP Boss theo lực cắn và tích lũy % phần thưởng 5.000 Xu hệ thống!
+                Tự động ghi nhận mỗi khi bạn cắn chết động vật/khủng long AI trong server. Người đứng đầu sẽ nhận 1.000 Xu!
               </p>
             </div>
-            <span style="background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 700;">
-              CẬP NHẬT TRỰC TIẾP
-            </span>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn-primary" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; font-weight: 700; border-radius: 8px; font-size: 0.85rem;" onclick="BossHunt.fetchData()">
+                🔄 Làm Mới
+              </button>
+            </div>
           </div>
         </div>
 
@@ -298,46 +264,66 @@ const BossHunt = {
           <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
             <thead>
               <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: #94a3b8;">
-                <th style="padding: 12px 14px; width: 60px;">Hạng</th>
-                <th style="padding: 12px 14px;">Dũng Sĩ Tấn Công</th>
-                <th style="padding: 12px 14px; text-align: right;">Sát Thương Gây Ra</th>
-                <th style="padding: 12px 14px; width: 220px;">Tỉ Lệ Đóng Góp (%)</th>
-                <th style="padding: 12px 14px; text-align: right;">Xu Ước Tính Nhận Được</th>
+                <th style="padding: 12px 14px; width: 70px;">Hạng</th>
+                <th style="padding: 12px 14px;">Thợ Săn</th>
+                <th style="padding: 12px 14px; text-align: center; width: 140px;">Số AI Đã Săn</th>
+                <th style="padding: 12px 14px;">Chi Tiết Con Mồi</th>
+                <th style="padding: 12px 14px; width: 160px;">Hoạt Động Gần Nhất</th>
+                <th style="padding: 12px 14px; text-align: right; width: 180px;">Phần Thưởng</th>
               </tr>
             </thead>
             <tbody>
-              ${dpsRanking.length > 0 ? dpsRanking.map((p, idx) => {
-                const pct = p.damage_pct !== undefined ? p.damage_pct : (p.percent !== undefined ? p.percent : 0);
-                const estXu = p.estimated_xu !== undefined ? p.estimated_xu : (p.est_reward !== undefined ? p.est_reward : 0);
+              ${leaderboard.length > 0 ? leaderboard.map((p, idx) => {
+                const isTop1 = (idx === 0 && p.kills > 0);
+                const breakdown = p.prey_breakdown || {};
+                const topDiff = (topHunter && topHunter.kills > p.kills) ? (topHunter.kills - p.kills) : 0;
+                
                 return `
-                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); background: ${idx === 0 ? 'rgba(245, 158, 11, 0.05)' : 'transparent'};">
-                  <td style="padding: 12px 14px; font-weight: 800; color: ${idx === 0 ? '#fbbf24' : idx === 1 ? '#cbd5e1' : idx === 2 ? '#b45309' : '#94a3b8'};">
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); background: ${isTop1 ? 'rgba(245, 158, 11, 0.08)' : 'transparent'};">
+                  <td style="padding: 14px; font-weight: 900; font-size: 1.05rem; color: ${idx === 0 ? '#fbbf24' : idx === 1 ? '#cbd5e1' : idx === 2 ? '#b45309' : '#94a3b8'};">
                     ${idx === 0 ? '🥇 #1' : idx === 1 ? '🥈 #2' : idx === 2 ? '🥉 #3' : `#${idx + 1}`}
                   </td>
-                  <td style="padding: 12px 14px;">
-                    <b style="color: #fff;">${p.name || 'Người chơi'}</b>
-                    <span style="font-size: 0.78rem; color: #64748b; margin-left: 6px;">(${p.steam_id})</span>
-                  </td>
-                  <td style="padding: 12px 14px; text-align: right; color: #f87171; font-weight: 700;">
-                    ${(p.damage || 0).toLocaleString('vi-VN')} HP
-                  </td>
-                  <td style="padding: 12px 14px;">
-                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #cbd5e1;">
-                      <span>Đóng góp:</span>
-                      <b>${pct}%</b>
+                  <td style="padding: 14px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <b style="color: #fff; font-size: 0.95rem;">${p.name || 'Thợ săn'}</b>
+                      ${isTop1 ? '<span style="background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); padding: 1px 6px; border-radius: 4px; font-size: 0.72rem; font-weight: 800;">TOP 1</span>' : ''}
                     </div>
-                    <div class="dps-bar-bg">
-                      <div class="dps-bar-fill" style="width: ${pct}%;"></div>
+                    <div style="font-size: 0.78rem; color: #64748b; margin-top: 2px;">
+                      Steam: ${p.steam_id} &bull; Dino: <span style="color: #38bdf8;">${p.species || 'Dino'}</span>
                     </div>
                   </td>
-                  <td style="padding: 12px 14px; text-align: right; color: #fbbf24; font-weight: 800; font-size: 1rem;">
-                    +${estXu.toLocaleString('vi-VN')} Xu
+                  <td style="padding: 14px; text-align: center;">
+                    <span style="font-size: 1.3rem; font-weight: 900; color: ${isTop1 ? '#fbbf24' : '#38bdf8'};">
+                      ${p.kills}
+                    </span>
+                    <span style="font-size: 0.8rem; color: #94a3b8; display: block;">con AI</span>
+                  </td>
+                  <td style="padding: 14px;">
+                    <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                      ${Object.keys(breakdown).length > 0 ? 
+                        Object.entries(breakdown).map(([sp, cnt]) => this.getSpeciesBadge(sp, cnt)).join('')
+                        : '<span style="color: #64748b; font-size: 0.8rem;">Đang cập nhật...</span>'}
+                    </div>
+                  </td>
+                  <td style="padding: 14px; color: #94a3b8; font-size: 0.82rem;">
+                    ${p.last_kill_at ? new Date(p.last_kill_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ' ' + new Date(p.last_kill_at).toLocaleDateString('vi-VN') : 'Vừa xong'}
+                  </td>
+                  <td style="padding: 14px; text-align: right;">
+                    ${isTop1 ? `
+                      <span style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); padding: 5px 12px; border-radius: 6px; font-weight: 800; font-size: 0.9rem; display: inline-block;">
+                        💰 +${rewardXu.toLocaleString('vi-VN')} Xu (Top 1)
+                      </span>
+                    ` : `
+                      <span style="color: #94a3b8; font-size: 0.8rem;">
+                        Kém Top 1: <b style="color: #f43f5e;">-${topDiff}</b> con
+                      </span>
+                    `}
                   </td>
                 </tr>
               `;}).join('') : `
                 <tr>
-                  <td colspan="5" style="text-align: center; padding: 32px; color: #64748b;">
-                    Chưa có người chơi nào tấn công Boss trong đợt này. Hãy đến Đấu Trường và cắn Boss để nhận Xu thưởng!
+                  <td colspan="6" style="text-align: center; padding: 36px; color: #64748b;">
+                    Chưa có người chơi nào săn AI trong mùa này. Hãy vào game và săn khủng long AI đầu tiên!
                   </td>
                 </tr>
               `}
@@ -346,15 +332,15 @@ const BossHunt = {
         </div>
       </div>
 
-      <!-- BẢNG VÀNG DIỆT BOSS -->
+      <!-- BẢNG VÀNG THỢ SĂN VÔ ĐỊCH (LỊCH SỬ TRAO THƯỞNG 1.000 XU) -->
       <div class="card">
         <div class="card-header" style="border: none; padding-bottom: 0;">
           <div>
             <h2 class="card-title" style="display: flex; align-items: center; gap: 8px;">
-              <span>🏆</span> BẢNG VÀNG DŨNG SĨ SĂN BOSS
+              <span>🏆</span> BẢNG VÀNG QUÁN QUÂN SĂN AI QUA CÁC MÙA
             </h2>
             <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">
-              Lịch sử các đợt hạ gục Boss Triceratops và danh sách chia thưởng 5.000 Xu theo tỉ lệ Dame
+              Danh sách các Thợ Săn Vô Địch đã nhận phần thưởng độc đắc 1.000 Xu từ máy chủ
             </p>
           </div>
         </div>
@@ -363,49 +349,37 @@ const BossHunt = {
           <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
             <thead>
               <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: #94a3b8;">
-                <th style="padding: 12px 14px;">#</th>
-                <th style="padding: 12px 14px;">Đòn Kết Liễu</th>
-                <th style="padding: 12px 14px;">Danh Sách Người Nhận Thưởng (Tỉ Lệ Dame)</th>
-                <th style="padding: 12px 14px;">Thời Gian</th>
-                <th style="padding: 12px 14px; text-align: right;">Tổng Thưởng</th>
+                <th style="padding: 12px 14px; width: 80px;">Mùa</th>
+                <th style="padding: 12px 14px;">Thợ Săn Đoạt Giải</th>
+                <th style="padding: 12px 14px; text-align: center;">Số AI Đã Săn</th>
+                <th style="padding: 12px 14px;">Thời Điểm Trao Giải</th>
+                <th style="padding: 12px 14px; text-align: right;">Phần Thưởng</th>
               </tr>
             </thead>
             <tbody>
-              ${killHistory.length > 0 ? killHistory.map((k, idx) => {
-                const recList = (k.rewards && k.rewards.length > 0) ? k.rewards : ((k.participants && k.participants.length > 0) ? k.participants : []);
-                return `
+              ${rewardHistory.length > 0 ? rewardHistory.map((h, idx) => `
                 <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                  <td style="padding: 12px 14px; color: #f59e0b; font-weight: 800;">#${idx + 1}</td>
-                  <td style="padding: 12px 14px;">
-                    <b style="color: #fff;">${k.killer_name || 'Chiến Binh'}</b>
-                    <div style="font-size: 0.78rem; color: #64748b;">(${k.killer_steam_id})</div>
+                  <td style="padding: 12px 14px; color: #fbbf24; font-weight: 800;">
+                    Mùa ${rewardHistory.length - idx}
                   </td>
                   <td style="padding: 12px 14px;">
-                    ${recList.length > 0 ? `
-                      <div style="display: flex; flex-direction: column; gap: 4px;">
-                        ${recList.map(p => `
-                          <div style="font-size: 0.82rem; color: #cbd5e1; display: flex; align-items: center; gap: 6px;">
-                            <span style="color: #38bdf8; font-weight: 700;">${p.name || 'Dũng Sĩ'}:</span>
-                            <span>${(p.damage || 0).toLocaleString('vi-VN')} Dame (${p.damage_pct !== undefined ? p.damage_pct : (p.percent !== undefined ? p.percent : 0)}%)</span>
-                            <span style="color: #fbbf24; font-weight: 800;">➜ +${(p.reward_xu || 0).toLocaleString('vi-VN')} Xu</span>
-                          </div>
-                        `).join('')}
-                      </div>
-                    ` : `
-                      <span style="color: #10b981; font-weight: 700;">+${(k.reward_xu || k.total_reward_xu || 5000).toLocaleString('vi-VN')} Xu</span>
-                    `}
+                    <b style="color: #fff;">${h.winner_name || 'Quán Quân'}</b>
+                    <div style="font-size: 0.78rem; color: #64748b;">(${h.winner_steam_id}) &bull; ${h.species || 'Dino'}</div>
+                  </td>
+                  <td style="padding: 12px 14px; text-align: center; color: #38bdf8; font-weight: 800;">
+                    ${h.kills || 0} con AI
                   </td>
                   <td style="padding: 12px 14px; color: #94a3b8; font-size: 0.82rem;">
-                    ${new Date(k.killed_at).toLocaleString('vi-VN')}
+                    ${h.settled_at ? new Date(h.settled_at).toLocaleString('vi-VN') : 'Đã trao'}
                   </td>
                   <td style="padding: 12px 14px; text-align: right; color: #10b981; font-weight: 800;">
-                    +${(k.total_reward_xu || k.reward_xu || 5000).toLocaleString('vi-VN')} Xu
+                    +${(h.reward_xu || 1000).toLocaleString('vi-VN')} Xu
                   </td>
                 </tr>
-              `;}).join('') : `
+              `).join('') : `
                 <tr>
                   <td colspan="5" style="text-align: center; padding: 32px; color: #64748b;">
-                    Chưa có đợt diệt Boss nào được ghi nhận. Hãy là những người đầu tiên lập kỳ tích!
+                    Chưa có mùa săn nào kết thúc. Mùa săn hiện tại đang diễn ra sôi nổi!
                   </td>
                 </tr>
               `}
@@ -416,11 +390,10 @@ const BossHunt = {
     `;
   },
 
-  renderAdminControls(boss) {
-    const isActive = !!boss.active;
-    const curHp = boss.current_hp !== undefined ? boss.current_hp : 100000;
-    const configuredBotSid = (this.data && this.data.boss_bot_steam_id) || boss.boss_steam_id || '76561199175571899';
-    const currentSpecies = boss.species || 'Puerta';
+  renderAdminControls(hunt, topHunter) {
+    const isSettled = !!hunt.is_settled;
+    const topName = topHunter ? topHunter.name : 'Chưa có';
+    const topKills = topHunter ? topHunter.kills : 0;
 
     return `
       <div class="card" style="border: 1px solid rgba(245, 158, 11, 0.4); background: linear-gradient(135deg, rgba(30, 20, 10, 0.65), rgba(15, 23, 42, 0.95)); margin-bottom: 24px;">
@@ -429,10 +402,10 @@ const BossHunt = {
             <span style="font-size: 1.6rem;">👑</span>
             <div>
               <h3 style="margin: 0; color: #fbbf24; font-size: 1.15rem; font-weight: 800;">
-                BẢNG ĐIỀU KHIỂN BOSS DÀNH CHO QUẢN TRỊ VIÊN (ADMIN)
+                BẢNG ĐIỀU KHIỂN SỰ KIỆN SĂN AI (QUẢN TRỊ VIÊN)
               </h3>
               <p style="margin: 2px 0 0; color: #94a3b8; font-size: 0.82rem;">
-                Triển khai Bot Boss chuyên dụng tự động — Nhân vật chơi của Admin được bảo toàn 100% không bị ảnh hưởng!
+                Hệ thống tự động đếm AI bị tiêu diệt từ combat-log &bull; Admin bấm trao thưởng 1.000 Xu cho Top 1 hoặc tạo mùa săn mới
               </p>
             </div>
           </div>
@@ -441,194 +414,119 @@ const BossHunt = {
           </span>
         </div>
 
-        <!-- CẤU HÌNH BOT BOSS CHUYÊN DỤNG CỐ ĐỊNH -->
-        <div style="background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 14px 18px; margin-bottom: 16px;">
-          <div style="font-weight: 800; color: #cbd5e1; font-size: 0.9rem; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
-            <span>⚙️</span> CẤU HÌNH TÀI KHOẢN BOT PHỤ LÀM BOSS (CỐ ĐỊNH)
-          </div>
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; align-items: flex-end;">
-            <div>
-              <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 4px; font-weight: 700;">
-                🤖 Steam ID Tài Khoản Bot Boss Phụ:
-              </label>
-              <input type="text" id="boss-bot-steam-id-input" class="form-input" style="width: 100%;" value="${configuredBotSid}" placeholder="Nhập Steam ID của tài khoản Bot phụ...">
-            </div>
-            <div>
-              <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 4px; font-weight: 700;">
-                🦖 Chủng Loài Siêu Boss:
-              </label>
-              <select id="boss-bot-species-select" class="form-input" style="width: 100%;">
-                <option value="Puerta" ${currentSpecies === 'Puerta' ? 'selected' : ''}>👑 Puerta (Puertasaurus Siêu Khổng Lồ Max Size - Khuyên Dùng)</option>
-                <option value="Triceratops" ${currentSpecies === 'Triceratops' ? 'selected' : ''}>Triceratops (Trice Sừng Khổng Lồ)</option>
-                <option value="Stegosaurus" ${currentSpecies === 'Stegosaurus' ? 'selected' : ''}>Stegosaurus (Gai Đuôi)</option>
-                <option value="Tenontosaurus" ${currentSpecies === 'Tenontosaurus' ? 'selected' : ''}>Tenontosaurus</option>
-                <option value="Tyrannosaurus" ${currentSpecies === 'Tyrannosaurus' ? 'selected' : ''}>Tyrannosaurus (T-Rex)</option>
-              </select>
-            </div>
-            <div>
-              <button class="btn-primary" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); font-size: 0.85rem; padding: 10px 16px; border-radius: 6px; cursor: pointer;" onclick="BossHunt.saveBotConfig()">
-                💾 Lưu Cấu Hình Bot
-              </button>
-            </div>
-          </div>
-          <p style="margin: 8px 0 0; color: #64748b; font-size: 0.78rem;">
-            * Tài khoản Bot này sẽ tự động biến hình và dịch chuyển vào Đấu Trường. Bạn không cần phải chọn lại nhiều lần.
-          </p>
-        </div>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+          <button class="btn-primary" style="background: linear-gradient(135deg, #10b981, #059669); font-size: 0.95rem; font-weight: 800; padding: 12px 22px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;" onclick="BossHunt.settleSeason()">
+            🏆 TRAO THƯỞNG 1.000 XU CHO TOP 1 (${topName} - ${topKills} AI)
+          </button>
 
-        <!-- THAO TÁC THẢ / TẮT BOSS -->
-        <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(6, 78, 59, 0.3)); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 12px; padding: 18px 22px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
-          <div>
-            <div style="font-weight: 900; color: #34d399; font-size: 1.15rem; display: flex; align-items: center; gap: 8px;">
-              <span>⚡</span> SIÊU BOSS AI 100.000 HP (TỰ ĐỘNG PHẢN ĐÒN & QUÉT 15M)
-            </div>
-            <p style="margin: 6px 0 0; color: #cbd5e1; font-size: 0.88rem; line-height: 1.5;">
-              • Chủng loại: <b style="color: #fbbf24;">${currentSpecies} (Max Size 3.0x)</b> &bull; Máu tối đa: <b style="color: #ef4444;">100.000 HP</b> &bull; Phản đòn: <b style="color: #f43f5e;">1.000 Dame/hit</b><br>
-              • Vị trí: <b style="color: #38bdf8;">ĐẤU TRƯỜNG</b> &bull; Phần thưởng: <b style="color: #10b981;">5.000 Xu chia theo % sát thương</b><br>
-              • Trạng thái hiện tại: <b>${isActive ? (curHp > 0 ? '🟢 Đang hoạt động (' + curHp.toLocaleString('vi-VN') + ' HP)' : '💀 Đã bị tiêu diệt') : '⚪ Đang Tắt'}</b>
-            </p>
-          </div>
-          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-            ${!isActive ? `
-              <button class="btn-primary" style="background: linear-gradient(135deg, #10b981, #047857); font-size: 1.05rem; font-weight: 900; padding: 14px 28px; border-radius: 10px; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 0 20px rgba(16, 185, 129, 0.4); cursor: pointer;" onclick="BossHunt.toggleBossAi('enable')">
-                🚀 BẬT THẢ BOSS AI 100.000 HP
-              </button>
-            ` : `
-              <button class="btn-primary" style="background: linear-gradient(135deg, #ef4444, #b91c1c); font-size: 0.95rem; font-weight: 800; padding: 12px 22px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;" onclick="BossHunt.toggleBossAi('disable')">
-                🛑 TẮT BOSS AI / THU HỒI
-              </button>
-              <button class="btn-primary" style="background: linear-gradient(135deg, #d97706, #b45309); font-size: 0.95rem; font-weight: 800; padding: 12px 22px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;" onclick="BossHunt.toggleBossAi('respawn')">
-                🔄 HỒI ĐẦY 100K HP
-              </button>
-            `}
-          </div>
+          <button class="btn-primary" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); font-size: 0.95rem; font-weight: 800; padding: 12px 22px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;" onclick="BossHunt.startNewSeason()">
+            🎯 KHỞI TRANH MÙA SĂN MỚI (RESET BXH)
+          </button>
         </div>
       </div>
     `;
   },
 
-  async saveBotConfig() {
-    const botSidInput = document.getElementById('boss-bot-steam-id-input');
-    const speciesSelect = document.getElementById('boss-bot-species-select');
-    const botSid = botSidInput ? botSidInput.value.trim() : '';
-    const species = speciesSelect ? speciesSelect.value : 'Puerta';
-
-    if (!botSid) {
-      alert("Vui lòng nhập Steam ID của tài khoản Bot!");
+  async settleSeason() {
+    const hunt = (this.data && this.data.ai_hunt) || {};
+    const leaderboard = hunt.leaderboard || [];
+    if (!leaderboard || leaderboard.length === 0 || leaderboard[0].kills <= 0) {
+      alert("⚠️ Hiện tại chưa có người chơi nào săn được AI để trao thưởng!");
       return;
     }
+
+    const topHunter = leaderboard[0];
+    const confirmMsg = `🏆 XÁC NHẬN TRAO THƯỞNG TOP 1 SĂN AI:\n\n` +
+      `Thợ Săn Quán Quân: ${topHunter.name}\n` +
+      `Steam ID: ${topHunter.steam_id}\n` +
+      `Số AI đã săn: ${topHunter.kills} con\n` +
+      `Phần Thưởng: +1.000 Xu\n\n` +
+      `Hệ thống sẽ tự động cộng 1.000 Xu vào ví và thông báo toàn server!`;
+
+    if (!confirm(confirmMsg)) return;
+
+    if (window.App && App.showToast) App.showToast("⏳ Đang xử lý trao thưởng 1.000 Xu...");
 
     try {
       const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
       const adminSid = user ? user.steamId : '';
-      const res = await fetch(`/api/boss/save-bot?admin_steam_id=${adminSid}`, {
+      const res = await fetch(`/api/ai-hunt/settle?admin_steam_id=${adminSid}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ boss_bot_steam_id: botSid, species: species })
+        body: JSON.stringify({})
       });
-      const data = await res.json();
-      if (data.ok) {
-        if (window.App && App.showToast) App.showToast(data.message);
-        else alert(data.message);
+      const resData = await res.json();
+      if (resData.ok) {
+        if (window.App && App.showToast) App.showToast(resData.message || "✅ Đã trao thưởng thành công!");
+        else alert(resData.message || "✅ Đã trao thưởng thành công!");
         await this.fetchData();
       } else {
-        alert("❌ " + (data.error || "Lỗi lưu cấu hình!"));
+        alert("❌ " + (resData.error || "Lỗi trao thưởng!"));
       }
     } catch (e) {
       alert("❌ Lỗi: " + e.message);
     }
   },
 
-  async toggleBossAi(action) {
-    const botSidInput = document.getElementById('boss-bot-steam-id-input');
-    const speciesSelect = document.getElementById('boss-bot-species-select');
-    const botSid = botSidInput ? botSidInput.value.trim() : '';
-    const species = speciesSelect ? speciesSelect.value : 'Puerta';
-
-    let confirmMsg = "";
-    if (action === 'enable') {
-      confirmMsg = "⚠️ XÁC NHẬN THẢ BOSS AI 100.000 HP:\n\nBạn có muốn kích hoạt thả Siêu Boss AI 100.000 HP tại Đấu Trường ngay bây giờ?\n\n⭐ Tài khoản Bot (" + botSid + ") sẽ hóa thân thành Boss Khổng Lồ 1.8x, tự phản đòn 1.000 dame và chia 5.000 Xu!";
-    } else if (action === 'disable') {
-      confirmMsg = "⚠️ XÁC NHẬN TẮT BOSS AI:\n\nBạn có chắc chắn muốn TẮT Boss AI và thu hồi khỏi Đấu Trường?";
-    } else {
-      confirmMsg = "⚠️ XÁC NHẬN HỒI ĐẦY MÁU BOSS:\n\nBạn có muốn hồi phục đầy đủ 100.000 HP cho Boss AI?";
-    }
+  async startNewSeason() {
+    const confirmMsg = `🎯 XÁC NHẬN KHỞI TRANH MÙA SĂN AI MỚI:\n\n` +
+      `Bảng xếp hạng số lượng AI bị tiêu diệt sẽ được làm mới về 0 cho tất cả người chơi.\n` +
+      `Mùa săn cũ sẽ được lưu trữ vào Bảng Vàng Quán Quân.\n\n` +
+      `Bạn có chắc chắn muốn bắt đầu mùa săn mới ngay bây giờ?`;
 
     if (!confirm(confirmMsg)) return;
 
-    if (window.App && App.showToast) {
-      App.showToast("⏳ Đang gửi lệnh máy chủ xử lý Boss AI...");
-    }
+    if (window.App && App.showToast) App.showToast("⏳ Đang khởi tạo mùa săn AI mới...");
 
     try {
       const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
       const adminSid = user ? user.steamId : '';
-
-      const res = await fetch(`/api/boss/toggle?admin_steam_id=${adminSid}`, {
+      const res = await fetch(`/api/ai-hunt/reset?admin_steam_id=${adminSid}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: action,
-          boss_bot_steam_id: botSid,
-          species: species
-        })
+        body: JSON.stringify({})
       });
-
       const resData = await res.json();
       if (resData.ok) {
-        if (window.App && App.showToast) {
-          App.showToast(resData.message || "✅ Thao tác Boss AI thành công!");
-        } else {
-          alert(resData.message || "✅ Thao tác Boss AI thành công!");
-        }
+        if (window.App && App.showToast) App.showToast(resData.message || "🎯 Đã bắt đầu mùa săn mới!");
+        else alert(resData.message || "🎯 Đã bắt đầu mùa săn mới!");
         await this.fetchData();
       } else {
-        alert("❌ " + (resData.error || "Lỗi thao tác!"));
+        alert("❌ " + (resData.error || "Lỗi khởi tạo!"));
       }
     } catch (e) {
-      alert("❌ Lỗi kết nối khi gửi lệnh Boss: " + e.message);
+      alert("❌ Lỗi: " + e.message);
     }
   },
 
-  // Aliases for compatibility
-  async spawnAutoAiBoss() {
-    return this.toggleBossAi('enable');
-  },
-
-  async adminToggle(action) {
-    return this.toggleBossAi(action);
-  },
-
+  // Backward compatibility alias methods
   async teleportToBoss() {
     const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
     if (!user || !user.steamId) {
-      alert("Vui lòng đăng nhập Steam để thực hiện dịch chuyển đến Đấu Trường Săn Boss!");
+      alert("Vui lòng đăng nhập Steam để thực hiện dịch chuyển!");
       return;
     }
+    if (!confirm("Bạn có muốn dịch chuyển đến Khu Săn Bắn ngay bây giờ?")) return;
 
-    if (!confirm("Bạn có chắc chắn muốn dịch chuyển đến Đấu Trường Săn Boss ngay bây giờ?")) {
-      return;
-    }
-
-    App.showToast("⏳ Đang yêu cầu dịch chuyển đến Đấu Trường...");
-
+    if (window.App && App.showToast) App.showToast("⏳ Đang yêu cầu dịch chuyển...");
     try {
-      const res = await fetch('/api/boss/teleport', {
+      const res = await fetch('/api/ai-hunt/teleport', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ steam_id: user.steamId })
       });
-
       const resData = await res.json();
       if (resData.ok) {
-        App.showToast(resData.message || "✅ Dịch chuyển thành công!");
+        if (window.App && App.showToast) App.showToast(resData.message || "✅ Dịch chuyển thành công!");
+        else alert(resData.message || "✅ Dịch chuyển thành công!");
       } else {
-        alert(resData.error || "Không thể dịch chuyển, vui lòng thử lại sau ít giây!");
+        alert(resData.error || "Lỗi dịch chuyển!");
       }
     } catch (e) {
-      alert("Lỗi kết nối dịch chuyển: " + e.message);
+      alert("Lỗi kết nối: " + e.message);
     }
   }
 };
 
 window.BossHunt = BossHunt;
+window.AIHunt = BossHunt;

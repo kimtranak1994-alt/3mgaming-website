@@ -1,30 +1,225 @@
 {
-  "active": false,
-  "boss_steam_id": "76561199175571899",
-  "boss_name": "👑 SIÊU BOSS PUERTA AI (100.000 HP)",
-  "species": "Puerta",
-  "max_hp": 100000,
-  "current_hp": 0,
-  "weight": 100000,
-  "weight_label": "100.0 Tấn (100,000 kg)",
-  "reward_xu": 5000,
-  "location_id": "cmvqtjyrr4ombph01vi8dknwg",
-  "location_name": "ĐẤU TRƯỜNG",
-  "spawned_at": "2026-10-28T22:55:35.645245",
-  "damage_per_hit": 1000,
+  "active": true,
+  "title": "🏹 SỰ KIỆN SĂN KHỦNG LONG AI TOÀN SERVER",
+  "description": "Người chơi săn được nhiều khủng long AI nhất sẽ nhận phần thưởng độc đắc 1.000 Xu!",
+  "reward_xu": 1000,
+  "season_id": "Mùa 1",
+  "started_at": "2026-10-29T12:30:53.368724",
+  "ended_at": null,
   "is_settled": false,
-  "last_killer": null,
-  "dps_ranking": [],
-  "kill_history": [],
-  "last_rewards": [],
-  "processed_hit_keys": [],
-  "_last_proximity_scan": 1793202391.6387923,
-  "last_proximity_hits": {
-    "76561198657515598": 1793202245.792657,
-    "76561199179767793": 1793202245.792657,
-    "76561198762346878": 1793202245.792657,
-    "76561198647188052": 1793202216.9469948,
-    "76561199259679997": 1793202287.9954596,
-    "76561199243423930": 1793202354.175126
-  }
+  "total_ai_kills": 18,
+  "hunters": {
+    "76561198655251333": {
+      "steam_id": "76561198655251333",
+      "name": "QuocThinhhYeuEM",
+      "species": "Giganotosaurus",
+      "kills": 1,
+      "prey_breakdown": {
+        "Dryosaurus": 1
+      },
+      "last_kill_at": "2026-10-29T05:11:20.260Z",
+      "last_prey": "Dryosaurus"
+    },
+    "76561198657515598": {
+      "steam_id": "76561198657515598",
+      "name": "haigialam20375",
+      "species": "Giganotosaurus",
+      "kills": 2,
+      "prey_breakdown": {
+        "Deer": 1,
+        "Boar": 1
+      },
+      "last_kill_at": "2026-10-29T04:10:22.568Z",
+      "last_prey": "Boar"
+    },
+    "76561198435078947": {
+      "steam_id": "76561198435078947",
+      "name": "thienchung1712",
+      "species": "Spinosaurus",
+      "kills": 5,
+      "prey_breakdown": {
+        "Goat": 1,
+        "Dryosaurus": 2,
+        "Seaturtle": 2
+      },
+      "last_kill_at": "2026-10-29T01:34:00.077Z",
+      "last_prey": "Dryosaurus"
+    },
+    "76561199575258338": {
+      "steam_id": "76561199575258338",
+      "name": "fatman",
+      "species": "Giganotosaurus",
+      "kills": 7,
+      "prey_breakdown": {
+        "Boar": 3,
+        "Gallimimus": 1,
+        "Goat": 2,
+        "Dryosaurus": 1
+      },
+      "last_kill_at": "2026-10-29T00:54:48.459Z",
+      "last_prey": "Boar"
+    },
+    "76561199319535762": {
+      "steam_id": "76561199319535762",
+      "name": "ĐÓI LẮM RỒI",
+      "species": "Tyrannosaurus",
+      "kills": 2,
+      "prey_breakdown": {
+        "Dryosaurus": 2
+      },
+      "last_kill_at": "2026-10-28T21:51:47.748Z",
+      "last_prey": "Dryosaurus"
+    },
+    "76561199773150638": {
+      "steam_id": "76561199773150638",
+      "name": "bo thang khang con",
+      "species": "Anky",
+      "kills": 1,
+      "prey_breakdown": {
+        "Boar": 1
+      },
+      "last_kill_at": "2026-10-28T22:01:19.720Z",
+      "last_prey": "Boar"
+    }
+  },
+  "leaderboard": [
+    {
+      "rank": 1,
+      "steam_id": "76561199575258338",
+      "name": "fatman",
+      "species": "Giganotosaurus",
+      "kills": 7,
+      "prey_breakdown": {
+        "Boar": 3,
+        "Gallimimus": 1,
+        "Goat": 2,
+        "Dryosaurus": 1
+      },
+      "last_kill_at": "2026-10-29T00:54:48.459Z",
+      "last_prey": "Boar",
+      "is_top1": true,
+      "reward_xu": 1000
+    },
+    {
+      "rank": 2,
+      "steam_id": "76561198435078947",
+      "name": "thienchung1712",
+      "species": "Spinosaurus",
+      "kills": 5,
+      "prey_breakdown": {
+        "Goat": 1,
+        "Dryosaurus": 2,
+        "Seaturtle": 2
+      },
+      "last_kill_at": "2026-10-29T01:34:00.077Z",
+      "last_prey": "Dryosaurus",
+      "is_top1": false,
+      "reward_xu": 0
+    },
+    {
+      "rank": 3,
+      "steam_id": "76561199319535762",
+      "name": "ĐÓI LẮM RỒI",
+      "species": "Tyrannosaurus",
+      "kills": 2,
+      "prey_breakdown": {
+        "Dryosaurus": 2
+      },
+      "last_kill_at": "2026-10-28T21:51:47.748Z",
+      "last_prey": "Dryosaurus",
+      "is_top1": false,
+      "reward_xu": 0
+    },
+    {
+      "rank": 4,
+      "steam_id": "76561198657515598",
+      "name": "haigialam20375",
+      "species": "Giganotosaurus",
+      "kills": 2,
+      "prey_breakdown": {
+        "Deer": 1,
+        "Boar": 1
+      },
+      "last_kill_at": "2026-10-29T04:10:22.568Z",
+      "last_prey": "Boar",
+      "is_top1": false,
+      "reward_xu": 0
+    },
+    {
+      "rank": 5,
+      "steam_id": "76561199773150638",
+      "name": "bo thang khang con",
+      "species": "Anky",
+      "kills": 1,
+      "prey_breakdown": {
+        "Boar": 1
+      },
+      "last_kill_at": "2026-10-28T22:01:19.720Z",
+      "last_prey": "Boar",
+      "is_top1": false,
+      "reward_xu": 0
+    },
+    {
+      "rank": 6,
+      "steam_id": "76561198655251333",
+      "name": "QuocThinhhYeuEM",
+      "species": "Giganotosaurus",
+      "kills": 1,
+      "prey_breakdown": {
+        "Dryosaurus": 1
+      },
+      "last_kill_at": "2026-10-29T05:11:20.260Z",
+      "last_prey": "Dryosaurus",
+      "is_top1": false,
+      "reward_xu": 0
+    }
+  ],
+  "prey_summary": {
+    "Dryosaurus": 6,
+    "Deer": 1,
+    "Boar": 5,
+    "Goat": 3,
+    "Gallimimus": 1,
+    "Seaturtle": 2
+  },
+  "processed_kill_ids": [
+    "6205878",
+    "6180175",
+    "6211293",
+    "6211311",
+    "6210902",
+    "6210823",
+    "6244721",
+    "6237350",
+    "6179996",
+    "6211563",
+    "6218365",
+    "6222930",
+    "6178705",
+    "6206661",
+    "6214704",
+    "6205980",
+    "6234286",
+    "6206481"
+  ],
+  "reward_history": [],
+  "top_hunter": {
+    "rank": 1,
+    "steam_id": "76561199575258338",
+    "name": "fatman",
+    "species": "Giganotosaurus",
+    "kills": 7,
+    "prey_breakdown": {
+      "Boar": 3,
+      "Gallimimus": 1,
+      "Goat": 2,
+      "Dryosaurus": 1
+    },
+    "last_kill_at": "2026-10-29T00:54:48.459Z",
+    "last_prey": "Boar",
+    "is_top1": true,
+    "reward_xu": 1000
+  },
+  "last_winner": null,
+  "filter_since_start": false
 }

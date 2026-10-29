@@ -33,7 +33,7 @@ const App = {
 
   switchTab(tabId) {
     const validTabs = [
-      'home', 'bxh', 'damage', 'boss', 'arena', 'garage', 
+      'home', 'bxh', 'damage', 'boss', 'ai-hunt', 'arena', 'garage', 
       'skinshop', 'skins', 'skineditor', 'referral', 'teleport', 'quests', 'buydino', 'carcass',
       'map', 'guide', 'rules', 'donate', 'admin'
     ];
@@ -62,7 +62,7 @@ const App = {
       if (window.DamageChecker && typeof window.DamageChecker.render === 'function') {
         window.DamageChecker.render();
       }
-    } else if (tabId === 'boss') {
+    } else if (tabId === 'boss' || tabId === 'ai-hunt') {
       if (window.BossHunt && typeof window.BossHunt.render === 'function') {
         window.BossHunt.render();
       }

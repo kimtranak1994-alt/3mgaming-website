@@ -593,8 +593,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             return
 
         # 9d. Săn Boss Thần Thoại & Phần Thưởng 5.000 Xu
-        elif self.path.startswith("/api/boss"):
-            self.handle_boss_get()
+        elif self.path.startswith("/api/ai-hunt") or self.path.startswith("/api/boss"):
+            self.handle_ai_hunt_get()
             return
 
         # 10. Gara Khủng Long (Live từ IslePilot)
@@ -989,8 +989,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             self.handle_arena_post()
             return
 
-        elif self.path.startswith("/api/boss/"):
-            self.handle_boss_post()
+        elif self.path.startswith("/api/ai-hunt/") or self.path.startswith("/api/boss/"):
+            self.handle_ai_hunt_post()
             return
 
         elif self.path == "/api/server/teleport":
@@ -3853,38 +3853,33 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         self.send_json_response({"ok": False, "error": "Endpoint không tồn tại"}, status=404)
 
     # =========================================================================
-    # MODULE SĂN BOSS TRICERATOPS 100.000 HP & PHẦN THƯỞNG 5.000 XU
-    # =========================================================================
-    # MODULE SĂN BOSS HƯƠU AI (DEER) 100.000 HP & PHẦN THƯỞNG 5.000 XU
-    # =========================================================================
-    # MODULE SĂN BOSS AI TỰ ĐỘNG (100.000 HP, DAME 1.000, THƯỞNG 5.000 XU)
-    # Tích hợp tài khoản Bot phụ chuyên dụng không ảnh hưởng nhân vật của Admin
+        # =========================================================================
+    # MODULE SĂN KHỦNG LONG AI & THƯỞNG 1.000 XU CHO NGƯỜI SĂN NHIỀU NHẤT
+    # Quét dữ liệu /combat-log từ IslePilot tự động tính số lượng AI tiêu diệt
+    # Ai săn được nhiều AI nhất sẽ nhận độc đắc 1.000 Xu!
     # =========================================================================
 
-    def _get_boss_db(self):
+    def _get_ai_hunt_db(self):
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        primary_file = os.path.join(base_dir, "boss_state.json")
-        backup_file = os.path.join(base_dir, ".persistent_boss_state.json")
-        default_bot_sid = str(config.get("BOSS_BOT_STEAM_ID", "76561199175571899")).strip()
+        primary_file = os.path.join(base_dir, "ai_hunt_state.json")
+        backup_file = os.path.join(base_dir, ".persistent_ai_hunt_state.json")
         defaults = {
-            "active": False,
-            "boss_steam_id": default_bot_sid,
-            "boss_name": "👑 SIÊU BOSS PUERTA AI MAX SIZE (100.000 HP)",
-            "species": "Puerta",
-            "max_hp": 100000,
-            "current_hp": 100000,
-            "damage_per_hit": 1000,
-            "weight": 100000,
-            "weight_label": "100.0 Tấn (100,000 kg)",
-            "reward_xu": 5000,
-            "location_id": "cmvqtjyrr4ombph01vi8dknwg",
-            "location_name": "ĐẤU TRƯỜNG",
-            "spawned_at": None,
+            "active": True,
+            "title": "🏹 SỰ KIỆN SĂN KHỦNG LONG AI TOÀN SERVER",
+            "description": "Người chơi săn được nhiều khủng long AI nhất sẽ nhận phần thưởng độc đắc 1.000 Xu!",
+            "reward_xu": 1000,
+            "season_id": "Mùa 1",
+            "started_at": datetime.datetime.now().isoformat(),
+            "ended_at": None,
             "is_settled": False,
-            "last_killer": None,
-            "dps_ranking": [],
-            "kill_history": [],
-            "last_rewards": []
+            "total_ai_kills": 0,
+            "hunters": {},
+            "leaderboard": [],
+            "prey_summary": {},
+            "processed_kill_ids": [],
+            "reward_history": [],
+            "top_hunter": None,
+            "last_winner": None
         }
         for fpath in [backup_file, primary_file]:
             if os.path.exists(fpath):
@@ -3900,12 +3895,14 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     pass
         return defaults
 
-    def _save_boss_db(self, data):
+    def _save_ai_hunt_db(self, data):
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        primary_file = os.path.join(base_dir, "boss_state.json")
-        sub_file = os.path.join(base_dir, "3mgaming-website", "boss_state.json")
-        backup_file = os.path.join(base_dir, ".persistent_boss_state.json")
-        for fpath in [primary_file, sub_file, backup_file]:
+        primary_file = os.path.join(base_dir, "ai_hunt_state.json")
+        sub_file = os.path.join(base_dir, "3mgaming-website", "ai_hunt_state.json")
+        backup_file = os.path.join(base_dir, ".persistent_ai_hunt_state.json")
+        legacy_file = os.path.join(base_dir, "boss_state.json")
+        legacy_sub = os.path.join(base_dir, "3mgaming-website", "boss_state.json")
+        for fpath in [primary_file, sub_file, backup_file, legacy_file, legacy_sub]:
             try:
                 os.makedirs(os.path.dirname(fpath), exist_ok=True)
                 with open(fpath, "w", encoding="utf-8") as f:
@@ -3913,22 +3910,10 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             except Exception:
                 pass
 
-    def _auto_check_boss_status(self, boss_db):
-        if not boss_db or not boss_db.get("active"):
+    def _auto_check_ai_hunt_status(self, db):
+        if not db or not db.get("active"):
             return
-        boss_sid = str(boss_db.get("boss_steam_id") or config.get("BOSS_BOT_STEAM_ID", "76561199175571899")).strip()
-        target_species = str(boss_db.get("species") or "Triceratops").strip().lower()
 
-        spawned_at_str = boss_db.get("spawned_at")
-        spawned_at_ts = 0.0
-        if spawned_at_str:
-            try:
-                clean_str = spawned_at_str.replace("Z", "+00:00")
-                spawned_at_ts = datetime.datetime.fromisoformat(clean_str).timestamp()
-            except Exception:
-                pass
-
-        # Throttle / combat-log query to avoid IslePilot 429 Too Many Requests
         now_ts = time.time()
         hits = []
         try:
@@ -3942,27 +3927,47 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     hits = remote_data.get("hits", [])
                 elif DinoRequestHandler._combat_log_cached_data:
                     hits = DinoRequestHandler._combat_log_cached_data.get("hits", [])
-        except Exception as e:
+        except Exception:
             if DinoRequestHandler._combat_log_cached_data:
                 hits = DinoRequestHandler._combat_log_cached_data.get("hits", [])
 
-        # 1. Quét toàn bộ đòn cắn của người chơi vào Boss AI (CHỈ TÍNH KHI ĐÁNH TRÚNG BOT BOSS)
-        damage_by_attacker = {}
-        fatal_hit = None
-        total_dmg_taken = 0.0
+        if not hits:
+            return
+
+        processed_ids = set(str(x) for x in db.setdefault("processed_kill_ids", []))
+        hunters = db.setdefault("hunters", {})
+        prey_summary = db.setdefault("prey_summary", {})
+
+        started_at_str = db.get("started_at")
+        started_at_ts = 0.0
+        if started_at_str:
+            try:
+                clean_str = started_at_str.replace("Z", "+00:00")
+                started_at_ts = datetime.datetime.fromisoformat(clean_str).timestamp()
+            except Exception:
+                pass
 
         for h in hits:
+            # 1. Nhận diện AI: victimSteamId là None / rỗng (không phải người chơi thật)
             vic_sid = str(h.get("victimSteamId") or "").strip()
+            if vic_sid and vic_sid.lower() != "none":
+                continue
+
+            # 2. Đòn kết liễu AI (killed == True hoặc hpAfter <= 0)
+            is_killed = bool(h.get("killed"))
+            hp_after = h.get("hpAfter")
+            if not is_killed and (hp_after is None or float(hp_after) > 0):
+                continue
+
             atk_sid = str(h.get("attackerSteamId") or "").strip()
-
-            # Nhận diện mục tiêu Boss: DUY NHẤT Tài khoản Bot Boss đang kích hoạt (KHÔNG BAO GIỜ áp dụng lên động vật/hươu hay người chơi khác)
-            if not boss_sid or vic_sid != boss_sid:
+            if not atk_sid or atk_sid.lower() == "none" or len(atk_sid) < 15:
                 continue
 
-            if not atk_sid or atk_sid == boss_sid:
-                continue
+            hit_id = str(h.get("id") or "")
+            hit_at = h.get("at") or ""
+            if not hit_id:
+                hit_id = f"{hit_at}_{atk_sid}"
 
-            hit_at = h.get("at")
             hit_ts = 0.0
             if hit_at:
                 try:
@@ -3971,195 +3976,89 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 except Exception:
                     pass
 
-            # Bỏ qua các hit xảy ra trước khi boss xuất hiện trong phiên này
-            if spawned_at_ts > 0 and hit_ts > 0 and hit_ts < (spawned_at_ts - 2.0):
+            # Bỏ qua các hit xảy ra trước khi mùa săn này bắt đầu
+            if db.get("filter_since_start") and started_at_ts > 0 and hit_ts > 0 and hit_ts < (started_at_ts - 1.0):
                 continue
 
-            # CƠ CHẾ BOSS AI PHẢN ĐÒN (1.000 HP KHI NGƯỜI CHƠI TẤN CÔNG BOSS):
-            # CHỈ PHẢN ĐÒN NẾU BOSS CÒN SỐNG VÀ TUYỆT ĐỐI KHÔNG GỌI LỆNH SLAY NGƯỜI CHƠI
-            hit_key = str(h.get("id") or f"{hit_at}_{atk_sid}_{vic_sid}")
-            processed_keys = boss_db.setdefault("processed_hit_keys", [])
-            if hit_key not in processed_keys:
-                processed_keys.append(hit_key)
-                if len(processed_keys) > 400:
-                    boss_db["processed_hit_keys"] = processed_keys[-250:]
+            if hit_id in processed_ids:
+                continue
 
-                # Boss AI chỉ phản đòn khi Boss đang còn sống (current_hp > 0)
-                if boss_db.get("active") and int(boss_db.get("current_hp", 100000)) > 0:
-                    try:
-                        target_player = self.fetch_islepilot(f"/players/{atk_sid}")
-                        if isinstance(target_player, dict) and target_player.get("online"):
-                            cur_health = float(target_player.get("health", 0.0))
-                            damage_dealt = float(boss_db.get("damage_per_hit", 1000))
-                            # Giữ máu tối thiểu là 1.0 HP (TUYỆT ĐỐI KHÔNG DÙNG LỆNH SLAY ĐỂ TRÁNH QUÉT CHẾT DINO CỦA NGƯỜI CHƠI)
-                            new_health = max(1.0, round(cur_health - damage_dealt, 1))
-                            self.fetch_islepilot("/commands", method="POST", body_data={
-                                "action": "setstats",
-                                "steamId": atk_sid,
-                                "health": new_health
-                            })
-                            print(f"[Boss AI Retaliation] Boss phản đòn {atk_sid}: {cur_health} -> {new_health} HP (-{damage_dealt} HP)")
-                    except Exception as e:
-                        print(f"[Boss AI Retaliation Error]: {e}")
+            processed_ids.add(hit_id)
 
-            # Lấy lực cắn / sát thương thực tế của dino người chơi
-            damage = float(h.get("damage") or 0.0)
-            if damage <= 0:
-                damage = 100.0
+            atk_name = h.get("attackerName") or f"Player_{atk_sid[-4:]}"
+            atk_species = h.get("attackerSpecies") or "Dinosaur"
+            vic_species = h.get("victimSpecies") or "Động vật AI"
 
-            total_dmg_taken += damage
-
-            if atk_sid not in damage_by_attacker:
-                p_name = h.get("attackerName") or f"Player_{atk_sid[-4:]}"
-                damage_by_attacker[atk_sid] = {
+            if atk_sid not in hunters:
+                hunters[atk_sid] = {
                     "steam_id": atk_sid,
-                    "name": p_name,
-                    "damage": 0.0,
-                    "hits": 0,
-                    "last_ability": h.get("ability", "Cắn")
+                    "name": atk_name,
+                    "species": atk_species,
+                    "kills": 0,
+                    "prey_breakdown": {},
+                    "last_kill_at": hit_at,
+                    "last_prey": vic_species
                 }
 
-            damage_by_attacker[atk_sid]["damage"] += damage
-            damage_by_attacker[atk_sid]["hits"] += 1
-            damage_by_attacker[atk_sid]["last_ability"] = h.get("ability", "Cắn")
+            hunter = hunters[atk_sid]
+            hunter["name"] = atk_name
+            hunter["species"] = atk_species
+            hunter["kills"] += 1
+            hunter["last_kill_at"] = hit_at
+            hunter["last_prey"] = vic_species
 
-            if h.get("killed"):
-                fatal_hit = h
+            breakdown = hunter.setdefault("prey_breakdown", {})
+            breakdown[vic_species] = breakdown.get(vic_species, 0) + 1
 
-        # Máu Boss bị trừ theo đúng tổng lực cắn của dino người chơi
-        max_hp = int(boss_db.get("max_hp", 100000))
-        calc_hp = max(0, int(max_hp - total_dmg_taken))
-        boss_db["current_hp"] = calc_hp
+            prey_summary[vic_species] = prey_summary.get(vic_species, 0) + 1
 
-        # Bảng xếp hạng sát thương (DPS Ranking) & ước tính tỷ lệ chia 5.000 Xu
-        dps_list = []
-        total_pool = int(boss_db.get("reward_xu", 5000))
-        sorted_attackers = sorted(damage_by_attacker.values(), key=lambda x: x["damage"], reverse=True)
+        db["processed_kill_ids"] = list(processed_ids)[-1000:]
+        db["prey_summary"] = prey_summary
 
-        for item in sorted_attackers:
-            ratio = (item["damage"] / total_dmg_taken) if total_dmg_taken > 0 else 0
-            pct = round(ratio * 100, 1)
-            est_xu = max(1, round(total_pool * ratio)) if total_dmg_taken > 0 else 0
-            dps_list.append({
-                "steam_id": item["steam_id"],
-                "name": item["name"],
-                "damage": round(item["damage"]),
-                "damage_pct": pct,
-                "hits": item["hits"],
-                "last_ability": item["last_ability"],
-                "estimated_xu": est_xu
+        # Sắp xếp Bảng Xếp Hạng: Số AI tiêu diệt giảm dần, ai đạt mốc sớm hơn đứng trước
+        sorted_hunters = sorted(
+            hunters.values(),
+            key=lambda x: (-x.get("kills", 0), x.get("last_kill_at", ""))
+        )
+
+        total_kills_all = sum(h.get("kills", 0) for h in sorted_hunters)
+        db["total_ai_kills"] = total_kills_all
+
+        reward_xu = int(db.get("reward_xu", 1000))
+        leaderboard = []
+        for idx, h in enumerate(sorted_hunters):
+            is_top1 = (idx == 0 and h.get("kills", 0) > 0)
+            leaderboard.append({
+                "rank": idx + 1,
+                "steam_id": h.get("steam_id"),
+                "name": h.get("name"),
+                "species": h.get("species"),
+                "kills": h.get("kills", 0),
+                "prey_breakdown": h.get("prey_breakdown", {}),
+                "last_kill_at": h.get("last_kill_at"),
+                "last_prey": h.get("last_prey"),
+                "is_top1": is_top1,
+                "reward_xu": reward_xu if is_top1 else 0
             })
-        boss_db["dps_ranking"] = dps_list
 
-        # 2. Xử lý khi Boss bị tiêu diệt: CHIA PHẦN THƯỞNG 5.000 XU CHO NHIỀU NGƯỜI THEO DAME
-        is_boss_dead = (fatal_hit is not None) or (calc_hp <= 0 and total_dmg_taken > 0)
+        db["leaderboard"] = leaderboard
+        db["top_hunter"] = leaderboard[0] if (leaderboard and leaderboard[0]["kills"] > 0) else None
 
-        if is_boss_dead and not boss_db.get("is_settled"):
-            reward_distribution = []
-            if total_dmg_taken > 0 and len(dps_list) > 0:
-                allocated = 0
-                for idx, p in enumerate(dps_list):
-                    ratio = p["damage"] / total_dmg_taken
-                    if idx == len(dps_list) - 1:
-                        share_xu = max(1, total_pool - allocated)
-                    else:
-                        share_xu = max(1, round(total_pool * ratio))
-                        allocated += share_xu
+        self._save_ai_hunt_db(db)
 
-                    # Tự động cộng Xu vào ví người chơi theo tỷ lệ dame gây ra
-                    self._adjust_player_xu(
-                        p["steam_id"],
-                        share_xu,
-                        f"Thưởng Săn Boss AI: Gây {p['damage']:,} dame ({p['damage_pct']}%)"
-                    )
-
-                    reward_distribution.append({
-                        "steam_id": p["steam_id"],
-                        "name": p["name"],
-                        "damage": p["damage"],
-                        "damage_pct": p["damage_pct"],
-                        "hits": p["hits"],
-                        "reward_xu": share_xu
-                    })
-
-            killer_sid = str(fatal_hit.get("attackerSteamId")) if fatal_hit else (dps_list[0]["steam_id"] if dps_list else "")
-            killer_name = "Không xác định"
-            if killer_sid:
-                match_p = next((p for p in dps_list if p["steam_id"] == killer_sid), None)
-                killer_name = match_p["name"] if match_p else f"Player_{killer_sid[-4:]}"
-
-            kill_session = {
-                "session_id": f"boss_session_{int(time.time()*1000)}",
-                "killed_at": datetime.datetime.now().isoformat(),
-                "killer_steam_id": killer_sid,
-                "killer_name": killer_name,
-                "total_damage": round(total_dmg_taken),
-                "total_reward_xu": total_pool,
-                "participants_count": len(reward_distribution),
-                "rewards": reward_distribution
-            }
-
-            boss_db.setdefault("kill_history", []).insert(0, kill_session)
-            boss_db["last_rewards"] = reward_distribution
-            boss_db["last_killer"] = {
-                "killer_steam_id": killer_sid,
-                "killer_name": killer_name,
-                "killed_at": kill_session["killed_at"],
-                "reward_xu": next((r["reward_xu"] for r in reward_distribution if r["steam_id"] == killer_sid), 0),
-                "ability": fatal_hit.get("ability", "Tấn công") if fatal_hit else "Đòn kết liễu"
-            }
-            boss_db["current_hp"] = 0
-            boss_db["is_settled"] = True
-
-            # Hạ gục nhân vật Bot Boss
-            if boss_sid:
-                try:
-                    self.fetch_islepilot("/commands", method="POST", body_data={
-                        "action": "slay",
-                        "steamId": boss_sid,
-                        "reason": f"Siêu Boss AI đã bị các dũng sĩ tiêu diệt!"
-                    })
-                except Exception:
-                    pass
-
-            # Gửi thông báo toàn server khi Boss bị hạ
-            try:
-                self.fetch_islepilot("/commands", method="POST", body_data={
-                    "action": "announce",
-                    "message": f"🎉 SIÊU BOSS AI 100.000 HP ĐÃ BỊ TIÊU DIỆT! Dũng sĩ kết liễu: {killer_name}. Đã chia 5.000 Xu cho các thợ săn!"
-                })
-            except Exception:
-                pass
-
-            self._save_boss_db(boss_db)
-            return
-
-        self._save_boss_db(boss_db)
-
-    def handle_boss_get(self):
-        boss_db = self._get_boss_db()
-        self._auto_check_boss_status(boss_db)
+    def handle_ai_hunt_get(self):
+        db = self._get_ai_hunt_db()
+        self._auto_check_ai_hunt_status(db)
 
         is_admin, _ = self.is_admin_request()
-        online_players = []
-        if is_admin:
-            try:
-                p_res = self.fetch_islepilot("/players") or {}
-                online_players = p_res.get("players", [])
-            except Exception:
-                pass
-
-        default_bot_sid = str(config.get("BOSS_BOT_STEAM_ID", "76561199175571899")).strip()
-
         self.send_json_response({
             "ok": True,
-            "boss": boss_db,
-            "is_admin": is_admin,
-            "boss_bot_steam_id": default_bot_sid,
-            "online_players": online_players
+            "ai_hunt": db,
+            "boss": db,
+            "is_admin": is_admin
         })
 
-    def handle_boss_post(self):
+    def handle_ai_hunt_post(self):
         try:
             length = int(self.headers.get("Content-Length", 0))
             payload = json.loads(self.rfile.read(length).decode("utf-8")) if length > 0 else {}
@@ -4167,215 +4066,115 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             payload = {}
 
         path = self.path.split("?")[0]
-        boss_db = self._get_boss_db()
+        db = self._get_ai_hunt_db()
+        self._auto_check_ai_hunt_status(db)
 
-        # 1. Lưu cấu hình Bot Boss cố định
-        if path == "/api/boss/save-bot":
+        # 1. Trao thưởng 1.000 Xu cho Top 1 Săn AI (Chỉ Admin)
+        if path in ["/api/ai-hunt/settle", "/api/boss/settle"]:
             is_admin, _ = self.is_admin_request()
             if not is_admin:
-                self.send_json_response({"ok": False, "error": "Chỉ Quản Trị Viên (Admin) mới có quyền lưu cấu hình Bot!"}, status=403)
+                self.send_json_response({"ok": False, "error": "Chỉ Quản Trị Viên (Admin) mới có quyền trao thưởng!"}, status=403)
                 return
-            new_bot_sid = str(payload.get("boss_bot_steam_id") or "").strip()
-            new_species = str(payload.get("species") or "Triceratops").strip()
-            if not new_bot_sid:
-                self.send_json_response({"ok": False, "error": "Steam ID không hợp lệ!"}, status=400)
+
+            leaderboard = db.get("leaderboard", [])
+            if not leaderboard or leaderboard[0].get("kills", 0) <= 0:
+                self.send_json_response({"ok": False, "error": "Chưa có thợ săn nào tiêu diệt được AI để trao thưởng!"}, status=400)
                 return
-            config["BOSS_BOT_STEAM_ID"] = new_bot_sid
-            boss_db["boss_steam_id"] = new_bot_sid
-            boss_db["species"] = new_species
-            self._save_boss_db(boss_db)
+
+            top_hunter = leaderboard[0]
+            winner_sid = str(top_hunter.get("steam_id")).strip()
+            winner_name = top_hunter.get("name", "Chiến Binh")
+            kills = top_hunter.get("kills", 0)
+            reward_xu = int(db.get("reward_xu", 1000))
+
+            if db.get("is_settled"):
+                self.send_json_response({"ok": False, "error": f"Phần thưởng mùa này đã được trao cho {winner_name} rồi! Vui lòng bấm 'Khởi Tranh Mùa Săn Mới' để reset."}, status=400)
+                return
+
+            # Tự động cộng 1.000 Xu vào tài khoản người chiến thắng
+            self._adjust_player_xu(
+                winner_sid,
+                reward_xu,
+                f"Thưởng Top 1 Săn AI ({kills} con): +{reward_xu:,} Xu"
+            )
+
+            # Thông báo toàn server qua IslePilot
             try:
-                base_dir = os.path.dirname(os.path.abspath(__file__))
-                cfg_path = os.path.join(base_dir, "config.json")
-                with open(cfg_path, "w", encoding="utf-8") as f:
-                    json.dump(config, f, indent=2, ensure_ascii=False)
-                sub_cfg = os.path.join(base_dir, "3mgaming-website", "config.json")
-                if os.path.exists(os.path.dirname(sub_cfg)):
-                    with open(sub_cfg, "w", encoding="utf-8") as f:
-                        json.dump(config, f, indent=2, ensure_ascii=False)
+                self.fetch_islepilot("/commands", method="POST", body_data={
+                    "action": "announce",
+                    "message": f"🏆 CHÚC MỪNG {winner_name.upper()} ĐÃ ĐOẠT TOP 1 SĂN AI VỚI {kills} CON! NHẬN THƯỞNG 1.000 XU!"
+                })
             except Exception:
                 pass
+
+            history_entry = {
+                "season_id": db.get("season_id", f"season_{int(time.time())}"),
+                "settled_at": datetime.datetime.now().isoformat(),
+                "winner_steam_id": winner_sid,
+                "winner_name": winner_name,
+                "species": top_hunter.get("species", "Dinosaur"),
+                "kills": kills,
+                "prey_breakdown": top_hunter.get("prey_breakdown", {}),
+                "reward_xu": reward_xu,
+                "total_participants": len(leaderboard),
+                "total_ai_kills": db.get("total_ai_kills", kills)
+            }
+            db.setdefault("reward_history", []).insert(0, history_entry)
+            db["is_settled"] = True
+            db["last_winner"] = history_entry
+            self._save_ai_hunt_db(db)
+
             self.send_json_response({
                 "ok": True,
-                "message": f"✅ Đã lưu Bot Boss cố định: Steam {new_bot_sid} ({new_species})",
-                "boss": boss_db
+                "message": f"🎉 ĐÃ TRAO THƯỞNG THÀNH CÔNG 1.000 XU CHO TOP 1: {winner_name} ({kills} AI)! Số dư ví đã được cộng.",
+                "ai_hunt": db
             })
             return
 
-        # 2. Bật / Tắt / Hồi Sinh Boss AI tại Đấu Trường (Chỉ Admin)
-        if path == "/api/boss/toggle":
+        # 2. Reset / Khởi tranh Mùa Săn AI Mới (Chỉ Admin)
+        if path in ["/api/ai-hunt/reset", "/api/ai-hunt/start", "/api/boss/reset", "/api/boss/toggle"]:
             is_admin, _ = self.is_admin_request()
             if not is_admin:
-                self.send_json_response({"ok": False, "error": "Chỉ Quản Trị Viên (Admin) mới có quyền bật/tắt Boss!"}, status=403)
+                self.send_json_response({"ok": False, "error": "Chỉ Quản Trị Viên (Admin) mới có quyền bắt đầu mùa săn mới!"}, status=403)
                 return
 
-            action = payload.get("action", "toggle") # enable, disable, respawn
-            bot_sid = str(payload.get("boss_bot_steam_id") or config.get("BOSS_BOT_STEAM_ID") or boss_db.get("boss_steam_id") or "76561199175571899").strip()
-            chosen_species = str(payload.get("species") or boss_db.get("species") or "Puerta").strip()
+            new_season_num = len(db.get("reward_history", [])) + 1
+            db["active"] = True
+            db["season_id"] = f"Mùa {new_season_num}"
+            db["started_at"] = datetime.datetime.now().isoformat()
+            db["ended_at"] = None
+            db["is_settled"] = False
+            db["total_ai_kills"] = 0
+            db["hunters"] = {}
+            db["leaderboard"] = []
+            db["prey_summary"] = {}
+            db["top_hunter"] = None
+            self._save_ai_hunt_db(db)
 
-            if action in ["enable", "respawn"] or (action == "toggle" and not boss_db.get("active")):
-                # Kiểm tra tài khoản Bot có đang online trong game không
-                bot_info = None
-                try:
-                    bot_info = self.fetch_islepilot(f"/players/{bot_sid}")
-                except Exception as e:
-                    print(f"[Boss Toggle] Lỗi kiểm tra bot player {bot_sid}: {e}")
-
-                is_bot_online = isinstance(bot_info, dict) and bot_info.get("online") is True
-                bot_name = bot_info.get("name") if (isinstance(bot_info, dict) and bot_info.get("name")) else f"Bot_{bot_sid[-4:]}"
-
-                if not is_bot_online:
-                    self.send_json_response({
-                        "ok": False,
-                        "error": f"⚠️ Tài khoản Bot Boss ({bot_name} - Steam: {bot_sid}) hiện CHƯA VÀO GAME!\n\nVui lòng đăng nhập tài khoản Bot này vào server trước khi bấm Thả Boss để Boss có thể xuất hiện tại Đấu Trường."
-                    }, status=400)
-                    return
-
-                # Triển khai Bot thành Boss Khổng Lồ 100.000 HP tại Đấu Trường
-                print(f"[Boss Spawn] Triển khai Bot {bot_sid} thành Boss {chosen_species} 100.000 HP...")
-                try:
-                    self.fetch_islepilot("/commands", method="POST", body_data={
-                        "action": "swap",
-                        "steamId": bot_sid,
-                        "species": chosen_species,
-                        "gender": "Female"
-                    })
-                except Exception as e:
-                    print(f"[Boss Spawn] Lỗi swap: {e}")
-
-                time.sleep(0.8)
-
-                try:
-                    self.fetch_islepilot("/commands", method="POST", body_data={
-                        "action": "setgrowth",
-                        "steamId": bot_sid,
-                        "growth": 1.0,
-                        "frozen": False
-                    })
-                except Exception as e:
-                    print(f"[Boss Spawn] Lỗi setgrowth: {e}")
-
-                time.sleep(0.3)
-
-                try:
-                    self.fetch_islepilot("/commands", method="POST", body_data={
-                        "action": "scale",
-                        "steamId": bot_sid,
-                        "scale": 3.0
-                    })
-                except Exception as e:
-                    print(f"[Boss Spawn] Lỗi scale: {e}")
-
-                time.sleep(0.3)
-
-                try:
-                    self.fetch_islepilot("/commands", method="POST", body_data={
-                        "action": "setstats",
-                        "steamId": bot_sid,
-                        "growth": 1.0,
-                        "health": 100000,
-                        "maxHealth": 100000,
-                        "hunger": 5000,
-                        "thirst": 1000,
-                        "stamina": 1000,
-                        "bleed": 0
-                    })
-                except Exception as e:
-                    print(f"[Boss Spawn] Lỗi setstats: {e}")
-
-                time.sleep(0.3)
-
-                # Dịch chuyển vào Đấu Trường
-                try:
-                    self.fetch_islepilot(f"/players/{bot_sid}/teleport", method="POST", body_data={"locationId": "cmvqtjyrr4ombph01vi8dknwg"})
-                except Exception as e:
-                    print(f"[Boss Spawn] Lỗi teleport: {e}")
-
-                time.sleep(0.3)
-
-                species_vi = "TRICERATOPS KHỔNG LỒ" if chosen_species.lower() == "triceratops" else chosen_species.upper()
-                try:
-                    self.fetch_islepilot("/commands", method="POST", body_data={
-                        "action": "announce",
-                        "message": f"🔥 SIÊU BOSS {species_vi} AI 100.000 HP ĐÃ XUẤT HIỆN TẠI ĐẤU TRƯỜNG! DŨNG SĨ HÃY TẬP HỢP SĂN BOSS NHẬN 5.000 XU!"
-                    })
-                except Exception:
-                    pass
-
-                boss_name = f"👑 SIÊU BOSS {species_vi} AI (100.000 HP)"
-                boss_db["active"] = True
-                boss_db["boss_steam_id"] = bot_sid
-                boss_db["boss_name"] = boss_name
-                boss_db["species"] = chosen_species
-                boss_db["max_hp"] = 100000
-                boss_db["current_hp"] = 100000
-                boss_db["damage_per_hit"] = 1000
-                boss_db["weight"] = 100000
-                boss_db["weight_label"] = "100.0 Tấn (100,000 kg)"
-                boss_db["reward_xu"] = 5000
-                boss_db["location_id"] = "cmvqtjyrr4ombph01vi8dknwg"
-                boss_db["location_name"] = "ĐẤU TRƯỜNG"
-                boss_db["spawned_at"] = datetime.datetime.now().isoformat()
-                boss_db["is_settled"] = False
-                boss_db["dps_ranking"] = []
-                boss_db["last_killer"] = None
-                boss_db["processed_hit_keys"] = []
-                self._save_boss_db(boss_db)
-
-                self.send_json_response({
-                    "ok": True,
-                    "message": f"🔥 ĐÃ THẢ THÀNH CÔNG {boss_name} TẠI ĐẤU TRƯỜNG!\n\nBot ({bot_name}) đã biến hình to lớn 3.0x (Max Size), máu 100.000 HP, tự phản đòn 1.000 dame và sẵn sàng chiến đấu.",
-                    "boss": boss_db
+            try:
+                self.fetch_islepilot("/commands", method="POST", body_data={
+                    "action": "announce",
+                    "message": f"🏹 [SĂN AI] MÙA SĂN KHỦNG LONG AI MỚI ĐÃ KHỞI TRANH! Ai săn được nhiều AI nhất sẽ nhận thưởng 1.000 Xu!"
                 })
-                return
+            except Exception:
+                pass
 
-            else:
-                # TẮT BOSS / THU HỒI
-                old_sid = str(boss_db.get("boss_steam_id") or bot_sid or "")
-                boss_db["active"] = False
-                boss_db["current_hp"] = 0
-                boss_db["is_settled"] = False
-                if old_sid:
-                    try:
-                        admin_sids = [str(sid) for sid in config.get("ADMIN_STEAM_IDS", ["76561199175571899"])]
-                        if old_sid in admin_sids:
-                            # Nếu Boss là Admin tự đóng vai, chỉ trả lại kích thước chuẩn 1.0x, tuyệt đối không slay admin!
-                            self.fetch_islepilot("/commands", method="POST", body_data={
-                                "action": "scale",
-                                "steamId": old_sid,
-                                "scale": 1.0
-                            })
-                        else:
-                            self.fetch_islepilot("/commands", method="POST", body_data={
-                                "action": "slay",
-                                "steamId": old_sid,
-                                "reason": "Boss AI đã được Admin thu hồi."
-                            })
-                    except Exception as e:
-                        pass
-                try:
-                    self.fetch_islepilot("/commands", method="POST", body_data={
-                        "action": "announce",
-                        "message": "🛑 SIÊU BOSS AI ĐÃ ĐƯỢC THU HỒI KHỎI ĐẤU TRƯỜNG!"
-                    })
-                except Exception as e:
-                    pass
-                self._save_boss_db(boss_db)
+            self.send_json_response({
+                "ok": True,
+                "message": f"🎯 ĐÃ KHỞI TRANH MÙA SĂN AI MỚI (MÙA {new_season_num})! Bảng xếp hạng đã sẵn sàng.",
+                "ai_hunt": db
+            })
+            return
 
-                self.send_json_response({
-                    "ok": True,
-                    "message": "🛑 ĐÃ TẮT VÀ THU HỒI BOSS AI THÀNH CÔNG!",
-                    "boss": boss_db
-                })
-                return
-
-        # 2. Người chơi dịch chuyển đến Đấu Trường Săn Boss
-        elif path == "/api/boss/teleport":
+        # 3. Dịch chuyển đến khu săn bắn
+        elif path in ["/api/ai-hunt/teleport", "/api/boss/teleport"]:
             steam_id = payload.get("steam_id") or self.get_active_steam_id()
             if not steam_id:
                 self.send_json_response({"ok": False, "error": "Vui lòng đăng nhập Steam trước khi dịch chuyển!"}, status=401)
                 return
 
+            loc_id = payload.get("location_id") or "cmvqtjyrr4ombph01vi8dknwg"
+            loc_name = payload.get("location_name") or "ĐẤU TRƯỜNG & KHU SĂN BẮN"
             steam_id = str(steam_id).strip()
             try:
                 p_info = self.fetch_islepilot(f"/players/{steam_id}")
@@ -4396,17 +4195,43 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 pass
 
             try:
-                res = self.fetch_islepilot(f"/players/{steam_id}/teleport", method="POST", body_data={"locationId": "cmvqtjyrr4ombph01vi8dknwg"})
+                res = self.fetch_islepilot(f"/players/{steam_id}/teleport", method="POST", body_data={"locationId": loc_id})
                 ok, msg = self._is_teleport_success(res)
                 if ok:
-                    self.send_json_response({"ok": True, "message": "🚀 Đã dịch chuyển đến Đấu Trường Săn Boss thành công! Hãy đứng yên 3-5 giây trong game."})
+                    self.send_json_response({"ok": True, "message": f"🚀 Đã dịch chuyển đến {loc_name} thành công! Hãy đứng yên 3-5 giây trong game."})
                 else:
                     self.send_json_response({"ok": False, "error": msg}, status=400)
             except Exception as e:
                 self.send_json_response({"ok": False, "error": f"Lỗi dịch chuyển: {e}"}, status=500)
             return
 
+        # 4. Cập nhật mức thưởng Xu (Chỉ Admin)
+        elif path in ["/api/ai-hunt/set-reward"]:
+            is_admin, _ = self.is_admin_request()
+            if not is_admin:
+                self.send_json_response({"ok": False, "error": "Chỉ Quản Trị Viên (Admin) mới có quyền chỉnh sửa phần thưởng!"}, status=403)
+                return
+            new_reward = int(payload.get("reward_xu", 1000))
+            db["reward_xu"] = max(100, new_reward)
+            self._save_ai_hunt_db(db)
+            self.send_json_response({"ok": True, "message": f"✅ Đã cập nhật phần thưởng Top 1: {db['reward_xu']:,} Xu", "ai_hunt": db})
+            return
+
         self.send_json_response({"ok": False, "error": "Endpoint không tồn tại"}, status=404)
+
+    # Aliases for backward compatibility
+    def _get_boss_db(self):
+        return self._get_ai_hunt_db()
+
+    def _save_boss_db(self, data):
+        self._save_ai_hunt_db(data)
+
+    def handle_boss_get(self):
+        self.handle_ai_hunt_get()
+
+    def handle_boss_post(self):
+        self.handle_ai_hunt_post()
+
 
     def handle_garage(self):
 
