@@ -195,6 +195,7 @@ const App = {
       if (res.ok) {
         const data = await res.json();
         window.realAdminVerified = !!data.isAdmin;
+        window.isMapAdmin = !!data.isMapAdmin;
         if (window.realAdminVerified) {
           document.cookie = "admin_auth=1; Path=/; Max-Age=86400; SameSite=Lax";
         }

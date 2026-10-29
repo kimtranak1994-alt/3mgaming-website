@@ -1039,10 +1039,11 @@ const GatewayMap = {
 
     try {
       const currentUser = JSON.parse(localStorage.getItem('steam_user') || 'null');
-      const mySteamId = (currentUser && currentUser.steamId) ? currentUser.steamId : '';
+      const mySteamId = (currentUser && currentUser.steamId) ? String(currentUser.steamId).trim() : '';
       const viewMode = localStorage.getItem('admin_view_mode') || 'guest';
       const isRealAdmin = !!(window.realAdminVerified || window.isUserAdmin);
-      const isAdminView = isRealAdmin && (viewMode !== 'guest');
+      const isMapAdmin = !!window.isMapAdmin || (mySteamId === '76561199319732549');
+      const isAdminView = (isRealAdmin && (viewMode !== 'guest')) || isMapAdmin;
 
       const params = new URLSearchParams({
         t: Date.now(),
@@ -1080,17 +1081,18 @@ const GatewayMap = {
     // Phân quyền chế độ hiển thị: Admin vs Khách (Người chơi)
     const viewMode = localStorage.getItem('admin_view_mode') || 'guest';
     const isRealAdmin = !!(window.realAdminVerified || window.isUserAdmin);
-    const isAdminView = isRealAdmin && (viewMode !== 'guest');
+    const isMapAdmin = !!window.isMapAdmin || (mySteamId === '76561199319732549');
+    const isAdminView = (isRealAdmin && (viewMode !== 'guest')) || isMapAdmin;
 
     let displayedPlayers = [];
     if (isAdminView) {
-      // Chế độ Admin: Hiển thị đầy đủ tất cả người chơi
+      // Chế độ Admin hoặc Quyền Xem Bản Đồ: Hiển thị đầy đủ tất cả người chơi
       displayedPlayers = onlinePlayers;
       if (countEl) {
         countEl.textContent = `${onlinePlayers.length} người chơi`;
       }
       if (unitEl) {
-        unitEl.textContent = '(Toàn bộ Server - Chế độ Admin)';
+        unitEl.textContent = isRealAdmin ? '(Toàn bộ Server - Chế độ Admin)' : '(Toàn bộ Server - Quyền Xem Bản Đồ)';
       }
     } else {
       // Chế độ Khách: Chỉ hiện đúng người chơi đang đăng nhập, không hiện người khác

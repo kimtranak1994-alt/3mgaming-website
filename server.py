@@ -790,6 +790,13 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         elif self.path.startswith("/api/admin/check"):
             is_admin, id_or_mode = self.is_admin_request()
             active_steam_id = self.get_active_steam_id()
+            query = urllib.parse.urlparse(self.path).query
+            q_params = urllib.parse.parse_qs(query)
+            target_sid = str(q_params.get("steam_id", [None])[0] or q_params.get("admin_steam_id", [None])[0] or active_steam_id or "").strip()
+
+            map_admin_sids = [str(sid).strip() for sid in config.get("MAP_ONLY_ADMIN_STEAM_IDS", ["76561199319732549"])]
+            is_map_admin = is_admin or (target_sid in map_admin_sids)
+
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             if is_admin:
@@ -797,7 +804,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps({
                 "isAdmin": is_admin,
-                "steamId": active_steam_id,
+                "isMapAdmin": is_map_admin,
+                "role": "full_admin" if is_admin else ("map_only" if is_map_admin else "player"),
+                "steamId": target_sid or active_steam_id,
                 "authMode": id_or_mode
             }).encode("utf-8"))
             return
@@ -2715,19 +2724,21 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         q_params = urllib.parse.parse_qs(query)
         client_mode = q_params.get("mode", ["guest"])[0]
         target_steam_id = q_params.get("steam_id", [None])[0]
+        active_sid = str(target_steam_id or self.get_active_steam_id() or "").strip()
 
         is_admin, _ = self.is_admin_request()
+        map_admin_sids = [str(sid).strip() for sid in config.get("MAP_ONLY_ADMIN_STEAM_IDS", ["76561199319732549"])]
+        is_map_admin = is_admin or (active_sid in map_admin_sids)
 
-        # Nếu là Admin và đang chọn chế độ Quản trị viên -> Cho phép xem toàn bộ người chơi
-        if is_admin and client_mode == "admin":
+        # Nếu là Admin hoặc có quyền xem bản đồ và yêu cầu xem toàn bộ người chơi
+        if is_map_admin and (client_mode == "admin" or active_sid in map_admin_sids):
             self.send_json_response(players)
             return
 
         # Chế độ Khách (hoặc người chơi bình thường):
         # Chỉ trả về duy nhất người chơi đang đăng nhập (nếu có steam_id)
-        if target_steam_id:
-            target_steam_id = str(target_steam_id).strip()
-            my_players = [p for p in players if str(p.get("steamId", "")) == target_steam_id]
+        if active_sid:
+            my_players = [p for p in players if str(p.get("steamId", "")).strip() == active_sid]
             self.send_json_response(my_players)
             return
 
