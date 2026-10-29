@@ -1,14 +1,14 @@
 // =========================================================================
 // MODULE SĂN KHỦNG LONG AI TOÀN SERVER (AI DINOSAUR HUNTING EVENT)
-// Người chơi săn được nhiều AI nhất sẽ nhận phần thưởng 1.000 Xu!
-// Tự động quét /combat-log và cập nhật bảng xếp hạng thời gian thực
+// Chu kỳ: Reset sau 1 ngày (24 giờ)
+// Hệ thống TỰ ĐỘNG trao thưởng 1.000 Xu cho người đứng Top 1 khi hết ngày!
 // =========================================================================
 
 const BossHunt = {
   data: null,
   pollTimer: null,
+  countdownTimer: null,
 
-  // Từ điển tên loài AI tiếng Việt & Icon thân thiện
   speciesDict: {
     'dryosaurus': { name: 'Dryosaurus', icon: '🦎' },
     'deer': { name: 'Hươu Rừng', icon: '🦌' },
@@ -18,6 +18,7 @@ const BossHunt = {
     'pachycephalosaurus': { name: 'Pachycephalosaurus', icon: '🦏' },
     'tenontosaurus': { name: 'Tenontosaurus', icon: '🦕' },
     'turtle': { name: 'Rùa Biển', icon: '🐢' },
+    'seaturtle': { name: 'Rùa Biển', icon: '🐢' },
     'frog': { name: 'Ếch AI', icon: '🐸' },
     'compsognathus': { name: 'Compy AI', icon: '🦎' },
     'compy': { name: 'Compy AI', icon: '🦎' }
@@ -41,7 +42,7 @@ const BossHunt = {
     container.innerHTML = `
       <div style="text-align: center; padding: 60px 20px;">
         <div class="spinner" style="margin: 0 auto 16px;"></div>
-        <p style="color: #94a3b8; font-size: 1.05rem;">Đang kết nối dữ liệu Săn AI từ máy chủ...</p>
+        <p style="color: #94a3b8; font-size: 1.05rem;">Đang kết nối sự kiện Săn AI từ máy chủ...</p>
       </div>
     `;
 
@@ -73,6 +74,42 @@ const BossHunt = {
         this.fetchData();
       }
     }, 3500);
+
+    if (this.countdownTimer) clearInterval(this.countdownTimer);
+    this.countdownTimer = setInterval(() => {
+      const curTab = document.body.getAttribute('data-current-tab');
+      if (curTab === 'boss' || curTab === 'ai-hunt') {
+        this.updateCountdown();
+      }
+    }, 1000);
+  },
+
+  updateCountdown() {
+    const cdElem = document.getElementById('ai-hunt-countdown');
+    if (!cdElem || !this.data || !this.data.ai_hunt) return;
+
+    const hunt = this.data.ai_hunt;
+    let remainingSec = 0;
+
+    if (hunt.expires_at) {
+      const expiresTs = new Date(hunt.expires_at).getTime();
+      const nowTs = Date.now();
+      remainingSec = Math.max(0, Math.floor((expiresTs - nowTs) / 1000));
+    } else if (hunt.time_remaining_seconds !== undefined) {
+      remainingSec = Math.max(0, hunt.time_remaining_seconds);
+    }
+
+    if (remainingSec <= 0) {
+      cdElem.innerHTML = `<span style="color: #10b981; font-size: 1rem;">🎉 Đang tự động trao thưởng & reset ngày mới...</span>`;
+      return;
+    }
+
+    const hours = Math.floor(remainingSec / 3600);
+    const minutes = Math.floor((remainingSec % 3600) / 60);
+    const seconds = remainingSec % 60;
+    const pad = (n) => String(n).padStart(2, '0');
+
+    cdElem.innerHTML = `⏱️ ${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
   },
 
   renderUI() {
@@ -88,21 +125,20 @@ const BossHunt = {
     const totalAiKills = hunt.total_ai_kills || 0;
     const preySummary = hunt.prey_summary || {};
     const rewardHistory = hunt.reward_history || [];
-    const seasonId = hunt.season_id || 'Mùa 1';
+    const seasonId = hunt.season_id || 'Mùa hôm nay';
 
     let statusBadge = '';
     if (!isSettled) {
       statusBadge = `<span style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px;">
         <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981; animation: pulse 1.5s infinite;"></span>
-        🟢 MÙA SĂN ĐANG DIỄN RA (${seasonId.toUpperCase()})
+        🟢 ĐANG DIỄN RA (${seasonId.toUpperCase()})
       </span>`;
     } else {
       statusBadge = `<span style="background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px;">
-        🏆 MÙA SĂN ĐÃ TRAO THƯỞNG (+1.000 XU)
+        🏆 ĐÃ TRAO THƯỞNG (+1.000 XU)
       </span>`;
     }
 
-    // Top con mồi phổ biến nhất
     const sortedPrey = Object.entries(preySummary).sort((a, b) => b[1] - a[1]);
     const topPreyName = sortedPrey.length > 0 ? sortedPrey[0][0] : 'Khủng Long AI';
     const topPreyCount = sortedPrey.length > 0 ? sortedPrey[0][1] : 0;
@@ -147,22 +183,39 @@ const BossHunt = {
         }
       </style>
 
-      <!-- HERO BANNER SỰ KIỆN SĂN AI -->
+      <!-- HERO BANNER SỰ KIỆN SĂN AI & ĐỒNG HỒ ĐẾM NGƯỢC 24H -->
       <div class="card" style="margin-bottom: 24px; background: linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(15, 23, 42, 0.95)); border: 1px solid rgba(14, 165, 233, 0.4);">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
-          <div>
+          <div style="max-width: 650px;">
             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
               <span style="font-size: 2.2rem;">🏹</span>
               <h1 style="font-size: 1.85rem; font-weight: 900; margin: 0; background: linear-gradient(90deg, #38bdf8, #818cf8, #fbbf24); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
                 SỰ KIỆN SĂN KHỦNG LONG AI TOÀN SERVER
               </h1>
             </div>
-            <p style="color: #cbd5e1; font-size: 0.95rem; margin: 0;">
-              Săn lùng động vật và khủng long AI (Dryo, Hươu, Lợn, Dê...) trên toàn bản đồ &bull; <b>Ai săn được nhiều AI nhất sẽ nhận độc đắc 💰 1.000 Xu!</b>
+            <p style="color: #cbd5e1; font-size: 0.95rem; margin: 0 0 8px;">
+              Săn lùng các loài khủng long và động vật AI trên toàn bản đồ &bull; <b>Ai săn được nhiều AI nhất trong ngày sẽ được hệ thống TỰ ĐỘNG trao thưởng 💰 1.000 XU!</b>
             </p>
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+              ${statusBadge}
+              <span style="background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); padding: 4px 10px; border-radius: 12px; font-size: 0.78rem; font-weight: 700;">
+                🔄 Reset sau 1 ngày & tự động phát thưởng
+              </span>
+            </div>
           </div>
-          <div style="display: flex; align-items: center; gap: 10px;">
-            ${statusBadge}
+
+          <!-- ĐỒNG HỒ ĐẾM NGƯỢC CHU KỲ 1 NGÀY -->
+          <div style="background: rgba(0, 0, 0, 0.55); border: 2px solid rgba(245, 158, 11, 0.5); border-radius: 14px; padding: 14px 20px; text-align: right; box-shadow: 0 6px 20px rgba(0,0,0,0.4);">
+            <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px; margin-bottom: 4px;">
+              ⏳ THỜI GIAN CÒN LẠI TRONG NGÀY
+            </div>
+            <div id="ai-hunt-countdown" style="font-size: 1.6rem; font-weight: 900; color: #fbbf24; font-family: 'Courier New', monospace; letter-spacing: 1.5px; text-shadow: 0 0 12px rgba(245, 158, 11, 0.5);">
+              --:--:--
+            </div>
+            <div style="font-size: 0.76rem; color: #10b981; font-weight: 700; margin-top: 4px; display: flex; align-items: center; justify-content: flex-end; gap: 5px;">
+              <span>🤖</span>
+              <span>Hết giờ: Tự trao 1.000 Xu & sang ngày mới</span>
+            </div>
           </div>
         </div>
       </div>
@@ -177,12 +230,12 @@ const BossHunt = {
             <div>
               <div style="display: flex; align-items: center; gap: 8px;">
                 <span style="font-size: 0.8rem; font-weight: 800; background: rgba(245, 158, 11, 0.25); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); padding: 2px 8px; border-radius: 4px;">
-                  TOP 1 THỢ SĂN AI HIỆN TẠI
+                  TOP 1 THỢ SĂN HÔM NAY
                 </span>
-                <span style="font-size: 0.8rem; color: #94a3b8;">(${isSettled ? 'Đã nhận thưởng' : 'Ứng viên nhận 1.000 Xu'})</span>
+                <span style="font-size: 0.8rem; color: #10b981; font-weight: 700;">(🤖 Hệ thống sẽ tự động chuyển 1.000 Xu khi hết giờ)</span>
               </div>
               <h2 style="font-size: 1.6rem; font-weight: 900; margin: 4px 0 2px; color: #fff;">
-                ${topHunter ? topHunter.name : 'Chưa có thợ săn nào ghi điểm'}
+                ${topHunter ? topHunter.name : 'Chưa có thợ săn nào ghi điểm hôm nay'}
               </h2>
               <div style="color: #94a3b8; font-size: 0.85rem; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                 ${topHunter ? `
@@ -190,7 +243,7 @@ const BossHunt = {
                   <span>Dino sử dụng: <b style="color: #38bdf8;">${topHunter.species || 'Dinosaur'}</b></span> &bull;
                   <span>Con mồi gần nhất: <b style="color: #f43f5e;">${topHunter.last_prey || 'AI'}</b></span>
                 ` : `
-                  <span>Hãy vào game săn AI ngay để đứng đầu bảng xếp hạng và ẵm 1.000 Xu!</span>
+                  <span>Hãy vào game săn khủng long AI ngay để đứng đầu bảng hôm nay và ẵm 1.000 Xu!</span>
                 `}
               </div>
             </div>
@@ -202,7 +255,7 @@ const BossHunt = {
               ${topHunter ? `${topHunter.kills} CON AI` : '0 CON'}
             </div>
             <div style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 8px; padding: 4px 12px; color: #10b981; font-weight: 800; font-size: 0.95rem;">
-              🎁 THƯỞNG: +1.000 XU
+              🎁 TỰ ĐỘNG THƯỞNG: +1.000 XU
             </div>
           </div>
         </div>
@@ -218,22 +271,20 @@ const BossHunt = {
       <!-- LƯỚI THÔNG SỐ SỰ KIỆN SĂN AI -->
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin-bottom: 24px;">
         <div class="stat-chip">
-          <div class="stat-chip-label">🎯 Tổng AI Đã Bị Săn</div>
+          <div class="stat-chip-label">🎯 Tổng AI Bị Săn Hôm Nay</div>
           <div class="stat-chip-val" style="color: #38bdf8;">${totalAiKills.toLocaleString('vi-VN')} Con</div>
         </div>
         <div class="stat-chip">
           <div class="stat-chip-label">💰 Giải Thưởng Top 1</div>
-          <div class="stat-chip-val" style="color: #fbbf24;">${rewardXu.toLocaleString('vi-VN')} Xu</div>
+          <div class="stat-chip-val" style="color: #fbbf24;">${rewardXu.toLocaleString('vi-VN')} Xu (Tự Động)</div>
         </div>
         <div class="stat-chip">
-          <div class="stat-chip-label">🏹 Thợ Săn Đua Top</div>
+          <div class="stat-chip-label">⏱️ Chu Kỳ Reset</div>
+          <div class="stat-chip-val" style="color: #a855f7;">Sau 1 Ngày (24h)</div>
+        </div>
+        <div class="stat-chip">
+          <div class="stat-chip-label">🏹 Thợ Săn Đang Đua Top</div>
           <div class="stat-chip-val" style="color: #10b981;">${leaderboard.length} Người Chơi</div>
-        </div>
-        <div class="stat-chip">
-          <div class="stat-chip-label">🦖 Con Mồi Bị Săn Nhiều Nhất</div>
-          <div class="stat-chip-val" style="color: #ec4899; font-size: 1.05rem;">
-            ${sortedPrey.length > 0 ? `${topPreyName} (${topPreyCount} con)` : 'Đang cập nhật'}
-          </div>
         </div>
       </div>
 
@@ -246,10 +297,10 @@ const BossHunt = {
           <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 12px;">
             <div>
               <h2 class="card-title" style="display: flex; align-items: center; gap: 8px;">
-                <span>🎯</span> BẢNG XẾP HẠNG THỢ SĂN AI (ĐUA TOP 1.000 XU)
+                <span>🎯</span> BẢNG XẾP HẠNG SĂN AI TRONG NGÀY (TOP 1 NHẬN 1.000 XU)
               </h2>
               <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">
-                Tự động ghi nhận mỗi khi bạn cắn chết động vật/khủng long AI trong server. Người đứng đầu sẽ nhận 1.000 Xu!
+                Tự động ghi nhận số lượng khủng long AI bị cắn chết. Khi hết 1 ngày, hệ thống sẽ tự động trao 1.000 Xu cho Top 1!
               </p>
             </div>
             <div style="display: flex; gap: 8px;">
@@ -269,7 +320,7 @@ const BossHunt = {
                 <th style="padding: 12px 14px; text-align: center; width: 140px;">Số AI Đã Săn</th>
                 <th style="padding: 12px 14px;">Chi Tiết Con Mồi</th>
                 <th style="padding: 12px 14px; width: 160px;">Hoạt Động Gần Nhất</th>
-                <th style="padding: 12px 14px; text-align: right; width: 180px;">Phần Thưởng</th>
+                <th style="padding: 12px 14px; text-align: right; width: 220px;">Phần Thưởng</th>
               </tr>
             </thead>
             <tbody>
@@ -277,7 +328,7 @@ const BossHunt = {
                 const isTop1 = (idx === 0 && p.kills > 0);
                 const breakdown = p.prey_breakdown || {};
                 const topDiff = (topHunter && topHunter.kills > p.kills) ? (topHunter.kills - p.kills) : 0;
-                
+
                 return `
                 <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); background: ${isTop1 ? 'rgba(245, 158, 11, 0.08)' : 'transparent'};">
                   <td style="padding: 14px; font-weight: 900; font-size: 1.05rem; color: ${idx === 0 ? '#fbbf24' : idx === 1 ? '#cbd5e1' : idx === 2 ? '#b45309' : '#94a3b8'};">
@@ -300,7 +351,7 @@ const BossHunt = {
                   </td>
                   <td style="padding: 14px;">
                     <div style="display: flex; flex-wrap: wrap; gap: 4px;">
-                      ${Object.keys(breakdown).length > 0 ? 
+                      ${Object.keys(breakdown).length > 0 ?
                         Object.entries(breakdown).map(([sp, cnt]) => this.getSpeciesBadge(sp, cnt)).join('')
                         : '<span style="color: #64748b; font-size: 0.8rem;">Đang cập nhật...</span>'}
                     </div>
@@ -311,7 +362,7 @@ const BossHunt = {
                   <td style="padding: 14px; text-align: right;">
                     ${isTop1 ? `
                       <span style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); padding: 5px 12px; border-radius: 6px; font-weight: 800; font-size: 0.9rem; display: inline-block;">
-                        💰 +${rewardXu.toLocaleString('vi-VN')} Xu (Top 1)
+                        💰 +${rewardXu.toLocaleString('vi-VN')} Xu (Tự Động)
                       </span>
                     ` : `
                       <span style="color: #94a3b8; font-size: 0.8rem;">
@@ -323,7 +374,7 @@ const BossHunt = {
               `;}).join('') : `
                 <tr>
                   <td colspan="6" style="text-align: center; padding: 36px; color: #64748b;">
-                    Chưa có người chơi nào săn AI trong mùa này. Hãy vào game và săn khủng long AI đầu tiên!
+                    Chưa có người chơi nào săn AI trong ngày hôm nay. Hãy vào game và săn khủng long AI đầu tiên!
                   </td>
                 </tr>
               `}
@@ -332,15 +383,15 @@ const BossHunt = {
         </div>
       </div>
 
-      <!-- BẢNG VÀNG THỢ SĂN VÔ ĐỊCH (LỊCH SỬ TRAO THƯỞNG 1.000 XU) -->
+      <!-- BẢNG VÀNG THỢ SĂN VÔ ĐỊCH QUA CÁC NGÀY -->
       <div class="card">
         <div class="card-header" style="border: none; padding-bottom: 0;">
           <div>
             <h2 class="card-title" style="display: flex; align-items: center; gap: 8px;">
-              <span>🏆</span> BẢNG VÀNG QUÁN QUÂN SĂN AI QUA CÁC MÙA
+              <span>🏆</span> BẢNG VÀNG QUÁN QUÂN QUA CÁC NGÀY (ĐÃ NHẬN 1.000 XU)
             </h2>
             <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">
-              Danh sách các Thợ Săn Vô Địch đã nhận phần thưởng độc đắc 1.000 Xu từ máy chủ
+              Lịch sử các Thợ Săn Vô Địch được hệ thống tự động chốt và trao 1.000 Xu sau mỗi 24 giờ
             </p>
           </div>
         </div>
@@ -349,7 +400,7 @@ const BossHunt = {
           <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
             <thead>
               <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: #94a3b8;">
-                <th style="padding: 12px 14px; width: 80px;">Mùa</th>
+                <th style="padding: 12px 14px; width: 140px;">Mùa / Ngày</th>
                 <th style="padding: 12px 14px;">Thợ Săn Đoạt Giải</th>
                 <th style="padding: 12px 14px; text-align: center;">Số AI Đã Săn</th>
                 <th style="padding: 12px 14px;">Thời Điểm Trao Giải</th>
@@ -360,10 +411,13 @@ const BossHunt = {
               ${rewardHistory.length > 0 ? rewardHistory.map((h, idx) => `
                 <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                   <td style="padding: 12px 14px; color: #fbbf24; font-weight: 800;">
-                    Mùa ${rewardHistory.length - idx}
+                    ${h.season_id || `Mùa ${rewardHistory.length - idx}`}
                   </td>
                   <td style="padding: 12px 14px;">
-                    <b style="color: #fff;">${h.winner_name || 'Quán Quân'}</b>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                      <b style="color: #fff;">${h.winner_name || 'Quán Quân'}</b>
+                      ${h.auto_settled ? '<span style="background: rgba(16, 185, 129, 0.2); color: #10b981; font-size: 0.72rem; padding: 1px 6px; border-radius: 4px; font-weight: 700;">Tự động</span>' : ''}
+                    </div>
                     <div style="font-size: 0.78rem; color: #64748b;">(${h.winner_steam_id}) &bull; ${h.species || 'Dino'}</div>
                   </td>
                   <td style="padding: 12px 14px; text-align: center; color: #38bdf8; font-weight: 800;">
@@ -379,7 +433,7 @@ const BossHunt = {
               `).join('') : `
                 <tr>
                   <td colspan="5" style="text-align: center; padding: 32px; color: #64748b;">
-                    Chưa có mùa săn nào kết thúc. Mùa săn hiện tại đang diễn ra sôi nổi!
+                    Chưa có mùa săn nào kết thúc. Mùa săn hôm nay đang đếm ngược và sẽ tự động trao thưởng!
                   </td>
                 </tr>
               `}
@@ -388,16 +442,17 @@ const BossHunt = {
         </div>
       </div>
     `;
+
+    this.updateCountdown();
   },
 
   renderAdminControls(hunt, topHunter) {
-    const isSettled = !!hunt.is_settled;
     const topName = topHunter ? topHunter.name : 'Chưa có';
     const topKills = topHunter ? topHunter.kills : 0;
 
     return `
       <div class="card" style="border: 1px solid rgba(245, 158, 11, 0.4); background: linear-gradient(135deg, rgba(30, 20, 10, 0.65), rgba(15, 23, 42, 0.95)); margin-bottom: 24px;">
-        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 16px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 14px;">
           <div style="display: flex; align-items: center; gap: 10px;">
             <span style="font-size: 1.6rem;">👑</span>
             <div>
@@ -405,22 +460,22 @@ const BossHunt = {
                 BẢNG ĐIỀU KHIỂN SỰ KIỆN SĂN AI (QUẢN TRỊ VIÊN)
               </h3>
               <p style="margin: 2px 0 0; color: #94a3b8; font-size: 0.82rem;">
-                Hệ thống tự động đếm AI bị tiêu diệt từ combat-log &bull; Admin bấm trao thưởng 1.000 Xu cho Top 1 hoặc tạo mùa săn mới
+                🤖 Hệ thống đang chạy <b>TỰ ĐỘNG 24/7</b>: Tự động đếm AI, hết 1 ngày tự động thưởng 1.000 Xu cho Top 1 và reset ngày mới!
               </p>
             </div>
           </div>
-          <span style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700;">
-            QUYỀN QUẢN TRỊ ADMIN
+          <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700;">
+            TỰ ĐỘNG HÓA 24H: BẬT 🟢
           </span>
         </div>
 
         <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-          <button class="btn-primary" style="background: linear-gradient(135deg, #10b981, #059669); font-size: 0.95rem; font-weight: 800; padding: 12px 22px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;" onclick="BossHunt.settleSeason()">
-            🏆 TRAO THƯỞNG 1.000 XU CHO TOP 1 (${topName} - ${topKills} AI)
+          <button class="btn-primary" style="background: linear-gradient(135deg, #10b981, #059669); font-size: 0.92rem; font-weight: 800; padding: 10px 20px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;" onclick="BossHunt.settleSeason()">
+            🏆 TRAO THƯỞNG 1.000 XU NGAY (${topName} - ${topKills} AI)
           </button>
 
-          <button class="btn-primary" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); font-size: 0.95rem; font-weight: 800; padding: 12px 22px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;" onclick="BossHunt.startNewSeason()">
-            🎯 KHỞI TRANH MÙA SĂN MỚI (RESET BXH)
+          <button class="btn-primary" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); font-size: 0.92rem; font-weight: 800; padding: 10px 20px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;" onclick="BossHunt.startNewSeason()">
+            🎯 KHỞI TRANH NGÀY SĂN MỚI NGAY (RESET 24H)
           </button>
         </div>
       </div>
@@ -441,7 +496,7 @@ const BossHunt = {
       `Steam ID: ${topHunter.steam_id}\n` +
       `Số AI đã săn: ${topHunter.kills} con\n` +
       `Phần Thưởng: +1.000 Xu\n\n` +
-      `Hệ thống sẽ tự động cộng 1.000 Xu vào ví và thông báo toàn server!`;
+      `Hệ thống sẽ cộng ngay 1.000 Xu vào ví và thông báo toàn server!`;
 
     if (!confirm(confirmMsg)) return;
 
@@ -469,14 +524,14 @@ const BossHunt = {
   },
 
   async startNewSeason() {
-    const confirmMsg = `🎯 XÁC NHẬN KHỞI TRANH MÙA SĂN AI MỚI:\n\n` +
-      `Bảng xếp hạng số lượng AI bị tiêu diệt sẽ được làm mới về 0 cho tất cả người chơi.\n` +
-      `Mùa săn cũ sẽ được lưu trữ vào Bảng Vàng Quán Quân.\n\n` +
-      `Bạn có chắc chắn muốn bắt đầu mùa săn mới ngay bây giờ?`;
+    const confirmMsg = `🎯 XÁC NHẬN KHỞI TRANH NGÀY SĂN AI MỚI:\n\n` +
+      `Bảng xếp hạng trong ngày sẽ được làm mới về 0 cho tất cả người chơi.\n` +
+      `Đồng hồ đếm ngược 24 giờ sẽ được thiết lập lại từ đầu.\n\n` +
+      `Bạn có chắc chắn muốn khởi tranh ngày săn mới ngay bây giờ?`;
 
     if (!confirm(confirmMsg)) return;
 
-    if (window.App && App.showToast) App.showToast("⏳ Đang khởi tạo mùa săn AI mới...");
+    if (window.App && App.showToast) App.showToast("⏳ Đang khởi tạo ngày săn AI mới...");
 
     try {
       const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
@@ -488,8 +543,8 @@ const BossHunt = {
       });
       const resData = await res.json();
       if (resData.ok) {
-        if (window.App && App.showToast) App.showToast(resData.message || "🎯 Đã bắt đầu mùa săn mới!");
-        else alert(resData.message || "🎯 Đã bắt đầu mùa săn mới!");
+        if (window.App && App.showToast) App.showToast(resData.message || "🎯 Đã bắt đầu ngày săn mới!");
+        else alert(resData.message || "🎯 Đã bắt đầu ngày săn mới!");
         await this.fetchData();
       } else {
         alert("❌ " + (resData.error || "Lỗi khởi tạo!"));
@@ -499,7 +554,6 @@ const BossHunt = {
     }
   },
 
-  // Backward compatibility alias methods
   async teleportToBoss() {
     const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
     if (!user || !user.steamId) {

@@ -3854,22 +3854,29 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
     # =========================================================================
         # =========================================================================
-    # MODULE SĂN KHỦNG LONG AI & THƯỞNG 1.000 XU CHO NGƯỜI SĂN NHIỀU NHẤT
-    # Quét dữ liệu /combat-log từ IslePilot tự động tính số lượng AI tiêu diệt
-    # Ai săn được nhiều AI nhất sẽ nhận độc đắc 1.000 Xu!
+        # =========================================================================
+    # MODULE SĂN KHỦNG LONG AI TOÀN SERVER (AI DINOSAUR HUNTING EVENT)
+    # Tự động quét /combat-log và ghi nhận số lượng AI bị tiêu diệt
+    # Chu kỳ sự kiện: Reset sau 1 ngày (24 giờ)
+    # Hệ thống TỰ ĐỘNG trao thưởng 1.000 Xu cho người đứng Top 1 khi hết 1 ngày!
     # =========================================================================
 
     def _get_ai_hunt_db(self):
         base_dir = os.path.dirname(os.path.abspath(__file__))
         primary_file = os.path.join(base_dir, "ai_hunt_state.json")
         backup_file = os.path.join(base_dir, ".persistent_ai_hunt_state.json")
+        now_dt = datetime.datetime.now()
         defaults = {
             "active": True,
             "title": "🏹 SỰ KIỆN SĂN KHỦNG LONG AI TOÀN SERVER",
-            "description": "Người chơi săn được nhiều khủng long AI nhất sẽ nhận phần thưởng độc đắc 1.000 Xu!",
+            "description": "Sự kiện diễn ra theo ngày (24 giờ). Người chơi săn được nhiều AI nhất sẽ được hệ thống TỰ ĐỘNG trao thưởng 1.000 Xu!",
             "reward_xu": 1000,
-            "season_id": "Mùa 1",
-            "started_at": datetime.datetime.now().isoformat(),
+            "duration_seconds": 86400,  # Chu kỳ reset 1 ngày (24 giờ)
+            "season_id": f"Mùa 1 (Ngày {now_dt.strftime('%d/%m')})",
+            "started_at": now_dt.isoformat(),
+            "expires_at": (now_dt + datetime.timedelta(seconds=86400)).isoformat(),
+            "time_remaining_seconds": 86400,
+            "auto_reward_enabled": True,
             "ended_at": None,
             "is_settled": False,
             "total_ai_kills": 0,
@@ -3931,9 +3938,6 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             if DinoRequestHandler._combat_log_cached_data:
                 hits = DinoRequestHandler._combat_log_cached_data.get("hits", [])
 
-        if not hits:
-            return
-
         processed_ids = set(str(x) for x in db.setdefault("processed_kill_ids", []))
         hunters = db.setdefault("hunters", {})
         prey_summary = db.setdefault("prey_summary", {})
@@ -3947,70 +3951,76 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             except Exception:
                 pass
 
-        for h in hits:
-            # 1. Nhận diện AI: victimSteamId là None / rỗng (không phải người chơi thật)
-            vic_sid = str(h.get("victimSteamId") or "").strip()
-            if vic_sid and vic_sid.lower() != "none":
-                continue
+        if not started_at_ts:
+            started_at_ts = now_ts
+            db["started_at"] = datetime.datetime.fromtimestamp(now_ts).isoformat()
 
-            # 2. Đòn kết liễu AI (killed == True hoặc hpAfter <= 0)
-            is_killed = bool(h.get("killed"))
-            hp_after = h.get("hpAfter")
-            if not is_killed and (hp_after is None or float(hp_after) > 0):
-                continue
+        # Quét và ghi nhận các đòn hạ gục khủng long AI
+        if hits:
+            for h in hits:
+                # 1. Nhận diện AI: victimSteamId là None / rỗng (không phải người chơi thật)
+                vic_sid = str(h.get("victimSteamId") or "").strip()
+                if vic_sid and vic_sid.lower() != "none":
+                    continue
 
-            atk_sid = str(h.get("attackerSteamId") or "").strip()
-            if not atk_sid or atk_sid.lower() == "none" or len(atk_sid) < 15:
-                continue
+                # 2. Đòn kết liễu AI (killed == True hoặc hpAfter <= 0)
+                is_killed = bool(h.get("killed"))
+                hp_after = h.get("hpAfter")
+                if not is_killed and (hp_after is None or float(hp_after) > 0):
+                    continue
 
-            hit_id = str(h.get("id") or "")
-            hit_at = h.get("at") or ""
-            if not hit_id:
-                hit_id = f"{hit_at}_{atk_sid}"
+                atk_sid = str(h.get("attackerSteamId") or "").strip()
+                if not atk_sid or atk_sid.lower() == "none" or len(atk_sid) < 15:
+                    continue
 
-            hit_ts = 0.0
-            if hit_at:
-                try:
-                    clean_hit_at = hit_at.replace("Z", "+00:00")
-                    hit_ts = datetime.datetime.fromisoformat(clean_hit_at).timestamp()
-                except Exception:
-                    pass
+                hit_id = str(h.get("id") or "")
+                hit_at = h.get("at") or ""
+                if not hit_id:
+                    hit_id = f"{hit_at}_{atk_sid}"
 
-            # Bỏ qua các hit xảy ra trước khi mùa săn này bắt đầu
-            if db.get("filter_since_start") and started_at_ts > 0 and hit_ts > 0 and hit_ts < (started_at_ts - 1.0):
-                continue
+                hit_ts = 0.0
+                if hit_at:
+                    try:
+                        clean_hit_at = hit_at.replace("Z", "+00:00")
+                        hit_ts = datetime.datetime.fromisoformat(clean_hit_at).timestamp()
+                    except Exception:
+                        pass
 
-            if hit_id in processed_ids:
-                continue
+                # Bỏ qua các hit xảy ra trước khi mùa săn này bắt đầu (chỉ khi có filter_since_start)
+                if db.get("filter_since_start") and started_at_ts > 0 and hit_ts > 0 and hit_ts < (started_at_ts - 1.0):
+                    continue
 
-            processed_ids.add(hit_id)
+                if hit_id in processed_ids:
+                    continue
 
-            atk_name = h.get("attackerName") or f"Player_{atk_sid[-4:]}"
-            atk_species = h.get("attackerSpecies") or "Dinosaur"
-            vic_species = h.get("victimSpecies") or "Động vật AI"
+                processed_ids.add(hit_id)
 
-            if atk_sid not in hunters:
-                hunters[atk_sid] = {
-                    "steam_id": atk_sid,
-                    "name": atk_name,
-                    "species": atk_species,
-                    "kills": 0,
-                    "prey_breakdown": {},
-                    "last_kill_at": hit_at,
-                    "last_prey": vic_species
-                }
+                atk_name = h.get("attackerName") or f"Player_{atk_sid[-4:]}"
+                atk_species = h.get("attackerSpecies") or "Dinosaur"
+                vic_species = h.get("victimSpecies") or "Động vật AI"
 
-            hunter = hunters[atk_sid]
-            hunter["name"] = atk_name
-            hunter["species"] = atk_species
-            hunter["kills"] += 1
-            hunter["last_kill_at"] = hit_at
-            hunter["last_prey"] = vic_species
+                if atk_sid not in hunters:
+                    hunters[atk_sid] = {
+                        "steam_id": atk_sid,
+                        "name": atk_name,
+                        "species": atk_species,
+                        "kills": 0,
+                        "prey_breakdown": {},
+                        "last_kill_at": hit_at,
+                        "last_prey": vic_species
+                    }
 
-            breakdown = hunter.setdefault("prey_breakdown", {})
-            breakdown[vic_species] = breakdown.get(vic_species, 0) + 1
+                hunter = hunters[atk_sid]
+                hunter["name"] = atk_name
+                hunter["species"] = atk_species
+                hunter["kills"] += 1
+                hunter["last_kill_at"] = hit_at
+                hunter["last_prey"] = vic_species
 
-            prey_summary[vic_species] = prey_summary.get(vic_species, 0) + 1
+                breakdown = hunter.setdefault("prey_breakdown", {})
+                breakdown[vic_species] = breakdown.get(vic_species, 0) + 1
+
+                prey_summary[vic_species] = prey_summary.get(vic_species, 0) + 1
 
         db["processed_kill_ids"] = list(processed_ids)[-1000:]
         db["prey_summary"] = prey_summary
@@ -4044,6 +4054,88 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         db["leaderboard"] = leaderboard
         db["top_hunter"] = leaderboard[0] if (leaderboard and leaderboard[0]["kills"] > 0) else None
 
+        # KIỂM TRA CHU KỲ 1 NGÀY (24 GIỜ): TỰ ĐỘNG CHỐT VÀ TRAO 1.000 XU CHO TOP 1
+        duration_sec = int(db.get("duration_seconds", 86400))
+        expires_at_ts = started_at_ts + duration_sec
+        time_left = max(0, int(expires_at_ts - now_ts))
+        db["duration_seconds"] = duration_sec
+        db["time_remaining_seconds"] = time_left
+        db["expires_at"] = datetime.datetime.fromtimestamp(expires_at_ts).isoformat()
+
+        if started_at_ts > 0 and now_ts >= expires_at_ts:
+            print(f"[AI Hunt Daily Auto-Settle] ĐÃ HẾT 1 NGÀY (now={now_ts} >= expires={expires_at_ts})! Đang tự động trao thưởng 1.000 Xu cho Top 1...")
+            top_hunter = leaderboard[0] if (leaderboard and leaderboard[0].get("kills", 0) > 0) else None
+
+            if top_hunter:
+                winner_sid = str(top_hunter.get("steam_id")).strip()
+                winner_name = top_hunter.get("name", "Chiến Binh")
+                kills = top_hunter.get("kills", 0)
+
+                # Tự động cộng 1.000 Xu vào ví người chơi
+                self._adjust_player_xu(
+                    winner_sid,
+                    reward_xu,
+                    f"Thưởng Tự Động Top 1 Săn AI ({kills} con/ngày): +{reward_xu:,} Xu"
+                )
+
+                # Thông báo toàn server qua IslePilot
+                try:
+                    self.fetch_islepilot("/commands", method="POST", body_data={
+                        "action": "announce",
+                        "message": f"🏆 [SĂN AI] HẾT NGÀY! Chúc mừng {winner_name.upper()} đã đoạt TOP 1 SĂN AI với {kills} con! Hệ thống đã tự động trao thưởng 1.000 Xu!"
+                    })
+                except Exception:
+                    pass
+
+                history_entry = {
+                    "season_id": db.get("season_id", "Mùa 1"),
+                    "settled_at": datetime.datetime.now().isoformat(),
+                    "winner_steam_id": winner_sid,
+                    "winner_name": winner_name,
+                    "species": top_hunter.get("species", "Dinosaur"),
+                    "kills": kills,
+                    "prey_breakdown": top_hunter.get("prey_breakdown", {}),
+                    "reward_xu": reward_xu,
+                    "total_participants": len(leaderboard),
+                    "total_ai_kills": db.get("total_ai_kills", kills),
+                    "auto_settled": True
+                }
+                db.setdefault("reward_history", []).insert(0, history_entry)
+                db["last_winner"] = history_entry
+            else:
+                try:
+                    self.fetch_islepilot("/commands", method="POST", body_data={
+                        "action": "announce",
+                        "message": "🏹 [SĂN AI] Mùa săn AI hôm nay đã khép lại và bước sang ngày mới!"
+                    })
+                except Exception:
+                    pass
+
+            # Tự động reset và bắt đầu ngày săn mới
+            new_season_num = len(db.get("reward_history", [])) + 1
+            now_dt = datetime.datetime.now()
+            db["active"] = True
+            db["season_id"] = f"Mùa {new_season_num} (Ngày {now_dt.strftime('%d/%m')})"
+            db["started_at"] = now_dt.isoformat()
+            db["expires_at"] = (now_dt + datetime.timedelta(seconds=duration_sec)).isoformat()
+            db["time_remaining_seconds"] = duration_sec
+            db["ended_at"] = None
+            db["is_settled"] = False
+            db["total_ai_kills"] = 0
+            db["hunters"] = {}
+            db["leaderboard"] = []
+            db["prey_summary"] = {}
+            db["top_hunter"] = None
+            db["filter_since_start"] = True
+
+            try:
+                self.fetch_islepilot("/commands", method="POST", body_data={
+                    "action": "announce",
+                    "message": f"🏹 [SĂN AI] MÙA SĂN KHỦNG LONG AI MỚI TRONG NGÀY ĐÃ BẮT ĐẦU! Ai săn được nhiều AI nhất hôm nay sẽ tự động nhận 1.000 Xu!"
+                })
+            except Exception:
+                pass
+
         self._save_ai_hunt_db(db)
 
     def handle_ai_hunt_get(self):
@@ -4069,7 +4161,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         db = self._get_ai_hunt_db()
         self._auto_check_ai_hunt_status(db)
 
-        # 1. Trao thưởng 1.000 Xu cho Top 1 Săn AI (Chỉ Admin)
+        # 1. Trao thưởng 1.000 Xu cho Top 1 Săn AI (Admin can manual trigger)
         if path in ["/api/ai-hunt/settle", "/api/boss/settle"]:
             is_admin, _ = self.is_admin_request()
             if not is_admin:
@@ -4095,7 +4187,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             self._adjust_player_xu(
                 winner_sid,
                 reward_xu,
-                f"Thưởng Top 1 Săn AI ({kills} con): +{reward_xu:,} Xu"
+                f"Thưởng Top 1 Săn AI ({kills} con/ngày): +{reward_xu:,} Xu"
             )
 
             # Thông báo toàn server qua IslePilot
@@ -4117,7 +4209,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "prey_breakdown": top_hunter.get("prey_breakdown", {}),
                 "reward_xu": reward_xu,
                 "total_participants": len(leaderboard),
-                "total_ai_kills": db.get("total_ai_kills", kills)
+                "total_ai_kills": db.get("total_ai_kills", kills),
+                "auto_settled": False
             }
             db.setdefault("reward_history", []).insert(0, history_entry)
             db["is_settled"] = True
@@ -4139,9 +4232,13 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 return
 
             new_season_num = len(db.get("reward_history", [])) + 1
+            now_dt = datetime.datetime.now()
+            duration_sec = int(db.get("duration_seconds", 86400))
             db["active"] = True
-            db["season_id"] = f"Mùa {new_season_num}"
-            db["started_at"] = datetime.datetime.now().isoformat()
+            db["season_id"] = f"Mùa {new_season_num} (Ngày {now_dt.strftime('%d/%m')})"
+            db["started_at"] = now_dt.isoformat()
+            db["expires_at"] = (now_dt + datetime.timedelta(seconds=duration_sec)).isoformat()
+            db["time_remaining_seconds"] = duration_sec
             db["ended_at"] = None
             db["is_settled"] = False
             db["total_ai_kills"] = 0
@@ -4149,19 +4246,20 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             db["leaderboard"] = []
             db["prey_summary"] = {}
             db["top_hunter"] = None
+            db["filter_since_start"] = True
             self._save_ai_hunt_db(db)
 
             try:
                 self.fetch_islepilot("/commands", method="POST", body_data={
                     "action": "announce",
-                    "message": f"🏹 [SĂN AI] MÙA SĂN KHỦNG LONG AI MỚI ĐÃ KHỞI TRANH! Ai săn được nhiều AI nhất sẽ nhận thưởng 1.000 Xu!"
+                    "message": f"🏹 [SĂN AI] MÙA SĂN KHỦNG LONG AI MỚI (MÙA {new_season_num}) ĐÃ KHỞI TRANH! Ai săn được nhiều AI nhất hôm nay sẽ nhận thưởng 1.000 Xu!"
                 })
             except Exception:
                 pass
 
             self.send_json_response({
                 "ok": True,
-                "message": f"🎯 ĐÃ KHỞI TRANH MÙA SĂN AI MỚI (MÙA {new_season_num})! Bảng xếp hạng đã sẵn sàng.",
+                "message": f"🎯 ĐÃ KHỞI TRANH MÙA SĂN AI MỚI (MÙA {new_season_num})! Hệ thống đếm ngược 24 giờ và sẽ tự động trao 1.000 Xu cho Top 1.",
                 "ai_hunt": db
             })
             return
@@ -4225,6 +4323,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
     def _save_boss_db(self, data):
         self._save_ai_hunt_db(data)
+
+    def _auto_check_boss_status(self, boss_db):
+        return self._auto_check_ai_hunt_status(boss_db)
 
     def handle_boss_get(self):
         self.handle_ai_hunt_get()
@@ -7811,7 +7912,7 @@ def start_boss_ai_worker():
                 # 2. Tự động kiểm tra và xử lý Boss AI (Puerta Max Size 100k HP)
                 boss_db = req_handler._get_boss_db()
                 if boss_db and boss_db.get("active"):
-                    req_handler._auto_check_boss_status(boss_db)
+                    req_handler._auto_check_ai_hunt_status(boss_db)
             except Exception as e:
                 pass
             time.sleep(5.0)
