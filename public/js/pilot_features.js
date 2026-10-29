@@ -1130,15 +1130,13 @@ const SkinEditor = {
 
   pitch: -0.08,
 
-  distance: 5.2,
+  distance: 5.4,
 
   distMin: 2.8,
 
-  distMax: 8.5,
-
-  distMin: 3.5,
-
   distMax: 9.5,
+
+  _targetLookAtY: 0.95,
 
   isAutoRotating: false,
 
@@ -1526,9 +1524,11 @@ const SkinEditor = {
 
       const camera = new THREE.PerspectiveCamera(34, width / height, 0.1, 100);
 
-      camera.position.set(0, 1.15, this.distance);
+      const targetY = (this._targetLookAtY !== undefined) ? this._targetLookAtY : 0.95;
 
-      camera.lookAt(0, 0.95, 0);
+      camera.position.set(0, targetY + 0.25, this.distance);
+
+      camera.lookAt(0, targetY, 0);
 
 
 
@@ -1636,9 +1636,11 @@ const SkinEditor = {
 
     if (!this.threeRenderer || !this.threeScene || !this.threeCamera) return;
 
-    this.threeCamera.position.set(0, 1.15, this.distance);
+    const targetY = (this._targetLookAtY !== undefined) ? this._targetLookAtY : 0.95;
 
-    this.threeCamera.lookAt(0, 0.95, 0);
+    this.threeCamera.position.set(0, targetY + 0.25, this.distance);
+
+    this.threeCamera.lookAt(0, targetY, 0);
 
     this.threeRenderer.render(this.threeScene, this.threeCamera);
 
@@ -1770,9 +1772,11 @@ const SkinEditor = {
 
 
 
-      // Chuẩn hóa kích thước khủng long lớn, cân đối màn hình (chiếm ~75% chiều cao)
+      // Chuẩn hóa tỷ lệ khủng long cân đối màn hình theo 3 chiều (chiều cao, chiều dài, bề ngang)
 
-      const baseScale = (this.sex === 'female' ? 2.3 : 2.45) / Math.max(size.y, 1);
+      const maxBound = Math.max(size.y, size.z * 0.45, size.x * 0.75, 1.0);
+
+      const baseScale = (this.sex === 'female' ? 2.3 : 2.45) / maxBound;
 
       const growthFactor = 0.5 + 0.5 * this.growth;
 
@@ -1798,11 +1802,13 @@ const SkinEditor = {
 
 
 
-      this.distance = 5.2;
+      this._targetLookAtY = (size.y * baseScale * growthFactor) * 0.45;
+
+      this.distance = 5.4;
 
       this.distMin = 2.8;
 
-      this.distMax = 8.5;
+      this.distMax = 9.5;
 
 
 
@@ -2326,7 +2332,7 @@ const SkinEditor = {
 
     if (degY < 0) degY += 360;
 
-    const zoomPct = Math.round((5.2 / this.distance) * 100);
+    const zoomPct = Math.round((5.4 / this.distance) * 100);
 
     readout.textContent = `Góc X: ${degX}° | Y: ${degY}° | Zoom: ${zoomPct}%`;
 
@@ -2396,7 +2402,7 @@ const SkinEditor = {
 
     this.pitch = -0.08;
 
-    this.distance = 5.2;
+    this.distance = 5.4;
 
     if (this.threeModel) {
 
@@ -2478,13 +2484,17 @@ const SkinEditor = {
 
     if (this.threeModel) {
 
-      const rawY = (this._rawModelSize && this._rawModelSize.y) ? this._rawModelSize.y : 1;
+      const size = this._rawModelSize || { x: 2, y: 3, z: 8 };
 
-      const baseScale = (this.sex === 'female' ? 2.3 : 2.45) / Math.max(rawY, 1);
+      const maxBound = Math.max(size.y, size.z * 0.45, size.x * 0.75, 1.0);
+
+      const baseScale = (this.sex === 'female' ? 2.3 : 2.45) / maxBound;
 
       const growthFactor = 0.5 + 0.5 * this.growth;
 
       this.threeModel.scale.setScalar(baseScale * growthFactor);
+
+      this._targetLookAtY = (size.y * baseScale * growthFactor) * 0.45;
 
       this.renderScene();
 
@@ -2563,6 +2573,24 @@ const SkinEditor = {
     this.updatePreview();
 
     this.queueTextureUpdate();
+
+    if (this.threeModel && this._rawModelSize) {
+
+      const size = this._rawModelSize;
+
+      const maxBound = Math.max(size.y, size.z * 0.45, size.x * 0.75, 1.0);
+
+      const baseScale = (this.sex === 'female' ? 2.3 : 2.45) / maxBound;
+
+      const growthFactor = 0.5 + 0.5 * this.growth;
+
+      this.threeModel.scale.setScalar(baseScale * growthFactor);
+
+      this._targetLookAtY = (size.y * baseScale * growthFactor) * 0.45;
+
+      this.renderScene();
+
+    }
 
   },
 
