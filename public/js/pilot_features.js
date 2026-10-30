@@ -5070,13 +5070,9 @@ const BuyDino = {
 // 8. THẢ XÁC (CARCASS - GIỐNG 100% 3MGAMING.ISLEPILOT.EU/CARCASS)
 
 const Carcass = {
-
   offers: [],
-
   currentCategory: 'all',
-
   cooldownEnd: 0,
-
   cooldownTimer: null,
 
   switchCategory(category, btn) {
@@ -5086,117 +5082,214 @@ const Carcass = {
     this.displayCards();
   },
 
-
-
   async render() {
     const container = document.getElementById('carcass-grid-container');
     if (!container) return;
 
-
-
     container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);">⏳ Đang đồng bộ danh sách xác từ máy chủ...</div>';
 
-
-
     try {
-
       const res = await fetch('/api/server/carcass/offers');
-
       const data = await res.json();
-
       this.offers = data.offers || [];
-
     } catch (e) {
-
       console.warn("Lỗi tải carcass offers:", e);
-
       this.offers = [];
-
     }
-
-
 
     if (this.offers.length === 0) {
       this.offers = [
         {
-                "id": "omv572un0",
-                "name": "Carcass",
-                "price": 0,
-                "price_display": "$ 0",
-                "species": "Tenontosaurus",
-                "species_name": "Tenontosaurus",
-                "image": "https://islepilot.eu/cdn/dino-art/render/Tenontosaurus.webp",
-                "description": "Xác tươi, cho thịt · hợp với chế độ ăn của bạn · kích cỡ 100%"
+          "id": "omv572un0",
+          "name": "Xác Tenontosaurus Tươi",
+          "category": "carnivore",
+          "type": "carcass",
+          "price": 1000,
+          "price_display": "1.000 Xu",
+          "species": "Tenontosaurus",
+          "species_name": "Tenontosaurus",
+          "icon": "🍖",
+          "image": "https://islepilot.eu/cdn/dino-art/render/Tenontosaurus.webp",
+          "badge": "🥩 100% Kích Cỡ",
+          "sub_badge": "🍖 Xác Thịt Tươi",
+          "description": "Xác Tenontosaurus tươi ngon, giàu chất đạm, phù hợp hoàn hảo với chế độ ăn của mọi loài săn mồi ăn thịt."
         },
         {
-                "id": "omv6uqesm",
-                "name": "triceraptor",
-                "price": 0,
-                "price_display": "$ 0",
-                "species": "Triceratops",
-                "species_name": "Triceratops",
-                "image": "https://islepilot.eu/cdn/dino-art/render/Triceratops.webp",
-                "description": "Xác tươi, cho thịt · Triceratops · kích cỡ 100%"
+          "id": "omv6uqesm",
+          "name": "Xác Triceratops Khổng Lồ",
+          "category": "carnivore",
+          "type": "carcass",
+          "price": 1000,
+          "price_display": "1.000 Xu",
+          "species": "Triceratops",
+          "species_name": "Triceratops",
+          "icon": "🍖",
+          "image": "https://islepilot.eu/cdn/dino-art/render/Triceratops.webp",
+          "badge": "🥩 100% Kích Cỡ",
+          "sub_badge": "🍖 Xác Thịt Tươi",
+          "description": "Xác Triceratops to lớn đầy ắp thịt và tủy xương, thích hợp cho Apex Predators như T-Rex hay Giganotosaurus."
         },
         {
-                "id": "omv6viaxj",
-                "name": "stegosarus",
-                "price": 0,
-                "price_display": "$ 0",
-                "species": "Stegosaurus",
-                "species_name": "Stegosaurus",
-                "image": "https://islepilot.eu/cdn/dino-art/render/Stegosaurus.webp",
-                "description": "Xác tươi, cho thịt · Stegosaurus · kích cỡ 100%"
+          "id": "omv6viaxj",
+          "name": "Xác Stegosaurus Bổ Dưỡng",
+          "category": "carnivore",
+          "type": "carcass",
+          "price": 1000,
+          "price_display": "1.000 Xu",
+          "species": "Stegosaurus",
+          "species_name": "Stegosaurus",
+          "icon": "🍖",
+          "image": "https://islepilot.eu/cdn/dino-art/render/Stegosaurus.webp",
+          "badge": "🥩 100% Kích Cỡ",
+          "sub_badge": "🍖 Xác Thịt Tươi",
+          "description": "Xác Stegosaurus giàu chất béo và dưỡng chất, đảm bảo no bụng và hồi phục thể lực nhanh chóng."
         },
         {
-                "id": "omvqituv4",
-                "name": "carnotaurus",
-                "price": 0,
-                "price_display": "$ 0",
-                "species": "Carnotaurus",
-                "species_name": "Carnotaurus",
-                "image": "https://islepilot.eu/cdn/dino-art/render/Carnotaurus.webp",
-                "description": "Xác tươi, cho thịt · Carnotaurus · kích cỡ 100%"
+          "id": "omvqituv4",
+          "name": "Xác Carnotaurus Săn Mồi",
+          "category": "carnivore",
+          "type": "carcass",
+          "price": 1000,
+          "price_display": "1.000 Xu",
+          "species": "Carnotaurus",
+          "species_name": "Carnotaurus",
+          "icon": "🍖",
+          "image": "https://islepilot.eu/cdn/dino-art/render/Carnotaurus.webp",
+          "badge": "🥩 100% Kích Cỡ",
+          "sub_badge": "🍖 Xác Thịt Tươi",
+          "description": "Xác thú ăn thịt cỡ trung, cung cấp hàm lượng protein tinh khiết cho các loài ăn thịt khác."
         },
         {
-                "id": "omvqiuffy",
-                "name": "ceratosaurus",
-                "price": 0,
-                "price_display": "$ 0",
-                "species": "Ceratosaurus",
-                "species_name": "Ceratosaurus",
-                "image": "https://islepilot.eu/cdn/dino-art/render/Ceratosaurus.webp",
-                "description": "Xác tươi, cho thịt · Ceratosaurus · kích cỡ 100%"
+          "id": "omvqiuffy",
+          "name": "Xác Ceratosaurus Đậm Vị",
+          "category": "carnivore",
+          "type": "carcass",
+          "price": 1000,
+          "price_display": "1.000 Xu",
+          "species": "Ceratosaurus",
+          "species_name": "Ceratosaurus",
+          "icon": "🍖",
+          "image": "https://islepilot.eu/cdn/dino-art/render/Ceratosaurus.webp",
+          "badge": "🥩 100% Kích Cỡ",
+          "sub_badge": "🍖 Xác Thịt Tươi",
+          "description": "Xác Ceratosaurus tươi đặc trưng, hỗ trợ tiêu hóa nhanh và kích hoạt các đột biến gen săn mồi."
         },
         {
-                "id": "omvqiuphi",
-                "name": "tyrannosaurus",
-                "price": 0,
-                "price_display": "$ 0",
-                "species": "Tyrannosaurus",
-                "species_name": "Tyrannosaurus",
-                "image": "https://islepilot.eu/cdn/dino-art/render/Tyrannosaurus.webp",
-                "description": "Xác tươi, cho thịt · Tyrannosaurus · kích cỡ 100%"
+          "id": "omvqiuphi",
+          "name": "Xác Tyrannosaurus Chúa Tể",
+          "category": "carnivore",
+          "type": "carcass",
+          "price": 1000,
+          "price_display": "1.000 Xu",
+          "species": "Tyrannosaurus",
+          "species_name": "Tyrannosaurus",
+          "icon": "🍖",
+          "image": "https://islepilot.eu/cdn/dino-art/render/Tyrannosaurus.webp",
+          "badge": "🥩 100% Kích Cỡ",
+          "sub_badge": "🍖 Xác Thịt Tươi",
+          "description": "Khối lượng thịt khổng lồ từ chúa tể T-Rex, cung cấp nguồn năng lượng dồi dào nhất đảo Evrima."
+        },
+        {
+          "id": "plant_sanctuary",
+          "name": "Bụi Cây Sanctuary (Thánh Địa)",
+          "category": "herbivore",
+          "type": "plant",
+          "price": 1000,
+          "price_display": "1.000 Xu",
+          "species": "Sanctuary Bush",
+          "species_name": "Sanctuary Bush",
+          "icon": "🌿",
+          "image": "https://islepilot.eu/cdn/dino-art/render/Tenontosaurus.webp",
+          "badge": "🌿 100% Cân Bằng",
+          "sub_badge": "✨ S-A-B-Y 100%",
+          "description": "Bụi cây Thánh Địa màu mỡ đặc trưng của The Isle: Evrima. Cung cấp toàn diện 3 nhóm dưỡng chất, no lâu và tăng trưởng thần tốc."
+        },
+        {
+          "id": "plant_berry",
+          "name": "Bụi Dâu Rừng (Blueberry Bush)",
+          "category": "herbivore",
+          "type": "plant",
+          "price": 1000,
+          "price_display": "1.000 Xu",
+          "species": "Berry Bush",
+          "species_name": "Berry Bush",
+          "icon": "🫐",
+          "image": "https://islepilot.eu/cdn/dino-art/render/Dryosaurus.webp",
+          "badge": "🫐 100% Carbs (S)",
+          "sub_badge": "⚡ Hồi Thể Lực",
+          "description": "Những chùm quả mọng ngọt nước mọc thành lùm rậm rạp. Cung cấp lượng lớn Carbohydrate, phục hồi thể lực (Stamina) dồi dào."
+        },
+        {
+          "id": "plant_roots",
+          "name": "Rễ Cây Cổ Thụ & Đầm Lầy (Bulrush)",
+          "category": "herbivore",
+          "type": "plant",
+          "price": 1000,
+          "price_display": "1.000 Xu",
+          "species": "Bulrush Roots",
+          "species_name": "Bulrush Roots",
+          "icon": "🌾",
+          "image": "https://islepilot.eu/cdn/dino-art/render/Stegosaurus.webp",
+          "badge": "🌾 100% Lipid (Y)",
+          "sub_badge": "🛡️ Tinh Bột & Khoáng",
+          "description": "Củ rễ đầm lầy đậm đà giàu tinh bột và khoáng chất tự nhiên. Món ăn khoái khẩu của Triceratops, Stegosaurus và Tenontosaurus."
+        },
+        {
+          "id": "plant_palm",
+          "name": "Cây Cọ Rừng & Chuối Rừng (Palm Tree)",
+          "category": "herbivore",
+          "type": "plant",
+          "price": 1000,
+          "price_display": "1.000 Xu",
+          "species": "Mountain Palm",
+          "species_name": "Mountain Palm",
+          "icon": "🌴",
+          "image": "https://islepilot.eu/cdn/dino-art/render/Triceratops.webp",
+          "badge": "🌴 100% Protein (B)",
+          "sub_badge": "💪 Tăng Cơ Bắp",
+          "description": "Tán cọ rừng xanh tốt với buồng quả chứa hàm lượng Protein thực vật dồi dào, hỗ trợ tăng cơ bắp và kích thước cho khủng long ăn cỏ."
+        },
+        {
+          "id": "plant_marigold",
+          "name": "Cây Thảo Dược Hồi Máu (Marigold)",
+          "category": "herbivore",
+          "type": "plant",
+          "price": 1000,
+          "price_display": "1.000 Xu",
+          "species": "Marigold Herbs",
+          "species_name": "Marigold Herbs",
+          "icon": "🌼",
+          "image": "https://islepilot.eu/cdn/dino-art/render/Diabloceratops.webp",
+          "badge": "❤️ Hồi Máu 100%",
+          "sub_badge": "🩹 Cầm Máu Cấp Tốc",
+          "description": "Loài thảo dược hoa vàng quý giá trong rừng rậm. Khả năng kháng viêm, cầm máu thần tốc và hồi phục sinh lực sau các trận tử chiến."
+        },
+        {
+          "id": "plant_mushroom",
+          "name": "Nấm Rừng Dinh Dưỡng (Forest Truffles)",
+          "category": "herbivore",
+          "type": "plant",
+          "price": 1000,
+          "price_display": "1.000 Xu",
+          "species": "Forest Mushroom",
+          "species_name": "Forest Mushroom",
+          "icon": "🍄",
+          "image": "https://islepilot.eu/cdn/dino-art/render/Pachycephalosaurus.webp",
+          "badge": "💧 100% Nước & Vi Chất",
+          "sub_badge": "🍄 Nấm Dinh Dưỡng",
+          "description": "Những tai nấm mọng nước phát triển trên thân gỗ mục. Cung cấp nước ngọt tinh khiết và vi chất hoàn hảo cho Pachy, Dryo, Hypsi, Galli."
         }
-];
+      ];
     }
 
     this.displayCards();
-
   },
 
-
-
   displayCards() {
-
     const container = document.getElementById('carcass-grid-container');
-
     if (!container) return;
 
-
-
     const isCooldown = Date.now() < this.cooldownEnd;
-
     const remainingSec = Math.max(0, Math.ceil((this.cooldownEnd - Date.now()) / 1000));
 
     const filtered = (this.offers || []).filter(item => {
@@ -5234,7 +5327,7 @@ const Carcass = {
           <div class="carcass-body">
             <div class="carcass-card-header">
               <span class="carcass-card-name">${isPlant ? (item.icon ? item.icon + ' ' : '🌿 ') : '🥩 '}${item.name}</span>
-              <span class="carcass-card-price" style="${isPlant ? 'color: #34d399;' : ''}">${item.price_display || '$ 0'}</span>
+              <span class="carcass-card-price" style="${isPlant ? 'color: #34d399;' : 'color: #ef4444; font-weight: 700;'}">${item.price_display || '1.000 Xu'}</span>
             </div>
 
             <p class="carcass-card-desc">
@@ -5256,66 +5349,45 @@ const Carcass = {
     }
   },
 
-
-
   startCooldownInterval() {
-
     if (this.cooldownTimer) clearInterval(this.cooldownTimer);
-
     this.cooldownTimer = setInterval(() => {
-
       const remainingSec = Math.max(0, Math.ceil((this.cooldownEnd - Date.now()) / 1000));
-
       document.querySelectorAll('.carcass-btn-buy').forEach(btn => {
-
         if (remainingSec > 0) {
-
           btn.disabled = true;
-
           btn.textContent = `Chờ (${remainingSec}s)`;
-
         } else {
-
           btn.disabled = false;
-
-          btn.textContent = 'Mua';
-
         }
-
       });
-
       if (remainingSec <= 0) {
-
         clearInterval(this.cooldownTimer);
-
         this.cooldownTimer = null;
-
+        this.displayCards();
       }
-
     }, 1000);
-
   },
-
-
 
   async actionDrop(offerId, name) {
     if (Date.now() < this.cooldownEnd) {
       const remaining = Math.ceil((this.cooldownEnd - Date.now()) / 1000);
-      App.showToast(`⏱️ Mỗi 300 giây mua được một lần. Vui lòng chờ ${remaining} giây!`);
+      App.showToast(`⏱️ Mỗi 300 giây mua được một lần. Vui lòng chờ ${remaining} giây!`, 'warning');
       return;
     }
 
     const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
-    if (!user) {
-      App.showToast("Thất bại");
+    if (!user || !user.steamId) {
+      App.showToast("Vui lòng đăng nhập Steam trước khi nhận!", 'warning');
       return;
     }
 
     const steamId = user.steamId;
+    const isPlant = String(offerId).startsWith('plant_');
     const btn = document.getElementById(`carcass-btn-${offerId}`);
     if (btn) {
       btn.disabled = true;
-      btn.textContent = '⏳ Đang thả...';
+      btn.textContent = isPlant ? '⏳ Đang trồng...' : '⏳ Đang thả...';
     }
 
     try {
@@ -5327,21 +5399,30 @@ const Carcass = {
       const data = await res.json();
 
       if (data.success || data.ok) {
-        App.showToast("Thành công");
+        if (data.new_balance !== undefined) {
+          user.balance = data.new_balance;
+          localStorage.setItem('steam_user', JSON.stringify(user));
+          if (window.App && typeof App.updateUserBalanceUI === 'function') {
+            App.updateUserBalanceUI(data.new_balance);
+          }
+        } else if (window.App && typeof App.refreshBalance === 'function') {
+          App.refreshBalance();
+        }
+        App.showToast(data.message || (isPlant ? 'Đã trừ 1.000 Xu! Trồng cây thành công!' : 'Đã trừ 1.000 Xu! Thả xác thành công!'), 'success');
         this.cooldownEnd = Date.now() + 300000;
         this.startCooldownInterval();
       } else {
-        App.showToast("Thất bại");
+        App.showToast(data.message || "Thao tác thất bại!", 'error');
         if (btn) {
           btn.disabled = false;
-          btn.textContent = 'Mua';
+          btn.textContent = isPlant ? '🌱 Trồng Cây' : '🥩 Thả Xác';
         }
       }
     } catch (e) {
-      App.showToast("Thất bại");
+      App.showToast("Không thể kết nối đến máy chủ!", 'error');
       if (btn) {
         btn.disabled = false;
-        btn.textContent = 'Mua';
+        btn.textContent = isPlant ? '🌱 Trồng Cây' : '🥩 Thả Xác';
       }
     }
   }
