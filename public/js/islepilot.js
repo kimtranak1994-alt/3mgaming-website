@@ -33,7 +33,17 @@ const IslePilot = {
       if (bankNameEl) bankNameEl.textContent = b.BANK_NAME || 'VCB';
       if (bankAccEl) bankAccEl.textContent = b.ACCOUNT_NUMBER || '9899996836';
       if (bankHolderEl) bankHolderEl.textContent = b.ACCOUNT_HOLDER || 'CHỦ SỞ HỮU SERVER';
-      if (transferNoteEl) transferNoteEl.textContent = b.TRANSFER_NOTE || 'ĐỂ MẶC ĐỊNH';
+      if (transferNoteEl) {
+        const u = JSON.parse(localStorage.getItem('steam_user') || 'null');
+        const hintEl = document.getElementById('donate-transfer-hint');
+        if (u && u.name) {
+          transferNoteEl.textContent = u.name;
+          if (hintEl) hintEl.textContent = '(Tên ingame của bạn)';
+        } else {
+          transferNoteEl.textContent = b.TRANSFER_NOTE || 'TÊN INGAME';
+          if (hintEl) hintEl.textContent = '(Ghi tên ingame của bạn)';
+        }
+      }
       if (momoPhoneEl) momoPhoneEl.textContent = b.MOMO_PHONE || '---';
 
       // Hiển thị ảnh QR chuẩn
