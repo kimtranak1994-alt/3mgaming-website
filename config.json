@@ -35,5 +35,45 @@
   "BOSS_BOT_STEAM_ID": "76561199175571899",
   "MAP_ONLY_ADMIN_STEAM_IDS": [
     "76561199319732549"
-  ]
+  ],
+  "STARTER_GIFT": {
+    "enabled": true,
+    "name": "Gói Quà Tân Thủ 3MGAMING",
+    "description": "Quà chào mừng thành viên mới gia nhập server 3MGAMING. Nhận ngay 1,000 Xu khởi nghiệp và 1 Khủng Long chiến đấu 85% vào Gara!",
+    "coins": 1000,
+    "dino_growth": 0.85,
+    "max_playtime_hours": 100,
+    "dino_choices": [
+      {
+        "species": "Ceratosaurus",
+        "name": "Ceratosaurus (Đầm Thịt)",
+        "icon": "Ceratosaurus"
+      },
+      {
+        "species": "Carnotaurus",
+        "name": "Carnotaurus (Tốc Độ)",
+        "icon": "Carnotaurus"
+      },
+      {
+        "species": "Omniraptor",
+        "name": "Omniraptor (Săn Bầy)",
+        "icon": "Omniraptor"
+      },
+      {
+        "species": "Pachycephalosaurus",
+        "name": "Pachycephalosaurus (Húc Thiết Giáp)",
+        "icon": "Pachycephalosaurus"
+      },
+      {
+        "species": "Tenontosaurus",
+        "name": "Tenontosaurus (Dũng Mãnh)",
+        "icon": "Tenontosaurus"
+      },
+      {
+        "species": "Dilophosaurus",
+        "name": "Dilophosaurus (Sát Thủ Màn Đêm)",
+        "icon": "Dilophosaurus"
+      }
+    ]
+  }
 }

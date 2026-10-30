@@ -5503,3 +5503,297 @@ const Carcass = {
   }
 };
 
+
+
+// ==========================================
+// 20. MODULE QUÀ TÂN THỦ (STARTER GIFT & CLAIMS - ĐỒNG BỘ ISLEPILOT)
+// ==========================================
+const StarterGift = {
+  bundle: null,
+  selectedSpecies: 'Ceratosaurus',
+  selectedGender: 'Male',
+  isClaiming: false,
+
+  async render() {
+    const container = document.getElementById('starter-container');
+    if (!container) return;
+
+    container.innerHTML = `
+      <div style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
+        <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 12px; color: #fbbf24;"></i>
+        <div style="font-size: 1rem; font-weight: 500;">Đang kết nối và đồng bộ dữ liệu gói quà tân thủ từ IslePilot...</div>
+      </div>
+    `;
+
+    const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
+    const steamId = user ? user.steamId : '';
+
+    try {
+      const url = steamId ? `/api/server/claims?steam_id=${encodeURIComponent(steamId)}` : '/api/server/claims';
+      const res = await fetch(url);
+      const data = await res.json();
+      this.bundle = data.bundle || null;
+    } catch (e) {
+      console.warn("Lỗi tải gói quà:", e);
+      this.bundle = null;
+    }
+
+    this.displayBundle();
+  },
+
+  displayBundle() {
+    const container = document.getElementById('starter-container');
+    if (!container) return;
+
+    const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
+    const isLoggedIn = !!(user && user.steamId);
+
+    if (!this.bundle) {
+      container.innerHTML = `
+        <div class="card" style="text-align: center; padding: 50px 20px; border: 1px dashed rgba(255,255,255,0.15);">
+          <div style="font-size: 2.5rem; margin-bottom: 10px;">🎁</div>
+          <h3 style="color: #fff; margin-bottom: 6px;">Hiện chưa có gói thưởng nào mở</h3>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">Vui lòng quay lại sau hoặc liên hệ ban quản trị server 3MGAMING.</p>
+        </div>
+      `;
+      return;
+    }
+
+    const b = this.bundle;
+    const isClaimed = !!b.claimed;
+    const isEligible = b.eligible !== false;
+    const playtimeHrs = b.playtime_hours || 0;
+
+    const choicesHtml = (b.choices || []).map(c => `
+      <div class="starter-dino-option ${this.selectedSpecies === c.species ? 'active' : ''}" 
+           onclick="StarterGift.selectSpecies('${c.species}')"
+           style="cursor: pointer; border: 1px solid ${this.selectedSpecies === c.species ? '#fbbf24' : 'rgba(255,255,255,0.1)'}; background: ${this.selectedSpecies === c.species ? 'rgba(251, 191, 36, 0.12)' : 'rgba(255,255,255,0.03)'}; padding: 12px 14px; border-radius: 12px; display: flex; align-items: center; gap: 12px; transition: all 0.2s;">
+        <img src="${typeof Garage !== 'undefined' && Garage.getDinoImageUrl ? Garage.getDinoImageUrl(c.species) : 'https://islepilot.eu/cdn/dino-art/icon-sm/' + c.species + '.webp'}" 
+             alt="${c.species}" 
+             style="width: 44px; height: 44px; object-fit: contain; border-radius: 8px; background: rgba(0,0,0,0.3); padding: 4px;"
+             onerror="this.src='https://islepilot.eu/cdn/dino-art/icon-sm/Ceratosaurus.webp'">
+        <div style="flex: 1; text-align: left;">
+          <div style="font-weight: 700; color: #fff; font-size: 0.95rem;">${c.name}</div>
+          <div style="font-size: 0.78rem; color: #10b981;">Tăng trưởng 85% · Thêm thẳng vào Gara</div>
+        </div>
+        <div style="color: ${this.selectedSpecies === c.species ? '#fbbf24' : 'rgba(255,255,255,0.2)'}; font-size: 1.1rem;">
+          <i class="${this.selectedSpecies === c.species ? 'fas fa-check-circle' : 'far fa-circle'}"></i>
+        </div>
+      </div>
+    `).join('');
+
+    container.innerHTML = `
+      <div class="card" style="border: 1px solid rgba(251, 191, 36, 0.35); background: linear-gradient(145deg, rgba(17, 24, 39, 0.95), rgba(30, 27, 75, 0.85)); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); overflow: hidden; position: relative;">
+        <!-- Glowing aura top -->
+        <div style="position: absolute; top: -80px; right: -80px; width: 220px; height: 220px; background: radial-gradient(circle, rgba(251, 191, 36, 0.25) 0%, transparent 70%); pointer-events: none;"></div>
+
+        <div style="display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start;">
+          <!-- Left side: Gift graphic & Badges -->
+          <div style="flex: 1; min-width: 280px;">
+            <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(251, 191, 36, 0.15); border: 1px solid rgba(251, 191, 36, 0.35); color: #fbbf24; padding: 4px 12px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 14px;">
+              <i class="fas fa-crown"></i> Gói Phúc Lợi Người Chơi Mới
+            </div>
+            <h1 style="font-size: 1.6rem; font-weight: 800; color: #fff; margin-bottom: 8px; line-height: 1.3;">
+              ${b.name || 'Gói Quà Tân Thủ 3MGAMING'}
+            </h1>
+            <p style="color: var(--text-muted); font-size: 0.92rem; line-height: 1.5; margin-bottom: 20px;">
+              ${b.description || 'Quà tặng chào mừng dành riêng cho thành viên mới tham gia cụm máy chủ 3MGAMING. Chỉ cần 1 cú click là nhận ngay tiền khởi nghiệp và khủng long vào Gara!'}
+            </p>
+
+            <!-- Rewards list -->
+            <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 16px; margin-bottom: 20px;">
+              <div style="font-size: 0.85rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.5px;">
+                Phần Thưởng Nhận Được
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 12px; background: rgba(251, 191, 36, 0.08); border: 1px solid rgba(251, 191, 36, 0.2); padding: 10px 14px; border-radius: 10px;">
+                  <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(251, 191, 36, 0.2); display: flex; align-items: center; justify-content: center; color: #fbbf24; font-size: 1.2rem;">
+                    <i class="fas fa-coins"></i>
+                  </div>
+                  <div>
+                    <div style="font-weight: 800; color: #fbbf24; font-size: 1.05rem;">+${(b.coins || 1000).toLocaleString()} Xu Khởi Nghiệp</div>
+                    <div style="font-size: 0.78rem; color: #94a3b8;">Cộng trực tiếp vào ví IslePilot của bạn</div>
+                  </div>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 12px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); padding: 10px 14px; border-radius: 10px;">
+                  <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(16, 185, 129, 0.2); display: flex; align-items: center; justify-content: center; color: #10b981; font-size: 1.2rem;">
+                    <i class="fas fa-dragon"></i>
+                  </div>
+                  <div>
+                    <div style="font-weight: 800; color: #34d399; font-size: 1.05rem;">1 Khủng Long Tùy Chọn 85% Size</div>
+                    <div style="font-size: 0.78rem; color: #94a3b8;">Thêm thẳng vào Gara Dino, lấy ra chơi bất cứ lúc nào</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Conditions info -->
+            <div style="display: flex; gap: 12px; flex-wrap: wrap; font-size: 0.8rem; color: #94a3b8;">
+              <span style="display: inline-flex; align-items: center; gap: 5px;">
+                <i class="fas fa-check" style="color: #10b981;"></i> Nhận 1 lần duy nhất
+              </span>
+              <span style="display: inline-flex; align-items: center; gap: 5px;">
+                <i class="fas fa-clock" style="color: #60a5fa;"></i> Dành cho người chơi &lt; ${b.max_playtime_hours || 100}h chơi
+              </span>
+              <span style="display: inline-flex; align-items: center; gap: 5px;">
+                <i class="fas fa-bolt" style="color: #fbbf24;"></i> Nhận tức thì
+              </span>
+            </div>
+          </div>
+
+          <!-- Right side: Dino Selector & Claim Action -->
+          <div style="flex: 1; min-width: 320px; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+              <div style="font-weight: 700; color: #fff; font-size: 0.95rem;">
+                <i class="fas fa-paw" style="color: #fbbf24; margin-right: 6px;"></i> Chọn Khủng Long Khởi Nghiệp
+              </div>
+              <div style="display: flex; gap: 6px;">
+                <button type="button" 
+                        onclick="StarterGift.setGender('Male')" 
+                        style="padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; border: 1px solid ${this.selectedGender === 'Male' ? '#3b82f6' : 'rgba(255,255,255,0.1)'}; background: ${this.selectedGender === 'Male' ? 'rgba(59, 130, 246, 0.25)' : 'transparent'}; color: ${this.selectedGender === 'Male' ? '#60a5fa' : '#94a3b8'};">
+                  Đực (Male)
+                </button>
+                <button type="button" 
+                        onclick="StarterGift.setGender('Female')" 
+                        style="padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; border: 1px solid ${this.selectedGender === 'Female' ? '#ec4899' : 'rgba(255,255,255,0.1)'}; background: ${this.selectedGender === 'Female' ? 'rgba(236, 72, 153, 0.25)' : 'transparent'}; color: ${this.selectedGender === 'Female' ? '#f472b6' : '#94a3b8'};">
+                  Cái (Female)
+                </button>
+              </div>
+            </div>
+
+            <!-- Dino list grid -->
+            <div style="display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto; padding-right: 4px; margin-bottom: 20px;">
+              ${choicesHtml}
+            </div>
+
+            <!-- Action button section -->
+            <div>
+              ${!isLoggedIn ? `
+                <a href="/api/player/steam/login?redirect=%2F%23starter" 
+                   class="btn btn-primary" 
+                   style="width: 100%; justify-content: center; padding: 14px; font-size: 1rem; font-weight: 800; background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); text-transform: uppercase;">
+                  <i class="fab fa-steam" style="font-size: 1.2rem; margin-right: 8px;"></i> Đăng Nhập Bằng Steam Để Nhận
+                </a>
+              ` : isClaimed ? `
+                <div style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 12px; padding: 14px; text-align: center; color: #34d399;">
+                  <div style="font-size: 1.3rem; margin-bottom: 4px;"><i class="fas fa-check-circle"></i></div>
+                  <div style="font-weight: 800; font-size: 0.95rem;">Bạn Đã Nhận Quà Tân Thủ Rồi!</div>
+                  <div style="font-size: 0.8rem; color: #a7f3d0; margin-top: 4px;">Khủng long đã có trong Gara Dino và 1,000 Xu đã được cộng vào ví.</div>
+                  <a href="#garage" class="btn btn-secondary" style="margin-top: 10px; font-size: 0.8rem; padding: 6px 14px; display: inline-flex; align-items: center; gap: 6px;">
+                    <i class="fas fa-warehouse"></i> Mở Gara Khủng Long Ngay
+                  </a>
+                </div>
+              ` : !isEligible ? `
+                <div style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 14px; text-align: center; color: #f87171;">
+                  <div style="font-size: 1.3rem; margin-bottom: 4px;"><i class="fas fa-lock"></i></div>
+                  <div style="font-weight: 800; font-size: 0.95rem;">Gói Quà Chỉ Dành Cho Tân Thủ</div>
+                  <div style="font-size: 0.8rem; color: #fca5a5; margin-top: 4px;">Tài khoản của bạn đã đạt ${playtimeHrs} giờ chơi (yêu cầu dưới ${b.max_playtime_hours || 100}h).</div>
+                </div>
+              ` : `
+                <button type="button" 
+                        onclick="StarterGift.claim()" 
+                        ${this.isClaiming ? 'disabled' : ''}
+                        class="btn btn-primary" 
+                        style="width: 100%; justify-content: center; padding: 14px; font-size: 1.05rem; font-weight: 800; background: linear-gradient(135deg, #f59e0b, #d97706); border-color: #fbbf24; box-shadow: 0 4px 20px rgba(245, 158, 11, 0.45); text-transform: uppercase;">
+                  ${this.isClaiming ? '<i class="fas fa-spinner fa-spin" style="margin-right: 8px;"></i> Đang Nhận Quà...' : '<i class="fas fa-gift" style="margin-right: 8px;"></i> Nhận Quà Tân Thủ Ngay'}
+                </button>
+              `}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  },
+
+  selectSpecies(spec) {
+    this.selectedSpecies = spec;
+    this.displayBundle();
+  },
+
+  setGender(gender) {
+    this.selectedGender = gender;
+    this.displayBundle();
+  },
+
+  async claim() {
+    const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
+    if (!user || !user.steamId) {
+      window.location.href = '/api/player/steam/login?redirect=%2F%23starter';
+      return;
+    }
+
+    if (!this.selectedSpecies) {
+      alert("Vui lòng chọn loài khủng long bạn muốn nhận!");
+      return;
+    }
+
+    this.isClaiming = true;
+    this.displayBundle();
+
+    try {
+      const res = await fetch('/api/server/claims/claim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          steam_id: user.steamId,
+          species: this.selectedSpecies,
+          gender: this.selectedGender
+        })
+      });
+      const data = await res.json();
+
+      if (data.ok || data.success) {
+        if (typeof Swal !== 'undefined') {
+          Swal.fire({
+            title: '🎉 Nhận Quà Thành Công!',
+            html: `
+              <div style="font-size: 1rem; color: #e2e8f0; line-height: 1.6;">
+                Chúc mừng bạn đã nhận thành công <b>Gói Quà Tân Thủ 3MGAMING</b>!<br>
+                💰 <b>+1,000 Xu</b> đã cộng thẳng vào ví IslePilot.<br>
+                🦖 <b>${this.selectedSpecies} (85%)</b> đã được chuyển vào Gara của bạn.
+              </div>
+            `,
+            icon: 'success',
+            confirmButtonText: 'Đến Gara Khủng Long',
+            showCancelButton: true,
+            cancelButtonText: 'Ở lại trang',
+            confirmButtonColor: '#10b981',
+            cancelButtonColor: '#64748b'
+          }).then(result => {
+            if (result.isConfirmed) {
+              window.location.hash = '#garage';
+            }
+          });
+        } else {
+          alert(`🎉 Nhận thành công Quà Tân Thủ: +1,000 Xu và ${this.selectedSpecies} vào Gara!`);
+        }
+
+        // Cập nhật số dư Xu trên Header nếu có hàm
+        if (window.App && typeof App.updateUserBalanceUI === 'function' && data.balance !== undefined && data.balance !== null) {
+          App.updateUserBalanceUI(data.balance);
+        } else if (window.App && typeof App.refreshBalance === 'function') {
+          App.refreshBalance();
+        }
+
+        // Reload bundle data
+        await this.render();
+      } else {
+        const errMsg = data.error || data.message || "Nhận quà thất bại. Vui lòng thử lại!";
+        if (typeof Swal !== 'undefined') {
+          Swal.fire('Lỗi', errMsg, 'error');
+        } else {
+          alert('Lỗi: ' + errMsg);
+        }
+        this.isClaiming = false;
+        this.displayBundle();
+      }
+    } catch (e) {
+      alert('Lỗi kết nối máy chủ: ' + e.message);
+      this.isClaiming = false;
+      this.displayBundle();
+    }
+  }
+};
+
+window.StarterGift = StarterGift;

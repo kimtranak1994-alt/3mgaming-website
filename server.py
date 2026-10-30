@@ -368,6 +368,45 @@ def save_claimed_quests(data):
         except Exception as e:
             print(f"Error saving claimed_quests to {fpath}: {e}")
 
+
+CLAIMED_STARTER_FILE = os.path.join(os.path.dirname(__file__), "claimed_starter.json")
+
+def _get_claimed_starter_paths():
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    primary_file = os.path.join(base_dir, "claimed_starter.json")
+    sub_file = os.path.join(base_dir, "3mgaming-website", "claimed_starter.json")
+    backup_file = os.path.join(base_dir, ".persistent_claimed_starter.json")
+    return [backup_file, primary_file, sub_file]
+
+def load_claimed_starter():
+    paths = _get_claimed_starter_paths()
+    merged = {}
+    for fpath in paths:
+        if os.path.exists(fpath):
+            try:
+                with open(fpath, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    if isinstance(data, dict):
+                        for sid, val in data.items():
+                            sid_str = str(sid).strip()
+                            if sid_str not in merged:
+                                merged[sid_str] = val
+                            elif isinstance(val, dict) and isinstance(merged[sid_str], dict):
+                                merged[sid_str].update(val)
+            except Exception:
+                pass
+    return merged
+
+def save_claimed_starter(data):
+    paths = _get_claimed_starter_paths()
+    for fpath in paths:
+        try:
+            os.makedirs(os.path.dirname(fpath), exist_ok=True)
+            with open(fpath, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            print(f"Error saving claimed_starter to {fpath}: {e}")
+
 def _is_quest_claimed(steam_id, quest_id, period_key, progress_id, claimed_db):
     sid = str(steam_id).strip()
     qid = str(quest_id).strip()
@@ -795,6 +834,11 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
         # 19. Gói Thả Xác Carcass Offers (Live từ IslePilot)
 
+        # 20. Quà Tân Thủ & Claims (Live từ IslePilot cmv3zzfix02g3pj01yay0hw4g)
+        elif self.path.startswith("/api/server/claims") or self.path.startswith("/api/server/starter"):
+            self.handle_claims()
+            return
+
         elif self.path.startswith("/api/server/carcass/offers") or self.path.startswith("/api/server/shop/carcasses"):
 
             self.handle_carcass_offers()
@@ -1190,6 +1234,10 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
             self.handle_skin_set()
 
+            return
+
+        elif self.path in ["/api/server/claims/claim", "/api/server/starter/claim"]:
+            self.handle_claim_starter()
             return
 
         elif self.path in ["/api/server/referral/apply", "/api/server/referral/redeem"]:
@@ -9754,6 +9802,165 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             print(f"[Referral Apply Error] {e}")
 
             self.send_json_response({"ok": False, "error": "Lỗi xử lý máy chủ khi áp dụng mã."}, 500)
+
+
+    def handle_claims(self):
+        try:
+            query = urllib.parse.urlparse(self.path).query
+            q_params = urllib.parse.parse_qs(query)
+            steam_id = q_params.get("steam_id", [None])[0] or self.get_active_steam_id()
+            
+            claimed_db = load_claimed_starter()
+            sid_str = str(steam_id).strip() if steam_id else ""
+            is_claimed = sid_str in claimed_db if sid_str else False
+            claim_info = claimed_db.get(sid_str, {}) if is_claimed else None
+            
+            playtime_hours = 0.0
+            is_newbie = True
+            player_name = ""
+            
+            if sid_str:
+                player_info = self.fetch_islepilot(f"/players/{sid_str}")
+                if isinstance(player_info, dict):
+                    player_name = player_info.get("name", "")
+                    total_play_sec = player_info.get("totalPlaySec", 0) or 0
+                    playtime_hours = round(total_play_sec / 3600.0, 1)
+                    if total_play_sec >= 100 * 3600:
+                        is_newbie = False
+            
+            starter_config = config.get("STARTER_GIFT", {})
+            bundle_coins = starter_config.get("coins", 1000)
+            bundle_growth = starter_config.get("dino_growth", 0.85)
+            max_playtime = starter_config.get("max_playtime_hours", 100)
+            
+            choices = starter_config.get("dino_choices", [
+                {"species": "Ceratosaurus", "name": "Ceratosaurus (Đầm Thịt)", "icon": "Ceratosaurus"},
+                {"species": "Carnotaurus", "name": "Carnotaurus (Tốc Độ)", "icon": "Carnotaurus"},
+                {"species": "Omniraptor", "name": "Omniraptor (Săn Bầy)", "icon": "Omniraptor"},
+                {"species": "Pachycephalosaurus", "name": "Pachycephalosaurus (Húc Thiết Giáp)", "icon": "Pachycephalosaurus"},
+                {"species": "Tenontosaurus", "name": "Tenontosaurus (Dũng Mãnh)", "icon": "Tenontosaurus"},
+                {"species": "Dilophosaurus", "name": "Dilophosaurus (Sát Thủ Màn Đêm)", "icon": "Dilophosaurus"}
+            ])
+            
+            self.send_json_response({
+                "ok": True,
+                "server_id": config.get("SERVER_ID", "cmv3zzfix02g3pj01yay0hw4g"),
+                "bundle": {
+                    "id": "starter_pack_3mgaming",
+                    "name": starter_config.get("name", "Gói Quà Tân Thủ 3MGAMING"),
+                    "description": starter_config.get("description", "Quà tặng chào mừng dành riêng cho thành viên mới tham gia cụm máy chủ 3MGAMING. Nhận ngay 1,000 Xu khởi nghiệp và Khủng Long chiến đấu 85% vào Gara!"),
+                    "coins": bundle_coins,
+                    "dino_growth": bundle_growth,
+                    "choices": choices,
+                    "claimed": is_claimed,
+                    "claimed_at": claim_info.get("claimed_at") if isinstance(claim_info, dict) else None,
+                    "claimed_species": claim_info.get("species") if isinstance(claim_info, dict) else None,
+                    "eligible": is_newbie,
+                    "playtime_hours": playtime_hours,
+                    "max_playtime_hours": max_playtime,
+                    "dashboard_sync_url": f"https://islepilot.eu/dashboard/servers/{config.get('SERVER_ID', 'cmv3zzfix02g3pj01yay0hw4g')}/claims",
+                    "player_claim_url": "https://3mgaming.islepilot.eu/claim"
+                }
+            })
+        except Exception as e:
+            print(f"[Handle Claims Error] {e}")
+            self.send_json_response({"ok": False, "error": str(e)}, 500)
+
+    def handle_claim_starter(self):
+        try:
+            length = int(self.headers.get("Content-Length", 0))
+            payload = json.loads(self.rfile.read(length).decode("utf-8")) if length > 0 else {}
+            
+            steam_id = payload.get("steam_id") or self.get_active_steam_id()
+            if not steam_id:
+                self.send_json_response({"ok": False, "error": "Vui lòng đăng nhập Steam trước khi nhận quà!"}, 401)
+                return
+            
+            sid_str = str(steam_id).strip()
+            claimed_db = load_claimed_starter()
+            if sid_str in claimed_db:
+                self.send_json_response({"ok": False, "error": "Bạn đã nhận gói Quà Tân Thủ này rồi!"}, 400)
+                return
+            
+            starter_config = config.get("STARTER_GIFT", {})
+            bundle_coins = starter_config.get("coins", 1000)
+            bundle_growth = starter_config.get("dino_growth", 0.85)
+            max_playtime = starter_config.get("max_playtime_hours", 100)
+            
+            player_info = self.fetch_islepilot(f"/players/{sid_str}")
+            player_name = sid_str
+            if isinstance(player_info, dict):
+                player_name = player_info.get("name", sid_str)
+                total_play_sec = player_info.get("totalPlaySec", 0) or 0
+                if total_play_sec >= max_playtime * 3600:
+                    playtime_hours = round(total_play_sec / 3600.0, 1)
+                    self.send_json_response({
+                        "ok": False,
+                        "error": f"Gói quà tân thủ chỉ dành cho người chơi dưới {max_playtime} giờ chơi (tài khoản của bạn đã đạt {playtime_hours}h)!"
+                    }, 400)
+                    return
+            
+            chosen_species = payload.get("species") or "Ceratosaurus"
+            chosen_gender = payload.get("gender") or "Male"
+            
+            try:
+                self.fetch_islepilot(f"/players/{sid_str}/claim", method="POST", body_data={"bundleId": "starter_pack_3mgaming"})
+            except Exception:
+                pass
+            
+            new_balance = None
+            if bundle_coins > 0:
+                cur_res = self.fetch_islepilot(
+                    f"/players/{sid_str}/currency",
+                    method="POST",
+                    body_data={"amount": bundle_coins, "reason": "Nhận Quà Tân Thủ 3MGAMING (+1,000 Xu)"}
+                )
+                if isinstance(cur_res, dict) and "balance" in cur_res:
+                    new_balance = cur_res.get("balance")
+            
+            gifts = load_user_gift_dinos()
+            if sid_str not in gifts:
+                gifts[sid_str] = []
+            
+            dino_id = f"gift_starter_{sid_str}_{int(time.time())}"
+            dino_entry = {
+                "id": dino_id,
+                "name": f"Tân Thủ: {chosen_species}",
+                "species": chosen_species,
+                "gender": chosen_gender,
+                "growth": bundle_growth,
+                "isPrimeElder": False,
+                "weight_label": f"Tân Thủ {int(bundle_growth * 100)}%",
+                "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
+            }
+            gifts[sid_str].append(dino_entry)
+            save_user_gift_dinos(gifts)
+            
+            now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
+            claimed_db[sid_str] = {
+                "claimed_at": now_iso,
+                "coins": bundle_coins,
+                "species": chosen_species,
+                "gender": chosen_gender,
+                "dino_id": dino_id,
+                "player_name": player_name
+            }
+            save_claimed_starter(claimed_db)
+            
+            print(f"[Starter Gift Claim] Người chơi {player_name} ({sid_str}) đã nhận Quà Tân Thủ: +{bundle_coins} Xu & {chosen_species}")
+            
+            self.send_json_response({
+                "ok": True,
+                "success": True,
+                "message": f"Nhận Quà Tân Thủ thành công! Đã cộng {bundle_coins:,} Xu vào ví và tặng {chosen_species} vào Gara Dino của bạn.",
+                "coins": bundle_coins,
+                "species": chosen_species,
+                "dino_id": dino_id,
+                "balance": new_balance
+            })
+        except Exception as e:
+            print(f"[Handle Claim Starter Error] {e}")
+            self.send_json_response({"ok": False, "error": str(e)}, 500)
 
     def handle_buy_skin(self):
 
