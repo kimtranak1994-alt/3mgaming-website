@@ -3185,6 +3185,51 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
         total_balance = max(0, int(round(last_known + extra)))
         return total_balance
+    @classmethod
+    def _get_carcass_remaining_cooldown(cls, steam_id):
+        steam_id = str(steam_id).strip()
+        if not steam_id:
+            return 0
+        now = time.time()
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        for d in [base_dir, os.path.join(base_dir, "3mgaming-website")]:
+            fpath = os.path.join(d, "carcass_cooldowns.json")
+            if os.path.exists(fpath):
+                try:
+                    with open(fpath, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                        last_ts = float(data.get(steam_id, 0))
+                        elapsed = now - last_ts
+                        if elapsed < 300:
+                            return int(300 - elapsed)
+                except Exception:
+                    pass
+        return 0
+
+    @classmethod
+    def _set_carcass_cooldown(cls, steam_id):
+        steam_id = str(steam_id).strip()
+        if not steam_id:
+            return
+        now = time.time()
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        for d in [base_dir, os.path.join(base_dir, "3mgaming-website")]:
+            fpath = os.path.join(d, "carcass_cooldowns.json")
+            try:
+                data = {}
+                if os.path.exists(fpath):
+                    try:
+                        with open(fpath, "r", encoding="utf-8") as f:
+                            data = json.load(f)
+                    except Exception:
+                        data = {}
+                data[steam_id] = now
+                os.makedirs(os.path.dirname(fpath), exist_ok=True)
+                with open(fpath, "w", encoding="utf-8") as f:
+                    json.dump(data, f)
+            except Exception:
+                pass
+
     def _translate_pilot_error(self, err_msg):
         err_str = str(err_msg).lower()
         if "not online" in err_str or "offline" in err_str or "player_offline" in err_str:
@@ -6350,6 +6395,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         query = urllib.parse.urlparse(self.path).query
         q_params = urllib.parse.parse_qs(query)
         active_steam_id = q_params.get("steam_id", [None])[0] or self.get_active_steam_id()
+        remaining_cd = self._get_carcass_remaining_cooldown(active_steam_id) if active_steam_id else 0
 
         remote_data = None
         if active_steam_id:
@@ -6366,7 +6412,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             self.send_json_response({
                 "ok": True,
                 "offers": remote_offers,
-                "cooldown_seconds": remote_data.get("cooldownSeconds", 300),
+                "cooldown_seconds": 300,
+                "remaining_cooldown": remaining_cd,
                 "daily_limit": remote_data.get("dailyLimit", 5),
                 "server_id": config.get("SERVER_ID", "cmv3zzfix02g3pj01yay0hw4g")
             })
@@ -6563,6 +6610,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             "ok": True,
             "offers": offers,
             "cooldown_seconds": 300,
+            "remaining_cooldown": remaining_cd,
             "server_id": config.get("SERVER_ID", "cmv3zzfix02g3pj01yay0hw4g")
         })
 
@@ -6579,6 +6627,17 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     "ok": False,
                     "message": "Vui lòng đăng nhập Steam trước khi nhận xác!"
                 }, 401)
+                return
+
+            remaining_cd = self._get_carcass_remaining_cooldown(steam_id)
+            if remaining_cd > 0:
+                self.send_json_response({
+                    "success": False,
+                    "ok": False,
+                    "cooldown": True,
+                    "remaining_seconds": remaining_cd,
+                    "message": f"⏱️ Vui lòng chờ {remaining_cd} giây nữa trước khi tiếp tục thả xác hoặc trồng cây!"
+                }, 400)
                 return
 
             cost = 1000
@@ -6641,6 +6700,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
                 # Trừ 1.000 Xu trực tiếp vào tài khoản người chơi
                 self._adjust_player_xu(steam_id, -cost, f"Trồng cây ({plant_info['name']}): -{cost:,} Xu")
+                # Đặt mốc thời gian hồi chiêu 300 giây bền vững
+                self._set_carcass_cooldown(steam_id)
                 new_bal = self._get_player_xu_balance(steam_id)
 
                 self.send_json_response({
@@ -6649,7 +6710,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     "message": f"Đã trừ {cost:,} Xu! Trồng thành công {plant_info['name']} ngay trước mặt bạn!",
                     "plant": plant_info["name"],
                     "cost": cost,
-                    "new_balance": new_bal
+                    "new_balance": new_bal,
+                    "cooldown_seconds": 300
                 })
                 return
 
@@ -6683,6 +6745,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             if res and (res.get("ok") is True or res.get("success") is True or "commandId" in res):
                 # Trừ 1.000 Xu trực tiếp vào tài khoản người chơi khi thả xác thành công
                 self._adjust_player_xu(steam_id, -cost, f"Thả xác ({target_species}): -{cost:,} Xu")
+                # Đặt mốc thời gian hồi chiêu 300 giây bền vững
+                self._set_carcass_cooldown(steam_id)
                 new_bal = self._get_player_xu_balance(steam_id)
                 self.send_json_response({
                     "success": True,
@@ -6690,7 +6754,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     "commandId": res.get("commandId"),
                     "message": f"Đã trừ {cost:,} Xu! Thả xác {target_species} thành công ngay vị trí của bạn.",
                     "cost": cost,
-                    "new_balance": new_bal
+                    "new_balance": new_bal,
+                    "cooldown_seconds": 300
                 })
                 return
 
@@ -8106,6 +8171,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         query = urllib.parse.urlparse(self.path).query
         q_params = urllib.parse.parse_qs(query)
         active_steam_id = q_params.get("steam_id", [None])[0] or self.get_active_steam_id()
+        remaining_cd = self._get_carcass_remaining_cooldown(active_steam_id) if active_steam_id else 0
 
         remote_data = None
         if active_steam_id:
@@ -8122,7 +8188,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             self.send_json_response({
                 "ok": True,
                 "offers": remote_offers,
-                "cooldown_seconds": remote_data.get("cooldownSeconds", 300),
+                "cooldown_seconds": 300,
+                "remaining_cooldown": remaining_cd,
                 "daily_limit": remote_data.get("dailyLimit", 5),
                 "server_id": config.get("SERVER_ID", "cmv3zzfix02g3pj01yay0hw4g")
             })
@@ -8319,6 +8386,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             "ok": True,
             "offers": offers,
             "cooldown_seconds": 300,
+            "remaining_cooldown": remaining_cd,
             "server_id": config.get("SERVER_ID", "cmv3zzfix02g3pj01yay0hw4g")
         })
 
@@ -8335,6 +8403,17 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     "ok": False,
                     "message": "Vui lòng đăng nhập Steam trước khi nhận xác!"
                 }, 401)
+                return
+
+            remaining_cd = self._get_carcass_remaining_cooldown(steam_id)
+            if remaining_cd > 0:
+                self.send_json_response({
+                    "success": False,
+                    "ok": False,
+                    "cooldown": True,
+                    "remaining_seconds": remaining_cd,
+                    "message": f"⏱️ Vui lòng chờ {remaining_cd} giây nữa trước khi tiếp tục thả xác hoặc trồng cây!"
+                }, 400)
                 return
 
             cost = 1000
@@ -8397,6 +8476,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
                 # Trừ 1.000 Xu trực tiếp vào tài khoản người chơi
                 self._adjust_player_xu(steam_id, -cost, f"Trồng cây ({plant_info['name']}): -{cost:,} Xu")
+                # Đặt mốc thời gian hồi chiêu 300 giây bền vững
+                self._set_carcass_cooldown(steam_id)
                 new_bal = self._get_player_xu_balance(steam_id)
 
                 self.send_json_response({
@@ -8405,7 +8486,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     "message": f"Đã trừ {cost:,} Xu! Trồng thành công {plant_info['name']} ngay trước mặt bạn!",
                     "plant": plant_info["name"],
                     "cost": cost,
-                    "new_balance": new_bal
+                    "new_balance": new_bal,
+                    "cooldown_seconds": 300
                 })
                 return
 
@@ -8439,6 +8521,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             if res and (res.get("ok") is True or res.get("success") is True or "commandId" in res):
                 # Trừ 1.000 Xu trực tiếp vào tài khoản người chơi khi thả xác thành công
                 self._adjust_player_xu(steam_id, -cost, f"Thả xác ({target_species}): -{cost:,} Xu")
+                # Đặt mốc thời gian hồi chiêu 300 giây bền vững
+                self._set_carcass_cooldown(steam_id)
                 new_bal = self._get_player_xu_balance(steam_id)
                 self.send_json_response({
                     "success": True,
@@ -8446,7 +8530,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     "commandId": res.get("commandId"),
                     "message": f"Đã trừ {cost:,} Xu! Thả xác {target_species} thành công ngay vị trí của bạn.",
                     "cost": cost,
-                    "new_balance": new_bal
+                    "new_balance": new_bal,
+                    "cooldown_seconds": 300
                 })
                 return
 

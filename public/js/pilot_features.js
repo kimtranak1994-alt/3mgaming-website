@@ -5082,16 +5082,67 @@ const Carcass = {
     this.displayCards();
   },
 
+  getStoredCooldown(steamId) {
+    try {
+      const keys = [];
+      if (steamId) keys.push('carcass_cooldown_' + steamId);
+      keys.push('carcass_cooldown_end');
+      for (const k of keys) {
+        const val = parseInt(localStorage.getItem(k) || '0', 10);
+        if (val && val > Date.now()) {
+          return val;
+        }
+      }
+    } catch (e) {}
+    return 0;
+  },
+
+  setStoredCooldown(steamId, endTimestamp) {
+    try {
+      if (steamId) {
+        localStorage.setItem('carcass_cooldown_' + steamId, endTimestamp);
+      }
+      localStorage.setItem('carcass_cooldown_end', endTimestamp);
+    } catch (e) {}
+  },
+
+  clearStoredCooldown(steamId) {
+    try {
+      if (steamId) {
+        localStorage.removeItem('carcass_cooldown_' + steamId);
+      }
+      localStorage.removeItem('carcass_cooldown_end');
+    } catch (e) {}
+  },
+
   async render() {
     const container = document.getElementById('carcass-grid-container');
     if (!container) return;
 
+    // 1. Phục hồi ngay cooldown từ localStorage để khi F5 trang lập tức hiện đếm ngược
+    const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
+    const steamId = (user && user.steamId) ? user.steamId : '';
+    const localCd = this.getStoredCooldown(steamId);
+    if (localCd > Date.now()) {
+      this.cooldownEnd = localCd;
+    }
+
     container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);">⏳ Đang đồng bộ danh sách xác từ máy chủ...</div>';
 
     try {
-      const res = await fetch('/api/server/carcass/offers');
+      const steamParam = steamId ? `?steam_id=${steamId}` : '';
+      const res = await fetch(`/api/server/carcass/offers${steamParam}`);
       const data = await res.json();
       this.offers = data.offers || [];
+
+      // 2. Đồng bộ thời gian chờ từ máy chủ nếu máy chủ báo vẫn còn cooldown
+      if (data.remaining_cooldown && data.remaining_cooldown > 0) {
+        const serverCdEnd = Date.now() + (data.remaining_cooldown * 1000);
+        if (serverCdEnd > this.cooldownEnd) {
+          this.cooldownEnd = serverCdEnd;
+          this.setStoredCooldown(steamId, this.cooldownEnd);
+        }
+      }
     } catch (e) {
       console.warn("Lỗi tải carcass offers:", e);
       this.offers = [];
@@ -5283,6 +5334,9 @@ const Carcass = {
     }
 
     this.displayCards();
+    if (this.cooldownEnd > Date.now()) {
+      this.startCooldownInterval();
+    }
   },
 
   displayCards() {
@@ -5351,7 +5405,7 @@ const Carcass = {
 
   startCooldownInterval() {
     if (this.cooldownTimer) clearInterval(this.cooldownTimer);
-    this.cooldownTimer = setInterval(() => {
+    const updateCountdown = () => {
       const remainingSec = Math.max(0, Math.ceil((this.cooldownEnd - Date.now()) / 1000));
       document.querySelectorAll('.carcass-btn-buy').forEach(btn => {
         if (remainingSec > 0) {
@@ -5364,18 +5418,17 @@ const Carcass = {
       if (remainingSec <= 0) {
         clearInterval(this.cooldownTimer);
         this.cooldownTimer = null;
+        const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
+        const steamId = (user && user.steamId) ? user.steamId : '';
+        this.clearStoredCooldown(steamId);
         this.displayCards();
       }
-    }, 1000);
+    };
+    updateCountdown();
+    this.cooldownTimer = setInterval(updateCountdown, 1000);
   },
 
   async actionDrop(offerId, name) {
-    if (Date.now() < this.cooldownEnd) {
-      const remaining = Math.ceil((this.cooldownEnd - Date.now()) / 1000);
-      App.showToast(`⏱️ Mỗi 300 giây mua được một lần. Vui lòng chờ ${remaining} giây!`, 'warning');
-      return;
-    }
-
     const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
     if (!user || !user.steamId) {
       App.showToast("Vui lòng đăng nhập Steam trước khi nhận!", 'warning');
@@ -5383,6 +5436,19 @@ const Carcass = {
     }
 
     const steamId = user.steamId;
+    // Kiểm tra cooldown cả trong bộ nhớ và trong localStorage
+    const localCd = this.getStoredCooldown(steamId);
+    if (localCd > this.cooldownEnd) {
+      this.cooldownEnd = localCd;
+    }
+
+    if (Date.now() < this.cooldownEnd) {
+      const remaining = Math.ceil((this.cooldownEnd - Date.now()) / 1000);
+      App.showToast(`⏱️ Mỗi 300 giây mua được một lần. Vui lòng chờ ${remaining} giây!`, 'warning');
+      this.startCooldownInterval();
+      return;
+    }
+
     const isPlant = String(offerId).startsWith('plant_');
     const btn = document.getElementById(`carcass-btn-${offerId}`);
     if (btn) {
@@ -5408,15 +5474,24 @@ const Carcass = {
         } else if (window.App && typeof App.refreshBalance === 'function') {
           App.refreshBalance();
         }
-        App.showToast(data.message || (isPlant ? 'Đã trừ 1.000 Xu! Trồng cây thành công!' : 'Đã trừ 1.000 Xu! Thả xác thành công!'), 'success');
+
+        // Kích hoạt cooldown 300s và lưu localStorage để F5 không bị mất
         this.cooldownEnd = Date.now() + 300000;
+        this.setStoredCooldown(steamId, this.cooldownEnd);
         this.startCooldownInterval();
+
+        App.showToast(data.message || (isPlant ? 'Đã trừ 1.000 Xu! Trồng cây thành công!' : 'Đã trừ 1.000 Xu! Thả xác thành công!'), 'success');
       } else {
-        App.showToast(data.message || "Thao tác thất bại!", 'error');
-        if (btn) {
+        // Nếu server từ chối vì đang cooldown
+        if (data.cooldown && data.remaining_seconds) {
+          this.cooldownEnd = Date.now() + (data.remaining_seconds * 1000);
+          this.setStoredCooldown(steamId, this.cooldownEnd);
+          this.startCooldownInterval();
+        } else if (btn) {
           btn.disabled = false;
           btn.textContent = isPlant ? '🌱 Trồng Cây' : '🥩 Thả Xác';
         }
+        App.showToast(data.message || "Thao tác thất bại!", 'error');
       }
     } catch (e) {
       App.showToast("Không thể kết nối đến máy chủ!", 'error');
