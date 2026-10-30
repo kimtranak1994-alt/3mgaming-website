@@ -39,9 +39,9 @@
   "STARTER_GIFT": {
     "enabled": true,
     "name": "Gói Quà Tân Thủ 3MGAMING",
-    "description": "Quà chào mừng thành viên mới gia nhập server 3MGAMING. Nhận ngay 3,000 Xu khởi nghiệp, 1 Khủng Long chiến đấu 85% và tùy chọn 4 Đột biến gen (Mutations) vào Gara!",
+    "description": "Quà chào mừng thành viên mới gia nhập server 3MGAMING. Nhận ngay 3,000 Xu khởi nghiệp, 1 Khủng Long Prime chiến đấu 76% và tùy chọn 4 Đột biến gen (Mutations) vào Gara!",
     "coins": 3000,
-    "dino_growth": 0.85,
+    "dino_growth": 0.76,
     "max_playtime_hours": 3,
     "dino_choices": [
       {
@@ -295,6 +295,7 @@
       "Hypermetabolic Inanition",
       "Congenital Hypoalgesia",
       "Photosynthetic Tissue"
-    ]
+    ],
+    "is_prime": true
   }
 }

@@ -5599,7 +5599,7 @@ const StarterGift = {
               ${c.name}
             </div>
             <div style="font-size: 0.75rem; color: ${isCarno ? '#f87171' : '#34d399'}; display: flex; align-items: center; gap: 4px;">
-              <span>${isCarno ? '🥩 Ăn thịt' : '🌿 Ăn cỏ'}</span> · <span>85% Size</span>
+              <span>${isCarno ? '🥩 Ăn thịt' : '🌿 Ăn cỏ'}</span> · <span style="color: #fbbf24; font-weight: 700;">👑 76% Size Prime</span>
             </div>
           </div>
           <div class="starter-check-icon" style="color: ${isSel ? '#fbbf24' : 'rgba(255,255,255,0.2)'}; font-size: 1.1rem;">
@@ -5678,8 +5678,8 @@ const StarterGift = {
                   <i class="fas fa-dragon"></i>
                 </div>
                 <div>
-                  <div style="font-weight: 800; color: #34d399; font-size: 1.1rem;">1 Khủng Long Tùy Chọn (85% Size)</div>
-                  <div style="font-size: 0.75rem; color: #94a3b8;">Chọn trong 27 loài có mặt trên server, lưu thẳng vào Gara Dino</div>
+                  <div style="font-weight: 800; color: #34d399; font-size: 1.1rem;">1 Khủng Long Prime Tùy Chọn (76% Size)</div>
+                  <div style="font-size: 0.75rem; color: #94a3b8;">Chọn trong 27 loài có mặt trên server, tặng kèm Prime Elder, lưu thẳng vào Gara Dino</div>
                 </div>
               </div>
             </div>
@@ -6002,7 +6002,7 @@ const StarterGift = {
               <div style="font-size: 1rem; color: #e2e8f0; line-height: 1.6; text-align: left; padding: 4px 8px;">
                 Chúc mừng bạn đã nhận thành công <b>Gói Quà Tân Thủ 3MGAMING</b>!<br><br>
                 💰 <b>+${coins.toLocaleString()} Xu</b> đã cộng thẳng vào ví IslePilot.<br>
-                🦖 <b>${this.selectedSpecies} (85%)</b> (${this.selectedGender === 'Male' ? 'Đực' : 'Cái'}) đã được chuyển vào Gara của bạn.<br>
+                🦖 <b>${this.selectedSpecies} Prime (76%)</b> (${this.selectedGender === 'Male' ? 'Đực' : 'Cái'}) đã được chuyển vào Gara của bạn.<br>
                 🧬 <b>Đúng 4 Đột biến gen đã tích hợp:</b><br>
                 <div style="font-size: 0.85rem; color: #38bdf8; margin-top: 4px; padding: 6px 10px; background: rgba(0,0,0,0.3); border-radius: 6px;">
                   ${mutNames || '4 Đột biến chuẩn'}

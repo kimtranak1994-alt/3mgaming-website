@@ -9733,7 +9733,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             
             starter_config = config.get("STARTER_GIFT", {})
             bundle_coins = starter_config.get("coins", 3000)
-            bundle_growth = starter_config.get("dino_growth", 0.85)
+            bundle_growth = starter_config.get("dino_growth", 0.76)
             max_playtime = starter_config.get("max_playtime_hours", 3)
             
             if sid_str:
@@ -9760,7 +9760,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "bundle": {
                     "id": "starter_pack_3mgaming",
                     "name": starter_config.get("name", "Gói Quà Tân Thủ 3MGAMING"),
-                    "description": starter_config.get("description", "Quà tặng chào mừng dành riêng cho thành viên mới tham gia cụm máy chủ 3MGAMING. Nhận ngay 3,000 Xu khởi nghiệp, 1 Khủng Long chiến đấu 85% và chọn 4 Đột biến gen vào Gara!"),
+                    "description": starter_config.get("description", "Quà tặng chào mừng dành riêng cho thành viên mới tham gia cụm máy chủ 3MGAMING. Nhận ngay 3,000 Xu khởi nghiệp, 1 Khủng Long Prime chiến đấu 76% và chọn 4 Đột biến gen vào Gara!"),
                     "coins": bundle_coins,
                     "dino_growth": bundle_growth,
                     "choices": choices,
@@ -9801,7 +9801,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             
             starter_config = config.get("STARTER_GIFT", {})
             bundle_coins = starter_config.get("coins", 3000)
-            bundle_growth = starter_config.get("dino_growth", 0.85)
+            bundle_growth = starter_config.get("dino_growth", 0.76)
             max_playtime = starter_config.get("max_playtime_hours", 3)
             
             player_info = self.fetch_islepilot(f"/players/{sid_str}")
@@ -9865,12 +9865,12 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             dino_id = f"gift_starter_{sid_str}_{int(time.time())}"
             dino_entry = {
                 "id": dino_id,
-                "name": f"Tân Thủ: {chosen_species}",
+                "name": f"Tân Thủ Prime: {chosen_species}",
                 "species": chosen_species,
                 "gender": chosen_gender,
                 "growth": bundle_growth,
-                "isPrimeElder": False,
-                "weight_label": f"Tân Thủ {int(bundle_growth * 100)}%",
+                "isPrimeElder": True,
+                "weight_label": f"Tân Thủ Prime {int(bundle_growth * 100)}%",
                 "mutations": chosen_mutations,
                 "mutationSlots": mut_slots,
                 "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
@@ -9901,7 +9901,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             self.send_json_response({
                 "ok": True,
                 "success": True,
-                "message": f"Nhận Quà Tân Thủ thành công! Đã cộng {bundle_coins:,} Xu vào ví và tặng {chosen_species} kèm 4 Đột biến gen vào Gara Dino.",
+                "message": f"Nhận Quà Tân Thủ thành công! Đã cộng {bundle_coins:,} Xu vào ví và tặng {chosen_species} Prime 76% kèm 4 Đột biến gen vào Gara Dino.",
                 "coins": bundle_coins,
                 "species": chosen_species,
                 "mutations": chosen_mutations,
