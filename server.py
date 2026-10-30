@@ -1954,11 +1954,12 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     except Exception:
                         pass
                     time.sleep(0.2)
+                    worker_scale = 0.5 if "indo" in str(spec).lower() else 1.0
                     try:
                         self.fetch_islepilot("/commands", method="POST", body_data={
                             "action": "scale",
                             "steamId": sid,
-                            "scale": 1.0
+                            "scale": worker_scale
                         })
                     except Exception:
                         pass
@@ -1984,10 +1985,11 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                             "stacks": 10
                         })
                         time.sleep(0.3)
+                        worker_scale = 0.5 if "indo" in str(spec).lower() else 1.0
                         self.fetch_islepilot("/commands", method="POST", body_data={
                             "action": "scale",
                             "steamId": sid,
-                            "scale": 1.0
+                            "scale": worker_scale
                         })
                         time.sleep(0.3)
 
@@ -2132,10 +2134,11 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                         "stacks": 10
                     })
                     time.sleep(0.4)
+                    worker_scale = 0.5 if "indo" in str(spec).lower() else 1.0
                     self.fetch_islepilot("/commands", method="POST", body_data={
                         "action": "scale",
                         "steamId": sid,
-                        "scale": 1.0
+                        "scale": worker_scale
                     })
                     time.sleep(0.4)
                 
@@ -5076,13 +5079,15 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
                     time.sleep(0.3)
 
-                    # 2. ĐẶT SCALE 1.0 (chuẩn kích cỡ mặc định game, không bị biến dạng hitbox)
+                    # 2. ĐẶT SCALE: Chuẩn hóa IndoRex là 0.5x, còn tất cả con khác giữ nguyên 1.0x
+                    target_scale = 0.5 if "indo" in str(dino_spec).lower() else 1.0
                     try:
                         self.fetch_islepilot("/commands", method="POST", body_data={
                             "action": "scale",
                             "steamId": str(steam_id),
-                            "scale": 1.0
+                            "scale": target_scale
                         })
+                        print(f"[Garage Restore] Đã đặt scale = {target_scale} cho {dino_spec} (Steam {steam_id})")
                     except Exception:
                         pass
 
@@ -5176,7 +5181,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                             self.fetch_islepilot("/commands", method="POST", body_data={
                                 "action": "scale",
                                 "steamId": str(steam_id),
-                                "scale": 1.0
+                                "scale": target_scale
                             })
                         except Exception:
                             pass
@@ -5189,6 +5194,11 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                             "steamId": str(steam_id),
                             "growth": dino_growth,
                             "frozen": False
+                        })
+                        self.fetch_islepilot("/commands", method="POST", body_data={
+                            "action": "scale",
+                            "steamId": str(steam_id),
+                            "scale": target_scale
                         })
                         self.fetch_islepilot("/commands", method="POST", body_data=stat_payload)
                         self.fetch_islepilot("/commands", method="POST", body_data=body_muts)
