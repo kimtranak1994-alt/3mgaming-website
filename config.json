@@ -42,7 +42,7 @@
     "description": "Quà chào mừng thành viên mới gia nhập server 3MGAMING. Nhận ngay 3,000 Xu khởi nghiệp, 1 Khủng Long chiến đấu 85% và tùy chọn 4 Đột biến gen (Mutations) vào Gara!",
     "coins": 3000,
     "dino_growth": 0.85,
-    "max_playtime_hours": 1000,
+    "max_playtime_hours": 3,
     "dino_choices": [
       {
         "species": "Allosaurus",

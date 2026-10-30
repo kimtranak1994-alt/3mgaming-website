@@ -9734,7 +9734,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             starter_config = config.get("STARTER_GIFT", {})
             bundle_coins = starter_config.get("coins", 3000)
             bundle_growth = starter_config.get("dino_growth", 0.85)
-            max_playtime = starter_config.get("max_playtime_hours", 1000)
+            max_playtime = starter_config.get("max_playtime_hours", 3)
             
             if sid_str:
                 player_info = self.fetch_islepilot(f"/players/{sid_str}")
@@ -9802,7 +9802,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             starter_config = config.get("STARTER_GIFT", {})
             bundle_coins = starter_config.get("coins", 3000)
             bundle_growth = starter_config.get("dino_growth", 0.85)
-            max_playtime = starter_config.get("max_playtime_hours", 1000)
+            max_playtime = starter_config.get("max_playtime_hours", 3)
             
             player_info = self.fetch_islepilot(f"/players/{sid_str}")
             player_name = sid_str
