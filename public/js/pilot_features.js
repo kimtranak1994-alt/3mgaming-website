@@ -5155,8 +5155,8 @@ const Carcass = {
           "name": "Xác Tenontosaurus Tươi",
           "category": "carnivore",
           "type": "carcass",
-          "price": 1000,
-          "price_display": "1.000 Xu",
+          "price": 200,
+          "price_display": "200 Xu",
           "species": "Tenontosaurus",
           "species_name": "Tenontosaurus",
           "icon": "🍖",
@@ -5170,8 +5170,8 @@ const Carcass = {
           "name": "Xác Triceratops Khổng Lồ",
           "category": "carnivore",
           "type": "carcass",
-          "price": 1000,
-          "price_display": "1.000 Xu",
+          "price": 200,
+          "price_display": "200 Xu",
           "species": "Triceratops",
           "species_name": "Triceratops",
           "icon": "🍖",
@@ -5185,8 +5185,8 @@ const Carcass = {
           "name": "Xác Stegosaurus Bổ Dưỡng",
           "category": "carnivore",
           "type": "carcass",
-          "price": 1000,
-          "price_display": "1.000 Xu",
+          "price": 200,
+          "price_display": "200 Xu",
           "species": "Stegosaurus",
           "species_name": "Stegosaurus",
           "icon": "🍖",
@@ -5200,8 +5200,8 @@ const Carcass = {
           "name": "Xác Carnotaurus Săn Mồi",
           "category": "carnivore",
           "type": "carcass",
-          "price": 1000,
-          "price_display": "1.000 Xu",
+          "price": 200,
+          "price_display": "200 Xu",
           "species": "Carnotaurus",
           "species_name": "Carnotaurus",
           "icon": "🍖",
@@ -5215,8 +5215,8 @@ const Carcass = {
           "name": "Xác Ceratosaurus Đậm Vị",
           "category": "carnivore",
           "type": "carcass",
-          "price": 1000,
-          "price_display": "1.000 Xu",
+          "price": 200,
+          "price_display": "200 Xu",
           "species": "Ceratosaurus",
           "species_name": "Ceratosaurus",
           "icon": "🍖",
@@ -5230,8 +5230,8 @@ const Carcass = {
           "name": "Xác Tyrannosaurus Chúa Tể",
           "category": "carnivore",
           "type": "carcass",
-          "price": 1000,
-          "price_display": "1.000 Xu",
+          "price": 200,
+          "price_display": "200 Xu",
           "species": "Tyrannosaurus",
           "species_name": "Tyrannosaurus",
           "icon": "🍖",
@@ -5245,8 +5245,8 @@ const Carcass = {
           "name": "Bụi Cây Sanctuary (Thánh Địa)",
           "category": "herbivore",
           "type": "plant",
-          "price": 1000,
-          "price_display": "1.000 Xu",
+          "price": 200,
+          "price_display": "200 Xu",
           "species": "Sanctuary Bush",
           "species_name": "Sanctuary Bush",
           "icon": "🌿",
@@ -5260,8 +5260,8 @@ const Carcass = {
           "name": "Bụi Dâu Rừng (Blueberry Bush)",
           "category": "herbivore",
           "type": "plant",
-          "price": 1000,
-          "price_display": "1.000 Xu",
+          "price": 200,
+          "price_display": "200 Xu",
           "species": "Berry Bush",
           "species_name": "Berry Bush",
           "icon": "🫐",
@@ -5275,8 +5275,8 @@ const Carcass = {
           "name": "Rễ Cây Cổ Thụ & Đầm Lầy (Bulrush)",
           "category": "herbivore",
           "type": "plant",
-          "price": 1000,
-          "price_display": "1.000 Xu",
+          "price": 200,
+          "price_display": "200 Xu",
           "species": "Bulrush Roots",
           "species_name": "Bulrush Roots",
           "icon": "🌾",
@@ -5290,8 +5290,8 @@ const Carcass = {
           "name": "Cây Cọ Rừng & Chuối Rừng (Palm Tree)",
           "category": "herbivore",
           "type": "plant",
-          "price": 1000,
-          "price_display": "1.000 Xu",
+          "price": 200,
+          "price_display": "200 Xu",
           "species": "Mountain Palm",
           "species_name": "Mountain Palm",
           "icon": "🌴",
@@ -5305,8 +5305,8 @@ const Carcass = {
           "name": "Cây Thảo Dược Hồi Máu (Marigold)",
           "category": "herbivore",
           "type": "plant",
-          "price": 1000,
-          "price_display": "1.000 Xu",
+          "price": 200,
+          "price_display": "200 Xu",
           "species": "Marigold Herbs",
           "species_name": "Marigold Herbs",
           "icon": "🌼",
@@ -5320,8 +5320,8 @@ const Carcass = {
           "name": "Nấm Rừng Dinh Dưỡng (Forest Truffles)",
           "category": "herbivore",
           "type": "plant",
-          "price": 1000,
-          "price_display": "1.000 Xu",
+          "price": 200,
+          "price_display": "200 Xu",
           "species": "Forest Mushroom",
           "species_name": "Forest Mushroom",
           "icon": "🍄",
@@ -5381,7 +5381,7 @@ const Carcass = {
           <div class="carcass-body">
             <div class="carcass-card-header">
               <span class="carcass-card-name">${isPlant ? (item.icon ? item.icon + ' ' : '🌿 ') : '🥩 '}${item.name}</span>
-              <span class="carcass-card-price" style="${isPlant ? 'color: #34d399;' : 'color: #ef4444; font-weight: 700;'}">${item.price_display || '1.000 Xu'}</span>
+              <span class="carcass-card-price" style="${isPlant ? 'color: #34d399;' : 'color: #ef4444; font-weight: 700;'}">${item.price_display || '200 Xu'}</span>
             </div>
 
             <p class="carcass-card-desc">
@@ -5480,7 +5480,7 @@ const Carcass = {
         this.setStoredCooldown(steamId, this.cooldownEnd);
         this.startCooldownInterval();
 
-        App.showToast(data.message || (isPlant ? 'Đã trừ 1.000 Xu! Trồng cây thành công!' : 'Đã trừ 1.000 Xu! Thả xác thành công!'), 'success');
+        App.showToast(data.message || (isPlant ? 'Đã trừ 200 Xu! Trồng cây thành công!' : 'Đã trừ 200 Xu! Thả xác thành công!'), 'success');
       } else {
         // Nếu server từ chối vì đang cooldown
         if (data.cooldown && data.remaining_seconds) {

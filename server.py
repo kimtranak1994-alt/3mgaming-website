@@ -6527,8 +6527,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         if remote_data and isinstance(remote_data, dict) and "offers" in remote_data:
             remote_offers = remote_data.get("offers", [])
             for item in remote_offers:
-                item["price"] = 1000
-                item["price_display"] = "1.000 Xu"
+                item["price"] = 200
+                item["price_display"] = "200 Xu"
             self.send_json_response({
                 "ok": True,
                 "offers": remote_offers,
@@ -6539,7 +6539,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             })
             return
 
-        # Đồng bộ 100% đầy đủ 6 gói xác mới nhất từ IslePilot của server 3MGAMING (Giá cố định 1.000 Xu)
+        # Đồng bộ 100% đầy đủ 6 gói xác mới nhất từ IslePilot của server 3MGAMING (Giá cố định 200 Xu)
         offers = [
             # 1. Danh mục Thả Xác cho Khủng Long Ăn Thịt (Carnivores)
             {
@@ -6547,8 +6547,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "name": "Xác Tenontosaurus Tươi",
                 "category": "carnivore",
                 "type": "carcass",
-                "price": 1000,
-                "price_display": "1.000 Xu",
+                "price": 200,
+                "price_display": "200 Xu",
                 "species": "Tenontosaurus",
                 "species_name": "Tenontosaurus",
                 "icon": "🍖",
@@ -6562,8 +6562,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "name": "Xác Triceratops Khổng Lồ",
                 "category": "carnivore",
                 "type": "carcass",
-                "price": 1000,
-                "price_display": "1.000 Xu",
+                "price": 200,
+                "price_display": "200 Xu",
                 "species": "Triceratops",
                 "species_name": "Triceratops",
                 "icon": "🍖",
@@ -6577,8 +6577,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "name": "Xác Stegosaurus Bổ Dưỡng",
                 "category": "carnivore",
                 "type": "carcass",
-                "price": 1000,
-                "price_display": "1.000 Xu",
+                "price": 200,
+                "price_display": "200 Xu",
                 "species": "Stegosaurus",
                 "species_name": "Stegosaurus",
                 "icon": "🍖",
@@ -6592,8 +6592,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "name": "Xác Carnotaurus Săn Mồi",
                 "category": "carnivore",
                 "type": "carcass",
-                "price": 1000,
-                "price_display": "1.000 Xu",
+                "price": 200,
+                "price_display": "200 Xu",
                 "species": "Carnotaurus",
                 "species_name": "Carnotaurus",
                 "icon": "🍖",
@@ -6607,8 +6607,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "name": "Xác Ceratosaurus Đậm Vị",
                 "category": "carnivore",
                 "type": "carcass",
-                "price": 1000,
-                "price_display": "1.000 Xu",
+                "price": 200,
+                "price_display": "200 Xu",
                 "species": "Ceratosaurus",
                 "species_name": "Ceratosaurus",
                 "icon": "🍖",
@@ -6622,8 +6622,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "name": "Xác Tyrannosaurus Chúa Tể",
                 "category": "carnivore",
                 "type": "carcass",
-                "price": 1000,
-                "price_display": "1.000 Xu",
+                "price": 200,
+                "price_display": "200 Xu",
                 "species": "Tyrannosaurus",
                 "species_name": "Tyrannosaurus",
                 "icon": "🍖",
@@ -6639,8 +6639,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "name": "Bụi Cây Sanctuary (Thánh Địa)",
                 "category": "herbivore",
                 "type": "plant",
-                "price": 1000,
-                "price_display": "1.000 Xu",
+                "price": 200,
+                "price_display": "200 Xu",
                 "species": "Sanctuary Bush",
                 "species_name": "Sanctuary Bush",
                 "icon": "🌿",
@@ -6654,8 +6654,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "name": "Bụi Dâu Rừng (Blueberry Bush)",
                 "category": "herbivore",
                 "type": "plant",
-                "price": 1000,
-                "price_display": "1.000 Xu",
+                "price": 200,
+                "price_display": "200 Xu",
                 "species": "Berry Bush",
                 "species_name": "Berry Bush",
                 "icon": "🫐",
@@ -6669,8 +6669,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "name": "Rễ Cây Cổ Thụ & Đầm Lầy (Bulrush)",
                 "category": "herbivore",
                 "type": "plant",
-                "price": 1000,
-                "price_display": "1.000 Xu",
+                "price": 200,
+                "price_display": "200 Xu",
                 "species": "Bulrush Roots",
                 "species_name": "Bulrush Roots",
                 "icon": "🌾",
@@ -6684,8 +6684,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "name": "Cây Cọ Rừng & Chuối Rừng (Palm Tree)",
                 "category": "herbivore",
                 "type": "plant",
-                "price": 1000,
-                "price_display": "1.000 Xu",
+                "price": 200,
+                "price_display": "200 Xu",
                 "species": "Mountain Palm",
                 "species_name": "Mountain Palm",
                 "icon": "🌴",
@@ -6699,8 +6699,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "name": "Cây Thảo Dược Hồi Máu (Marigold)",
                 "category": "herbivore",
                 "type": "plant",
-                "price": 1000,
-                "price_display": "1.000 Xu",
+                "price": 200,
+                "price_display": "200 Xu",
                 "species": "Marigold Herbs",
                 "species_name": "Marigold Herbs",
                 "icon": "🌼",
@@ -6714,8 +6714,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "name": "Nấm Rừng Dinh Dưỡng (Forest Truffles)",
                 "category": "herbivore",
                 "type": "plant",
-                "price": 1000,
-                "price_display": "1.000 Xu",
+                "price": 200,
+                "price_display": "200 Xu",
                 "species": "Forest Mushroom",
                 "species_name": "Forest Mushroom",
                 "icon": "🍄",
@@ -6760,7 +6760,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 }, 400)
                 return
 
-            cost = 1000
+            cost = 200
             current_xu = self._get_player_xu_balance(steam_id)
             if current_xu < cost:
                 self.send_json_response({
@@ -6818,7 +6818,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                         "stamina": plant_info["stamina"]
                     })
 
-                # Trừ 1.000 Xu trực tiếp vào tài khoản người chơi
+                # Trừ 200 Xu trực tiếp vào tài khoản người chơi
                 self._adjust_player_xu(steam_id, -cost, f"Trồng cây ({plant_info['name']}): -{cost:,} Xu")
                 # Đặt mốc thời gian hồi chiêu 300 giây bền vững
                 self._set_carcass_cooldown(steam_id)
@@ -6863,7 +6863,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     res = res2
 
             if res and (res.get("ok") is True or res.get("success") is True or "commandId" in res):
-                # Trừ 1.000 Xu trực tiếp vào tài khoản người chơi khi thả xác thành công
+                # Trừ 200 Xu trực tiếp vào tài khoản người chơi khi thả xác thành công
                 self._adjust_player_xu(steam_id, -cost, f"Thả xác ({target_species}): -{cost:,} Xu")
                 # Đặt mốc thời gian hồi chiêu 300 giây bền vững
                 self._set_carcass_cooldown(steam_id)
@@ -8303,8 +8303,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         if remote_data and isinstance(remote_data, dict) and "offers" in remote_data:
             remote_offers = remote_data.get("offers", [])
             for item in remote_offers:
-                item["price"] = 1000
-                item["price_display"] = "1.000 Xu"
+                item["price"] = 200
+                item["price_display"] = "200 Xu"
             self.send_json_response({
                 "ok": True,
                 "offers": remote_offers,
@@ -8315,7 +8315,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             })
             return
 
-        # Đồng bộ 100% đầy đủ 6 gói xác mới nhất từ IslePilot của server 3MGAMING (Giá cố định 1.000 Xu)
+        # Đồng bộ 100% đầy đủ 6 gói xác mới nhất từ IslePilot của server 3MGAMING (Giá cố định 200 Xu)
         offers = [
             # 1. Danh mục Thả Xác cho Khủng Long Ăn Thịt (Carnivores)
             {
@@ -8323,8 +8323,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "name": "Xác Tenontosaurus Tươi",
                 "category": "carnivore",
                 "type": "carcass",
-                "price": 1000,
-                "price_display": "1.000 Xu",
+                "price": 200,
+                "price_display": "200 Xu",
                 "species": "Tenontosaurus",
                 "species_name": "Tenontosaurus",
                 "icon": "🍖",
@@ -8338,8 +8338,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "name": "Xác Triceratops Khổng Lồ",
                 "category": "carnivore",
                 "type": "carcass",
-                "price": 1000,
-                "price_display": "1.000 Xu",
+                "price": 200,
+                "price_display": "200 Xu",
                 "species": "Triceratops",
                 "species_name": "Triceratops",
                 "icon": "🍖",
@@ -8353,8 +8353,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "name": "Xác Stegosaurus Bổ Dưỡng",
                 "category": "carnivore",
                 "type": "carcass",
-                "price": 1000,
-                "price_display": "1.000 Xu",
+                "price": 200,
+                "price_display": "200 Xu",
                 "species": "Stegosaurus",
                 "species_name": "Stegosaurus",
                 "icon": "🍖",
@@ -8368,8 +8368,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "name": "Xác Carnotaurus Săn Mồi",
                 "category": "carnivore",
                 "type": "carcass",
-                "price": 1000,
-                "price_display": "1.000 Xu",
+                "price": 200,
+                "price_display": "200 Xu",
                 "species": "Carnotaurus",
                 "species_name": "Carnotaurus",
                 "icon": "🍖",
@@ -8383,8 +8383,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "name": "Xác Ceratosaurus Đậm Vị",
                 "category": "carnivore",
                 "type": "carcass",
-                "price": 1000,
-                "price_display": "1.000 Xu",
+                "price": 200,
+                "price_display": "200 Xu",
                 "species": "Ceratosaurus",
                 "species_name": "Ceratosaurus",
                 "icon": "🍖",
@@ -8398,8 +8398,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "name": "Xác Tyrannosaurus Chúa Tể",
                 "category": "carnivore",
                 "type": "carcass",
-                "price": 1000,
-                "price_display": "1.000 Xu",
+                "price": 200,
+                "price_display": "200 Xu",
                 "species": "Tyrannosaurus",
                 "species_name": "Tyrannosaurus",
                 "icon": "🍖",
@@ -8415,8 +8415,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "name": "Bụi Cây Sanctuary (Thánh Địa)",
                 "category": "herbivore",
                 "type": "plant",
-                "price": 1000,
-                "price_display": "1.000 Xu",
+                "price": 200,
+                "price_display": "200 Xu",
                 "species": "Sanctuary Bush",
                 "species_name": "Sanctuary Bush",
                 "icon": "🌿",
@@ -8430,8 +8430,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "name": "Bụi Dâu Rừng (Blueberry Bush)",
                 "category": "herbivore",
                 "type": "plant",
-                "price": 1000,
-                "price_display": "1.000 Xu",
+                "price": 200,
+                "price_display": "200 Xu",
                 "species": "Berry Bush",
                 "species_name": "Berry Bush",
                 "icon": "🫐",
@@ -8445,8 +8445,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "name": "Rễ Cây Cổ Thụ & Đầm Lầy (Bulrush)",
                 "category": "herbivore",
                 "type": "plant",
-                "price": 1000,
-                "price_display": "1.000 Xu",
+                "price": 200,
+                "price_display": "200 Xu",
                 "species": "Bulrush Roots",
                 "species_name": "Bulrush Roots",
                 "icon": "🌾",
@@ -8460,8 +8460,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "name": "Cây Cọ Rừng & Chuối Rừng (Palm Tree)",
                 "category": "herbivore",
                 "type": "plant",
-                "price": 1000,
-                "price_display": "1.000 Xu",
+                "price": 200,
+                "price_display": "200 Xu",
                 "species": "Mountain Palm",
                 "species_name": "Mountain Palm",
                 "icon": "🌴",
@@ -8475,8 +8475,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "name": "Cây Thảo Dược Hồi Máu (Marigold)",
                 "category": "herbivore",
                 "type": "plant",
-                "price": 1000,
-                "price_display": "1.000 Xu",
+                "price": 200,
+                "price_display": "200 Xu",
                 "species": "Marigold Herbs",
                 "species_name": "Marigold Herbs",
                 "icon": "🌼",
@@ -8490,8 +8490,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "name": "Nấm Rừng Dinh Dưỡng (Forest Truffles)",
                 "category": "herbivore",
                 "type": "plant",
-                "price": 1000,
-                "price_display": "1.000 Xu",
+                "price": 200,
+                "price_display": "200 Xu",
                 "species": "Forest Mushroom",
                 "species_name": "Forest Mushroom",
                 "icon": "🍄",
@@ -8536,7 +8536,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 }, 400)
                 return
 
-            cost = 1000
+            cost = 200
             current_xu = self._get_player_xu_balance(steam_id)
             if current_xu < cost:
                 self.send_json_response({
@@ -8594,7 +8594,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                         "stamina": plant_info["stamina"]
                     })
 
-                # Trừ 1.000 Xu trực tiếp vào tài khoản người chơi
+                # Trừ 200 Xu trực tiếp vào tài khoản người chơi
                 self._adjust_player_xu(steam_id, -cost, f"Trồng cây ({plant_info['name']}): -{cost:,} Xu")
                 # Đặt mốc thời gian hồi chiêu 300 giây bền vững
                 self._set_carcass_cooldown(steam_id)
@@ -8639,7 +8639,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     res = res2
 
             if res and (res.get("ok") is True or res.get("success") is True or "commandId" in res):
-                # Trừ 1.000 Xu trực tiếp vào tài khoản người chơi khi thả xác thành công
+                # Trừ 200 Xu trực tiếp vào tài khoản người chơi khi thả xác thành công
                 self._adjust_player_xu(steam_id, -cost, f"Thả xác ({target_species}): -{cost:,} Xu")
                 # Đặt mốc thời gian hồi chiêu 300 giây bền vững
                 self._set_carcass_cooldown(steam_id)
