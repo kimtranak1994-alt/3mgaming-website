@@ -2041,96 +2041,42 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                         })
                         time.sleep(0.3)
 
-                    if clean_muts:
-                        # 1. Gửi mảng mutations
-                        self.fetch_islepilot("/commands", method="POST", body_data={
-                            "action": "mutations",
-                            "steamId": sid,
-                            "mutations": clean_muts
-                        })
-                        self.fetch_islepilot("/commands", method="POST", body_data={
-                            "action": "mutations",
-                            "steamId": sid,
-                            "slots": clean_muts
-                        })
-                        self.fetch_islepilot("/commands", method="POST", body_data={
-                            "action": "mutations",
-                            "steamId": sid,
-                            "category": "active",
-                            "mutations": clean_muts
-                        })
+                    if clean_muts or mutation_slots:
+                        active_arr = (clean_muts + ["None"] * (4 - len(clean_muts)))[:4]
+                        parent_arr = ["None", "None", "None", "None"]
+                        elderA_arr = active_arr if is_prime else ["None", "None", "None", "None"]
+                        elderB_arr = ["None", "None", "None", "None"]
 
-                        # 2. Gửi từng slot gen
-                        for slot_i, m_name in enumerate(clean_muts[:4]):
-                            slot_num = slot_i + 1
-                            self.fetch_islepilot("/commands", method="POST", body_data={
-                                "action": "mutations",
-                                "steamId": sid,
-                                "slot": slot_num,
-                                "mutation": m_name
-                            })
-                            self.fetch_islepilot("/commands", method="POST", body_data={
-                                "action": "mutations",
-                                "steamId": sid,
-                                "category": "active",
-                                "slot": slot_num,
-                                "mutation": m_name
-                            })
-                            if is_prime:
-                                self.fetch_islepilot("/commands", method="POST", body_data={
-                                    "action": "mutations",
-                                    "steamId": sid,
-                                    "category": "elderA",
-                                    "slot": slot_num,
-                                    "mutation": m_name
-                                })
-
-                        # 3. Gửi mutationSlots hoàn chỉnh
                         if mutation_slots and isinstance(mutation_slots, dict):
-                            full_mutation_slots = {
-                                "active": list(mutation_slots.get("active") or ["None"] * 4)[:4],
-                                "parent": list(mutation_slots.get("parent") or ["None"] * 4)[:4],
-                                "elderA": list(mutation_slots.get("elderA") or ["None"] * 4)[:4],
-                                "elderB": list(mutation_slots.get("elderB") or ["None"] * 4)[:4]
-                            }
-                        else:
-                            full_mutation_slots = {
-                                "active": clean_muts + ["None"] * (4 - len(clean_muts)),
-                                "parent": ["None", "None", "None", "None"],
-                                "elderA": (clean_muts + ["None"] * (4 - len(clean_muts))) if is_prime else ["None", "None", "None", "None"],
-                                "elderB": ["None", "None", "None", "None"]
-                            }
-                        self.fetch_islepilot("/commands", method="POST", body_data={
+                            if mutation_slots.get("active"):
+                                active_arr = [(str(m).strip() if m else "None") for m in list(mutation_slots["active"])[:4]]
+                                while len(active_arr) < 4: active_arr.append("None")
+                            if mutation_slots.get("parent"):
+                                parent_arr = [(str(m).strip() if m else "None") for m in list(mutation_slots["parent"])[:4]]
+                                while len(parent_arr) < 4: parent_arr.append("None")
+                            if mutation_slots.get("elderA"):
+                                elderA_arr = [(str(m).strip() if m else "None") for m in list(mutation_slots["elderA"])[:4]]
+                                while len(elderA_arr) < 4: elderA_arr.append("None")
+                            if mutation_slots.get("elderB"):
+                                elderB_arr = [(str(m).strip() if m else "None") for m in list(mutation_slots["elderB"])[:4]]
+                                while len(elderB_arr) < 4: elderB_arr.append("None")
+
+                        mut_cmd_body = {
                             "action": "mutations",
                             "steamId": sid,
-                            "mutationSlots": full_mutation_slots
-                        })
+                            "active": active_arr,
+                            "parent": parent_arr,
+                            "elderA": elderA_arr,
+                            "elderB": elderB_arr
+                        }
+                        self.fetch_islepilot("/commands", method="POST", body_data=mut_cmd_body)
+                        print(f"[apply_dino_in_game] Gửi lệnh mutations (preserve) cho {sid}: {mut_cmd_body}")
 
-
-                        # 5. Reinforce worker: CHỈ bổ trợ mutations, TUYỆT ĐỐI không gọi setstats hay setnutrition!
                         def reinforce_mut_only():
-                            time.sleep(5.0)
-                            self.fetch_islepilot("/commands", method="POST", body_data={
-                                "action": "mutations",
-                                "steamId": sid,
-                                "mutations": clean_muts
-                            })
-                            for slot_i, m_name in enumerate(clean_muts[:4]):
-                                self.fetch_islepilot("/commands", method="POST", body_data={
-                                    "action": "mutations",
-                                    "steamId": sid,
-                                    "category": "active",
-                                    "slot": slot_i + 1,
-                                    "mutation": m_name
-                                })
-                                if is_prime:
-                                    self.fetch_islepilot("/commands", method="POST", body_data={
-                                        "action": "mutations",
-                                        "steamId": sid,
-                                        "category": "elderA",
-                                        "slot": slot_i + 1,
-                                        "mutation": m_name
-                                    })
+                            time.sleep(3.0)
+                            self.fetch_islepilot("/commands", method="POST", body_data=mut_cmd_body)
+                            time.sleep(4.0)
+                            self.fetch_islepilot("/commands", method="POST", body_data=mut_cmd_body)
                         threading.Thread(target=reinforce_mut_only, daemon=True).start()
 
                     print(f"[apply_dino_in_game] Rút từ Gara thành công: Giữ nguyên 100% tọa độ và chỉ số máu, nước, đói, chất A B Y của {sid}.")
@@ -2223,67 +2169,40 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 })
                 time.sleep(0.4)
 
-                if clean_muts:
-                    # 1. Gửi mảng mutations trực tiếp
-                    self.fetch_islepilot("/commands", method="POST", body_data={
+                if clean_muts or mutation_slots:
+                    active_arr = (clean_muts + ["None"] * (4 - len(clean_muts)))[:4]
+                    parent_arr = ["None", "None", "None", "None"]
+                    elderA_arr = active_arr if is_prime else ["None", "None", "None", "None"]
+                    elderB_arr = ["None", "None", "None", "None"]
+
+                    if mutation_slots and isinstance(mutation_slots, dict):
+                        if mutation_slots.get("active"):
+                            active_arr = [(str(m).strip() if m else "None") for m in list(mutation_slots["active"])[:4]]
+                            while len(active_arr) < 4: active_arr.append("None")
+                        if mutation_slots.get("parent"):
+                            parent_arr = [(str(m).strip() if m else "None") for m in list(mutation_slots["parent"])[:4]]
+                            while len(parent_arr) < 4: parent_arr.append("None")
+                        if mutation_slots.get("elderA"):
+                            elderA_arr = [(str(m).strip() if m else "None") for m in list(mutation_slots["elderA"])[:4]]
+                            while len(elderA_arr) < 4: elderA_arr.append("None")
+                        if mutation_slots.get("elderB"):
+                            elderB_arr = [(str(m).strip() if m else "None") for m in list(mutation_slots["elderB"])[:4]]
+                            while len(elderB_arr) < 4: elderB_arr.append("None")
+
+                    mut_cmd_body = {
                         "action": "mutations",
                         "steamId": sid,
-                        "mutations": clean_muts
-                    })
-                    self.fetch_islepilot("/commands", method="POST", body_data={
-                        "action": "mutations",
-                        "steamId": sid,
-                        "slots": clean_muts
-                    })
-                    self.fetch_islepilot("/commands", method="POST", body_data={
-                        "action": "mutations",
-                        "steamId": sid,
-                        "category": "active",
-                        "mutations": clean_muts
-                    })
-                    
-                    # 2. Gửi từng slot gen (active và elderA nếu prime)
-                    for slot_i, m_name in enumerate(clean_muts[:4]):
-                        slot_num = slot_i + 1
-                        self.fetch_islepilot("/commands", method="POST", body_data={
-                            "action": "mutations",
-                            "steamId": sid,
-                            "slot": slot_num,
-                            "mutation": m_name
-                        })
-                        self.fetch_islepilot("/commands", method="POST", body_data={
-                            "action": "mutations",
-                            "steamId": sid,
-                            "category": "active",
-                            "slot": slot_num,
-                            "mutation": m_name
-                        })
-                        if is_prime:
-                            self.fetch_islepilot("/commands", method="POST", body_data={
-                                "action": "mutations",
-                                "steamId": sid,
-                                "category": "elderA",
-                                "slot": slot_num,
-                                "mutation": m_name
-                            })
-                    
-                    # 3. Gửi mutationSlots hoàn chỉnh
-                    full_mutation_slots = {
-                        "active": clean_muts + ["None"] * (4 - len(clean_muts)),
-                        "parent": ["None", "None", "None", "None"],
-                        "elderA": (clean_muts + ["None"] * (4 - len(clean_muts))) if is_prime else ["None", "None", "None", "None"],
-                        "elderB": ["None", "None", "None", "None"]
+                        "active": active_arr,
+                        "parent": parent_arr,
+                        "elderA": elderA_arr,
+                        "elderB": elderB_arr
                     }
-                    self.fetch_islepilot("/commands", method="POST", body_data={
-                        "action": "mutations",
-                        "steamId": sid,
-                        "mutationSlots": full_mutation_slots
-                    })
+                    self.fetch_islepilot("/commands", method="POST", body_data=mut_cmd_body)
+                    print(f"[apply_dino_in_game] Gửi lệnh mutations (swap) cho {sid}: {mut_cmd_body}")
 
-
-                    # 5. Luồng phụ bổ trợ (reinforce) sau 5 giây để đảm bảo gen ăn chắc chắn vào nhân vật game
+                    # Luồng phụ bổ trợ (reinforce) sau 4 giây và 8 giây để đảm bảo gen ăn chắc chắn vào nhân vật game
                     def reinforce_worker():
-                        time.sleep(5.0)
+                        time.sleep(4.0)
                         self.fetch_islepilot("/commands", method="POST", body_data={
                             "action": "setstats",
                             "steamId": sid,
@@ -2295,27 +2214,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                             "stamina": 100,
                             "bleed": 0
                         })
-                        self.fetch_islepilot("/commands", method="POST", body_data={
-                            "action": "mutations",
-                            "steamId": sid,
-                            "mutations": clean_muts
-                        })
-                        for slot_i, m_name in enumerate(clean_muts[:4]):
-                            self.fetch_islepilot("/commands", method="POST", body_data={
-                                "action": "mutations",
-                                "steamId": sid,
-                                "category": "active",
-                                "slot": slot_i + 1,
-                                "mutation": m_name
-                            })
-                            if is_prime:
-                                self.fetch_islepilot("/commands", method="POST", body_data={
-                                    "action": "mutations",
-                                    "steamId": sid,
-                                    "category": "elderA",
-                                    "slot": slot_i + 1,
-                                    "mutation": m_name
-                                })
+                        self.fetch_islepilot("/commands", method="POST", body_data=mut_cmd_body)
+                        time.sleep(4.0)
+                        self.fetch_islepilot("/commands", method="POST", body_data=mut_cmd_body)
                     threading.Thread(target=reinforce_worker, daemon=True).start()
                     
                 print(f"[apply_dino_in_game] Hoàn tất áp dụng cho {sid}: {spec}, is_prime={is_prime}, HP={target_hp}, muts={clean_muts}")
@@ -5035,6 +4936,12 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 growth_val = float(found_gift.get("growth", 1.0))
                 is_prime = bool(found_gift.get("isPrimeElder"))
                 gift_muts = [m for m in found_gift.get("mutations", []) if m and m != "None"]
+                gift_slots = found_gift.get("mutationSlots") or {
+                    "active": (gift_muts + ["None"] * (4 - len(gift_muts)))[:4],
+                    "parent": ["None", "None", "None", "None"],
+                    "elderA": ["None", "None", "None", "None"],
+                    "elderB": ["None", "None", "None", "None"]
+                }
 
                 self.apply_dino_in_game_worker(
                     steam_id=steam_id,
@@ -5043,7 +4950,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     growth_val=growth_val,
                     is_prime=is_prime,
                     mutations=gift_muts,
-                    needs_swap=True
+                    needs_swap=True,
+                    mutation_slots=gift_slots
                 )
                 self.send_json_response({"success": True, "message": "Thành công"})
                 return
@@ -9814,6 +9722,10 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             sid_str = str(steam_id).strip() if steam_id else ""
             is_claimed = sid_str in claimed_db if sid_str else False
             claim_info = claimed_db.get(sid_str, {}) if is_claimed else None
+            is_admin, _ = self.is_admin_request()
+            admin_steam_ids = [str(s) for s in config.get("ADMIN_STEAM_IDS", [])]
+            if is_claimed and (is_admin or sid_str in admin_steam_ids):
+                is_claimed = False
             
             playtime_hours = 0.0
             is_newbie = True
@@ -9881,7 +9793,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             
             sid_str = str(steam_id).strip()
             claimed_db = load_claimed_starter()
-            if sid_str in claimed_db:
+            is_admin, _ = self.is_admin_request()
+            admin_steam_ids = [str(s) for s in config.get("ADMIN_STEAM_IDS", [])]
+            if sid_str in claimed_db and not (is_admin or sid_str in admin_steam_ids):
                 self.send_json_response({"ok": False, "error": "Bạn đã nhận gói Quà Tân Thủ này rồi!"}, 400)
                 return
             
