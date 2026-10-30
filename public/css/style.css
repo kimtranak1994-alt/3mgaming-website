@@ -3939,6 +3939,42 @@ body[data-current-tab="admin"] .nav-links {
   transform: translateX(3px);
   box-shadow: 0 0 24px rgba(0, 242, 254, 0.5), inset 0 0 16px rgba(0, 242, 254, 0.2);
 }
+/* Row Rank 2 Active */
+.cyber-supporter-row.rank-2-active {
+  background: linear-gradient(90deg, rgba(56, 189, 248, 0.14) 0%, rgba(14, 18, 30, 0.9) 45%, rgba(0, 242, 254, 0.1) 100%);
+  border: 1.5px solid #38bdf8;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.35), inset 0 0 10px rgba(56, 189, 248, 0.12);
+}
+
+.cyber-supporter-row.rank-2-active:hover {
+  transform: translateX(3px);
+  box-shadow: 0 0 22px rgba(56, 189, 248, 0.5), inset 0 0 14px rgba(56, 189, 248, 0.2);
+}
+
+.rank-2-avatar {
+  border: 2px solid #38bdf8;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.65);
+}
+
+.rank-2-name {
+  color: #ffffff;
+  text-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
+  letter-spacing: 0.5px;
+}
+
+.rank-2-role {
+  color: #93c5fd;
+  font-weight: 600;
+}
+
+.rank-2-badge {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(0, 242, 254, 0.25));
+  border: 1px solid #38bdf8;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+  letter-spacing: 1px;
+}
+
 
 /* Row Rank 2 & 3 Empty */
 .cyber-supporter-row.rank-empty {
