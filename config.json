@@ -42,7 +42,7 @@
     "description": "Quà chào mừng thành viên mới gia nhập server 3MGAMING. Nhận ngay 1,000 Xu khởi nghiệp và 1 Khủng Long chiến đấu 85% vào Gara!",
     "coins": 1000,
     "dino_growth": 0.85,
-    "max_playtime_hours": 100,
+    "max_playtime_hours": 2,
     "dino_choices": [
       {
         "species": "Ceratosaurus",

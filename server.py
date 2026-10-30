@@ -9819,19 +9819,19 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             is_newbie = True
             player_name = ""
             
+            starter_config = config.get("STARTER_GIFT", {})
+            bundle_coins = starter_config.get("coins", 1000)
+            bundle_growth = starter_config.get("dino_growth", 0.85)
+            max_playtime = starter_config.get("max_playtime_hours", 2)
+            
             if sid_str:
                 player_info = self.fetch_islepilot(f"/players/{sid_str}")
                 if isinstance(player_info, dict):
                     player_name = player_info.get("name", "")
                     total_play_sec = player_info.get("totalPlaySec", 0) or 0
                     playtime_hours = round(total_play_sec / 3600.0, 1)
-                    if total_play_sec >= 100 * 3600:
+                    if total_play_sec >= max_playtime * 3600:
                         is_newbie = False
-            
-            starter_config = config.get("STARTER_GIFT", {})
-            bundle_coins = starter_config.get("coins", 1000)
-            bundle_growth = starter_config.get("dino_growth", 0.85)
-            max_playtime = starter_config.get("max_playtime_hours", 100)
             
             choices = starter_config.get("dino_choices", [
                 {"species": "Ceratosaurus", "name": "Ceratosaurus (Đầm Thịt)", "icon": "Ceratosaurus"},
@@ -9885,7 +9885,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             starter_config = config.get("STARTER_GIFT", {})
             bundle_coins = starter_config.get("coins", 1000)
             bundle_growth = starter_config.get("dino_growth", 0.85)
-            max_playtime = starter_config.get("max_playtime_hours", 100)
+            max_playtime = starter_config.get("max_playtime_hours", 2)
             
             player_info = self.fetch_islepilot(f"/players/{sid_str}")
             player_name = sid_str

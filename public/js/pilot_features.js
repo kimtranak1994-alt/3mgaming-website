@@ -5634,7 +5634,7 @@ const StarterGift = {
                 <i class="fas fa-check" style="color: #10b981;"></i> Nhận 1 lần duy nhất
               </span>
               <span style="display: inline-flex; align-items: center; gap: 5px;">
-                <i class="fas fa-clock" style="color: #60a5fa;"></i> Dành cho người chơi &lt; ${b.max_playtime_hours || 100}h chơi
+                <i class="fas fa-clock" style="color: #60a5fa;"></i> Dành cho người chơi &lt; ${b.max_playtime_hours || 2}h chơi
               </span>
               <span style="display: inline-flex; align-items: center; gap: 5px;">
                 <i class="fas fa-bolt" style="color: #fbbf24;"></i> Nhận tức thì
@@ -5688,7 +5688,7 @@ const StarterGift = {
                 <div style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 14px; text-align: center; color: #f87171;">
                   <div style="font-size: 1.3rem; margin-bottom: 4px;"><i class="fas fa-lock"></i></div>
                   <div style="font-weight: 800; font-size: 0.95rem;">Gói Quà Chỉ Dành Cho Tân Thủ</div>
-                  <div style="font-size: 0.8rem; color: #fca5a5; margin-top: 4px;">Tài khoản của bạn đã đạt ${playtimeHrs} giờ chơi (yêu cầu dưới ${b.max_playtime_hours || 100}h).</div>
+                  <div style="font-size: 0.8rem; color: #fca5a5; margin-top: 4px;">Tài khoản của bạn đã đạt ${playtimeHrs} giờ chơi (yêu cầu dưới ${b.max_playtime_hours || 2}h).</div>
                 </div>
               ` : `
                 <button type="button" 
