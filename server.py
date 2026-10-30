@@ -24,6 +24,7 @@ import datetime
 
 import random
 import threading
+import math
 import concurrent.futures
 
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
@@ -72,6 +73,17 @@ SPECIES_BASE_STATS = {
     "therizinosaurus": {"hp": 6000, "prime_hp": 8500, "hunger": 4000, "thirst": 1000, "label": "6.0 Tấn (6,000 kg)", "prime_label": "8.5 Tấn (8,500 kg)"}
 }
 
+def safe_float(val, default=1.0):
+    if val is None:
+        return float(default)
+    try:
+        f = float(val)
+        if math.isnan(f) or math.isinf(f):
+            return float(default)
+        return f
+    except (ValueError, TypeError):
+        return float(default)
+
 def calc_dino_stats(species_name, growth, health_val, hunger_val, thirst_val, is_prime_elder=False):
 
     s = (species_name or "").lower()
@@ -88,7 +100,7 @@ def calc_dino_stats(species_name, growth, health_val, hunger_val, thirst_val, is
 
             
 
-    g = max(0.01, min(1.0, float(growth or 1.0)))
+    g = max(0.01, min(1.0, safe_float(growth, 1.0)))
 
     target_max_hp = base.get("prime_hp", base["hp"]) if is_prime_elder else base["hp"]
 
@@ -100,7 +112,7 @@ def calc_dino_stats(species_name, growth, health_val, hunger_val, thirst_val, is
 
     
 
-    h_ratio = float(health_val if health_val is not None else 1.0)
+    h_ratio = safe_float(health_val, 1.0)
 
     if h_ratio > 1.0: h_ratio /= 100.0
 
@@ -110,7 +122,7 @@ def calc_dino_stats(species_name, growth, health_val, hunger_val, thirst_val, is
 
     
 
-    hu_ratio = float(hunger_val if hunger_val is not None else 1.0)
+    hu_ratio = safe_float(hunger_val, 1.0)
 
     if hu_ratio > 1.0: hu_ratio /= 100.0
 
@@ -120,7 +132,7 @@ def calc_dino_stats(species_name, growth, health_val, hunger_val, thirst_val, is
 
     
 
-    th_ratio = float(thirst_val if thirst_val is not None else 1.0)
+    th_ratio = safe_float(thirst_val, 1.0)
 
     if th_ratio > 1.0: th_ratio /= 100.0
 
@@ -1636,7 +1648,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     if found_gift:
                         species = found_gift.get("species", "Tyrannosaurus")
                         gender = found_gift.get("gender", "Female")
-                        growth_val = float(found_gift.get("growth", 1.0))
+                        growth_val = safe_float(found_gift.get("growth"), 1.0)
                         is_prime = bool(found_gift.get("isPrimeElder"))
                         gift_muts = [m for m in found_gift.get("mutations", []) if m and m != "None"]
                         
@@ -1974,7 +1986,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 sid = str(steam_id).strip()
                 spec = species or "Tyrannosaurus"
                 gen = gender or "Female"
-                gr = float(growth_val if growth_val is not None else 1.0)
+                gr = safe_float(growth_val, 1.0)
                 if gr > 1.0:
                     gr = gr / 100.0
                 
@@ -4646,7 +4658,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     save_garage_dino_snapshot(f"{active_steam_id}_{d.get('id')}", d)
                     save_garage_dino_snapshot(str(d.get("id")), d)
 
-                    growth = float(d.get("growth", 1.0) or 1.0)
+                    growth = safe_float(d.get("growth"), 1.0)
 
                     growth_val = round(growth * 100, 1)
 
@@ -4761,7 +4773,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     for gd in gifts.get(str(active_steam_id), []):
                         if str(gd.get("id")) in deleted_dinos:
                             continue
-                        g_growth = float(gd.get("growth", 1.0) or 1.0)
+                        g_growth = safe_float(gd.get("growth"), 1.0)
                         g_pct = round(g_growth * 100, 1)
                         g_stage = "Adult" if g_pct >= 100 else ("Sub-Adult" if g_pct >= 60 else ("Juvenile" if g_pct >= 20 else "Baby"))
                         is_p = bool(gd.get("isPrimeElder", False) or gd.get("is_prime_elder", False))
@@ -4835,7 +4847,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 for gd in gifts.get(str(active_steam_id), []):
                     if str(gd.get("id")) in deleted_dinos:
                         continue
-                    g_growth = float(gd.get("growth", 1.0) or 1.0)
+                    g_growth = safe_float(gd.get("growth"), 1.0)
                     g_pct = round(g_growth * 100, 1)
                     g_stage = "Adult" if g_pct >= 100 else ("Sub-Adult" if g_pct >= 60 else ("Juvenile" if g_pct >= 20 else "Baby"))
                     is_p = bool(gd.get("isPrimeElder", False) or gd.get("is_prime_elder", False))
@@ -4933,7 +4945,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             if found_gift:
                 species = found_gift.get("species", "Tyrannosaurus")
                 gender = found_gift.get("gender", "Female")
-                growth_val = float(found_gift.get("growth", 1.0))
+                growth_val = safe_float(found_gift.get("growth"), 1.0)
                 is_prime = bool(found_gift.get("isPrimeElder"))
                 gift_muts = [m for m in found_gift.get("mutations", []) if m and m != "None"]
                 gift_slots = found_gift.get("mutationSlots") or {
@@ -4977,16 +4989,16 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
             # Tổng hợp đầy đủ các thuộc tính gốc
             dino_spec = (target_gd.get("species") if target_gd else None) or snap_data.get("species") or species
-            raw_growth = (target_gd.get("growth") if target_gd else None) if target_gd and target_gd.get("growth") is not None else snap_data.get("growth", 1.0)
-            dino_growth = float(raw_growth or 1.0)
+            raw_growth = target_gd.get("growth") if target_gd and target_gd.get("growth") is not None else snap_data.get("growth")
+            dino_growth = safe_float(raw_growth, 1.0)
             if dino_growth > 1.0:
                 dino_growth /= 100.0
             dino_growth = max(0.01, min(1.0, dino_growth))
 
-            dino_health = float(target_gd.get("health") if target_gd and target_gd.get("health") is not None else snap_data.get("health", 1.0))
-            dino_hunger = float(target_gd.get("hunger") if target_gd and target_gd.get("hunger") is not None else snap_data.get("hunger", 1.0))
-            dino_thirst = float(target_gd.get("thirst") if target_gd and target_gd.get("thirst") is not None else snap_data.get("thirst", 1.0))
-            dino_stamina = float(target_gd.get("stamina") if target_gd and target_gd.get("stamina") is not None else snap_data.get("stamina", 1.0))
+            dino_health = safe_float(target_gd.get("health") if target_gd and target_gd.get("health") is not None else snap_data.get("health"), 1.0)
+            dino_hunger = safe_float(target_gd.get("hunger") if target_gd and target_gd.get("hunger") is not None else snap_data.get("hunger"), 1.0)
+            dino_thirst = safe_float(target_gd.get("thirst") if target_gd and target_gd.get("thirst") is not None else snap_data.get("thirst"), 1.0)
+            dino_stamina = safe_float(target_gd.get("stamina") if target_gd and target_gd.get("stamina") is not None else snap_data.get("stamina"), 1.0)
             is_prime = bool((target_gd.get("isPrimeElder") if target_gd else None) or snap_data.get("isPrimeElder", False))
 
             saved_muts_map = load_garage_saved_mutations()
@@ -5073,7 +5085,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
                     # 4. ĐỒNG BỘ THỂ LỰC (STAMINA)
                     try:
-                        st_val = float(dino_stamina if dino_stamina is not None else 1.0)
+                        st_val = safe_float(dino_stamina, 1.0)
                         if st_val <= 1.0:
                             st_val *= 1000.0
                         self.fetch_islepilot("/commands", method="POST", body_data={
@@ -5088,9 +5100,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
                     # 5. ĐỒNG BỘ DINH DƯỠNG A, B, Y (CARB, PROTEIN, LIPID)
                     nutrients = snap_data.get("nutrients") or {}
-                    carb_val = float(nutrients.get("carb", nutrients.get("a", 100.0)))
-                    prot_val = float(nutrients.get("protein", nutrients.get("b", 100.0)))
-                    lipid_val = float(nutrients.get("lipid", nutrients.get("y", 100.0)))
+                    carb_val = safe_float(nutrients.get("carb") if nutrients.get("carb") is not None else nutrients.get("a"), 100.0)
+                    prot_val = safe_float(nutrients.get("protein") if nutrients.get("protein") is not None else nutrients.get("b"), 100.0)
+                    lipid_val = safe_float(nutrients.get("lipid") if nutrients.get("lipid") is not None else nutrients.get("y"), 100.0)
                     try:
                         self.fetch_islepilot("/commands", method="POST", body_data={
                             "action": "setnutrition",
@@ -5291,20 +5303,20 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
                 # Lưu snapshot đầy đủ dữ liệu khủng long (máu, nước, no, size, a-b-y, mutations) trước khi cất
                 if player_info and isinstance(player_info, dict):
-                    growth_val = float(player_info.get("growth") or 1.0)
-                    h_val = float(player_info.get("health", 100.0))
-                    max_h = float(player_info.get("maxHealth", 100.0))
+                    growth_val = safe_float(player_info.get("growth"), 1.0)
+                    h_val = safe_float(player_info.get("health"), 100.0)
+                    max_h = safe_float(player_info.get("maxHealth"), 100.0)
                     h_ratio = h_val / max_h if max_h > 0 else 1.0
 
-                    hu_val = float(player_info.get("hunger", 100.0))
-                    max_hu = float(player_info.get("maxHunger", 100.0))
+                    hu_val = safe_float(player_info.get("hunger"), 100.0)
+                    max_hu = safe_float(player_info.get("maxHunger"), 100.0)
                     hu_ratio = hu_val / max_hu if max_hu > 0 else 1.0
 
-                    t_val = float(player_info.get("thirst", 1000.0))
-                    max_t = float(player_info.get("maxThirst", 1000.0))
+                    t_val = safe_float(player_info.get("thirst"), 1000.0)
+                    max_t = safe_float(player_info.get("maxThirst"), 1000.0)
                     t_ratio = t_val / max_t if max_t > 0 else 1.0
 
-                    st_val = float(player_info.get("stamina", 100.0))
+                    st_val = safe_float(player_info.get("stamina"), 100.0)
 
                     p_muts = player_info.get("mutationSlots")
                     if p_muts and isinstance(p_muts, dict):
@@ -5323,9 +5335,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                         "mutationSlots": p_muts,
                         "isPrimeElder": bool(player_info.get("isPrimeElder", False)),
                         "nutrients": {
-                            "carb": float(player_info.get("carb", 100.0)),
-                            "protein": float(player_info.get("protein", 100.0)),
-                            "lipid": float(player_info.get("lipid", 100.0))
+                            "carb": safe_float(player_info.get("carb"), 100.0),
+                            "protein": safe_float(player_info.get("protein"), 100.0),
+                            "lipid": safe_float(player_info.get("lipid"), 100.0)
                         }
                     }
                     save_garage_dino_snapshot(f"{steam_id}_last_parked", dino_snap)
@@ -5363,11 +5375,11 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                                     "id": d_id,
                                     "species": latest_dino.get("species") or snap.get("species"),
                                     "gender": latest_dino.get("gender") or snap.get("gender"),
-                                    "growth": float(latest_dino.get("growth") or snap.get("growth") or 1.0),
-                                    "health": float(latest_dino.get("health") if latest_dino.get("health") is not None else snap.get("health", 1.0)),
-                                    "hunger": float(latest_dino.get("hunger") if latest_dino.get("hunger") is not None else snap.get("hunger", 1.0)),
-                                    "thirst": float(latest_dino.get("thirst") if latest_dino.get("thirst") is not None else snap.get("thirst", 1.0)),
-                                    "stamina": float(latest_dino.get("stamina") if latest_dino.get("stamina") is not None else snap.get("stamina", 1.0)),
+                                    "growth": safe_float(latest_dino.get("growth") or snap.get("growth"), 1.0),
+                                    "health": safe_float(latest_dino.get("health") if latest_dino.get("health") is not None else snap.get("health"), 1.0),
+                                    "hunger": safe_float(latest_dino.get("hunger") if latest_dino.get("hunger") is not None else snap.get("hunger"), 1.0),
+                                    "thirst": safe_float(latest_dino.get("thirst") if latest_dino.get("thirst") is not None else snap.get("thirst"), 1.0),
+                                    "stamina": safe_float(latest_dino.get("stamina") if latest_dino.get("stamina") is not None else snap.get("stamina"), 1.0),
                                     "mutationSlots": p_muts,
                                     "isPrimeElder": bool(latest_dino.get("isPrimeElder") if latest_dino.get("isPrimeElder") is not None else snap.get("isPrimeElder", False)),
                                     "nutrients": snap.get("nutrients") or {"carb": 100.0, "protein": 100.0, "lipid": 100.0}
