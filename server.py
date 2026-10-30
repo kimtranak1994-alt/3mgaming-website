@@ -4160,7 +4160,11 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             top_hunter = leaderboard[0] if (leaderboard and leaderboard[0].get("kills", 0) > 0) else None
             reward_xu = int(db.get("reward_xu", 1000))
 
-            if top_hunter:
+            reward_history = db.setdefault("reward_history", [])
+            already_settled_dates = [h.get("season_date") for h in reward_history if h.get("season_date")]
+
+            # Chỉ trao thưởng và lưu lịch sử nếu mùa cũ này chưa từng được chốt trao thưởng
+            if top_hunter and season_date not in already_settled_dates and not db.get("is_settled"):
                 winner_sid = str(top_hunter.get("steam_id")).strip()
                 winner_name = top_hunter.get("name", "Chiến Binh")
                 kills = top_hunter.get("kills", 0)
@@ -4196,7 +4200,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     "total_ai_kills": db.get("total_ai_kills", kills),
                     "auto_settled": True
                 }
-                db.setdefault("reward_history", []).insert(0, history_entry)
+                reward_history.insert(0, history_entry)
                 db["last_winner"] = history_entry
             else:
                 try:

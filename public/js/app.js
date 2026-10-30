@@ -17,6 +17,12 @@ const App = {
     setInterval(() => {
       this.refreshLiveStatus();
       this.refreshKillfeed();
+      if (window.BossHunt && typeof window.BossHunt.fetchData === 'function') {
+        const curTab = document.body.getAttribute('data-current-tab');
+        if (curTab !== 'boss' && curTab !== 'ai-hunt' && window.location.hash !== '#boss') {
+          window.BossHunt.fetchData();
+        }
+      }
     }, 30000);
   },
 

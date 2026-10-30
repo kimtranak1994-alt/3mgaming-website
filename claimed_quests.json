@@ -1,3 +1,40 @@
 {
-  "76561199483156684": []
+  "76561199483156684": {
+    "test_quest_123": {
+      "quest_id": "test",
+      "period_key": "quest",
+      "claimed_at": "2026-10-29T21:40:33.200887+07:00"
+    },
+    "test_prog_123": {
+      "quest_id": "test",
+      "period_key": "prog",
+      "claimed_at": "2026-10-29T21:40:33.200887+07:00"
+    },
+    "cmvlbs2om0f8iqf017owkziv5_2026-10-29": {
+      "quest_id": "cmvlbs2om0f8iqf017owkziv5",
+      "period_key": "2026-10-29",
+      "claimed_at": "2026-10-29T21:40:33.200887+07:00"
+    },
+    "cmvt3ccg21c786951cc768295_2026-10-29": {
+      "quest_id": "cmvt3ccg21c786951cc768295",
+      "period_key": "2026-10-29",
+      "claimed_at": "2026-10-29T21:40:33.200887+07:00"
+    },
+    "cmvlbma250fqvmp01m2oww6pq_2026-10-29": {
+      "quest_id": "cmvlbma250fqvmp01m2oww6pq",
+      "quest_name": "đăng nhập hàng ngày",
+      "period_key": "2026-10-29",
+      "progress_id": "cmvt3ccg2e9d70830a9cb0886",
+      "amount": 50,
+      "claimed_at": "2026-10-29T21:43:06.590358+07:00"
+    },
+    "cmvt3ccg2e9d70830a9cb0886": {
+      "quest_id": "cmvlbma250fqvmp01m2oww6pq",
+      "quest_name": "đăng nhập hàng ngày",
+      "period_key": "2026-10-29",
+      "progress_id": "cmvt3ccg2e9d70830a9cb0886",
+      "amount": 50,
+      "claimed_at": "2026-10-29T21:43:06.590358+07:00"
+    }
+  }
 }

@@ -52,12 +52,16 @@ const BossHunt = {
     const container = document.getElementById('view-boss');
     if (!container) return;
 
-    container.innerHTML = `
-      <div style="text-align: center; padding: 60px 20px;">
-        <div class="spinner" style="margin: 0 auto 16px;"></div>
-        <p style="color: #94a3b8; font-size: 1.05rem;">Đang kết nối sự kiện Săn AI từ máy chủ...</p>
-      </div>
-    `;
+    if (!this.data) {
+      container.innerHTML = `
+        <div style="text-align: center; padding: 60px 20px;">
+          <div class="spinner" style="margin: 0 auto 16px;"></div>
+          <p style="color: #94a3b8; font-size: 1.05rem;">Đang kết nối sự kiện Săn AI từ máy chủ...</p>
+        </div>
+      `;
+    } else {
+      this.renderUI();
+    }
 
     await this.fetchData();
     this.startAutoRefresh();
@@ -83,7 +87,8 @@ const BossHunt = {
     if (this.pollTimer) clearInterval(this.pollTimer);
     this.pollTimer = setInterval(() => {
       const curTab = document.body.getAttribute('data-current-tab');
-      if (curTab === 'boss' || curTab === 'ai-hunt') {
+      const isBossTab = curTab === 'boss' || curTab === 'ai-hunt' || window.location.hash === '#boss';
+      if (isBossTab) {
         this.fetchData();
       }
     }, 3500);
@@ -91,7 +96,8 @@ const BossHunt = {
     if (this.countdownTimer) clearInterval(this.countdownTimer);
     this.countdownTimer = setInterval(() => {
       const curTab = document.body.getAttribute('data-current-tab');
-      if (curTab === 'boss' || curTab === 'ai-hunt') {
+      const isBossTab = curTab === 'boss' || curTab === 'ai-hunt' || window.location.hash === '#boss';
+      if (isBossTab) {
         this.updateCountdown();
       }
     }, 1000);
@@ -496,6 +502,8 @@ const BossHunt = {
         </div>
       </div>
     `;
+
+    this.updateCountdown();
   },
 
   async settleSeason() {
