@@ -5576,7 +5576,7 @@ const StarterGift = {
     const isEligible = b.eligible !== false;
     const playtimeHrs = b.playtime_hours || 0;
     const coinsReward = b.coins || 3000;
-    const maxPlaytime = b.max_playtime_hours || 2;
+    const maxPlaytime = b.max_playtime_hours || 1000;
 
     const allChoices = b.choices || [];
     const filteredChoices = allChoices.filter(c => {
