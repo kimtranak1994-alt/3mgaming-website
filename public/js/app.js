@@ -39,7 +39,7 @@ const App = {
 
   switchTab(tabId) {
     const validTabs = [
-      'home', 'bxh', 'damage', 'boss', 'ai-hunt', 'arena', 'garage', 'starter', 
+      'home', 'bxh', 'dino-info', 'dinoinfo', 'damage', 'boss', 'ai-hunt', 'arena', 'garage', 'starter', 
       'skinshop', 'skins', 'skineditor', 'referral', 'teleport', 'quests', 'buydino', 'carcass',
       'map', 'guide', 'rules', 'donate', 'admin'
     ];
@@ -75,6 +75,10 @@ const App = {
     } else if (tabId === 'arena') {
       if (window.Arena && typeof window.Arena.render === 'function') {
         window.Arena.render();
+      }
+    } else if (tabId === 'dino-info' || tabId === 'dinoinfo') {
+      if (window.DinoInfo && typeof window.DinoInfo.render === 'function') {
+        window.DinoInfo.render();
       }
     } else if (tabId === 'garage') {
       Garage.render();

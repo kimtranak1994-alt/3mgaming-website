@@ -711,6 +711,10 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
             return
 
+        elif self.path.startswith("/api/player/dino-info") or self.path.startswith("/api/dino-info"):
+            self.handle_player_dino_info()
+            return
+
         elif self.path.startswith("/api/player/active-dino"):
 
             self.handle_player_active_dino()
@@ -2665,6 +2669,139 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
             "source": "default"
 
+        })
+
+    def handle_player_dino_info(self):
+        query = urllib.parse.urlparse(self.path).query
+        q_params = urllib.parse.parse_qs(query)
+        passed_steam_id = q_params.get("steam_id", [None])[0]
+
+        cookie_header = self.headers.get("Cookie", "")
+        cookie_match = re.search(r"steam_user=([^;:]+)", cookie_header)
+        cookie_steam_id = cookie_match.group(1).strip() if cookie_match else None
+
+        steam_id = passed_steam_id or cookie_steam_id
+        is_logged_in = bool(steam_id)
+
+        if not steam_id:
+            self.send_json_response({
+                "ok": False,
+                "logged_in": False,
+                "message": "Vui lòng đăng nhập Steam để xem thông tin khủng long!"
+            })
+            return
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+            f_player = executor.submit(self.fetch_islepilot, f"/players/{steam_id}")
+            f_warnings = executor.submit(self.fetch_islepilot, f"/players/{steam_id}/warnings")
+            f_garage = executor.submit(self.fetch_islepilot, f"/players/{steam_id}/garage")
+
+            player_data = f_player.result() or {}
+            warnings_data = f_warnings.result() or {}
+            garage_data = f_garage.result() or {}
+
+        balance = self._get_player_xu_balance(steam_id)
+
+        species = player_data.get("species")
+        has_active_dino = bool(species)
+
+        garage_list = []
+        if isinstance(garage_data, dict):
+            garage_list = garage_data.get("garage", []) or garage_data.get("dinosaurs", [])
+        elif isinstance(garage_data, list):
+            garage_list = garage_data
+
+        def safe_float(v, default=0.0):
+            try:
+                if v is None: return default
+                return float(v)
+            except:
+                return default
+
+        health = safe_float(player_data.get("health"), 0.0)
+        max_health = safe_float(player_data.get("maxHealth"), 1.0)
+        health_pct = min(100.0, max(0.0, round((health / max_health * 100), 1))) if max_health > 0 else 0.0
+
+        hunger = safe_float(player_data.get("hunger"), 0.0)
+        max_hunger = safe_float(player_data.get("maxHunger"), 1.0)
+        hunger_pct = min(100.0, max(0.0, round((hunger / max_hunger * 100), 1))) if max_hunger > 0 else 0.0
+
+        thirst = safe_float(player_data.get("thirst"), 0.0)
+        max_thirst = safe_float(player_data.get("maxThirst"), 1.0)
+        thirst_pct = min(100.0, max(0.0, round((thirst / max_thirst * 100), 1))) if max_thirst > 0 else 0.0
+
+        growth = safe_float(player_data.get("growth"), 0.0)
+        growth_pct = round(growth * 100, 1)
+
+        is_prime_elder = bool(player_data.get("isPrimeElder"))
+        prime_eligible = bool(player_data.get("primeEligible"))
+
+        if growth < 0.35:
+            stage = "Con non (Juvenile)"
+        elif growth < 0.70:
+            stage = "Cận trưởng thành (Subadult)"
+        elif is_prime_elder:
+            stage = "Prime Elder (Cổ Đại Tối Thượng)"
+        elif growth >= 1.0:
+            stage = "Trưởng thành hoàn toàn (Full Adult)"
+        else:
+            stage = "Trưởng thành (Adult)"
+
+        pos = player_data.get("position") or {}
+        pos_formatted = {
+            "x": round(safe_float(pos.get("x")), 2) if pos.get("x") is not None else None,
+            "y": round(safe_float(pos.get("y")), 2) if pos.get("y") is not None else None,
+            "z": round(safe_float(pos.get("z")), 2) if pos.get("z") is not None else None,
+            "yaw": round(safe_float(pos.get("yaw")), 2) if pos.get("yaw") is not None else None
+        }
+
+        prime_info = player_data.get("prime") or {}
+        mut_slots = player_data.get("mutationSlots") or {}
+
+        warnings_list = warnings_data.get("warnings") or []
+        active_warning_count = warnings_data.get("activeCount", len(warnings_list))
+
+        self.send_json_response({
+            "ok": True,
+            "logged_in": is_logged_in,
+            "steam_id": steam_id,
+            "name": player_data.get("name") or f"Player_{steam_id[-4:]}",
+            "online": bool(player_data.get("online", False)),
+            "wallet_balance": balance,
+            "discord": player_data.get("discord"),
+            "total_play_seconds": player_data.get("totalPlaySec", 0),
+            "playtime_hours": round(player_data.get("totalPlaySec", 0) / 3600, 1),
+            "last_seen_at": player_data.get("lastSeenAt"),
+            "has_active_dino": has_active_dino,
+            "garage_count": len(garage_list),
+            "dino": {
+                "species": species,
+                "female": bool(player_data.get("female", False)),
+                "gender": "female" if player_data.get("female") else "male",
+                "gender_text": "Cái (Female ♀)" if player_data.get("female") else "Đực (Male ♂)",
+                "growth": growth,
+                "growth_percent": growth_pct,
+                "stage": stage,
+                "is_prime_elder": is_prime_elder,
+                "prime_eligible": prime_eligible,
+                "health": health,
+                "max_health": max_health,
+                "health_percent": health_pct,
+                "hunger": hunger,
+                "max_hunger": max_hunger,
+                "hunger_percent": hunger_pct,
+                "thirst": thirst,
+                "max_thirst": max_thirst,
+                "thirst_percent": thirst_pct,
+                "position": pos_formatted,
+                "mutation_slots": mut_slots,
+                "prime": prime_info,
+                "ban": player_data.get("ban")
+            } if has_active_dino else None,
+            "warnings": {
+                "count": active_warning_count,
+                "list": warnings_list
+            }
         })
 
     def handle_player_logout(self):
