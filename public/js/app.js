@@ -177,9 +177,7 @@ const App = {
         this.updateUserBalanceUI(user.balance);
       }
       const donateNoteEl = document.getElementById('donate-transfer-note');
-      const donateHintEl = document.getElementById('donate-transfer-hint');
       if (donateNoteEl) donateNoteEl.textContent = user.name || 'TÊN INGAME';
-      if (donateHintEl) donateHintEl.textContent = '(Tên ingame của bạn)';
     } else {
       if (btnLink) {
         btnLink.setAttribute('href', '/api/player/steam/login?redirect=%2F');
