@@ -5507,6 +5507,7 @@ const Carcass = {
 
 // ==========================================
 // ==========================================
+// ==========================================
 // 20. MODULE QUÀ TÂN THỦ (STARTER GIFT & CLAIMS - ĐỒNG BỘ ISLEPILOT)
 // ==========================================
 const StarterGift = {
@@ -5579,20 +5580,15 @@ const StarterGift = {
     const maxPlaytime = b.max_playtime_hours || 1000;
 
     const allChoices = b.choices || [];
-    const filteredChoices = allChoices.filter(c => {
-      const matchCat = this.filterCategory === 'all' || (c.category === this.filterCategory);
-      const matchSearch = !this.searchQuery || 
-        c.species.toLowerCase().includes(this.searchQuery.toLowerCase()) || 
-        (c.name && c.name.toLowerCase().includes(this.searchQuery.toLowerCase()));
-      return matchCat && matchSearch;
-    });
-
-    const choicesHtml = filteredChoices.map(c => {
+    const choicesHtml = allChoices.map(c => {
       const isSel = this.selectedSpecies === c.species;
       const isCarno = c.category === 'carnivore';
       return `
         <div class="starter-dino-option ${isSel ? 'active' : ''}" 
-             onclick="StarterGift.selectSpecies('${c.species}')"
+             data-species="${c.species}"
+             data-category="${c.category || 'carnivore'}"
+             data-name="${(c.name || '').toLowerCase()}"
+             onclick="StarterGift.selectSpecies('${c.species}', event)"
              style="cursor: pointer; border: 1px solid ${isSel ? '#fbbf24' : 'rgba(255,255,255,0.1)'}; background: ${isSel ? 'rgba(251, 191, 36, 0.15)' : 'rgba(255,255,255,0.03)'}; padding: 10px 12px; border-radius: 12px; display: flex; align-items: center; gap: 10px; transition: all 0.2s; position: relative;">
           <img src="${typeof Garage !== 'undefined' && Garage.getDinoImageUrl ? Garage.getDinoImageUrl(c.species) : 'https://islepilot.eu/cdn/dino-art/icon-sm/' + c.species + '.webp'}" 
                alt="${c.species}" 
@@ -5606,12 +5602,12 @@ const StarterGift = {
               <span>${isCarno ? '🥩 Ăn thịt' : '🌿 Ăn cỏ'}</span> · <span>85% Size</span>
             </div>
           </div>
-          <div style="color: ${isSel ? '#fbbf24' : 'rgba(255,255,255,0.2)'}; font-size: 1.1rem;">
+          <div class="starter-check-icon" style="color: ${isSel ? '#fbbf24' : 'rgba(255,255,255,0.2)'}; font-size: 1.1rem;">
             <i class="${isSel ? 'fas fa-check-circle' : 'far fa-circle'}"></i>
           </div>
         </div>
       `;
-    }).join('') || `<div style="text-align: center; padding: 20px; color: var(--text-muted); font-size: 0.85rem;">Không tìm thấy khủng long phù hợp với từ khóa "${this.searchQuery}"</div>`;
+    }).join('');
 
     const mutationList = b.mutation_choices || [];
     const mutationSlotsHtml = [0, 1, 2, 3].map(slotIdx => {
@@ -5628,7 +5624,8 @@ const StarterGift = {
             <span><i class="fas fa-dna"></i> Đột biến ${slotIdx + 1}:</span>
             <span style="color: #94a3b8; font-weight: normal;">Slot ${slotIdx + 1}</span>
           </label>
-          <select onchange="StarterGift.setMutation(${slotIdx}, this.value)" 
+          <select id="starter-mutation-slot-${slotIdx}" 
+                  onchange="StarterGift.setMutation(${slotIdx}, this.value)" 
                   style="width: 100%; background: #0f172a; color: #f8fafc; border: 1px solid rgba(56, 189, 248, 0.3); padding: 6px 10px; border-radius: 6px; font-size: 0.82rem; outline: none; cursor: pointer;">
             ${optionsHtml}
           </select>
@@ -5651,7 +5648,7 @@ const StarterGift = {
               ${b.name || 'Gói Quà Tân Thủ 3MGAMING'}
             </h1>
             <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.5; margin-bottom: 16px;">
-              Tặng ngay cho tất cả người chơi mới gia nhập: Khởi nghiệp với <b>${coinsReward.toLocaleString()} Xu</b> và nhận ngay 1 cá thể khủng long tùy chọn với <b>4 Đột Biến Gen (Mutations)</b> tự chọn vào Gara Dino!
+              Tặng ngay cho tất cả người chơi mới gia nhập: Khởi nghiệp với <b>${coinsReward.toLocaleString()} Xu</b> và nhận ngay 1 cá thể khủng long tùy chọn với <b>Đúng 4 Đột Biến Gen (Mutations)</b> tự chọn vào Gara Dino!
             </p>
 
             <!-- Rewards Cards -->
@@ -5672,7 +5669,7 @@ const StarterGift = {
                 </div>
                 <div>
                   <div style="font-weight: 800; color: #38bdf8; font-size: 1.15rem;">4 Đột Biến Gen</div>
-                  <div style="font-size: 0.75rem; color: #94a3b8;">Tự do lựa chọn theo sở thích</div>
+                  <div style="font-size: 0.75rem; color: #94a3b8;">Đúng 4 mutation chuẩn xác</div>
                 </div>
               </div>
 
@@ -5693,7 +5690,7 @@ const StarterGift = {
                 <div style="font-size: 0.9rem; font-weight: 800; color: #38bdf8; display: flex; align-items: center; gap: 6px;">
                   <i class="fas fa-dna"></i> CHỌN 4 ĐỘT BIẾN GEN (MUTATIONS):
                 </div>
-                <button type="button" onclick="StarterGift.resetDefaultMutations()" 
+                <button type="button" onclick="StarterGift.resetDefaultMutations(event)" 
                         style="background: transparent; border: 1px solid rgba(255,255,255,0.15); color: #94a3b8; font-size: 0.72rem; padding: 3px 8px; border-radius: 6px; cursor: pointer;">
                   <i class="fas fa-undo"></i> Mặc định
                 </button>
@@ -5725,12 +5722,14 @@ const StarterGift = {
               </div>
               <div style="display: flex; gap: 4px;">
                 <button type="button" 
-                        onclick="StarterGift.setGender('Male')" 
+                        id="starter-gender-male"
+                        onclick="StarterGift.setGender('Male', event)" 
                         style="padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; border: 1px solid ${this.selectedGender === 'Male' ? '#3b82f6' : 'rgba(255,255,255,0.1)'}; background: ${this.selectedGender === 'Male' ? 'rgba(59, 130, 246, 0.25)' : 'transparent'}; color: ${this.selectedGender === 'Male' ? '#60a5fa' : '#94a3b8'};">
                   Đực (Male)
                 </button>
                 <button type="button" 
-                        onclick="StarterGift.setGender('Female')" 
+                        id="starter-gender-female"
+                        onclick="StarterGift.setGender('Female', event)" 
                         style="padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; border: 1px solid ${this.selectedGender === 'Female' ? '#ec4899' : 'rgba(255,255,255,0.1)'}; background: ${this.selectedGender === 'Female' ? 'rgba(236, 72, 153, 0.25)' : 'transparent'}; color: ${this.selectedGender === 'Female' ? '#f472b6' : '#94a3b8'};">
                   Cái (Female)
                 </button>
@@ -5739,16 +5738,16 @@ const StarterGift = {
 
             <!-- Category & Search Filters -->
             <div style="display: flex; gap: 6px; margin-bottom: 10px;">
-              <button type="button" onclick="StarterGift.setCategory('all')" 
-                      style="flex: 1; padding: 5px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; border: 1px solid ${this.filterCategory === 'all' ? '#fbbf24' : 'rgba(255,255,255,0.1)'}; background: ${this.filterCategory === 'all' ? 'rgba(251,191,36,0.2)' : 'rgba(0,0,0,0.2)'}; color: ${this.filterCategory === 'all' ? '#fbbf24' : '#94a3b8'};">
+              <button type="button" id="starter-cat-all" onclick="StarterGift.setCategory('all', event)" 
+                      style="flex: 1; padding: 5px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; border: 1px solid #fbbf24; background: rgba(251,191,36,0.2); color: #fbbf24;">
                 Tất cả (${allChoices.length})
               </button>
-              <button type="button" onclick="StarterGift.setCategory('carnivore')" 
-                      style="flex: 1; padding: 5px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; border: 1px solid ${this.filterCategory === 'carnivore' ? '#ef4444' : 'rgba(255,255,255,0.1)'}; background: ${this.filterCategory === 'carnivore' ? 'rgba(239,68,68,0.2)' : 'rgba(0,0,0,0.2)'}; color: ${this.filterCategory === 'carnivore' ? '#f87171' : '#94a3b8'};">
+              <button type="button" id="starter-cat-carnivore" onclick="StarterGift.setCategory('carnivore', event)" 
+                      style="flex: 1; padding: 5px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: #94a3b8;">
                 Ăn thịt
               </button>
-              <button type="button" onclick="StarterGift.setCategory('herbivore')" 
-                      style="flex: 1; padding: 5px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; border: 1px solid ${this.filterCategory === 'herbivore' ? '#10b981' : 'rgba(255,255,255,0.1)'}; background: ${this.filterCategory === 'herbivore' ? 'rgba(16,185,129,0.2)' : 'rgba(0,0,0,0.2)'}; color: ${this.filterCategory === 'herbivore' ? '#34d399' : '#94a3b8'};">
+              <button type="button" id="starter-cat-herbivore" onclick="StarterGift.setCategory('herbivore', event)" 
+                      style="flex: 1; padding: 5px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: #94a3b8;">
                 Ăn cỏ
               </button>
             </div>
@@ -5756,6 +5755,7 @@ const StarterGift = {
             <!-- Search input -->
             <div style="position: relative; margin-bottom: 12px;">
               <input type="text" 
+                     id="starter-dino-search"
                      placeholder="🔍 Tìm nhanh loài khủng long..." 
                      value="${this.searchQuery}" 
                      oninput="StarterGift.setSearch(this.value)" 
@@ -5763,7 +5763,7 @@ const StarterGift = {
             </div>
 
             <!-- Dino list grid with scroll -->
-            <div style="display: flex; flex-direction: column; gap: 8px; max-height: 290px; overflow-y: auto; padding-right: 4px; margin-bottom: 16px;">
+            <div id="starter-dino-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 290px; overflow-y: auto; padding-right: 4px; margin-bottom: 16px;">
               ${choicesHtml}
             </div>
 
@@ -5792,11 +5792,12 @@ const StarterGift = {
                 </div>
               ` : `
                 <button type="button" 
+                        id="btn-claim-starter"
                         onclick="StarterGift.claim()" 
                         ${this.isClaiming ? 'disabled' : ''}
                         class="btn btn-primary" 
                         style="width: 100%; justify-content: center; padding: 14px; font-size: 1rem; font-weight: 800; background: linear-gradient(135deg, #f59e0b, #d97706); border-color: #fbbf24; box-shadow: 0 4px 20px rgba(245, 158, 11, 0.45); text-transform: uppercase;">
-                  ${this.isClaiming ? '<i class="fas fa-spinner fa-spin" style="margin-right: 8px;"></i> Đang Nhận Quà...' : '<i class="fas fa-gift" style="margin-right: 8px;"></i> Nhận Quà Tân Thủ (' + coinsReward.toLocaleString() + ' Xu + Dino)'}
+                  ${this.isClaiming ? '<i class="fas fa-spinner fa-spin" style="margin-right: 8px;"></i> Đang Nhận Quà...' : '<i class="fas fa-gift" style="margin-right: 8px;"></i> Nhận Quà Tân Thủ (3.000 Xu + ' + this.selectedSpecies + ')'}
                 </button>
               `}
             </div>
@@ -5806,38 +5807,152 @@ const StarterGift = {
     `;
   },
 
-  selectSpecies(spec) {
+  selectSpecies(spec, ev) {
+    if (ev) {
+      ev.preventDefault();
+      ev.stopPropagation();
+    }
     this.selectedSpecies = spec;
-    this.displayBundle();
+
+    // Cập nhật DOM trực tiếp để TUYỆT ĐỐI KHÔNG bị reset cuộn trang
+    document.querySelectorAll('.starter-dino-option').forEach(el => {
+      const match = el.getAttribute('data-species') === spec;
+      el.classList.toggle('active', match);
+      el.style.borderColor = match ? '#fbbf24' : 'rgba(255,255,255,0.1)';
+      el.style.background = match ? 'rgba(251, 191, 36, 0.15)' : 'rgba(255,255,255,0.03)';
+      const iconWrap = el.querySelector('.starter-check-icon');
+      if (iconWrap) {
+        iconWrap.style.color = match ? '#fbbf24' : 'rgba(255,255,255,0.2)';
+        iconWrap.innerHTML = match ? '<i class="fas fa-check-circle"></i>' : '<i class="far fa-circle"></i>';
+      }
+    });
+
+    const btn = document.getElementById('btn-claim-starter');
+    if (btn && !this.isClaiming) {
+      const coins = (this.bundle && this.bundle.coins) || 3000;
+      btn.innerHTML = `<i class="fas fa-gift" style="margin-right: 8px;"></i> Nhận Quà Tân Thủ (${coins.toLocaleString()} Xu + ${spec})`;
+    }
   },
 
-  setGender(gender) {
+  setGender(gender, ev) {
+    if (ev) {
+      ev.preventDefault();
+      ev.stopPropagation();
+    }
     this.selectedGender = gender;
-    this.displayBundle();
+    const btnMale = document.getElementById('starter-gender-male');
+    const btnFemale = document.getElementById('starter-gender-female');
+
+    if (btnMale && btnFemale) {
+      const isMale = gender === 'Male';
+      btnMale.style.borderColor = isMale ? '#3b82f6' : 'rgba(255,255,255,0.1)';
+      btnMale.style.background = isMale ? 'rgba(59, 130, 246, 0.25)' : 'transparent';
+      btnMale.style.color = isMale ? '#60a5fa' : '#94a3b8';
+
+      btnFemale.style.borderColor = !isMale ? '#ec4899' : 'rgba(255,255,255,0.1)';
+      btnFemale.style.background = !isMale ? 'rgba(236, 72, 153, 0.25)' : 'transparent';
+      btnFemale.style.color = !isMale ? '#f472b6' : '#94a3b8';
+    }
   },
 
-  setCategory(cat) {
+  setCategory(cat, ev) {
+    if (ev) {
+      ev.preventDefault();
+      ev.stopPropagation();
+    }
     this.filterCategory = cat;
-    this.displayBundle();
+
+    // Cập nhật nút tab
+    const btns = {
+      'all': document.getElementById('starter-cat-all'),
+      'carnivore': document.getElementById('starter-cat-carnivore'),
+      'herbivore': document.getElementById('starter-cat-herbivore')
+    };
+    for (const [key, b] of Object.entries(btns)) {
+      if (b) {
+        const isCur = key === cat;
+        if (key === 'all') {
+          b.style.borderColor = isCur ? '#fbbf24' : 'rgba(255,255,255,0.1)';
+          b.style.background = isCur ? 'rgba(251,191,36,0.2)' : 'rgba(0,0,0,0.2)';
+          b.style.color = isCur ? '#fbbf24' : '#94a3b8';
+        } else if (key === 'carnivore') {
+          b.style.borderColor = isCur ? '#ef4444' : 'rgba(255,255,255,0.1)';
+          b.style.background = isCur ? 'rgba(239,68,68,0.2)' : 'rgba(0,0,0,0.2)';
+          b.style.color = isCur ? '#f87171' : '#94a3b8';
+        } else {
+          b.style.borderColor = isCur ? '#10b981' : 'rgba(255,255,255,0.1)';
+          b.style.background = isCur ? 'rgba(16,185,129,0.2)' : 'rgba(0,0,0,0.2)';
+          b.style.color = isCur ? '#34d399' : '#94a3b8';
+        }
+      }
+    }
+
+    this.filterDinoList();
   },
 
   setSearch(q) {
-    this.searchQuery = q || '';
-    this.displayBundle();
+    this.searchQuery = (q || '').trim().toLowerCase();
+    this.filterDinoList();
+  },
+
+  filterDinoList() {
+    const list = document.getElementById('starter-dino-list');
+    if (!list) return;
+
+    const items = list.querySelectorAll('.starter-dino-option');
+    let visibleCount = 0;
+
+    items.forEach(el => {
+      const cat = el.getAttribute('data-category') || '';
+      const name = (el.getAttribute('data-name') || '') + ' ' + (el.getAttribute('data-species') || '').toLowerCase();
+      
+      const matchCat = this.filterCategory === 'all' || (cat === this.filterCategory);
+      const matchSearch = !this.searchQuery || name.includes(this.searchQuery);
+
+      if (matchCat && matchSearch) {
+        el.style.display = 'flex';
+        visibleCount++;
+      } else {
+        el.style.display = 'none';
+      }
+    });
+
+    let emptyNotice = document.getElementById('starter-dino-empty');
+    if (visibleCount === 0) {
+      if (!emptyNotice) {
+        emptyNotice = document.createElement('div');
+        emptyNotice.id = 'starter-dino-empty';
+        emptyNotice.style.cssText = 'text-align: center; padding: 20px; color: var(--text-muted); font-size: 0.85rem;';
+        list.appendChild(emptyNotice);
+      }
+      emptyNotice.textContent = `Không tìm thấy khủng long nào phù hợp`;
+      emptyNotice.style.display = 'block';
+    } else if (emptyNotice) {
+      emptyNotice.style.display = 'none';
+    }
   },
 
   setMutation(slotIdx, val) {
     this.selectedMutations[slotIdx] = val;
   },
 
-  resetDefaultMutations() {
+  resetDefaultMutations(ev) {
+    if (ev) {
+      ev.preventDefault();
+      ev.stopPropagation();
+    }
     this.selectedMutations = [
       'Multichambered Lungs',
       'Hypermetabolic Inanition',
       'Congenital Hypoalgesia',
       'Photosynthetic Tissue'
     ];
-    this.displayBundle();
+    for (let i = 0; i < 4; i++) {
+      const sel = document.getElementById(`starter-mutation-slot-${i}`);
+      if (sel) {
+        sel.value = this.selectedMutations[i];
+      }
+    }
   },
 
   async claim() {
@@ -5852,8 +5967,17 @@ const StarterGift = {
       return;
     }
 
+    // Lọc chuẩn xác 4 đột biến không trùng lặp và không rỗng
+    const validMuts = (this.selectedMutations || []).map(m => String(m).trim()).filter(m => m && m !== 'None');
+    // Giới hạn đúng 4 đột biến
+    const finalMuts = validMuts.slice(0, 4);
+
     this.isClaiming = true;
-    this.displayBundle();
+    const btn = document.getElementById('btn-claim-starter');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right: 8px;"></i> Đang Nhận Quà...';
+    }
 
     try {
       const res = await fetch('/api/server/claims/claim', {
@@ -5863,14 +5987,14 @@ const StarterGift = {
           steam_id: user.steamId,
           species: this.selectedSpecies,
           gender: this.selectedGender,
-          mutations: this.selectedMutations
+          mutations: finalMuts
         })
       });
       const data = await res.json();
 
       if (data.ok || data.success) {
         const coins = data.coins || 3000;
-        const mutNames = (data.mutations || this.selectedMutations).join(', ');
+        const mutNames = (data.mutations || finalMuts).filter(m => m !== 'None').join(', ');
         if (typeof Swal !== 'undefined') {
           Swal.fire({
             title: '🎉 Nhận Quà Thành Công!',
@@ -5879,9 +6003,9 @@ const StarterGift = {
                 Chúc mừng bạn đã nhận thành công <b>Gói Quà Tân Thủ 3MGAMING</b>!<br><br>
                 💰 <b>+${coins.toLocaleString()} Xu</b> đã cộng thẳng vào ví IslePilot.<br>
                 🦖 <b>${this.selectedSpecies} (85%)</b> (${this.selectedGender === 'Male' ? 'Đực' : 'Cái'}) đã được chuyển vào Gara của bạn.<br>
-                🧬 <b>4 Đột biến gen đã tích hợp:</b><br>
+                🧬 <b>Đúng 4 Đột biến gen đã tích hợp:</b><br>
                 <div style="font-size: 0.85rem; color: #38bdf8; margin-top: 4px; padding: 6px 10px; background: rgba(0,0,0,0.3); border-radius: 6px;">
-                  ${mutNames}
+                  ${mutNames || '4 Đột biến chuẩn'}
                 </div>
               </div>
             `,
@@ -5907,7 +6031,7 @@ const StarterGift = {
           App.refreshBalance();
         }
 
-        // Reload bundle data
+        // Cập nhật lại view
         await this.render();
       } else {
         const errMsg = data.error || data.message || "Nhận quà thất bại. Vui lòng thử lại!";
@@ -5917,12 +6041,20 @@ const StarterGift = {
           alert('Lỗi: ' + errMsg);
         }
         this.isClaiming = false;
-        this.displayBundle();
+        if (btn) {
+          btn.disabled = false;
+          const coins = (this.bundle && this.bundle.coins) || 3000;
+          btn.innerHTML = `<i class="fas fa-gift" style="margin-right: 8px;"></i> Nhận Quà Tân Thủ (${coins.toLocaleString()} Xu + ${this.selectedSpecies})`;
+        }
       }
     } catch (e) {
       alert('Lỗi kết nối máy chủ: ' + e.message);
       this.isClaiming = false;
-      this.displayBundle();
+      if (btn) {
+        btn.disabled = false;
+        const coins = (this.bundle && this.bundle.coins) || 3000;
+        btn.innerHTML = `<i class="fas fa-gift" style="margin-right: 8px;"></i> Nhận Quà Tân Thủ (${coins.toLocaleString()} Xu + ${this.selectedSpecies})`;
+      }
     }
   }
 };

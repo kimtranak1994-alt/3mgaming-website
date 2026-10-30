@@ -9919,10 +9919,10 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             while len(chosen_mutations) < 4:
                 chosen_mutations.append("None")
             
-            # Chuẩn hóa cấu trúc mutationSlots
+            # Chuẩn hóa cấu trúc mutationSlots: CHỈ ĐÚNG 4 ĐỘT BIẾN Ở ACTIVE, CÒN PARENT/ELDER ĐỀU LÀ NONE
             mut_slots = {
                 "active": list(chosen_mutations),
-                "parent": list(chosen_mutations),
+                "parent": ["None", "None", "None", "None"],
                 "elderA": ["None", "None", "None", "None"],
                 "elderB": ["None", "None", "None", "None"]
             }
