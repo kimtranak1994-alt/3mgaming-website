@@ -9820,7 +9820,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             player_name = ""
             
             starter_config = config.get("STARTER_GIFT", {})
-            bundle_coins = starter_config.get("coins", 1000)
+            bundle_coins = starter_config.get("coins", 3000)
             bundle_growth = starter_config.get("dino_growth", 0.85)
             max_playtime = starter_config.get("max_playtime_hours", 2)
             
@@ -9833,13 +9833,13 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     if total_play_sec >= max_playtime * 3600:
                         is_newbie = False
             
-            choices = starter_config.get("dino_choices", [
-                {"species": "Ceratosaurus", "name": "Ceratosaurus (Đầm Thịt)", "icon": "Ceratosaurus"},
-                {"species": "Carnotaurus", "name": "Carnotaurus (Tốc Độ)", "icon": "Carnotaurus"},
-                {"species": "Omniraptor", "name": "Omniraptor (Săn Bầy)", "icon": "Omniraptor"},
-                {"species": "Pachycephalosaurus", "name": "Pachycephalosaurus (Húc Thiết Giáp)", "icon": "Pachycephalosaurus"},
-                {"species": "Tenontosaurus", "name": "Tenontosaurus (Dũng Mãnh)", "icon": "Tenontosaurus"},
-                {"species": "Dilophosaurus", "name": "Dilophosaurus (Sát Thủ Màn Đêm)", "icon": "Dilophosaurus"}
+            choices = starter_config.get("dino_choices", [])
+            mutation_choices = starter_config.get("mutation_choices", [])
+            default_mutations = starter_config.get("default_mutations", [
+                "Multichambered Lungs",
+                "Hypermetabolic Inanition",
+                "Congenital Hypoalgesia",
+                "Photosynthetic Tissue"
             ])
             
             self.send_json_response({
@@ -9848,13 +9848,16 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "bundle": {
                     "id": "starter_pack_3mgaming",
                     "name": starter_config.get("name", "Gói Quà Tân Thủ 3MGAMING"),
-                    "description": starter_config.get("description", "Quà tặng chào mừng dành riêng cho thành viên mới tham gia cụm máy chủ 3MGAMING. Nhận ngay 1,000 Xu khởi nghiệp và Khủng Long chiến đấu 85% vào Gara!"),
+                    "description": starter_config.get("description", "Quà tặng chào mừng dành riêng cho thành viên mới tham gia cụm máy chủ 3MGAMING. Nhận ngay 3,000 Xu khởi nghiệp, 1 Khủng Long chiến đấu 85% và chọn 4 Đột biến gen vào Gara!"),
                     "coins": bundle_coins,
                     "dino_growth": bundle_growth,
                     "choices": choices,
+                    "mutation_choices": mutation_choices,
+                    "default_mutations": default_mutations,
                     "claimed": is_claimed,
                     "claimed_at": claim_info.get("claimed_at") if isinstance(claim_info, dict) else None,
                     "claimed_species": claim_info.get("species") if isinstance(claim_info, dict) else None,
+                    "claimed_mutations": claim_info.get("mutations") if isinstance(claim_info, dict) else None,
                     "eligible": is_newbie,
                     "playtime_hours": playtime_hours,
                     "max_playtime_hours": max_playtime,
@@ -9883,7 +9886,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 return
             
             starter_config = config.get("STARTER_GIFT", {})
-            bundle_coins = starter_config.get("coins", 1000)
+            bundle_coins = starter_config.get("coins", 3000)
             bundle_growth = starter_config.get("dino_growth", 0.85)
             max_playtime = starter_config.get("max_playtime_hours", 2)
             
@@ -9902,22 +9905,45 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             
             chosen_species = payload.get("species") or "Ceratosaurus"
             chosen_gender = payload.get("gender") or "Male"
+            raw_mutations = payload.get("mutations") or []
+            if not isinstance(raw_mutations, list) or len(raw_mutations) == 0:
+                raw_mutations = [
+                    "Multichambered Lungs",
+                    "Hypermetabolic Inanition",
+                    "Congenital Hypoalgesia",
+                    "Photosynthetic Tissue"
+                ]
+            
+            # Đảm bảo đủ 4 đột biến
+            chosen_mutations = [str(m).strip() for m in raw_mutations if str(m).strip()][:4]
+            while len(chosen_mutations) < 4:
+                chosen_mutations.append("None")
+            
+            # Chuẩn hóa cấu trúc mutationSlots
+            mut_slots = {
+                "active": list(chosen_mutations),
+                "parent": list(chosen_mutations),
+                "elderA": ["None", "None", "None", "None"],
+                "elderB": ["None", "None", "None", "None"]
+            }
             
             try:
                 self.fetch_islepilot(f"/players/{sid_str}/claim", method="POST", body_data={"bundleId": "starter_pack_3mgaming"})
             except Exception:
                 pass
             
+            # Cộng 3,000 Xu vào ví IslePilot
             new_balance = None
             if bundle_coins > 0:
                 cur_res = self.fetch_islepilot(
                     f"/players/{sid_str}/currency",
                     method="POST",
-                    body_data={"amount": bundle_coins, "reason": "Nhận Quà Tân Thủ 3MGAMING (+1,000 Xu)"}
+                    body_data={"amount": bundle_coins, "reason": f"Nhận Quà Tân Thủ 3MGAMING (+{bundle_coins:,} Xu)"}
                 )
                 if isinstance(cur_res, dict) and "balance" in cur_res:
                     new_balance = cur_res.get("balance")
             
+            # Tặng khủng long với 4 mutation vào Gara Dino
             gifts = load_user_gift_dinos()
             if sid_str not in gifts:
                 gifts[sid_str] = []
@@ -9931,36 +9957,47 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "growth": bundle_growth,
                 "isPrimeElder": False,
                 "weight_label": f"Tân Thủ {int(bundle_growth * 100)}%",
+                "mutations": chosen_mutations,
+                "mutationSlots": mut_slots,
                 "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
             }
             gifts[sid_str].append(dino_entry)
             save_user_gift_dinos(gifts)
             
+            # Đồng bộ vào garage_saved_mutations để khi unpark tự động setmutations
+            save_garage_saved_mutation(dino_id, mut_slots)
+            save_garage_saved_mutation(f"{sid_str}_{dino_id}", mut_slots)
+            
+            # Lưu lịch sử đã nhận
             now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
             claimed_db[sid_str] = {
                 "claimed_at": now_iso,
                 "coins": bundle_coins,
                 "species": chosen_species,
                 "gender": chosen_gender,
+                "mutations": chosen_mutations,
                 "dino_id": dino_id,
                 "player_name": player_name
             }
             save_claimed_starter(claimed_db)
             
-            print(f"[Starter Gift Claim] Người chơi {player_name} ({sid_str}) đã nhận Quà Tân Thủ: +{bundle_coins} Xu & {chosen_species}")
+            mut_str = ", ".join([m for m in chosen_mutations if m != "None"])
+            print(f"[Starter Gift Claim] Người chơi {player_name} ({sid_str}) đã nhận Quà Tân Thủ: +{bundle_coins} Xu, {chosen_species} & 4 Đột biến [{mut_str}]")
             
             self.send_json_response({
                 "ok": True,
                 "success": True,
-                "message": f"Nhận Quà Tân Thủ thành công! Đã cộng {bundle_coins:,} Xu vào ví và tặng {chosen_species} vào Gara Dino của bạn.",
+                "message": f"Nhận Quà Tân Thủ thành công! Đã cộng {bundle_coins:,} Xu vào ví và tặng {chosen_species} kèm 4 Đột biến gen vào Gara Dino.",
                 "coins": bundle_coins,
                 "species": chosen_species,
+                "mutations": chosen_mutations,
                 "dino_id": dino_id,
                 "balance": new_balance
             })
         except Exception as e:
             print(f"[Handle Claim Starter Error] {e}")
             self.send_json_response({"ok": False, "error": str(e)}, 500)
+
 
     def handle_buy_skin(self):
 

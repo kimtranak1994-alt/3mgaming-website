@@ -39,41 +39,262 @@
   "STARTER_GIFT": {
     "enabled": true,
     "name": "Gói Quà Tân Thủ 3MGAMING",
-    "description": "Quà chào mừng thành viên mới gia nhập server 3MGAMING. Nhận ngay 1,000 Xu khởi nghiệp và 1 Khủng Long chiến đấu 85% vào Gara!",
-    "coins": 1000,
+    "description": "Quà chào mừng thành viên mới gia nhập server 3MGAMING. Nhận ngay 3,000 Xu khởi nghiệp, 1 Khủng Long chiến đấu 85% và tùy chọn 4 Đột biến gen (Mutations) vào Gara!",
+    "coins": 3000,
     "dino_growth": 0.85,
     "max_playtime_hours": 2,
     "dino_choices": [
       {
-        "species": "Ceratosaurus",
-        "name": "Ceratosaurus (Đầm Thịt)",
-        "icon": "Ceratosaurus"
+        "species": "Allosaurus",
+        "name": "Allosaurus (Săn Mồi Đỉnh Cao)",
+        "category": "carnivore"
+      },
+      {
+        "species": "Ankylosaurus",
+        "name": "Ankylosaurus (Thiết Giáp Chùy)",
+        "category": "herbivore"
+      },
+      {
+        "species": "Baryonyx",
+        "name": "Baryonyx (Sát Thủ Bờ Sông)",
+        "category": "carnivore"
+      },
+      {
+        "species": "Beipiaosaurus",
+        "name": "Beipiaosaurus (Vịt Lội Nước)",
+        "category": "herbivore"
       },
       {
         "species": "Carnotaurus",
-        "name": "Carnotaurus (Tốc Độ)",
-        "icon": "Carnotaurus"
+        "name": "Carnotaurus (Tên Lửa Tốc Độ)",
+        "category": "carnivore"
       },
       {
-        "species": "Omniraptor",
-        "name": "Omniraptor (Săn Bầy)",
-        "icon": "Omniraptor"
+        "species": "Ceratosaurus",
+        "name": "Ceratosaurus (Bạo Chúa Đầm Thịt)",
+        "category": "carnivore"
       },
       {
-        "species": "Pachycephalosaurus",
-        "name": "Pachycephalosaurus (Húc Thiết Giáp)",
-        "icon": "Pachycephalosaurus"
+        "species": "Deinosuchus",
+        "name": "Deinosuchus (Thủy Quái Đầm Lầy)",
+        "category": "carnivore"
       },
       {
-        "species": "Tenontosaurus",
-        "name": "Tenontosaurus (Dũng Mãnh)",
-        "icon": "Tenontosaurus"
+        "species": "Diabloceratops",
+        "name": "Diabloceratops (Sừng Quỷ)",
+        "category": "herbivore"
       },
       {
         "species": "Dilophosaurus",
         "name": "Dilophosaurus (Sát Thủ Màn Đêm)",
-        "icon": "Dilophosaurus"
+        "category": "carnivore"
+      },
+      {
+        "species": "Dryosaurus",
+        "name": "Dryosaurus (Nhanh Nhẹn Đào Hang)",
+        "category": "herbivore"
+      },
+      {
+        "species": "Gallimimus",
+        "name": "Gallimimus (Tốc Độ Bứt Phá)",
+        "category": "herbivore"
+      },
+      {
+        "species": "Giganotosaurus",
+        "name": "Giganotosaurus (Khổng Lồ Nam Mỹ)",
+        "category": "carnivore"
+      },
+      {
+        "species": "Herrerasaurus",
+        "name": "Herrerasaurus (Thợ Săn Leo Trèo)",
+        "category": "carnivore"
+      },
+      {
+        "species": "Hypsilophodon",
+        "name": "Hypsilophodon (Nhảy Cao Nhỏ Con)",
+        "category": "herbivore"
+      },
+      {
+        "species": "IndoRex",
+        "name": "IndoRex (Quái Thú Biến Gen)",
+        "category": "carnivore"
+      },
+      {
+        "species": "Maiasaura",
+        "name": "Maiasaura (Tốc Độ Ăn Cỏ)",
+        "category": "herbivore"
+      },
+      {
+        "species": "Omniraptor",
+        "name": "Omniraptor (Raptor Săn Bầy)",
+        "category": "carnivore"
+      },
+      {
+        "species": "Pachycephalosaurus",
+        "name": "Pachycephalosaurus (Thiết Đầu Công)",
+        "category": "herbivore"
+      },
+      {
+        "species": "Pteranodon",
+        "name": "Pteranodon (Chúa Tể Bầu Trời)",
+        "category": "carnivore"
+      },
+      {
+        "species": "Puertasaurus",
+        "name": "Puertasaurus (Hộ Vệ Khổng Lồ)",
+        "category": "herbivore"
+      },
+      {
+        "species": "Spinosaurus",
+        "name": "Spinosaurus (Bạo Chúa Cánh Buồm)",
+        "category": "carnivore"
+      },
+      {
+        "species": "Stegosaurus",
+        "name": "Stegosaurus (Chiến Binh Đuôi Gai)",
+        "category": "herbivore"
+      },
+      {
+        "species": "Tenontosaurus",
+        "name": "Tenontosaurus (Chiến Binh Quật Đuôi)",
+        "category": "herbivore"
+      },
+      {
+        "species": "Therizinosaurus",
+        "name": "Therizinosaurus (Móng Vuốt Tử Thần)",
+        "category": "herbivore"
+      },
+      {
+        "species": "Triceratops",
+        "name": "Triceratops (Tam Giác Long Vĩ Đại)",
+        "category": "herbivore"
+      },
+      {
+        "species": "Troodon",
+        "name": "Troodon (Ác Mộng Độc Dược)",
+        "category": "carnivore"
+      },
+      {
+        "species": "Tyrannosaurus",
+        "name": "Tyrannosaurus (T-Rex Chúa Tể)",
+        "category": "carnivore"
       }
+    ],
+    "mutation_choices": [
+      {
+        "id": "Multichambered Lungs",
+        "name": "Multichambered Lungs (Phổi Đa Ngăn - Tăng Thể Lực)"
+      },
+      {
+        "id": "Hypermetabolic Inanition",
+        "name": "Hypermetabolic Inanition (Tiêu Hóa Nhanh - Kháng Đói)"
+      },
+      {
+        "id": "Congenital Hypoalgesia",
+        "name": "Congenital Hypoalgesia (Giảm Đau Bẩm Sinh - Kháng Choáng)"
+      },
+      {
+        "id": "Photosynthetic Tissue",
+        "name": "Photosynthetic Tissue (Mô Quang Hợp - Hồi Máu Dưới Nắng)"
+      },
+      {
+        "id": "Hemomania",
+        "name": "Hemomania (Cuồng Huyết - Tăng Sát Thương Khi Máu Thấp)"
+      },
+      {
+        "id": "Accelerated Prey Drive",
+        "name": "Accelerated Prey Drive (Tăng Tốc Săn Mồi)"
+      },
+      {
+        "id": "Osteosclerosis",
+        "name": "Osteosclerosis (Xương Đặc - Giảm Gãy Xương)"
+      },
+      {
+        "id": "Epidermal Fibrosis",
+        "name": "Epidermal Fibrosis (Xơ Hóa Da - Giảm Chảy Máu)"
+      },
+      {
+        "id": "Cellular Regeneration",
+        "name": "Cellular Regeneration (Tái Tạo Tế Bào - Hồi Phục Nhanh)"
+      },
+      {
+        "id": "Efficient Digestion",
+        "name": "Efficient Digestion (Tiêu Hóa Hiệu Quả)"
+      },
+      {
+        "id": "Enhanced Digestion",
+        "name": "Enhanced Digestion (Tăng Dinh Dưỡng)"
+      },
+      {
+        "id": "Gastronomic Regeneration",
+        "name": "Gastronomic Regeneration (Hồi Máu Khi No)"
+      },
+      {
+        "id": "Photosynthetic Regeneration",
+        "name": "Photosynthetic Regeneration (Tái Tạo Dưới Nắng)"
+      },
+      {
+        "id": "Sustained Hydration",
+        "name": "Sustained Hydration (Giữ Nước Lâu)"
+      },
+      {
+        "id": "Tactile Endurance",
+        "name": "Tactile Endurance (Bền Bỉ Thể Lực)"
+      },
+      {
+        "id": "Truculency",
+        "name": "Truculency (Hung Hãn Chiến Đấu)"
+      },
+      {
+        "id": "Xerocole Adaptation",
+        "name": "Xerocole Adaptation (Thích Nghi Khô Cằn)"
+      },
+      {
+        "id": "Infrasound Communication",
+        "name": "Infrasound Communication (Giao Tiếp Siêu Âm)"
+      },
+      {
+        "id": "Nocturnal",
+        "name": "Nocturnal (Tầm Nhìn Đêm Tối)"
+      },
+      {
+        "id": "Featherweight",
+        "name": "Featherweight (Nhẹ Nhàng - Giảm Sát Thương Rơi)"
+      },
+      {
+        "id": "Hydrodynamic",
+        "name": "Hydrodynamic (Bơi Nhanh Dưới Nước)"
+      },
+      {
+        "id": "Hydroregenerative",
+        "name": "Hydroregenerative (Hồi Phục Trong Nước)"
+      },
+      {
+        "id": "Submerged Optical Retention",
+        "name": "Submerged Optical Retention (Nhìn Rõ Dưới Nước)"
+      },
+      {
+        "id": "Enlarged Meniscus",
+        "name": "Enlarged Meniscus (Khớp Dẻo - Nhảy Cao/Xa)"
+      },
+      {
+        "id": "Cannibalistic",
+        "name": "Cannibalistic (Đồng Loại Tương Tàn)"
+      },
+      {
+        "id": "Hematophagy",
+        "name": "Hematophagy (Hút Máu Hồi Thể Lực)"
+      },
+      {
+        "id": "Wader",
+        "name": "Wader (Lội Nước Không Giảm Tốc)"
+      }
+    ],
+    "default_mutations": [
+      "Multichambered Lungs",
+      "Hypermetabolic Inanition",
+      "Congenital Hypoalgesia",
+      "Photosynthetic Tissue"
     ]
   }
 }

@@ -5506,12 +5506,21 @@ const Carcass = {
 
 
 // ==========================================
+// ==========================================
 // 20. MODULE QUÀ TÂN THỦ (STARTER GIFT & CLAIMS - ĐỒNG BỘ ISLEPILOT)
 // ==========================================
 const StarterGift = {
   bundle: null,
   selectedSpecies: 'Ceratosaurus',
   selectedGender: 'Male',
+  selectedMutations: [
+    'Multichambered Lungs',
+    'Hypermetabolic Inanition',
+    'Congenital Hypoalgesia',
+    'Photosynthetic Tissue'
+  ],
+  filterCategory: 'all',
+  searchQuery: '',
   isClaiming: false,
 
   async render() {
@@ -5533,6 +5542,9 @@ const StarterGift = {
       const res = await fetch(url);
       const data = await res.json();
       this.bundle = data.bundle || null;
+      if (this.bundle && this.bundle.default_mutations && (!this.selectedMutations || this.selectedMutations.length === 0)) {
+        this.selectedMutations = [...this.bundle.default_mutations];
+      }
     } catch (e) {
       console.warn("Lỗi tải gói quà:", e);
       this.bundle = null;
@@ -5563,92 +5575,155 @@ const StarterGift = {
     const isClaimed = !!b.claimed;
     const isEligible = b.eligible !== false;
     const playtimeHrs = b.playtime_hours || 0;
+    const coinsReward = b.coins || 3000;
+    const maxPlaytime = b.max_playtime_hours || 2;
 
-    const choicesHtml = (b.choices || []).map(c => `
-      <div class="starter-dino-option ${this.selectedSpecies === c.species ? 'active' : ''}" 
-           onclick="StarterGift.selectSpecies('${c.species}')"
-           style="cursor: pointer; border: 1px solid ${this.selectedSpecies === c.species ? '#fbbf24' : 'rgba(255,255,255,0.1)'}; background: ${this.selectedSpecies === c.species ? 'rgba(251, 191, 36, 0.12)' : 'rgba(255,255,255,0.03)'}; padding: 12px 14px; border-radius: 12px; display: flex; align-items: center; gap: 12px; transition: all 0.2s;">
-        <img src="${typeof Garage !== 'undefined' && Garage.getDinoImageUrl ? Garage.getDinoImageUrl(c.species) : 'https://islepilot.eu/cdn/dino-art/icon-sm/' + c.species + '.webp'}" 
-             alt="${c.species}" 
-             style="width: 44px; height: 44px; object-fit: contain; border-radius: 8px; background: rgba(0,0,0,0.3); padding: 4px;"
-             onerror="this.src='https://islepilot.eu/cdn/dino-art/icon-sm/Ceratosaurus.webp'">
-        <div style="flex: 1; text-align: left;">
-          <div style="font-weight: 700; color: #fff; font-size: 0.95rem;">${c.name}</div>
-          <div style="font-size: 0.78rem; color: #10b981;">Tăng trưởng 85% · Thêm thẳng vào Gara</div>
+    const allChoices = b.choices || [];
+    const filteredChoices = allChoices.filter(c => {
+      const matchCat = this.filterCategory === 'all' || (c.category === this.filterCategory);
+      const matchSearch = !this.searchQuery || 
+        c.species.toLowerCase().includes(this.searchQuery.toLowerCase()) || 
+        (c.name && c.name.toLowerCase().includes(this.searchQuery.toLowerCase()));
+      return matchCat && matchSearch;
+    });
+
+    const choicesHtml = filteredChoices.map(c => {
+      const isSel = this.selectedSpecies === c.species;
+      const isCarno = c.category === 'carnivore';
+      return `
+        <div class="starter-dino-option ${isSel ? 'active' : ''}" 
+             onclick="StarterGift.selectSpecies('${c.species}')"
+             style="cursor: pointer; border: 1px solid ${isSel ? '#fbbf24' : 'rgba(255,255,255,0.1)'}; background: ${isSel ? 'rgba(251, 191, 36, 0.15)' : 'rgba(255,255,255,0.03)'}; padding: 10px 12px; border-radius: 12px; display: flex; align-items: center; gap: 10px; transition: all 0.2s; position: relative;">
+          <img src="${typeof Garage !== 'undefined' && Garage.getDinoImageUrl ? Garage.getDinoImageUrl(c.species) : 'https://islepilot.eu/cdn/dino-art/icon-sm/' + c.species + '.webp'}" 
+               alt="${c.species}" 
+               style="width: 40px; height: 40px; object-fit: contain; border-radius: 8px; background: rgba(0,0,0,0.35); padding: 3px;"
+               onerror="this.src='https://islepilot.eu/cdn/dino-art/icon-sm/Ceratosaurus.webp'">
+          <div style="flex: 1; text-align: left; min-width: 0;">
+            <div style="font-weight: 700; color: #fff; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              ${c.name}
+            </div>
+            <div style="font-size: 0.75rem; color: ${isCarno ? '#f87171' : '#34d399'}; display: flex; align-items: center; gap: 4px;">
+              <span>${isCarno ? '🥩 Ăn thịt' : '🌿 Ăn cỏ'}</span> · <span>85% Size</span>
+            </div>
+          </div>
+          <div style="color: ${isSel ? '#fbbf24' : 'rgba(255,255,255,0.2)'}; font-size: 1.1rem;">
+            <i class="${isSel ? 'fas fa-check-circle' : 'far fa-circle'}"></i>
+          </div>
         </div>
-        <div style="color: ${this.selectedSpecies === c.species ? '#fbbf24' : 'rgba(255,255,255,0.2)'}; font-size: 1.1rem;">
-          <i class="${this.selectedSpecies === c.species ? 'fas fa-check-circle' : 'far fa-circle'}"></i>
+      `;
+    }).join('') || `<div style="text-align: center; padding: 20px; color: var(--text-muted); font-size: 0.85rem;">Không tìm thấy khủng long phù hợp với từ khóa "${this.searchQuery}"</div>`;
+
+    const mutationList = b.mutation_choices || [];
+    const mutationSlotsHtml = [0, 1, 2, 3].map(slotIdx => {
+      const curVal = this.selectedMutations[slotIdx] || 'None';
+      const optionsHtml = mutationList.map(m => `
+        <option value="${m.id}" ${curVal === m.id ? 'selected' : ''}>
+          ${m.name}
+        </option>
+      `).join('');
+
+      return `
+        <div style="display: flex; flex-direction: column; gap: 4px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); padding: 8px 12px; border-radius: 10px;">
+          <label style="font-size: 0.78rem; font-weight: 700; color: #38bdf8; display: flex; justify-content: space-between;">
+            <span><i class="fas fa-dna"></i> Đột biến ${slotIdx + 1}:</span>
+            <span style="color: #94a3b8; font-weight: normal;">Slot ${slotIdx + 1}</span>
+          </label>
+          <select onchange="StarterGift.setMutation(${slotIdx}, this.value)" 
+                  style="width: 100%; background: #0f172a; color: #f8fafc; border: 1px solid rgba(56, 189, 248, 0.3); padding: 6px 10px; border-radius: 6px; font-size: 0.82rem; outline: none; cursor: pointer;">
+            ${optionsHtml}
+          </select>
         </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
 
     container.innerHTML = `
-      <div class="card" style="border: 1px solid rgba(251, 191, 36, 0.35); background: linear-gradient(145deg, rgba(17, 24, 39, 0.95), rgba(30, 27, 75, 0.85)); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); overflow: hidden; position: relative;">
+      <div class="card" style="border: 1px solid rgba(251, 191, 36, 0.35); background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(24, 24, 47, 0.9)); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); overflow: hidden; position: relative;">
         <!-- Glowing aura top -->
-        <div style="position: absolute; top: -80px; right: -80px; width: 220px; height: 220px; background: radial-gradient(circle, rgba(251, 191, 36, 0.25) 0%, transparent 70%); pointer-events: none;"></div>
+        <div style="position: absolute; top: -80px; right: -80px; width: 240px; height: 240px; background: radial-gradient(circle, rgba(251, 191, 36, 0.25) 0%, transparent 70%); pointer-events: none;"></div>
 
         <div style="display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start;">
-          <!-- Left side: Gift graphic & Badges -->
-          <div style="flex: 1; min-width: 280px;">
-            <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(251, 191, 36, 0.15); border: 1px solid rgba(251, 191, 36, 0.35); color: #fbbf24; padding: 4px 12px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 14px;">
-              <i class="fas fa-crown"></i> Gói Phúc Lợi Người Chơi Mới
+          <!-- Left side: Summary & Badges -->
+          <div style="flex: 1.1; min-width: 320px;">
+            <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(251, 191, 36, 0.15); border: 1px solid rgba(251, 191, 36, 0.35); color: #fbbf24; padding: 4px 12px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 12px;">
+              <i class="fas fa-crown"></i> Gói Phúc Lợi Tân Thủ Toàn Diện
             </div>
             <h1 style="font-size: 1.6rem; font-weight: 800; color: #fff; margin-bottom: 8px; line-height: 1.3;">
               ${b.name || 'Gói Quà Tân Thủ 3MGAMING'}
             </h1>
-            <p style="color: var(--text-muted); font-size: 0.92rem; line-height: 1.5; margin-bottom: 20px;">
-              ${b.description || 'Quà tặng chào mừng dành riêng cho thành viên mới tham gia cụm máy chủ 3MGAMING. Chỉ cần 1 cú click là nhận ngay tiền khởi nghiệp và khủng long vào Gara!'}
+            <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.5; margin-bottom: 16px;">
+              Tặng ngay cho tất cả người chơi mới gia nhập: Khởi nghiệp với <b>${coinsReward.toLocaleString()} Xu</b> và nhận ngay 1 cá thể khủng long tùy chọn với <b>4 Đột Biến Gen (Mutations)</b> tự chọn vào Gara Dino!
             </p>
 
-            <!-- Rewards list -->
-            <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 16px; margin-bottom: 20px;">
-              <div style="font-size: 0.85rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.5px;">
-                Phần Thưởng Nhận Được
+            <!-- Rewards Cards -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; margin-bottom: 18px;">
+              <div style="display: flex; align-items: center; gap: 12px; background: rgba(251, 191, 36, 0.08); border: 1px solid rgba(251, 191, 36, 0.25); padding: 12px 14px; border-radius: 12px;">
+                <div style="width: 42px; height: 42px; border-radius: 10px; background: rgba(251, 191, 36, 0.2); display: flex; align-items: center; justify-content: center; color: #fbbf24; font-size: 1.3rem;">
+                  <i class="fas fa-coins"></i>
+                </div>
+                <div>
+                  <div style="font-weight: 800; color: #fbbf24; font-size: 1.15rem;">+${coinsReward.toLocaleString()} Xu</div>
+                  <div style="font-size: 0.75rem; color: #94a3b8;">Cộng thẳng vào ví IslePilot</div>
+                </div>
               </div>
-              <div style="display: flex; flex-direction: column; gap: 10px;">
-                <div style="display: flex; align-items: center; gap: 12px; background: rgba(251, 191, 36, 0.08); border: 1px solid rgba(251, 191, 36, 0.2); padding: 10px 14px; border-radius: 10px;">
-                  <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(251, 191, 36, 0.2); display: flex; align-items: center; justify-content: center; color: #fbbf24; font-size: 1.2rem;">
-                    <i class="fas fa-coins"></i>
-                  </div>
-                  <div>
-                    <div style="font-weight: 800; color: #fbbf24; font-size: 1.05rem;">+${(b.coins || 1000).toLocaleString()} Xu Khởi Nghiệp</div>
-                    <div style="font-size: 0.78rem; color: #94a3b8;">Cộng trực tiếp vào ví IslePilot của bạn</div>
-                  </div>
-                </div>
 
-                <div style="display: flex; align-items: center; gap: 12px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); padding: 10px 14px; border-radius: 10px;">
-                  <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(16, 185, 129, 0.2); display: flex; align-items: center; justify-content: center; color: #10b981; font-size: 1.2rem;">
-                    <i class="fas fa-dragon"></i>
-                  </div>
-                  <div>
-                    <div style="font-weight: 800; color: #34d399; font-size: 1.05rem;">1 Khủng Long Tùy Chọn 85% Size</div>
-                    <div style="font-size: 0.78rem; color: #94a3b8;">Thêm thẳng vào Gara Dino, lấy ra chơi bất cứ lúc nào</div>
-                  </div>
+              <div style="display: flex; align-items: center; gap: 12px; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.25); padding: 12px 14px; border-radius: 12px;">
+                <div style="width: 42px; height: 42px; border-radius: 10px; background: rgba(56, 189, 248, 0.2); display: flex; align-items: center; justify-content: center; color: #38bdf8; font-size: 1.3rem;">
+                  <i class="fas fa-dna"></i>
                 </div>
+                <div>
+                  <div style="font-weight: 800; color: #38bdf8; font-size: 1.15rem;">4 Đột Biến Gen</div>
+                  <div style="font-size: 0.75rem; color: #94a3b8;">Tự do lựa chọn theo sở thích</div>
+                </div>
+              </div>
+
+              <div style="display: flex; align-items: center; gap: 12px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); padding: 12px 14px; border-radius: 12px; grid-column: 1/-1;">
+                <div style="width: 42px; height: 42px; border-radius: 10px; background: rgba(16, 185, 129, 0.2); display: flex; align-items: center; justify-content: center; color: #10b981; font-size: 1.3rem;">
+                  <i class="fas fa-dragon"></i>
+                </div>
+                <div>
+                  <div style="font-weight: 800; color: #34d399; font-size: 1.1rem;">1 Khủng Long Tùy Chọn (85% Size)</div>
+                  <div style="font-size: 0.75rem; color: #94a3b8;">Chọn trong 27 loài có mặt trên server, lưu thẳng vào Gara Dino</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 4 Mutations Selector Box -->
+            <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 14px; padding: 16px; margin-bottom: 16px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <div style="font-size: 0.9rem; font-weight: 800; color: #38bdf8; display: flex; align-items: center; gap: 6px;">
+                  <i class="fas fa-dna"></i> CHỌN 4 ĐỘT BIẾN GEN (MUTATIONS):
+                </div>
+                <button type="button" onclick="StarterGift.resetDefaultMutations()" 
+                        style="background: transparent; border: 1px solid rgba(255,255,255,0.15); color: #94a3b8; font-size: 0.72rem; padding: 3px 8px; border-radius: 6px; cursor: pointer;">
+                  <i class="fas fa-undo"></i> Mặc định
+                </button>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px;">
+                ${mutationSlotsHtml}
               </div>
             </div>
 
             <!-- Conditions info -->
             <div style="display: flex; gap: 12px; flex-wrap: wrap; font-size: 0.8rem; color: #94a3b8;">
               <span style="display: inline-flex; align-items: center; gap: 5px;">
-                <i class="fas fa-check" style="color: #10b981;"></i> Nhận 1 lần duy nhất
+                <i class="fas fa-check-circle" style="color: #10b981;"></i> Nhận 1 lần duy nhất
               </span>
               <span style="display: inline-flex; align-items: center; gap: 5px;">
-                <i class="fas fa-clock" style="color: #60a5fa;"></i> Dành cho người chơi &lt; ${b.max_playtime_hours || 2}h chơi
+                <i class="fas fa-clock" style="color: #60a5fa;"></i> Áp dụng tài khoản &lt; ${maxPlaytime}h chơi
               </span>
               <span style="display: inline-flex; align-items: center; gap: 5px;">
-                <i class="fas fa-bolt" style="color: #fbbf24;"></i> Nhận tức thì
+                <i class="fas fa-bolt" style="color: #fbbf24;"></i> Nhận tự động vào game
               </span>
             </div>
           </div>
 
           <!-- Right side: Dino Selector & Claim Action -->
-          <div style="flex: 1; min-width: 320px; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 20px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+          <div style="flex: 1; min-width: 320px; background: rgba(0, 0, 0, 0.35); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 18px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
               <div style="font-weight: 700; color: #fff; font-size: 0.95rem;">
-                <i class="fas fa-paw" style="color: #fbbf24; margin-right: 6px;"></i> Chọn Khủng Long Khởi Nghiệp
+                <i class="fas fa-paw" style="color: #fbbf24; margin-right: 6px;"></i> Chọn Khủng Long (${allChoices.length} Loài)
               </div>
-              <div style="display: flex; gap: 6px;">
+              <div style="display: flex; gap: 4px;">
                 <button type="button" 
                         onclick="StarterGift.setGender('Male')" 
                         style="padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; border: 1px solid ${this.selectedGender === 'Male' ? '#3b82f6' : 'rgba(255,255,255,0.1)'}; background: ${this.selectedGender === 'Male' ? 'rgba(59, 130, 246, 0.25)' : 'transparent'}; color: ${this.selectedGender === 'Male' ? '#60a5fa' : '#94a3b8'};">
@@ -5662,8 +5737,33 @@ const StarterGift = {
               </div>
             </div>
 
-            <!-- Dino list grid -->
-            <div style="display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto; padding-right: 4px; margin-bottom: 20px;">
+            <!-- Category & Search Filters -->
+            <div style="display: flex; gap: 6px; margin-bottom: 10px;">
+              <button type="button" onclick="StarterGift.setCategory('all')" 
+                      style="flex: 1; padding: 5px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; border: 1px solid ${this.filterCategory === 'all' ? '#fbbf24' : 'rgba(255,255,255,0.1)'}; background: ${this.filterCategory === 'all' ? 'rgba(251,191,36,0.2)' : 'rgba(0,0,0,0.2)'}; color: ${this.filterCategory === 'all' ? '#fbbf24' : '#94a3b8'};">
+                Tất cả (${allChoices.length})
+              </button>
+              <button type="button" onclick="StarterGift.setCategory('carnivore')" 
+                      style="flex: 1; padding: 5px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; border: 1px solid ${this.filterCategory === 'carnivore' ? '#ef4444' : 'rgba(255,255,255,0.1)'}; background: ${this.filterCategory === 'carnivore' ? 'rgba(239,68,68,0.2)' : 'rgba(0,0,0,0.2)'}; color: ${this.filterCategory === 'carnivore' ? '#f87171' : '#94a3b8'};">
+                Ăn thịt
+              </button>
+              <button type="button" onclick="StarterGift.setCategory('herbivore')" 
+                      style="flex: 1; padding: 5px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; border: 1px solid ${this.filterCategory === 'herbivore' ? '#10b981' : 'rgba(255,255,255,0.1)'}; background: ${this.filterCategory === 'herbivore' ? 'rgba(16,185,129,0.2)' : 'rgba(0,0,0,0.2)'}; color: ${this.filterCategory === 'herbivore' ? '#34d399' : '#94a3b8'};">
+                Ăn cỏ
+              </button>
+            </div>
+
+            <!-- Search input -->
+            <div style="position: relative; margin-bottom: 12px;">
+              <input type="text" 
+                     placeholder="🔍 Tìm nhanh loài khủng long..." 
+                     value="${this.searchQuery}" 
+                     oninput="StarterGift.setSearch(this.value)" 
+                     style="width: 100%; background: #0f172a; border: 1px solid rgba(255,255,255,0.12); color: #fff; padding: 7px 12px; border-radius: 8px; font-size: 0.82rem; outline: none;">
+            </div>
+
+            <!-- Dino list grid with scroll -->
+            <div style="display: flex; flex-direction: column; gap: 8px; max-height: 290px; overflow-y: auto; padding-right: 4px; margin-bottom: 16px;">
               ${choicesHtml}
             </div>
 
@@ -5679,7 +5779,7 @@ const StarterGift = {
                 <div style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 12px; padding: 14px; text-align: center; color: #34d399;">
                   <div style="font-size: 1.3rem; margin-bottom: 4px;"><i class="fas fa-check-circle"></i></div>
                   <div style="font-weight: 800; font-size: 0.95rem;">Bạn Đã Nhận Quà Tân Thủ Rồi!</div>
-                  <div style="font-size: 0.8rem; color: #a7f3d0; margin-top: 4px;">Khủng long đã có trong Gara Dino và 1,000 Xu đã được cộng vào ví.</div>
+                  <div style="font-size: 0.8rem; color: #a7f3d0; margin-top: 4px;">Khủng long và 4 Mutation đã có trong Gara Dino, ${coinsReward.toLocaleString()} Xu đã được cộng vào ví.</div>
                   <a href="#garage" class="btn btn-secondary" style="margin-top: 10px; font-size: 0.8rem; padding: 6px 14px; display: inline-flex; align-items: center; gap: 6px;">
                     <i class="fas fa-warehouse"></i> Mở Gara Khủng Long Ngay
                   </a>
@@ -5688,15 +5788,15 @@ const StarterGift = {
                 <div style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 14px; text-align: center; color: #f87171;">
                   <div style="font-size: 1.3rem; margin-bottom: 4px;"><i class="fas fa-lock"></i></div>
                   <div style="font-weight: 800; font-size: 0.95rem;">Gói Quà Chỉ Dành Cho Tân Thủ</div>
-                  <div style="font-size: 0.8rem; color: #fca5a5; margin-top: 4px;">Tài khoản của bạn đã đạt ${playtimeHrs} giờ chơi (yêu cầu dưới ${b.max_playtime_hours || 2}h).</div>
+                  <div style="font-size: 0.8rem; color: #fca5a5; margin-top: 4px;">Tài khoản của bạn đã đạt ${playtimeHrs} giờ chơi (yêu cầu dưới ${maxPlaytime}h).</div>
                 </div>
               ` : `
                 <button type="button" 
                         onclick="StarterGift.claim()" 
                         ${this.isClaiming ? 'disabled' : ''}
                         class="btn btn-primary" 
-                        style="width: 100%; justify-content: center; padding: 14px; font-size: 1.05rem; font-weight: 800; background: linear-gradient(135deg, #f59e0b, #d97706); border-color: #fbbf24; box-shadow: 0 4px 20px rgba(245, 158, 11, 0.45); text-transform: uppercase;">
-                  ${this.isClaiming ? '<i class="fas fa-spinner fa-spin" style="margin-right: 8px;"></i> Đang Nhận Quà...' : '<i class="fas fa-gift" style="margin-right: 8px;"></i> Nhận Quà Tân Thủ Ngay'}
+                        style="width: 100%; justify-content: center; padding: 14px; font-size: 1rem; font-weight: 800; background: linear-gradient(135deg, #f59e0b, #d97706); border-color: #fbbf24; box-shadow: 0 4px 20px rgba(245, 158, 11, 0.45); text-transform: uppercase;">
+                  ${this.isClaiming ? '<i class="fas fa-spinner fa-spin" style="margin-right: 8px;"></i> Đang Nhận Quà...' : '<i class="fas fa-gift" style="margin-right: 8px;"></i> Nhận Quà Tân Thủ (' + coinsReward.toLocaleString() + ' Xu + Dino)'}
                 </button>
               `}
             </div>
@@ -5713,6 +5813,30 @@ const StarterGift = {
 
   setGender(gender) {
     this.selectedGender = gender;
+    this.displayBundle();
+  },
+
+  setCategory(cat) {
+    this.filterCategory = cat;
+    this.displayBundle();
+  },
+
+  setSearch(q) {
+    this.searchQuery = q || '';
+    this.displayBundle();
+  },
+
+  setMutation(slotIdx, val) {
+    this.selectedMutations[slotIdx] = val;
+  },
+
+  resetDefaultMutations() {
+    this.selectedMutations = [
+      'Multichambered Lungs',
+      'Hypermetabolic Inanition',
+      'Congenital Hypoalgesia',
+      'Photosynthetic Tissue'
+    ];
     this.displayBundle();
   },
 
@@ -5738,20 +5862,27 @@ const StarterGift = {
         body: JSON.stringify({
           steam_id: user.steamId,
           species: this.selectedSpecies,
-          gender: this.selectedGender
+          gender: this.selectedGender,
+          mutations: this.selectedMutations
         })
       });
       const data = await res.json();
 
       if (data.ok || data.success) {
+        const coins = data.coins || 3000;
+        const mutNames = (data.mutations || this.selectedMutations).join(', ');
         if (typeof Swal !== 'undefined') {
           Swal.fire({
             title: '🎉 Nhận Quà Thành Công!',
             html: `
-              <div style="font-size: 1rem; color: #e2e8f0; line-height: 1.6;">
-                Chúc mừng bạn đã nhận thành công <b>Gói Quà Tân Thủ 3MGAMING</b>!<br>
-                💰 <b>+1,000 Xu</b> đã cộng thẳng vào ví IslePilot.<br>
-                🦖 <b>${this.selectedSpecies} (85%)</b> đã được chuyển vào Gara của bạn.
+              <div style="font-size: 1rem; color: #e2e8f0; line-height: 1.6; text-align: left; padding: 4px 8px;">
+                Chúc mừng bạn đã nhận thành công <b>Gói Quà Tân Thủ 3MGAMING</b>!<br><br>
+                💰 <b>+${coins.toLocaleString()} Xu</b> đã cộng thẳng vào ví IslePilot.<br>
+                🦖 <b>${this.selectedSpecies} (85%)</b> (${this.selectedGender === 'Male' ? 'Đực' : 'Cái'}) đã được chuyển vào Gara của bạn.<br>
+                🧬 <b>4 Đột biến gen đã tích hợp:</b><br>
+                <div style="font-size: 0.85rem; color: #38bdf8; margin-top: 4px; padding: 6px 10px; background: rgba(0,0,0,0.3); border-radius: 6px;">
+                  ${mutNames}
+                </div>
               </div>
             `,
             icon: 'success',
@@ -5766,10 +5897,10 @@ const StarterGift = {
             }
           });
         } else {
-          alert(`🎉 Nhận thành công Quà Tân Thủ: +1,000 Xu và ${this.selectedSpecies} vào Gara!`);
+          alert(`🎉 Nhận thành công Quà Tân Thủ: +${coins.toLocaleString()} Xu và ${this.selectedSpecies} (kèm 4 đột biến) vào Gara!`);
         }
 
-        // Cập nhật số dư Xu trên Header nếu có hàm
+        // Cập nhật số dư Xu trên Header
         if (window.App && typeof App.updateUserBalanceUI === 'function' && data.balance !== undefined && data.balance !== null) {
           App.updateUserBalanceUI(data.balance);
         } else if (window.App && typeof App.refreshBalance === 'function') {
