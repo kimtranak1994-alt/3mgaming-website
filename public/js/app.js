@@ -238,8 +238,10 @@ const App = {
       }
     } else {
       this.showToast('👑 Đã kích hoạt chế độ Quản trị viên', 'success');
-      this.switchTab('admin');
-      window.location.hash = '#admin';
+      if (this.currentTab !== 'map') {
+        this.switchTab('admin');
+        window.location.hash = '#admin';
+      }
     }
   },
 
@@ -283,12 +285,13 @@ const App = {
       navItem.style.display = isGuest ? 'none' : 'inline-block';
     }
 
-    // Cập nhật lại bản đồ trực tiếp theo chế độ vừa chuyển đổi
+    // Cập nhật lại bản đồ trực tiếp ngay lập tức theo chế độ vừa chuyển đổi
     if (window.GatewayMap) {
-      if (typeof window.GatewayMap.updateLivePlayers === 'function') {
-        window.GatewayMap.updateLivePlayers();
-      } else if (typeof window.GatewayMap.renderLivePlayers === 'function') {
+      if (typeof window.GatewayMap.renderLivePlayers === 'function') {
         window.GatewayMap.renderLivePlayers();
+      }
+      if (typeof window.GatewayMap.updateLivePlayers === 'function') {
+        window.GatewayMap.updateLivePlayers(true);
       }
     }
 

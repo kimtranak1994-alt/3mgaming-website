@@ -1033,8 +1033,8 @@ const GatewayMap = {
     return '🦕';
   },
 
-  async updateLivePlayers() {
-    if (this.isPolling) return;
+  async updateLivePlayers(force = false) {
+    if (this.isPolling && !force) return;
     this.isPolling = true;
 
     try {
@@ -1042,8 +1042,9 @@ const GatewayMap = {
       const mySteamId = (currentUser && currentUser.steamId) ? String(currentUser.steamId).trim() : '';
       const viewMode = localStorage.getItem('admin_view_mode') || 'guest';
       const isRealAdmin = !!(window.realAdminVerified || window.isUserAdmin);
-      const isMapAdmin = !!window.isMapAdmin || (mySteamId === '76561199319732549');
-      const isAdminView = (isRealAdmin && (viewMode !== 'guest')) || isMapAdmin;
+      const isMapAdmin = !!window.isMapAdmin;
+      // Chỉ bật chế độ xem tất cả người chơi khi đang ở chế độ Quản trị (admin) và có quyền hợp lệ
+      const isAdminView = (viewMode === 'admin') && (isRealAdmin || isMapAdmin);
 
       const params = new URLSearchParams({
         t: Date.now(),
@@ -1072,21 +1073,22 @@ const GatewayMap = {
     if (!layer) return;
 
     const currentUser = JSON.parse(localStorage.getItem('steam_user') || 'null');
-    let mySteamId = (currentUser && currentUser.steamId) ? currentUser.steamId : null;
+    let mySteamId = (currentUser && currentUser.steamId) ? String(currentUser.steamId).trim() : null;
 
     // Lọc danh sách người chơi đang online và có dữ liệu tọa độ
     const onlinePlayers = this.livePlayers.filter(p => p.online !== false && p.position);
-    let myPlayer = mySteamId ? onlinePlayers.find(p => p.steamId === mySteamId) : null;
+    let myPlayer = mySteamId ? onlinePlayers.find(p => String(p.steamId || '').trim() === mySteamId) : null;
 
     // Phân quyền chế độ hiển thị: Admin vs Khách (Người chơi)
+    // Khi ở chế độ Khách (viewMode !== 'admin'), CHỈ hiển thị duy nhất vị trí của chính người chơi đó
     const viewMode = localStorage.getItem('admin_view_mode') || 'guest';
     const isRealAdmin = !!(window.realAdminVerified || window.isUserAdmin);
-    const isMapAdmin = !!window.isMapAdmin || (mySteamId === '76561199319732549');
-    const isAdminView = (isRealAdmin && (viewMode !== 'guest')) || isMapAdmin;
+    const isMapAdmin = !!window.isMapAdmin;
+    const isAdminView = (viewMode === 'admin') && (isRealAdmin || isMapAdmin);
 
     let displayedPlayers = [];
     if (isAdminView) {
-      // Chế độ Admin hoặc Quyền Xem Bản Đồ: Hiển thị đầy đủ tất cả người chơi
+      // Chế độ Admin (khi đang bật chế độ Quản trị): Hiển thị đầy đủ tất cả người chơi
       displayedPlayers = onlinePlayers;
       if (countEl) {
         countEl.textContent = `${onlinePlayers.length} người chơi`;
@@ -1095,22 +1097,22 @@ const GatewayMap = {
         unitEl.textContent = isRealAdmin ? '(Toàn bộ Server - Chế độ Admin)' : '(Toàn bộ Server - Quyền Xem Bản Đồ)';
       }
     } else {
-      // Chế độ Khách: Chỉ hiện đúng người chơi đang đăng nhập, không hiện người khác
+      // Chế độ Khách: Chỉ hiện đúng người chơi đang đăng nhập, tuyệt đối không hiện người khác
       if (myPlayer) {
         displayedPlayers = [myPlayer];
         if (countEl) {
-          countEl.textContent = '1/1 Đang theo dõi';
+          countEl.textContent = `${myPlayer.name || 'Khủng long của bạn'} (${myPlayer.species || 'Online'})`;
         }
         if (unitEl) {
-          unitEl.textContent = '(Vị trí của bạn - Chế độ Khách)';
+          unitEl.textContent = '(Chỉ hiển thị vị trí của bạn - Chế độ Khách)';
         }
       } else {
         displayedPlayers = [];
         if (countEl) {
-          countEl.textContent = '0 người chơi';
+          countEl.textContent = mySteamId ? 'Đang Offline' : 'Chưa đăng nhập Steam';
         }
         if (unitEl) {
-          unitEl.textContent = mySteamId ? '(Khủng long của bạn đang Offline)' : '(Chế độ Khách - Đăng nhập Steam để xem)';
+          unitEl.textContent = mySteamId ? '(Chỉ hiển thị vị trí của bạn - Vào game để định vị)' : '(Chế độ Khách - Đăng nhập Steam để xem vị trí của bạn)';
         }
       }
     }

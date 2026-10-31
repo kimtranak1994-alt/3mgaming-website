@@ -2927,19 +2927,24 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         q_params = urllib.parse.parse_qs(query)
         client_mode = q_params.get("mode", ["guest"])[0]
         target_steam_id = q_params.get("steam_id", [None])[0]
-        active_sid = str(target_steam_id or self.get_active_steam_id() or "").strip()
+
+        # Chỉ lấy Steam ID thực của người đang đăng nhập (từ query hoặc cookie steam_user, không fallback sang người chơi khác)
+        cookie_header = self.headers.get("Cookie", "")
+        cookie_match = re.search(r"steam_user=([^;:]+)", cookie_header)
+        cookie_sid = cookie_match.group(1).strip() if cookie_match else ""
+        active_sid = str(target_steam_id or cookie_sid or "").strip()
 
         is_admin, _ = self.is_admin_request()
         map_admin_sids = [str(sid).strip() for sid in config.get("MAP_ONLY_ADMIN_STEAM_IDS", ["76561199319732549"])]
         is_map_admin = is_admin or (active_sid in map_admin_sids)
 
-        # Nếu là Admin hoặc có quyền xem bản đồ và yêu cầu xem toàn bộ người chơi
-        if is_map_admin and (client_mode == "admin" or active_sid in map_admin_sids):
+        # CHỈ khi đang ở chế độ Quản trị (mode=admin) VÀ có quyền Admin/MapAdmin mới trả về toàn bộ người chơi
+        if client_mode == "admin" and is_map_admin:
             self.send_json_response(players)
             return
 
-        # Chế độ Khách (hoặc người chơi bình thường):
-        # Chỉ trả về duy nhất người chơi đang đăng nhập (nếu có steam_id)
+        # Chế độ Khách (mode=guest hoặc người chơi bình thường):
+        # CHỈ trả về duy nhất vị trí của chính người chơi đang đăng nhập, không cho xem người khác
         if active_sid:
             my_players = [p for p in players if str(p.get("steamId", "")).strip() == active_sid]
             self.send_json_response(my_players)
