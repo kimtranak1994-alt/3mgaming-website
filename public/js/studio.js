@@ -111,6 +111,7 @@ const Studio = {
     this.renderPatternChips();
     this.loadSavedSkins();
     this.loadSpecies(this.species);
+    this.syncActiveDino();
   },
 
   populateSpeciesSelector() {
@@ -1067,6 +1068,11 @@ const Studio = {
     }
 
     // Apply In Game button
+    const btnSync = document.getElementById('btn-sync-dino');
+    if (btnSync) {
+      btnSync.addEventListener('click', () => this.syncActiveDino());
+    }
+
     const btnApply = document.getElementById('btn-apply-ingame');
     if (btnApply) {
       btnApply.addEventListener('click', () => this.applyInGame());
