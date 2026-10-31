@@ -192,6 +192,9 @@ const App = {
       }
       const donateNoteEl = document.getElementById('donate-transfer-note');
       if (donateNoteEl) donateNoteEl.textContent = user.name || 'TÊN INGAME';
+      document.querySelectorAll('a[href^="/studio"]').forEach(a => {
+        a.setAttribute('href', `/studio?steam_id=${encodeURIComponent(user.steamId)}&name=${encodeURIComponent(user.name || '')}`);
+      });
     } else {
       if (btnLink) {
         btnLink.setAttribute('href', '/api/player/steam/login?redirect=%2F');

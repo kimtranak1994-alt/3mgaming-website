@@ -2373,11 +2373,17 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
     def handle_steam_login(self):
 
+        parsed_req = urllib.parse.urlparse(self.path)
+        req_params = urllib.parse.parse_qs(parsed_req.query)
+        redirect_target = req_params.get("redirect", [""])[0].strip()
+
         host = self.headers.get("Host", f"localhost:{config.get('PORT', 8000)}")
 
         scheme = "https" if "https" in self.headers.get("X-Forwarded-Proto", "") else "http"
 
         return_to = f"{scheme}://{host}/api/player/steam/callback"
+        if redirect_target:
+            return_to += f"?redirect={urllib.parse.quote(redirect_target)}"
 
         params = {
 
@@ -2495,7 +2501,11 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
         cookie_val = f"{steam_id}:{encoded_name}"
 
-        redirect_url = f"/?steam_id={steam_id}&name={encoded_name}#garage"
+        redirect_target = params.get("redirect", [""])[0].strip()
+        if redirect_target and redirect_target.startswith("/studio"):
+            redirect_url = f"/studio?steam_id={steam_id}&name={encoded_name}"
+        else:
+            redirect_url = f"/?steam_id={steam_id}&name={encoded_name}#garage"
 
         self.send_response(302)
 
@@ -2557,7 +2567,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
         player_info = self.fetch_islepilot(f"/players/{steam_id}")
 
-        is_logged_in = bool(re.search(r"steam_user=([^;]+)", self.headers.get("Cookie", "")))
+        query_params = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+        has_query_sid = bool(query_params.get("steam_id", [None])[0])
+        is_logged_in = bool(re.search(r"steam_user=([^;]+)", self.headers.get("Cookie", ""))) or has_query_sid
 
         
 

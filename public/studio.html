@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Skin Studio 3D — 3MGAMING EVRIMA</title>
   <link rel="icon" type="image/png" href="/assets/images/logo.png">
-  <link rel="stylesheet" href="/css/studio.css?v=1.0">
+  <link rel="stylesheet" href="/css/studio.css?v=1.2">
 </head>
 <body>
 
@@ -20,6 +20,27 @@
     </div>
 
     <div class="studio-top-nav">
+      <!-- STEAM ACCOUNT & LOGIN BAR -->
+      <div class="studio-steam-box" id="studio-steam-box">
+        <!-- Trạng thái chưa đăng nhập Steam -->
+        <div id="studio-steam-guest" style="display: inline-flex; align-items: center; gap: 6px;">
+          <a href="/api/player/steam/login?redirect=%2Fstudio" class="studio-steam-login-btn" id="btn-studio-steam-login">
+            <span>🎮</span> <span>Đăng nhập Steam</span>
+          </a>
+          <button type="button" class="studio-nav-btn" id="btn-studio-manual-steam" title="Nhập nhanh SteamID64 để liên kết">
+            <span>🔗</span> <span>Nhập SteamID</span>
+          </button>
+        </div>
+
+        <!-- Trạng thái đã đăng nhập Steam -->
+        <div id="studio-steam-logged" class="studio-steam-profile" style="display: none;">
+          <span class="studio-balance-pill" id="studio-user-balance">💰 0 Xu</span>
+          <span style="font-weight: 700; color: #fff;">👤 <span id="studio-user-name">Người chơi</span></span>
+          <span id="studio-user-steamid" style="font-family: var(--font-mono); font-size: 0.72rem; color: #94a3b8;"></span>
+          <button type="button" class="btn-icon-subtle" id="btn-studio-logout" title="Đăng xuất Steam" style="font-size: 0.85rem; padding: 2px 6px;">🚪</button>
+        </div>
+      </div>
+
       <button type="button" class="studio-nav-btn" id="btn-sync-dino" style="color: #4ade80; border-color: rgba(34,197,94,0.4); background: rgba(34,197,94,0.12);" title="Lấy khủng long đang online/sống trong server">
         <span>🔄</span> <span>Đồng bộ từ Server</span>
       </button>
@@ -101,6 +122,7 @@
         </div>
 
         <div class="stage-readout">
+          <span>STEAM: <b id="readout-steam" style="color: #66c0f4;">CHƯA LIÊN KẾT</b></span>
           <span>LOÀI: <b id="readout-species">Tyrannosaurus</b></span>
           <span>CHẾ ĐỘ ĂN: <b id="readout-diet">CARNIVORE</b></span>
           <span>RENDER: <b style="color: var(--success);">WEBGL 3D</b></span>
@@ -125,12 +147,42 @@
 
       <!-- PANE 1: EDITOR -->
       <div class="deck-body deck-pane" id="pane-editor">
-        <!-- Tên thiết kế -->
-        <div class="deck-section">
-          <div class="deck-title">
-            <span>Tên Bản Thiết Kế</span>
+        <!-- STEAM & ACTIVE DINO SYNC STATUS CARD -->
+        <div class="steam-sync-card" id="deck-steam-card">
+          <div class="steam-sync-row">
+            <span style="color: #94a3b8; font-weight: 600;">🎮 Tài khoản Steam:</span>
+            <span id="deck-steam-user" style="font-weight: 700; color: #f87171;">Chưa đăng nhập Steam</span>
           </div>
-          <input type="text" id="design-name" class="design-input" placeholder="Đặt tên cho skin này..." value="Shadow Tyrant">
+          <div class="steam-sync-row">
+            <span style="color: #94a3b8; font-weight: 600;">🦖 Khủng long Server:</span>
+            <span id="deck-active-dino" style="font-weight: 700; color: #38bdf8;">Chưa đồng bộ</span>
+          </div>
+          <div id="deck-steam-login-cta" style="margin-top: 4px;">
+            <a href="/api/player/steam/login?redirect=%2Fstudio" class="studio-steam-login-btn" style="width: 100%; justify-content: center; padding: 8px;">
+              <span>🎮</span> <span>Đăng Nhập / Liên Kết Steam Ngay</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Tên thiết kế & Giới tính -->
+        <div class="deck-section">
+          <div style="display: grid; grid-template-columns: 1.3fr 1fr; gap: 10px;">
+            <div>
+              <div class="deck-title" style="margin-bottom: 6px;">
+                <span>Tên Bản Thiết Kế</span>
+              </div>
+              <input type="text" id="design-name" class="design-input" placeholder="Đặt tên cho skin..." value="Shadow Tyrant">
+            </div>
+            <div>
+              <div class="deck-title" style="margin-bottom: 6px;">
+                <span>Giới Tính (Sex)</span>
+              </div>
+              <div class="sex-toggle-group">
+                <button type="button" class="sex-btn active" id="btn-sex-male" data-sex="male">♂ Đực</button>
+                <button type="button" class="sex-btn" id="btn-sex-female" data-sex="female">♀ Cái</button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Hoa văn (Pattern) -->
@@ -223,7 +275,7 @@
       <div class="deck-body deck-pane" id="pane-saved" style="display: none;">
         <div class="deck-section" style="border-bottom: none;">
           <div class="deck-title">
-            <span>Các Bản Thiết Kế Đã Lưu</span>
+            <span>Các Bản Thiết Kế Đã Lưu (Đồng bộ Steam)</span>
           </div>
           <div class="saved-list" id="saved-skins-list"></div>
         </div>
@@ -238,6 +290,6 @@
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 
   <!-- Studio Controller -->
-  <script src="/js/studio.js?v=1.0"></script>
+  <script src="/js/studio.js?v=1.2"></script>
 </body>
 </html>

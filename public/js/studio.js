@@ -1,7 +1,7 @@
 /**
  * 3MGAMING EVRIMA 3D SKIN STUDIO & MOD WORKSHOP
  * Fully featured local & web 3D Dino Skin Customizer matching Elysium Studio layout
- * Supports importing any external mod skin (.json / .txt / Evrima Code / Blueprint)
+ * Synchronized with Steam OpenID, IslePilot Active Dinosaur, and External Mod Skins
  */
 
 const Studio = {
@@ -12,7 +12,11 @@ const Studio = {
   variation: 0,
   theme: 0,
   growth: 1.0,
-  designName: 'My Evrima Skin',
+  designName: 'Shadow Tyrant',
+
+  // Steam Auth & Active Dino State
+  steamUser: null,
+  activeDino: null,
 
   // Three.js instances
   scene: null,
@@ -99,19 +103,237 @@ const Studio = {
     { id: 'claws', label: 'Móng vuốt (Claws)', sub: 'Móng chân và vuốt trước' }
   ],
 
-  // Saved skins cache
   savedSkins: [],
 
-  // Init
-  init() {
+  async init() {
     this.populateSpeciesSelector();
     this.initThree();
     this.initEventListeners();
     this.renderChannels();
     this.renderPatternChips();
-    this.loadSavedSkins();
-    this.loadSpecies(this.species);
-    this.syncActiveDino();
+    await this.checkSteamAuth();
+    await this.loadSavedSkins();
+    await this.syncActiveDino(true);
+  },
+
+  // ==========================================
+  // STEAM AUTHENTICATION & SYNCHRONIZATION
+  // ==========================================
+  getStoredSteamUser() {
+    try {
+      const raw = JSON.parse(localStorage.getItem('steam_user') || 'null');
+      if (!raw) return null;
+      const sid = raw.steamId || raw.steamid || raw.steam_id || '';
+      if (!sid) return null;
+      return {
+        steamId: String(sid).trim(),
+        name: raw.name || `Player_${String(sid).slice(-4)}`,
+        balance: raw.balance || 0
+      };
+    } catch (e) {
+      return null;
+    }
+  },
+
+  async checkSteamAuth() {
+    // 1. Check URL query params from Steam OpenID callback
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('steam_id')) {
+      const sid = params.get('steam_id').trim();
+      const name = params.get('name') || `Player_${sid.slice(-4)}`;
+      if (sid) {
+        const userObj = { steamId: sid, name: decodeURIComponent(name), balance: 0 };
+        localStorage.setItem('steam_user', JSON.stringify(userObj));
+        document.cookie = `steam_user=${sid}:${encodeURIComponent(userObj.name)}; Path=/; Max-Age=2592000; SameSite=Lax`;
+        const cleanUrl = window.location.pathname + window.location.hash;
+        window.history.replaceState({}, document.title, cleanUrl);
+        this.showToast(`🎉 Đã liên kết Steam thành công: ${userObj.name}!`, 'success');
+      }
+    }
+
+    // 2. Read from localStorage & verify with /api/player/me
+    let user = this.getStoredSteamUser();
+    const steamParam = (user && user.steamId) ? `?steam_id=${encodeURIComponent(user.steamId)}` : '';
+
+    try {
+      const res = await fetch(`/api/player/me${steamParam}`, { credentials: 'same-origin' });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.logged_in && data.steam_id) {
+          user = {
+            steamId: String(data.steam_id),
+            name: data.name || (user && user.name) || `Player_${String(data.steam_id).slice(-4)}`,
+            balance: typeof data.balance === 'number' ? data.balance : 0
+          };
+          localStorage.setItem('steam_user', JSON.stringify(user));
+        } else if (!user) {
+          user = null;
+        }
+      }
+    } catch (e) {
+      console.warn('checkSteamAuth error:', e);
+    }
+
+    this.steamUser = user;
+    this.updateSteamUI();
+  },
+
+  updateSteamUI() {
+    const guestBox = document.getElementById('studio-steam-guest');
+    const loggedBox = document.getElementById('studio-steam-logged');
+    const nameEl = document.getElementById('studio-user-name');
+    const sidEl = document.getElementById('studio-user-steamid');
+    const balEl = document.getElementById('studio-user-balance');
+    const readoutSteam = document.getElementById('readout-steam');
+    const deckUser = document.getElementById('deck-steam-user');
+    const deckLoginCta = document.getElementById('deck-steam-login-cta');
+
+    if (this.steamUser && this.steamUser.steamId) {
+      if (guestBox) guestBox.style.display = 'none';
+      if (loggedBox) loggedBox.style.display = 'inline-flex';
+      if (nameEl) nameEl.textContent = this.steamUser.name;
+      if (sidEl) sidEl.textContent = `(${this.steamUser.steamId})`;
+      if (balEl) balEl.textContent = `💰 ${(this.steamUser.balance || 0).toLocaleString('vi-VN')} Xu`;
+      if (readoutSteam) {
+        readoutSteam.textContent = `${this.steamUser.name} (${this.steamUser.steamId.slice(-4)})`;
+        readoutSteam.style.color = '#4ade80';
+      }
+      if (deckUser) {
+        deckUser.innerHTML = `<span style="color:#4ade80;">🟢 ${this.steamUser.name}</span> <small style="color:#94a3b8;font-family:var(--font-mono);">(${this.steamUser.steamId})</small>`;
+      }
+      if (deckLoginCta) deckLoginCta.style.display = 'none';
+    } else {
+      if (guestBox) guestBox.style.display = 'inline-flex';
+      if (loggedBox) loggedBox.style.display = 'none';
+      if (readoutSteam) {
+        readoutSteam.textContent = 'CHƯA ĐĂNG NHẬP';
+        readoutSteam.style.color = '#f87171';
+      }
+      if (deckUser) {
+        deckUser.innerHTML = `<span style="color:#f87171;">⚠️ Chưa đăng nhập Steam</span>`;
+      }
+      if (deckLoginCta) deckLoginCta.style.display = 'block';
+    }
+  },
+
+  async promptManualSteamId() {
+    const cur = (this.steamUser && this.steamUser.steamId) || '';
+    const input = window.prompt('Nhập mã SteamID64 (17 chữ số, bắt đầu bằng 7656119...) để đồng bộ trực tiếp với tài khoản trên Server:', cur);
+    if (!input) return;
+    const sid = input.trim();
+    if (!/^7656119\d{10}$/.test(sid)) {
+      this.showToast('⚠️ Mã SteamID64 không hợp lệ! Phải gồm 17 chữ số bắt đầu bằng 7656119...', 'error');
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/player/me?steam_id=${encodeURIComponent(sid)}`, { credentials: 'same-origin' });
+      const data = await res.json().catch(() => ({}));
+      const name = data.name || `Player_${sid.slice(-4)}`;
+      const balance = data.balance || 0;
+      const userObj = { steamId: sid, name, balance };
+      localStorage.setItem('steam_user', JSON.stringify(userObj));
+      document.cookie = `steam_user=${sid}:${encodeURIComponent(name)}; Path=/; Max-Age=2592000; SameSite=Lax`;
+      this.steamUser = userObj;
+      this.updateSteamUI();
+      await this.loadSavedSkins();
+      await this.syncActiveDino();
+      this.showToast(`✅ Đã đồng bộ Steam: ${name} (${sid})`, 'success');
+    } catch (e) {
+      this.showToast('Lỗi kiểm tra SteamID!', 'error');
+    }
+  },
+
+  async logoutSteam() {
+    try {
+      await fetch('/api/player/logout', { credentials: 'same-origin' });
+    } catch (e) {}
+    localStorage.removeItem('steam_user');
+    document.cookie = 'steam_user=; Path=/; Max-Age=0; SameSite=Lax';
+    this.steamUser = null;
+    this.activeDino = null;
+    this.updateSteamUI();
+    const deckDino = document.getElementById('deck-active-dino');
+    if (deckDino) deckDino.textContent = 'Chưa đồng bộ';
+    this.showToast('Đã đăng xuất tài khoản Steam.');
+  },
+
+  // Synchronize with player's active dinosaur on the server
+  async syncActiveDino(initialLoad = false) {
+    const sid = (this.steamUser && this.steamUser.steamId) ? this.steamUser.steamId : '';
+    const deckDino = document.getElementById('deck-active-dino');
+
+    if (!sid) {
+      if (deckDino) deckDino.innerHTML = '<span style="color:#94a3b8;">Đăng nhập Steam để đồng bộ</span>';
+      if (initialLoad) {
+        await this.loadSpecies(this.species);
+      } else {
+        this.showToast('⚠️ Vui lòng đăng nhập Steam trước để đồng bộ khủng long từ Server!', 'error');
+      }
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/player/active-dino?steam_id=${encodeURIComponent(sid)}`, { credentials: 'same-origin' });
+      const data = await res.json().catch(() => null);
+      if (data && data.species) {
+        this.activeDino = data;
+        let sp = data.species;
+        const match = this.speciesList.find(s => s.id.toLowerCase() === sp.toLowerCase());
+        if (match) {
+          this.species = match.id;
+        } else if (sp.toLowerCase().includes('rex')) {
+          this.species = 'Tyrannosaurus';
+        }
+
+        if (data.gender) this.sex = data.gender;
+        if (data.female !== undefined) this.sex = data.female ? 'female' : 'male';
+        this.updateSexButtons();
+
+        if (typeof data.growth === 'number') {
+          this.growth = Math.max(0.1, Math.min(1.0, data.growth));
+          const slider = document.getElementById('growth-slider');
+          const readout = document.getElementById('growth-readout');
+          const pct = Math.round(this.growth * 100);
+          if (slider) slider.value = pct;
+          if (readout) {
+            const stageName = pct < 25 ? 'Hatchling (Con non)' : pct < 50 ? 'Juvenile (Mới lớn)' : pct < 75 ? 'Subadult (Tiền trưởng thành)' : 'Adult (Trưởng thành)';
+            readout.textContent = `${pct}% · ${stageName}`;
+          }
+        }
+
+        if (data.name && this.steamUser && this.steamUser.name.startsWith('Player_')) {
+          this.steamUser.name = data.name;
+          localStorage.setItem('steam_user', JSON.stringify(this.steamUser));
+          this.updateSteamUI();
+        }
+
+        if (deckDino) {
+          const pct = Math.round((data.growth || 1) * 100);
+          const statusTag = data.online
+            ? '<span style="color:#4ade80;">🟢 Đang trong Game</span>'
+            : (data.source === 'garage' ? '<span style="color:#fbbf24;">📦 Trong Gara</span>' : '<span style="color:#38bdf8;">🦕 Trên Server</span>');
+          deckDino.innerHTML = `${data.species} (${pct}% · ${this.sex === 'female' ? '♀ Cái' : '♂ Đực'}) · ${statusTag}`;
+        }
+
+        this.populateSpeciesSelector();
+        await this.loadSpecies(this.species);
+        this.showToast(`✅ Đã đồng bộ khủng long của ${this.steamUser.name}: ${data.species} (${Math.round(this.growth * 100)}%)`, 'success');
+      } else {
+        if (deckDino) deckDino.textContent = 'Chưa có khủng long';
+        if (initialLoad) await this.loadSpecies(this.species);
+      }
+    } catch (e) {
+      console.warn('syncActiveDino error:', e);
+      if (initialLoad) await this.loadSpecies(this.species);
+    }
+  },
+
+  updateSexButtons() {
+    const maleBtn = document.getElementById('btn-sex-male');
+    const femaleBtn = document.getElementById('btn-sex-female');
+    if (maleBtn) maleBtn.classList.toggle('active', this.sex === 'male');
+    if (femaleBtn) femaleBtn.classList.toggle('active', this.sex === 'female');
   },
 
   populateSpeciesSelector() {
@@ -151,15 +373,12 @@ const Studio = {
     const width = container.clientWidth || window.innerWidth;
     const height = container.clientHeight || (window.innerHeight - 52);
 
-    // Scene
     this.scene = new THREE.Scene();
     this.applyChamberPreset(this.chamberPreset);
 
-    // Camera
     this.camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100);
     this.camera.position.set(0, 1.4, 6.5);
 
-    // Renderer
     this.renderer = new THREE.WebGLRenderer({
       canvas: canvas,
       antialias: true,
@@ -171,7 +390,6 @@ const Studio = {
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = this.exposure;
 
-    // Controls
     if (typeof THREE.OrbitControls !== 'undefined') {
       this.controls = new THREE.OrbitControls(this.camera, canvas);
       this.controls.enableDamping = true;
@@ -182,7 +400,6 @@ const Studio = {
       this.controls.target.set(0, 0.8, 0);
     }
 
-    // Lights
     this.ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
     this.scene.add(this.ambientLight);
 
@@ -197,12 +414,10 @@ const Studio = {
     this.fillLight.position.set(-4, 3, -4);
     this.scene.add(this.fillLight);
 
-    // Ground Grid / Pedestal
     const grid = new THREE.GridHelper(12, 24, 0xff2a85, 0x223046);
     grid.position.y = -0.01;
     this.scene.add(grid);
 
-    // Start render loop
     const clock = new THREE.Clock();
     const animate = () => {
       requestAnimationFrame(animate);
@@ -219,7 +434,6 @@ const Studio = {
     };
     animate();
 
-    // Window resize
     window.addEventListener('resize', () => {
       if (!this.renderer || !this.camera || !canvas.parentElement) return;
       const w = canvas.parentElement.clientWidth;
@@ -230,7 +444,6 @@ const Studio = {
     });
   },
 
-  // Apply Chamber Lighting & Background Presets
   applyChamberPreset(name, customHex = null) {
     this.chamberPreset = name;
     let colorSet = this.chamberColors[name] || this.chamberColors.amber;
@@ -254,7 +467,6 @@ const Studio = {
     });
   },
 
-  // Load 3D Model with GLTF & dynamic texture composition
   async loadSpecies(speciesName) {
     this.species = speciesName;
     const loadingElem = document.getElementById('viewport-loading');
@@ -263,6 +475,7 @@ const Studio = {
     const sel = document.getElementById('spec-select');
     if (sel) sel.value = speciesName;
     this.updateDietBadge();
+    this.updateSkinCodeDisplay();
 
     const meshUrl = `/cdn/dinos/${encodeURIComponent(speciesName)}/mesh.glb`;
     const diffUrl = `/cdn/dinos/${encodeURIComponent(speciesName)}/diffuse.png`;
@@ -340,15 +553,12 @@ const Studio = {
       this.updateMaterialTexture();
 
       if (loadingElem) loadingElem.style.display = 'none';
-      this.showToast(`Đã tải loài: ${speciesName}`);
     } catch (err) {
       console.warn(`Lỗi tải 3D cho ${speciesName}:`, err);
       if (loadingElem) loadingElem.style.display = 'none';
-      this.showToast(`Đang tải dữ liệu 3D cho ${speciesName}...`, 'info');
     }
   },
 
-  // Compose dynamic textures (Diffuse + Pattern + Mask) according to user palette
   updateMaterialTexture() {
     if (!this.dinoModel) return;
     const tex = this.cachedTextures[this.species];
@@ -438,7 +648,6 @@ const Studio = {
     });
   },
 
-  // Render Color Channels in Deck
   renderChannels() {
     const list = document.getElementById('channel-list');
     if (!list) return;
@@ -484,7 +693,6 @@ const Studio = {
     this.updateSkinCodeDisplay();
   },
 
-  // Render Pattern Chips
   renderPatternChips() {
     const container = document.getElementById('pattern-chips');
     if (!container) return;
@@ -505,7 +713,6 @@ const Studio = {
     }
   },
 
-  // Randomise colors
   randomise() {
     const naturalTones = [
       '#2b3a2a', '#44533c', '#5e6f53', '#7a896d', '#8c9c7e',
@@ -529,10 +736,9 @@ const Studio = {
 
     this.renderChannels();
     this.updateMaterialTexture();
-    this.showToast('Đã tạo màu ngẫu nhiên!');
+    this.showToast('🎲 Đã tạo màu ngẫu nhiên!');
   },
 
-  // Generate Evrima compact code
   generateSkinCode() {
     const p = this.palette;
     const num = `${this.pattern}${this.variation}${this.theme}`;
@@ -544,7 +750,6 @@ const Studio = {
     return `${this.species}${num}${hexes}`;
   },
 
-  // Generate Unreal Engine 4 Evrima Blueprint JSON
   generateBlueprintJson() {
     const hexToFloatRgba = (hex) => {
       const clean = (hex || '#808080').replace('#', '');
@@ -582,7 +787,6 @@ const Studio = {
 
   // ==========================================
   // EXTERNAL MOD SKIN PARSER & VALIDATOR
-  // Supports .json / .txt / Evrima Code / UE4 Blueprint / Custom Mod packs
   // ==========================================
   importExternalModSkin(rawContent) {
     if (!rawContent || !rawContent.trim()) {
@@ -596,7 +800,6 @@ const Studio = {
     let detectedSex = this.sex;
     let newPalette = { ...this.palette };
 
-    // Helper: float array [r, g, b, (a)] to Hex
     const floatToHex = (arr) => {
       if (!Array.isArray(arr) || arr.length < 3) return null;
       const to255 = (v) => Math.max(0, Math.min(255, Math.round(v <= 1.0 ? v * 255 : v)));
@@ -606,7 +809,6 @@ const Studio = {
       return `#${r}${g}${b}`;
     };
 
-    // Helper: normalize any color (string hex, array, object)
     const normalizeColor = (val) => {
       if (!val) return null;
       if (typeof val === 'string') {
@@ -624,7 +826,6 @@ const Studio = {
       return null;
     };
 
-    // 1. Try parsing JSON
     let isJson = false;
     let parsedJson = null;
     try {
@@ -637,7 +838,6 @@ const Studio = {
     if (isJson && parsedJson) {
       const data = parsedJson.payload || parsedJson.skin || parsedJson.recipe || parsedJson;
 
-      // Extract species
       const rawClass = data.class || data.blueprint || data.character || '';
       if (rawClass) {
         const m = rawClass.match(/BP_([a-zA-Z0-9]+)_C/i) || rawClass.match(/([a-zA-Z]+)/);
@@ -647,12 +847,10 @@ const Studio = {
         detectedSpecies = data.species || data.dino || data.dinosaur;
       }
 
-      // Extract pattern & sex
       if (data.pattern !== undefined) detectedPattern = parseInt(data.pattern, 10) || 0;
       if (data.female !== undefined) detectedSex = data.female ? 'female' : 'male';
       if (data.sex) detectedSex = String(data.sex).toLowerCase().includes('fe') ? 'female' : 'male';
 
-      // Map color layers from JSON keys or nested palette object
       const colorSource = data.palette || data.colors || data;
       const keyMap = {
         body: ['body', 'primary', 'skin', 'base', 'base_color', 'diffuse'],
@@ -679,12 +877,11 @@ const Studio = {
         }
       }
     } else {
-      // 2. Try parsing Evrima Compact Code String (e.g. Tyrannosaurus000...)
       const match = text.match(/^([A-Za-z]+?)(\d{3,})((?:[0-9A-Fa-f]{8})+)$/);
       if (match) {
         detectedSpecies = match[1];
         const digits = match[2];
-        detectedPattern = parseInt(digits[:-2] || digits[0], 10) || 0;
+        detectedPattern = parseInt(digits.length > 2 ? digits.slice(0, -2) : digits[0], 10) || 0;
 
         const hexPart = match[3];
         const hexList = [];
@@ -702,7 +899,6 @@ const Studio = {
       }
     }
 
-    // Match species with valid list
     if (detectedSpecies) {
       const found = this.speciesList.find(s => s.id.toLowerCase() === detectedSpecies.toLowerCase());
       if (found) {
@@ -714,7 +910,7 @@ const Studio = {
     this.sex = detectedSex;
     this.palette = newPalette;
 
-    // Refresh UI
+    this.updateSexButtons();
     this.populateSpeciesSelector();
     this.renderChannels();
     this.renderPatternChips();
@@ -727,30 +923,47 @@ const Studio = {
       alertBox.style.display = 'flex';
     }
 
-    this.showToast(`✅ Đã nạp thành công Mod Skin (${this.species})!`);
+    this.showToast(`✅ Đã nạp thành công Mod Skin (${this.species})!`, 'success');
     return true;
   },
 
-  // Apply in Game (Connects to backend /api/studio/apply or IslePilot API)
+  // Apply in Game (Connects to backend /api/studio/apply with SteamID)
   async applyInGame() {
+    const stored = this.getStoredSteamUser();
+    const steamId = (this.steamUser && this.steamUser.steamId) || (stored && stored.steamId) || '';
+
+    if (!steamId) {
+      this.showToast('⚠️ Bạn chưa đăng nhập Steam! Hãy đăng nhập Steam để áp dụng skin vào khủng long của bạn.', 'error');
+      const confirmLogin = window.confirm('Bạn cần liên kết tài khoản Steam để áp dụng Skin vào khủng long trong Server.\n\nBấm OK để chuyển tới trang Đăng nhập Steam ngay!');
+      if (confirmLogin) {
+        window.location.href = '/api/player/steam/login?redirect=%2Fstudio';
+      }
+      return;
+    }
+
     const btn = document.getElementById('btn-apply-ingame');
     const originalText = btn ? btn.innerHTML : '';
     if (btn) {
       btn.disabled = true;
-      btn.innerHTML = '<span>⏳ Đang gửi vào game...</span>';
+      btn.innerHTML = '<span>⏳ Đang áp dụng vào Server...</span>';
     }
 
     const bpPayload = this.generateBlueprintJson();
-    const activeUser = JSON.parse(localStorage.getItem('steam_user') || 'null');
-    const steamId = (activeUser && activeUser.steamid) ? activeUser.steamid : '';
 
     try {
-      const res = await fetch('/api/studio/apply', {
+      const res = await fetch(`/api/studio/apply?steam_id=${encodeURIComponent(steamId)}`, {
         method: 'POST',
+        credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           steam_id: steamId,
+          targetSteamId: steamId,
           species: this.species,
+          sex: this.sex,
+          pattern: this.pattern,
+          variation: this.variation,
+          theme: this.theme,
+          palette: this.palette,
           payload: bpPayload,
           confirm: true
         })
@@ -759,15 +972,15 @@ const Studio = {
       const data = await res.json().catch(() => null);
 
       if (res.ok && data && (data.ok || data.success)) {
-        this.showToast('🎉 THÀNH CÔNG! Skin đã được cập nhật trực tiếp vào khủng long trong server!', 'success');
+        this.showToast(`🎉 THÀNH CÔNG! Đã áp dụng Skin lên khủng long của ${this.steamUser ? this.steamUser.name : steamId}!`, 'success');
         const alertBox = document.getElementById('mod-import-status');
         if (alertBox) {
           alertBox.className = 'status-alert status-success';
-          alertBox.innerHTML = `⚡ <b>Skin đã áp dụng thành công!</b> Hãy kiểm tra khủng long của bạn trên đảo.`;
+          alertBox.innerHTML = `⚡ <b>Skin đã áp dụng thành công cho SteamID ${steamId}!</b> Hãy kiểm tra khủng long của bạn trên đảo.`;
           alertBox.style.display = 'flex';
         }
       } else {
-        const msg = (data && (data.message || data.error)) || 'Máy chủ IslePilot từ chối hoặc người chơi chưa spawn khủng long.';
+        const msg = (data && (data.message || data.error)) || 'Máy chủ IslePilot từ chối hoặc khủng long chưa spawn trong game.';
         this.showToast(`⚠️ Không áp dụng được: ${msg}`, 'error');
       }
     } catch (err) {
@@ -780,8 +993,8 @@ const Studio = {
     }
   },
 
-  // Save current design to local / drafts
-  saveDesign() {
+  // Save current design to local & Steam server drafts
+  async saveDesign() {
     const name = (document.getElementById('design-name')?.value || '').trim() || `${this.species} Custom`;
     const draft = {
       id: `skin_${Date.now()}`,
@@ -790,21 +1003,56 @@ const Studio = {
       sex: this.sex,
       pattern: this.pattern,
       palette: { ...this.palette },
+      code: this.generateSkinCode(),
       date: new Date().toLocaleDateString('vi-VN')
     };
 
     this.savedSkins.unshift(draft);
     localStorage.setItem('3m_saved_skins', JSON.stringify(this.savedSkins));
+    await this.syncSavedSkinsToServer();
     this.renderSavedSkins();
-    this.showToast(`💾 Đã lưu thiết kế: "${name}"`);
+    this.showToast(`💾 Đã lưu thiết kế: "${name}"`, 'success');
   },
 
-  loadSavedSkins() {
+  async syncSavedSkinsToServer() {
+    const sid = (this.steamUser && this.steamUser.steamId) || '';
+    if (!sid) return;
+    try {
+      await fetch(`/api/player/skin-drafts?steam_id=${encodeURIComponent(sid)}`, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ drafts: this.savedSkins })
+      });
+    } catch (e) {}
+  },
+
+  async loadSavedSkins() {
     try {
       this.savedSkins = JSON.parse(localStorage.getItem('3m_saved_skins') || '[]');
     } catch (e) {
       this.savedSkins = [];
     }
+
+    const sid = (this.steamUser && this.steamUser.steamId) || '';
+    if (sid) {
+      try {
+        const res = await fetch(`/api/player/skin-drafts?steam_id=${encodeURIComponent(sid)}`, { credentials: 'same-origin' });
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.drafts) && data.drafts.length > 0) {
+            const existingIds = new Set(this.savedSkins.map(s => s.id));
+            data.drafts.forEach(d => {
+              if (d && d.id && !existingIds.has(d.id)) {
+                this.savedSkins.push(d);
+              }
+            });
+            localStorage.setItem('3m_saved_skins', JSON.stringify(this.savedSkins));
+          }
+        }
+      } catch (e) {}
+    }
+
     this.renderSavedSkins();
   },
 
@@ -823,8 +1071,8 @@ const Studio = {
       card.className = 'saved-card';
       card.innerHTML = `
         <div>
-          <div class="saved-info-name">${skin.name}</div>
-          <div class="saved-info-meta">${skin.species} · Pattern ${skin.pattern + 1} · ${skin.date}</div>
+          <div class="saved-info-name">${skin.name || skin.species}</div>
+          <div class="saved-info-meta">${skin.species} · Pattern ${(skin.pattern || 0) + 1} · ${skin.date || ''}</div>
         </div>
         <div class="saved-actions">
           <button class="btn-deck" style="padding: 4px 10px; font-size: 0.75rem;" onclick="Studio.applySavedSkin(${idx})">Tải lên</button>
@@ -839,33 +1087,33 @@ const Studio = {
     const skin = this.savedSkins[idx];
     if (!skin) return;
 
-    this.species = skin.species;
+    this.species = skin.species || 'Tyrannosaurus';
     this.sex = skin.sex || 'male';
     this.pattern = skin.pattern || 0;
-    this.palette = { ...skin.palette };
-    this.designName = skin.name;
+    this.palette = { ...this.palette, ...(skin.palette || {}) };
+    this.designName = skin.name || this.species;
 
     const nameInput = document.getElementById('design-name');
-    if (nameInput) nameInput.value = skin.name;
+    if (nameInput) nameInput.value = this.designName;
 
+    this.updateSexButtons();
     this.populateSpeciesSelector();
     this.renderChannels();
     this.renderPatternChips();
     this.loadSpecies(this.species);
 
-    // Switch back to editor tab
     this.switchTab('editor');
-    this.showToast(`Đã mở bản lưu: ${skin.name}`);
+    this.showToast(`Đã mở bản lưu: ${this.designName}`);
   },
 
-  deleteSavedSkin(idx) {
+  async deleteSavedSkin(idx) {
     this.savedSkins.splice(idx, 1);
     localStorage.setItem('3m_saved_skins', JSON.stringify(this.savedSkins));
+    await this.syncSavedSkinsToServer();
     this.renderSavedSkins();
     this.showToast('Đã xóa bản lưu.');
   },
 
-  // Export & Copy Helpers
   copyCode() {
     const code = this.generateSkinCode();
     navigator.clipboard.writeText(code).then(() => {
@@ -892,13 +1140,11 @@ const Studio = {
     this.showToast('💾 Đã tải xuống file mod skin!');
   },
 
-  // Tab switcher
   switchTab(tabId) {
     document.querySelectorAll('.deck-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tabId));
     document.querySelectorAll('.deck-pane').forEach(p => p.style.display = p.id === `pane-${tabId}` ? 'flex' : 'none');
   },
 
-  // Toast notification
   showToast(msg, type = 'normal') {
     let toast = document.getElementById('studio-toast');
     if (!toast) {
@@ -916,8 +1162,36 @@ const Studio = {
     }, 3200);
   },
 
-  // Setup UI event listeners
   initEventListeners() {
+    // Steam manual link & logout
+    const btnManualSteam = document.getElementById('btn-studio-manual-steam');
+    if (btnManualSteam) {
+      btnManualSteam.addEventListener('click', () => this.promptManualSteamId());
+    }
+
+    const btnLogout = document.getElementById('btn-studio-logout');
+    if (btnLogout) {
+      btnLogout.addEventListener('click', () => this.logoutSteam());
+    }
+
+    // Sex toggle buttons
+    const btnMale = document.getElementById('btn-sex-male');
+    const btnFemale = document.getElementById('btn-sex-female');
+    if (btnMale) {
+      btnMale.addEventListener('click', () => {
+        this.sex = 'male';
+        this.updateSexButtons();
+        this.loadSpecies(this.species);
+      });
+    }
+    if (btnFemale) {
+      btnFemale.addEventListener('click', () => {
+        this.sex = 'female';
+        this.updateSexButtons();
+        this.loadSpecies(this.species);
+      });
+    }
+
     // Species dropdown
     const sel = document.getElementById('spec-select');
     if (sel) {
@@ -1067,10 +1341,9 @@ const Studio = {
       });
     }
 
-    // Apply In Game button
     const btnSync = document.getElementById('btn-sync-dino');
     if (btnSync) {
-      btnSync.addEventListener('click', () => this.syncActiveDino());
+      btnSync.addEventListener('click', () => this.syncActiveDino(false));
     }
 
     const btnApply = document.getElementById('btn-apply-ingame');
@@ -1078,19 +1351,16 @@ const Studio = {
       btnApply.addEventListener('click', () => this.applyInGame());
     }
 
-    // Randomise button
     const btnRand = document.getElementById('btn-randomise');
     if (btnRand) {
       btnRand.addEventListener('click', () => this.randomise());
     }
 
-    // Save design button
     const btnSave = document.getElementById('btn-save-design');
     if (btnSave) {
       btnSave.addEventListener('click', () => this.saveDesign());
     }
 
-    // Copy buttons
     const btnCopyCode = document.getElementById('btn-copy-code');
     if (btnCopyCode) btnCopyCode.addEventListener('click', () => this.copyCode());
 
@@ -1102,7 +1372,6 @@ const Studio = {
   }
 };
 
-// Auto-run when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
   Studio.init();
 });

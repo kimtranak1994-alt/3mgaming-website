@@ -849,3 +849,96 @@ html, body {
     height: 50vh;
   }
 }
+
+/* STEAM AUTH & SYNC UI */
+.studio-steam-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.studio-steam-login-btn {
+  background: linear-gradient(135deg, #1b2838 0%, #2a475e 100%);
+  border: 1px solid #66c0f4;
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  box-shadow: 0 0 12px rgba(102, 192, 244, 0.25);
+  transition: all 0.2s ease;
+}
+
+.studio-steam-login-btn:hover {
+  background: linear-gradient(135deg, #2a475e 0%, #3b6584 100%);
+  box-shadow: 0 0 16px rgba(102, 192, 244, 0.45);
+  transform: translateY(-1px);
+}
+
+.studio-steam-profile {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(27, 40, 56, 0.75);
+  border: 1px solid rgba(102, 192, 244, 0.35);
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+}
+
+.studio-balance-pill {
+  background: rgba(245, 158, 11, 0.16);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+  padding: 2px 8px;
+  border-radius: 5px;
+  font-weight: 700;
+  font-size: 0.76rem;
+}
+
+.steam-sync-card {
+  background: linear-gradient(135deg, rgba(27, 40, 56, 0.65), rgba(15, 23, 42, 0.9));
+  border: 1px solid rgba(102, 192, 244, 0.3);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.steam-sync-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  gap: 8px;
+}
+
+.sex-toggle-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.sex-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sex-btn.active {
+  background: rgba(56, 189, 248, 0.18);
+  border-color: #38bdf8;
+  color: #fff;
+}
