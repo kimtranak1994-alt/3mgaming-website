@@ -1792,5 +1792,239 @@
       "Congenital Hypoalgesia",
       "None"
     ]
+  },
+  "76561198975489051_cmvwfa1v76onsmr01ktamwqi8": {
+    "active": [
+      "Hemomania",
+      "Hematophagy",
+      "Multichambered Lungs",
+      "Accelerated Prey Drive"
+    ],
+    "parent": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderA": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "cmvwfa1v76onsmr01ktamwqi8": {
+    "active": [
+      "Hemomania",
+      "Hematophagy",
+      "Multichambered Lungs",
+      "Accelerated Prey Drive"
+    ],
+    "parent": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderA": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "76561198975489051_cmvweh4o86mi5te01l8b9qzpx": {
+    "active": [
+      "Hypervigilance",
+      "Multichambered Lungs",
+      "Hydroregenerative",
+      "None"
+    ],
+    "parent": [
+      "Osteosclerosis",
+      "Congenital Hypoalgesia",
+      "Enlarged meniscus",
+      "Epidermal Fibrosis"
+    ],
+    "elderA": [
+      "Xerocole Adaptation",
+      "Photosynthetic Regeneration",
+      "Truculency",
+      "Cellular Regeneration"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "cmvweh4o86mi5te01l8b9qzpx": {
+    "active": [
+      "Hypervigilance",
+      "Multichambered Lungs",
+      "Hydroregenerative",
+      "None"
+    ],
+    "parent": [
+      "Osteosclerosis",
+      "Congenital Hypoalgesia",
+      "Enlarged meniscus",
+      "Epidermal Fibrosis"
+    ],
+    "elderA": [
+      "Xerocole Adaptation",
+      "Photosynthetic Regeneration",
+      "Truculency",
+      "Cellular Regeneration"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "76561198975489051_cmvwayvne62evte01j48awfv8": {
+    "active": [
+      "Truculency",
+      "Enlarged meniscus",
+      "Sustained Hydration",
+      "Xerocole Adaptation"
+    ],
+    "parent": [
+      "Hypervigilance",
+      "Gastronomic Regeneration",
+      "Hydrodynamic",
+      "Increased Inspiratory Capacity"
+    ],
+    "elderA": [
+      "Multichambered Lungs",
+      "Tactile Endurance",
+      "Photosynthetic Regeneration",
+      "Photosynthetic Tissue"
+    ],
+    "elderB": [
+      "Cellular Regeneration",
+      "Epidermal Fibrosis",
+      "Osteosclerosis",
+      "Congenital Hypoalgesia"
+    ]
+  },
+  "cmvwayvne62evte01j48awfv8": {
+    "active": [
+      "Truculency",
+      "Enlarged meniscus",
+      "Sustained Hydration",
+      "Xerocole Adaptation"
+    ],
+    "parent": [
+      "Hypervigilance",
+      "Gastronomic Regeneration",
+      "Hydrodynamic",
+      "Increased Inspiratory Capacity"
+    ],
+    "elderA": [
+      "Multichambered Lungs",
+      "Tactile Endurance",
+      "Photosynthetic Regeneration",
+      "Photosynthetic Tissue"
+    ],
+    "elderB": [
+      "Cellular Regeneration",
+      "Epidermal Fibrosis",
+      "Osteosclerosis",
+      "Congenital Hypoalgesia"
+    ]
+  },
+  "76561198975489051_Anky": {
+    "active": [
+      "Truculency",
+      "Enlarged meniscus",
+      "Sustained Hydration",
+      "Xerocole Adaptation"
+    ],
+    "parent": [
+      "Hypervigilance",
+      "Gastronomic Regeneration",
+      "Hydrodynamic",
+      "Increased Inspiratory Capacity"
+    ],
+    "elderA": [
+      "Multichambered Lungs",
+      "Tactile Endurance",
+      "Photosynthetic Regeneration",
+      "Photosynthetic Tissue"
+    ],
+    "elderB": [
+      "Cellular Regeneration",
+      "Epidermal Fibrosis",
+      "Osteosclerosis",
+      "Congenital Hypoalgesia"
+    ]
+  },
+  "76561198975489051_cmvw1mss84owtmr01d0ti7wkb": {
+    "active": [
+      "Truculency",
+      "Enlarged meniscus",
+      "Sustained Hydration",
+      "Xerocole Adaptation"
+    ],
+    "parent": [
+      "Hypervigilance",
+      "Gastronomic Regeneration",
+      "Hydrodynamic",
+      "Increased Inspiratory Capacity"
+    ],
+    "elderA": [
+      "Multichambered Lungs",
+      "Tactile Endurance",
+      "Photosynthetic Regeneration",
+      "Photosynthetic Tissue"
+    ],
+    "elderB": [
+      "Cellular Regeneration",
+      "Epidermal Fibrosis",
+      "Osteosclerosis",
+      "Congenital Hypoalgesia"
+    ]
+  },
+  "cmvw1mss84owtmr01d0ti7wkb": {
+    "active": [
+      "Truculency",
+      "Enlarged meniscus",
+      "Sustained Hydration",
+      "Xerocole Adaptation"
+    ],
+    "parent": [
+      "Hypervigilance",
+      "Gastronomic Regeneration",
+      "Hydrodynamic",
+      "Increased Inspiratory Capacity"
+    ],
+    "elderA": [
+      "Multichambered Lungs",
+      "Tactile Endurance",
+      "Photosynthetic Regeneration",
+      "Photosynthetic Tissue"
+    ],
+    "elderB": [
+      "Cellular Regeneration",
+      "Epidermal Fibrosis",
+      "Osteosclerosis",
+      "Congenital Hypoalgesia"
+    ]
   }
 }

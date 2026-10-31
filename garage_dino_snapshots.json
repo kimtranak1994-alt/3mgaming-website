@@ -798,5 +798,405 @@
       "protein": 100.0,
       "lipid": 100.0
     }
+  },
+  "76561198975489051_cmvwfa1v76onsmr01ktamwqi8": {
+    "id": "cmvwfa1v76onsmr01ktamwqi8",
+    "name": null,
+    "species": "Carnotaurus",
+    "gender": "Male",
+    "growth": 1,
+    "health": 1,
+    "hunger": 0.7341902356902357,
+    "thirst": 0.547509,
+    "stamina": 0.628518,
+    "isPrimeElder": true,
+    "mutations": [
+      "Hemomania",
+      "Hematophagy",
+      "Multichambered Lungs",
+      "Accelerated Prey Drive"
+    ],
+    "mutationSlots": {
+      "active": [
+        "Hemomania",
+        "Hematophagy",
+        "Multichambered Lungs",
+        "Accelerated Prey Drive"
+      ],
+      "parent": [
+        "None",
+        "None",
+        "None",
+        "None"
+      ],
+      "elderA": [
+        "None",
+        "None",
+        "None",
+        "None"
+      ],
+      "elderB": [
+        "None",
+        "None",
+        "None",
+        "None"
+      ]
+    },
+    "parkedAt": "2026-10-31T13:14:03.379Z",
+    "nutrients": {
+      "carb": 100.0,
+      "protein": 100.0,
+      "lipid": 100.0
+    }
+  },
+  "cmvwfa1v76onsmr01ktamwqi8": {
+    "id": "cmvwfa1v76onsmr01ktamwqi8",
+    "name": null,
+    "species": "Carnotaurus",
+    "gender": "Male",
+    "growth": 1,
+    "health": 1,
+    "hunger": 0.7341902356902357,
+    "thirst": 0.547509,
+    "stamina": 0.628518,
+    "isPrimeElder": true,
+    "mutations": [
+      "Hemomania",
+      "Hematophagy",
+      "Multichambered Lungs",
+      "Accelerated Prey Drive"
+    ],
+    "mutationSlots": {
+      "active": [
+        "Hemomania",
+        "Hematophagy",
+        "Multichambered Lungs",
+        "Accelerated Prey Drive"
+      ],
+      "parent": [
+        "None",
+        "None",
+        "None",
+        "None"
+      ],
+      "elderA": [
+        "None",
+        "None",
+        "None",
+        "None"
+      ],
+      "elderB": [
+        "None",
+        "None",
+        "None",
+        "None"
+      ]
+    },
+    "parkedAt": "2026-10-31T13:14:03.379Z",
+    "nutrients": {
+      "carb": 100.0,
+      "protein": 100.0,
+      "lipid": 100.0
+    }
+  },
+  "76561198975489051_cmvweh4o86mi5te01l8b9qzpx": {
+    "id": "cmvweh4o86mi5te01l8b9qzpx",
+    "name": null,
+    "species": "Triceratops",
+    "gender": "Female",
+    "growth": 0.997112,
+    "health": 1,
+    "hunger": 0.6333178947368422,
+    "thirst": 0.738164,
+    "stamina": 1,
+    "isPrimeElder": false,
+    "mutations": [
+      "Hypervigilance",
+      "Multichambered Lungs",
+      "Hydroregenerative",
+      "None"
+    ],
+    "mutationSlots": {
+      "active": [
+        "Hypervigilance",
+        "Multichambered Lungs",
+        "Hydroregenerative",
+        "None"
+      ],
+      "parent": [
+        "Osteosclerosis",
+        "Congenital Hypoalgesia",
+        "Enlarged meniscus",
+        "Epidermal Fibrosis"
+      ],
+      "elderA": [
+        "Xerocole Adaptation",
+        "Photosynthetic Regeneration",
+        "Truculency",
+        "Cellular Regeneration"
+      ],
+      "elderB": [
+        "None",
+        "None",
+        "None",
+        "None"
+      ]
+    },
+    "parkedAt": "2026-10-31T12:51:33.993Z",
+    "nutrients": {
+      "carb": 100.0,
+      "protein": 100.0,
+      "lipid": 100.0
+    }
+  },
+  "cmvweh4o86mi5te01l8b9qzpx": {
+    "id": "cmvweh4o86mi5te01l8b9qzpx",
+    "name": null,
+    "species": "Triceratops",
+    "gender": "Female",
+    "growth": 0.997112,
+    "health": 1,
+    "hunger": 0.6333178947368422,
+    "thirst": 0.738164,
+    "stamina": 1,
+    "isPrimeElder": false,
+    "mutations": [
+      "Hypervigilance",
+      "Multichambered Lungs",
+      "Hydroregenerative",
+      "None"
+    ],
+    "mutationSlots": {
+      "active": [
+        "Hypervigilance",
+        "Multichambered Lungs",
+        "Hydroregenerative",
+        "None"
+      ],
+      "parent": [
+        "Osteosclerosis",
+        "Congenital Hypoalgesia",
+        "Enlarged meniscus",
+        "Epidermal Fibrosis"
+      ],
+      "elderA": [
+        "Xerocole Adaptation",
+        "Photosynthetic Regeneration",
+        "Truculency",
+        "Cellular Regeneration"
+      ],
+      "elderB": [
+        "None",
+        "None",
+        "None",
+        "None"
+      ]
+    },
+    "parkedAt": "2026-10-31T12:51:33.993Z",
+    "nutrients": {
+      "carb": 100.0,
+      "protein": 100.0,
+      "lipid": 100.0
+    }
+  },
+  "76561198975489051_cmvwayvne62evte01j48awfv8": {
+    "id": "cmvwayvne62evte01j48awfv8",
+    "name": null,
+    "species": "Anky",
+    "gender": "Female",
+    "growth": 0.921667,
+    "health": 1,
+    "hunger": 0.4680373333333334,
+    "thirst": 0.703649,
+    "stamina": 1,
+    "isPrimeElder": true,
+    "mutations": [
+      "Truculency",
+      "Enlarged meniscus",
+      "Sustained Hydration",
+      "Xerocole Adaptation"
+    ],
+    "mutationSlots": {
+      "active": [
+        "Truculency",
+        "Enlarged meniscus",
+        "Sustained Hydration",
+        "Xerocole Adaptation"
+      ],
+      "parent": [
+        "Hypervigilance",
+        "Gastronomic Regeneration",
+        "Hydrodynamic",
+        "Increased Inspiratory Capacity"
+      ],
+      "elderA": [
+        "Multichambered Lungs",
+        "Tactile Endurance",
+        "Photosynthetic Regeneration",
+        "Photosynthetic Tissue"
+      ],
+      "elderB": [
+        "Cellular Regeneration",
+        "Epidermal Fibrosis",
+        "Osteosclerosis",
+        "Congenital Hypoalgesia"
+      ]
+    },
+    "parkedAt": "2026-10-31T11:13:23.643Z",
+    "nutrients": {
+      "carb": 100.0,
+      "protein": 100.0,
+      "lipid": 100.0
+    }
+  },
+  "cmvwayvne62evte01j48awfv8": {
+    "id": "cmvwayvne62evte01j48awfv8",
+    "name": null,
+    "species": "Anky",
+    "gender": "Female",
+    "growth": 0.921667,
+    "health": 1,
+    "hunger": 0.4680373333333334,
+    "thirst": 0.703649,
+    "stamina": 1,
+    "isPrimeElder": true,
+    "mutations": [
+      "Truculency",
+      "Enlarged meniscus",
+      "Sustained Hydration",
+      "Xerocole Adaptation"
+    ],
+    "mutationSlots": {
+      "active": [
+        "Truculency",
+        "Enlarged meniscus",
+        "Sustained Hydration",
+        "Xerocole Adaptation"
+      ],
+      "parent": [
+        "Hypervigilance",
+        "Gastronomic Regeneration",
+        "Hydrodynamic",
+        "Increased Inspiratory Capacity"
+      ],
+      "elderA": [
+        "Multichambered Lungs",
+        "Tactile Endurance",
+        "Photosynthetic Regeneration",
+        "Photosynthetic Tissue"
+      ],
+      "elderB": [
+        "Cellular Regeneration",
+        "Epidermal Fibrosis",
+        "Osteosclerosis",
+        "Congenital Hypoalgesia"
+      ]
+    },
+    "parkedAt": "2026-10-31T11:13:23.643Z",
+    "nutrients": {
+      "carb": 100.0,
+      "protein": 100.0,
+      "lipid": 100.0
+    }
+  },
+  "76561198975489051_cmvw1mss84owtmr01d0ti7wkb": {
+    "id": "cmvw1mss84owtmr01d0ti7wkb",
+    "name": null,
+    "species": "Anky",
+    "gender": "Female",
+    "growth": 0.916667,
+    "health": 1,
+    "hunger": 0.4847066666666667,
+    "thirst": 0.7170890000000001,
+    "stamina": 1,
+    "isPrimeElder": true,
+    "mutations": [
+      "Truculency",
+      "Enlarged meniscus",
+      "Sustained Hydration",
+      "Xerocole Adaptation"
+    ],
+    "mutationSlots": {
+      "active": [
+        "Truculency",
+        "Enlarged meniscus",
+        "Sustained Hydration",
+        "Xerocole Adaptation"
+      ],
+      "parent": [
+        "Hypervigilance",
+        "Gastronomic Regeneration",
+        "Hydrodynamic",
+        "Increased Inspiratory Capacity"
+      ],
+      "elderA": [
+        "Multichambered Lungs",
+        "Tactile Endurance",
+        "Photosynthetic Regeneration",
+        "Photosynthetic Tissue"
+      ],
+      "elderB": [
+        "Cellular Regeneration",
+        "Epidermal Fibrosis",
+        "Osteosclerosis",
+        "Congenital Hypoalgesia"
+      ]
+    },
+    "parkedAt": "2026-10-31T06:52:03.512Z",
+    "nutrients": {
+      "carb": 100.0,
+      "protein": 100.0,
+      "lipid": 100.0
+    }
+  },
+  "cmvw1mss84owtmr01d0ti7wkb": {
+    "id": "cmvw1mss84owtmr01d0ti7wkb",
+    "name": null,
+    "species": "Anky",
+    "gender": "Female",
+    "growth": 0.916667,
+    "health": 1,
+    "hunger": 0.4847066666666667,
+    "thirst": 0.7170890000000001,
+    "stamina": 1,
+    "isPrimeElder": true,
+    "mutations": [
+      "Truculency",
+      "Enlarged meniscus",
+      "Sustained Hydration",
+      "Xerocole Adaptation"
+    ],
+    "mutationSlots": {
+      "active": [
+        "Truculency",
+        "Enlarged meniscus",
+        "Sustained Hydration",
+        "Xerocole Adaptation"
+      ],
+      "parent": [
+        "Hypervigilance",
+        "Gastronomic Regeneration",
+        "Hydrodynamic",
+        "Increased Inspiratory Capacity"
+      ],
+      "elderA": [
+        "Multichambered Lungs",
+        "Tactile Endurance",
+        "Photosynthetic Regeneration",
+        "Photosynthetic Tissue"
+      ],
+      "elderB": [
+        "Cellular Regeneration",
+        "Epidermal Fibrosis",
+        "Osteosclerosis",
+        "Congenital Hypoalgesia"
+      ]
+    },
+    "parkedAt": "2026-10-31T06:52:03.512Z",
+    "nutrients": {
+      "carb": 100.0,
+      "protein": 100.0,
+      "lipid": 100.0
+    }
   }
 }
