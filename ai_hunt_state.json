@@ -10,7 +10,7 @@
   "auto_reward_enabled": true,
   "ended_at": null,
   "is_settled": false,
-  "total_ai_kills": 102,
+  "total_ai_kills": 111,
   "hunters": {
     "76561199319764814": {
       "steam_id": "76561199319764814",
@@ -85,14 +85,16 @@
       "steam_id": "76561199483156684",
       "name": "Thich Du Thư",
       "species": "Tyrannosaurus",
-      "kills": 4,
+      "kills": 9,
       "prey_breakdown": {
         "Chicken": 1,
         "Crab": 2,
-        "Deer": 1
+        "Deer": 1,
+        "Compsognathus": 3,
+        "Gallimimus": 2
       },
-      "last_kill_at": "2026-10-31T07:20:36.816Z",
-      "last_prey": "Crab"
+      "last_kill_at": "2026-10-31T11:36:06.540Z",
+      "last_prey": "Compsognathus"
     },
     "76561198628218497": {
       "steam_id": "76561198628218497",
@@ -108,16 +110,16 @@
     "76561198762346878": {
       "steam_id": "76561198762346878",
       "name": "ÂnRicot",
-      "species": "Tyrannosaurus",
-      "kills": 4,
+      "species": "IndoRex",
+      "kills": 5,
       "prey_breakdown": {
-        "Seaturtle": 1,
+        "Seaturtle": 2,
         "Deer": 1,
         "Compsognathus": 1,
         "Dryosaurus": 1
       },
-      "last_kill_at": "2026-10-31T11:04:38.373Z",
-      "last_prey": "Dryosaurus"
+      "last_kill_at": "2026-10-31T11:31:17.466Z",
+      "last_prey": "Seaturtle"
     },
     "76561198655873474": {
       "steam_id": "76561198655873474",
@@ -147,15 +149,16 @@
       "steam_id": "76561199575258338",
       "name": "fatman",
       "species": "Giganotosaurus",
-      "kills": 10,
+      "kills": 11,
       "prey_breakdown": {
         "Goat": 2,
         "Boar": 3,
         "Compsognathus": 1,
-        "Deer": 4
+        "Deer": 4,
+        "Dryosaurus": 1
       },
-      "last_kill_at": "2026-10-31T10:56:24.905Z",
-      "last_prey": "Boar"
+      "last_kill_at": "2026-10-31T11:10:05.916Z",
+      "last_prey": "Dryosaurus"
     },
     "76561198624342405": {
       "steam_id": "76561198624342405",
@@ -184,13 +187,14 @@
     "76561198975489051": {
       "steam_id": "76561198975489051",
       "name": "Nứng Nừng Nưng",
-      "species": "Carnotaurus",
-      "kills": 2,
+      "species": "Triceratops",
+      "kills": 4,
       "prey_breakdown": {
         "Bullfrog": 1,
-        "Boar": 1
+        "Boar": 2,
+        "Dryosaurus": 1
       },
-      "last_kill_at": "2026-10-31T05:48:31.276Z",
+      "last_kill_at": "2026-10-31T11:38:53.341Z",
       "last_prey": "Boar"
     },
     "76561199580968218": {
@@ -302,6 +306,24 @@
     },
     {
       "rank": 3,
+      "steam_id": "76561199575258338",
+      "name": "fatman",
+      "species": "Giganotosaurus",
+      "kills": 11,
+      "prey_breakdown": {
+        "Goat": 2,
+        "Boar": 3,
+        "Compsognathus": 1,
+        "Deer": 4,
+        "Dryosaurus": 1
+      },
+      "last_kill_at": "2026-10-31T11:10:05.916Z",
+      "last_prey": "Dryosaurus",
+      "is_top1": false,
+      "reward_xu": 0
+    },
+    {
+      "rank": 4,
       "steam_id": "76561198655251333",
       "name": "QuocThinhhYeuEM",
       "species": "IndoRex",
@@ -318,24 +340,25 @@
       "reward_xu": 0
     },
     {
-      "rank": 4,
-      "steam_id": "76561199575258338",
-      "name": "fatman",
-      "species": "Giganotosaurus",
-      "kills": 10,
+      "rank": 5,
+      "steam_id": "76561199483156684",
+      "name": "Thich Du Thư",
+      "species": "Tyrannosaurus",
+      "kills": 9,
       "prey_breakdown": {
-        "Goat": 2,
-        "Boar": 3,
-        "Compsognathus": 1,
-        "Deer": 4
+        "Chicken": 1,
+        "Crab": 2,
+        "Deer": 1,
+        "Compsognathus": 3,
+        "Gallimimus": 2
       },
-      "last_kill_at": "2026-10-31T10:56:24.905Z",
-      "last_prey": "Boar",
+      "last_kill_at": "2026-10-31T11:36:06.540Z",
+      "last_prey": "Compsognathus",
       "is_top1": false,
       "reward_xu": 0
     },
     {
-      "rank": 5,
+      "rank": 6,
       "steam_id": "76561198796029510",
       "name": "Hà Nhi",
       "species": "Spinosaurus",
@@ -352,7 +375,7 @@
       "reward_xu": 0
     },
     {
-      "rank": 6,
+      "rank": 7,
       "steam_id": "76561198670217946",
       "name": "Monter Ăn Chay",
       "species": "Stegosaurus",
@@ -371,7 +394,7 @@
       "reward_xu": 0
     },
     {
-      "rank": 7,
+      "rank": 8,
       "steam_id": "76561198737423924",
       "name": "Zyrex",
       "species": "Carnotaurus",
@@ -387,40 +410,40 @@
       "reward_xu": 0
     },
     {
-      "rank": 8,
-      "steam_id": "76561199483156684",
-      "name": "Thich Du Thư",
-      "species": "Tyrannosaurus",
-      "kills": 4,
-      "prey_breakdown": {
-        "Chicken": 1,
-        "Crab": 2,
-        "Deer": 1
-      },
-      "last_kill_at": "2026-10-31T07:20:36.816Z",
-      "last_prey": "Crab",
-      "is_top1": false,
-      "reward_xu": 0
-    },
-    {
       "rank": 9,
       "steam_id": "76561198762346878",
       "name": "ÂnRicot",
-      "species": "Tyrannosaurus",
-      "kills": 4,
+      "species": "IndoRex",
+      "kills": 5,
       "prey_breakdown": {
-        "Seaturtle": 1,
+        "Seaturtle": 2,
         "Deer": 1,
         "Compsognathus": 1,
         "Dryosaurus": 1
       },
-      "last_kill_at": "2026-10-31T11:04:38.373Z",
-      "last_prey": "Dryosaurus",
+      "last_kill_at": "2026-10-31T11:31:17.466Z",
+      "last_prey": "Seaturtle",
       "is_top1": false,
       "reward_xu": 0
     },
     {
       "rank": 10,
+      "steam_id": "76561198975489051",
+      "name": "Nứng Nừng Nưng",
+      "species": "Triceratops",
+      "kills": 4,
+      "prey_breakdown": {
+        "Bullfrog": 1,
+        "Boar": 2,
+        "Dryosaurus": 1
+      },
+      "last_kill_at": "2026-10-31T11:38:53.341Z",
+      "last_prey": "Boar",
+      "is_top1": false,
+      "reward_xu": 0
+    },
+    {
+      "rank": 11,
       "steam_id": "76561198751942670",
       "name": "haibangtk2",
       "species": "Omniraptor",
@@ -436,7 +459,7 @@
       "reward_xu": 0
     },
     {
-      "rank": 11,
+      "rank": 12,
       "steam_id": "76561198655873474",
       "name": "Phenyl Đẹp Trai",
       "species": "IndoRex",
@@ -451,7 +474,7 @@
       "reward_xu": 0
     },
     {
-      "rank": 12,
+      "rank": 13,
       "steam_id": "76561198624342405",
       "name": "bethom06",
       "species": "Austroraptor",
@@ -465,7 +488,7 @@
       "reward_xu": 0
     },
     {
-      "rank": 13,
+      "rank": 14,
       "steam_id": "76561199175571899",
       "name": "ông 6 hồ wesrell",
       "species": "Indominus",
@@ -475,21 +498,6 @@
         "Boar": 1
       },
       "last_kill_at": "2026-10-31T04:38:29.220Z",
-      "last_prey": "Boar",
-      "is_top1": false,
-      "reward_xu": 0
-    },
-    {
-      "rank": 14,
-      "steam_id": "76561198975489051",
-      "name": "Nứng Nừng Nưng",
-      "species": "Carnotaurus",
-      "kills": 2,
-      "prey_breakdown": {
-        "Bullfrog": 1,
-        "Boar": 1
-      },
-      "last_kill_at": "2026-10-31T05:48:31.276Z",
       "last_prey": "Boar",
       "is_top1": false,
       "reward_xu": 0
@@ -570,13 +578,13 @@
     "Deer": 34,
     "Psittacosaurus_Plains": 5,
     "Psittacosaurus_Coastal": 2,
-    "Boar": 22,
+    "Boar": 23,
     "Crab": 4,
-    "Dryosaurus": 12,
-    "Seaturtle": 6,
+    "Dryosaurus": 14,
+    "Seaturtle": 7,
     "Chicken": 3,
-    "Compsognathus": 5,
-    "Gallimimus": 1,
+    "Compsognathus": 8,
+    "Gallimimus": 3,
     "Goat": 3,
     "Bullfrog": 2,
     "Rabbit": 2,
@@ -597,16 +605,19 @@
     "6741385",
     "6743583",
     "6746908",
+    "6948127",
     "6875611",
     "6754377",
+    "6952943",
     "6889933",
     "6757591",
     "6895478",
     "6890256",
     "6859987",
     "6868749",
-    "6899021",
+    "6952035",
     "6886130",
+    "6899021",
     "6929734",
     "6879532",
     "6756656",
@@ -632,8 +643,11 @@
     "6750735",
     "6750084",
     "6927881",
+    "6951379",
     "6889891",
+    "6955397",
     "6747381",
+    "6953057",
     "6738855",
     "6755597",
     "6750576",
@@ -669,6 +683,7 @@
     "6885783",
     "6738886",
     "6748808",
+    "6954575",
     "6854885",
     "6741102",
     "6758188",
@@ -680,9 +695,11 @@
     "6756878",
     "6857122",
     "6744930",
+    "6951367",
     "6755536",
     "6862886",
     "6928184",
+    "6953013",
     "6891934",
     "6870405"
   ],

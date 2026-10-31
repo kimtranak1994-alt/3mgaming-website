@@ -3151,32 +3151,7 @@ const SkinEditor = {
 
 
 
-    const exclusiveBanner = `
-      <div style="grid-column: 1 / -1; background: linear-gradient(135deg, rgba(8,11,18,0.96), rgba(16,28,46,0.95)); border: 1px solid rgba(0, 217, 255, 0.55); border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px; box-shadow: 0 6px 20px rgba(0, 217, 255, 0.15);">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <img src="/assets/images/skin_hac_bang_doc_quyen.jpg" alt="Màu Độc Quyền" style="width: 48px; height: 48px; object-fit: cover; border-radius: 8px; border: 1px solid #00D9FF;">
-          <div>
-            <div style="font-size: 0.85rem; font-weight: 800; color: #00D9FF;">👑 Màu Độc Quyền: Hắc Băng Lôi Điện (Mọi Dino)</div>
-            <div style="font-size: 0.72rem; color: #94a3b8; display: flex; gap: 6px; align-items: center; margin-top: 3px;">
-              <span style="display:inline-flex;align-items:center;gap:3px;"><i style="width:8px;height:8px;border-radius:50%;background:#080B12;border:1px solid #fff;display:inline-block;"></i>Đen huyền</span>
-              <span style="display:inline-flex;align-items:center;gap:3px;"><i style="width:8px;height:8px;border-radius:50%;background:#00D9FF;display:inline-block;"></i>Xanh ngọc</span>
-              <span style="display:inline-flex;align-items:center;gap:3px;"><i style="width:8px;height:8px;border-radius:50%;background:#EEF8FF;display:inline-block;"></i>Trắng băng</span>
-              <span style="display:inline-flex;align-items:center;gap:3px;"><i style="width:8px;height:8px;border-radius:50%;background:#6889A6;display:inline-block;"></i>Xám xanh</span>
-            </div>
-          </div>
-        </div>
-        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-          <button type="button" class="btn-primary" style="padding: 7px 12px; font-size: 0.78rem; font-weight: 800; background: linear-gradient(135deg, #00D9FF, #0284C7); color: #041019; border: none; border-radius: 6px; white-space: nowrap; cursor: pointer;" onclick="SkinEditor.loadExclusiveHacBang()">
-            ⚡ Nạp Màu Độc Quyền
-          </button>
-          <a href="/assets/mods/Mod_Skin_Hac_Bang_Loi_Dien_Standalone.zip" download="Mod_Skin_Hac_Bang_Loi_Dien_Standalone.zip" class="btn-secondary" style="padding: 7px 10px; font-size: 0.75rem; font-weight: 700; border: 1px solid rgba(0, 240, 118, 0.55); background: rgba(0, 240, 118, 0.14); color: #4ade80; border-radius: 6px; text-decoration: none; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px;">
-            📦 Tải File Mod Riêng (No IslePilot)
-          </a>
-        </div>
-      </div>
-    `;
-
-    container.innerHTML = exclusiveBanner + zones.map(key => {
+    container.innerHTML = zones.map(key => {
 
       const info = this.zoneLabels[key] || { name: key, desc: '' };
 

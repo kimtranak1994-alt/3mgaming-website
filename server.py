@@ -5812,9 +5812,6 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             except Exception:
                 pass
 
-        if not any(s.get("id") == "skin_hac_bang_doc_quyen" for s in custom_list):
-            custom_list.insert(0, self.get_exclusive_universal_skin())
-
         existing_ids = {s.get("id") for s in custom_list}
         skins = custom_list + [s for s in skins if s.get("id") not in existing_ids]
         self.send_json_response({"skins": skins})
@@ -9810,10 +9807,6 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         if remote and "skins" in remote:
             raw_skins = remote.get("skins", [])
             skins = [self.enrich_skin_data(s) for s in raw_skins]
-
-        excl = self.get_exclusive_universal_skin()
-        if not any(s.get("id") == excl["id"] for s in skins):
-            skins.insert(0, excl)
 
         self.send_json_response({"skins": skins})
 
