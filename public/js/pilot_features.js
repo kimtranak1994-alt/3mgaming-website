@@ -4232,6 +4232,72 @@ const Teleport = {
 
   timerInterval: null,
 
+  cooldownInterval: null,
+
+  getCooldownRemaining() {
+    const until = parseInt(localStorage.getItem('teleport_cooldown_until') || '0', 10);
+    const now = Date.now();
+    if (until > now) {
+      return Math.ceil((until - now) / 1000);
+    }
+    return 0;
+  },
+
+  startCooldown(seconds = 60) {
+    const until = Date.now() + (seconds * 1000);
+    localStorage.setItem('teleport_cooldown_until', until);
+    this.updateCooldownUI();
+  },
+
+  updateCooldownUI() {
+    if (this.cooldownInterval) {
+      clearInterval(this.cooldownInterval);
+      this.cooldownInterval = null;
+    }
+
+    const banner = document.getElementById('teleport-cooldown-banner');
+    const timerText = document.getElementById('teleport-cooldown-timer-text');
+
+    const tick = () => {
+      const remaining = this.getCooldownRemaining();
+      const buttons = document.querySelectorAll('.teleport-btn-action');
+
+      if (remaining > 0) {
+        if (banner) {
+          banner.style.display = 'flex';
+        }
+        if (timerText) {
+          timerText.textContent = `${remaining}s`;
+        }
+
+        buttons.forEach(btn => {
+          btn.disabled = true;
+          btn.style.opacity = '0.6';
+          btn.style.cursor = 'not-allowed';
+          btn.innerHTML = `⏳ Hồi chiêu (${remaining}s)`;
+        });
+      } else {
+        if (banner) {
+          banner.style.display = 'none';
+        }
+        buttons.forEach(btn => {
+          btn.disabled = false;
+          btn.style.opacity = '1';
+          btn.style.cursor = 'pointer';
+          btn.innerHTML = `Dịch chuyển`;
+        });
+
+        if (this.cooldownInterval) {
+          clearInterval(this.cooldownInterval);
+          this.cooldownInterval = null;
+        }
+      }
+    };
+
+    tick();
+    this.cooldownInterval = setInterval(tick, 1000);
+  },
+
 
 
   async render() {
@@ -4326,17 +4392,29 @@ const Teleport = {
 
     }).join('');
 
+    this.updateCooldownUI();
+
   },
 
 
 
   async actionTeleport(locationId, locationName) {
 
+    const remaining = this.getCooldownRemaining();
+    if (remaining > 0) {
+      const msg = `⏳ Dịch chuyển đang hồi chiêu! Vui lòng đợi ${remaining} giây nữa.`;
+      if (window.App && window.App.showToast) App.showToast(msg);
+      else alert(msg);
+      return;
+    }
+
     const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
 
     const steamId = user ? user.steamId : '76561199175571899';
 
-
+    if (window.App && window.App.showToast) {
+      App.showToast(`🚀 Đang gửi lệnh dịch chuyển tới ${locationName}...`);
+    }
 
     try {
 
@@ -4354,17 +4432,32 @@ const Teleport = {
 
       if (data.success || data.ok) {
 
-        App.showToast("Thành công");
+        const succMsg = data.message || `🚀 Đã gửi lệnh dịch chuyển tới ${locationName} thành công! Hãy đứng yên 3-5s trong game.`;
+        if (window.App && window.App.showToast) App.showToast(succMsg);
+        else alert(succMsg);
+
+        // BẮT ĐẦU BỘ ĐẾM 60S HỒI CHIÊU
+        this.startCooldown(data.cooldown_seconds || 60);
+
+        if (window.App && typeof App.refreshBalance === 'function') {
+          setTimeout(() => App.refreshBalance(), 1000);
+        }
 
       } else {
 
-        App.showToast("Thất bại");
+        const errMsg = data.error || data.message || "Thất bại";
+        if (window.App && window.App.showToast) App.showToast(errMsg);
+        else alert(errMsg);
+
+        if (data.cooldown_remaining) {
+          this.startCooldown(data.cooldown_remaining);
+        }
 
       }
 
     } catch (e) {
 
-      App.showToast("Thất bại");
+      App.showToast(`Lỗi kết nối: ${e.message}`);
 
     }
 

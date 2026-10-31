@@ -5809,20 +5809,101 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
             if not location_id:
 
-                self.send_json_response({"success": False, "message": "Vui lòng chọn địa điểm dịch chuyển!"}, 400)
+                self.send_json_response({"success": False, "ok": False, "message": "Vui lòng chọn địa điểm dịch chuyển!"}, 400)
 
                 return
 
+            if not steam_id:
+
+                self.send_json_response({"success": False, "ok": False, "message": "Vui lòng đăng nhập Steam trước khi dịch chuyển!"}, 401)
+
+                return
+
+            steam_id = str(steam_id).strip()
+
+            # 1. KIỂM TRA BỘ ĐẾM HỒI CHIÊU 60 GIÂY
+            if not hasattr(DinoRequestHandler, "_teleport_cooldowns"):
+                DinoRequestHandler._teleport_cooldowns = {}
+
+            now = time.time()
+            cooldown_until = DinoRequestHandler._teleport_cooldowns.get(steam_id, 0)
+            if now < cooldown_until:
+                remaining = int(math.ceil(cooldown_until - now))
+                self.send_json_response({
+                    "success": False,
+                    "ok": False,
+                    "message": f"⏳ Dịch chuyển đang trong thời gian hồi chiêu! Vui lòng đợi {remaining} giây nữa.",
+                    "error": f"⏳ Dịch chuyển đang trong thời gian hồi chiêu! Vui lòng đợi {remaining} giây nữa.",
+                    "cooldown_remaining": remaining
+                }, 429)
+                return
+
+            # 2. KIỂM TRA TRẠNG THÁI KHỦNG LONG TRONG GAME ĐỂ TRÁNH LỖI TRỪ XU KHI MỚI SPAWN
+            try:
+                p_info = self.fetch_islepilot(f"/players/{steam_id}")
+                if isinstance(p_info, dict):
+                    if p_info.get("online") is False:
+                        self.send_json_response({
+                            "success": False,
+                            "ok": False,
+                            "message": "⚠️ Khủng long của bạn chưa online trong server! Vui lòng vào game trước khi bấm dịch chuyển."
+                        }, 400)
+                        return
+
+                    if not p_info.get("species"):
+                        self.send_json_response({
+                            "success": False,
+                            "ok": False,
+                            "message": "⚠️ Bạn chưa chọn khủng long spawn vào thế giới game! Vui lòng vào game bấm Spawn trước khi dịch chuyển."
+                        }, 400)
+                        return
+
+                    hp = p_info.get("health")
+                    if hp is not None and float(hp) <= 0:
+                        self.send_json_response({
+                            "success": False,
+                            "ok": False,
+                            "message": "⚠️ Khủng long đã chết! Vui lòng hồi sinh/spawn khủng long mới vào map trước khi dịch chuyển."
+                        }, 400)
+                        return
+
+                    if p_info.get("inCombat") is True:
+                        self.send_json_response({
+                            "success": False,
+                            "ok": False,
+                            "message": "⚠️ Khủng long đang trong giao tranh (combat)! Vui lòng đợi 30s sau khi hết combat rồi thử lại."
+                        }, 400)
+                        return
+
+                    pos = p_info.get("position")
+                    if not pos or not isinstance(pos, dict) or pos.get("x") is None:
+                        self.send_json_response({
+                            "success": False,
+                            "ok": False,
+                            "message": "⚠️ Khủng long vừa mới spawn hoặc đang tải vào map! Vui lòng vào game di chuyển (bấm W-A-S-D) ít nhất 3-5 giây để máy chủ nhận diện vị trí trước khi dịch chuyển."
+                        }, 400)
+                        return
+            except Exception as ex_check:
+                print(f"[Teleport Pre-Check Warning] {ex_check}")
+
+            # 3. GỬI LỆNH DỊCH CHUYỂN TỚI ISLEPILOT
             res = self.fetch_islepilot(f"/players/{steam_id}/teleport", method="POST", body_data={"locationId": location_id})
             ok, msg = self._is_teleport_success(res)
             if ok:
-                self.send_json_response({"success": True, "message": "🚀 Đã gửi lệnh dịch chuyển thành công! Hãy đứng yên trong game 3-5s."})
+                # KÍCH HOẠT HỒI CHIÊU 60 GIÂY
+                DinoRequestHandler._teleport_cooldowns[steam_id] = time.time() + 60.0
+                self.send_json_response({
+                    "success": True,
+                    "ok": True,
+                    "message": "🚀 Đã gửi lệnh dịch chuyển thành công! Hãy đứng yên trong game 3-5s để máy chủ chuyển vị trí.",
+                    "cooldown_seconds": 60
+                })
                 return
-            self.send_json_response({"success": False, "message": msg}, 400)
+            self.send_json_response({"success": False, "ok": False, "message": msg, "error": msg}, 400)
 
         except Exception as e:
 
-            self.send_json_response({"success": False, "message": f"Lỗi hệ thống: {e}"}, 500)
+            self.send_json_response({"success": False, "ok": False, "message": f"Lỗi hệ thống: {e}"}, 500)
 
     def handle_friend_code_create(self):
 

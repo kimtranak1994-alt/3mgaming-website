@@ -1841,6 +1841,23 @@
 
       </div>
 
+      <!-- CẢNH BÁO KHI MỚI SPAWN -->
+      <div style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.35); border-radius: 10px; padding: 12px 18px; margin-bottom: 18px; display: flex; align-items: center; gap: 12px;">
+        <span style="font-size: 1.4rem;">⚠️</span>
+        <div style="font-size: 0.88rem; color: #fde68a; line-height: 1.5;">
+          <b>Lưu ý quan trọng khi vừa Spawn:</b> Nếu bạn vừa mới spawn hoặc vừa vào server, hãy <b>di chuyển khủng long (bấm W-A-S-D) ít nhất 3 - 5 giây</b> trong game trước khi bấm dịch chuyển để máy chủ cập nhật vị trí nhân vật (tránh bị trừ xu mà không bay đi).
+        </div>
+      </div>
+
+      <!-- BANNER BỘ ĐẾM 60S HỒI CHIÊU -->
+      <div id="teleport-cooldown-banner" style="display: none; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 10px; padding: 12px 18px; margin-bottom: 18px; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 1.3rem;">⏳</span>
+          <span style="font-size: 0.95rem; color: #bae6fd; font-weight: 700;">Hồi chiêu dịch chuyển: <span id="teleport-cooldown-timer-text" style="color: #fbbf24; font-family: monospace; font-size: 1.15rem;">60s</span></span>
+        </div>
+        <span style="font-size: 0.82rem; color: #94a3b8;">Vui lòng chờ hết thời gian hồi chiêu để tiếp tục dịch chuyển</span>
+      </div>
+
       <!-- Danh Sách Điểm Đến Đã Lưu (Gần cầu Delta, spawm...) -->
 
       <div id="teleport-locations-container" class="teleport-locations-grid">
