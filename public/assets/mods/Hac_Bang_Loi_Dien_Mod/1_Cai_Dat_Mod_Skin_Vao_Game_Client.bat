@@ -22,9 +22,9 @@ echo [✓] Đã cài đặt thành công bảng màu Hắc Băng Lôi Điện ch
 echo     %TARGET_DIR%\Skins.ini
 echo.
 echo [MÃ SKIN CODE COPY NHANH VÀO GAME]:
-echo Diabloceratops10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF
+echo Diabloceratops10006080EFF06080EFF00D9FFFFD1FAFFFF00F2FFFF00FFFFFF
 echo.
-echo Diabloceratops10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF | clip
+echo Diabloceratops10006080EFF06080EFF00D9FFFFD1FAFFFF00F2FFFF00FFFFFF | clip
 echo [✓] Đã tự động copy mã Skin Code vào bộ nhớ tạm (Clipboard)!
 echo     Bạn có thể vào thẳng game The Isle Evrima và nhấn Ctrl+V vào ô Skin Code!
 echo ============================================================================

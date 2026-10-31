@@ -58,32 +58,32 @@
     "pattern_adult": "/assets/mods/Hac_Bang_Loi_Dien_Mod/Textures_3D_Baked/pattern_hac_bang.png"
   },
   "skin_codes_by_species": {
-    "Allosaurus": "Allosaurus10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
-    "Ankylosaurus": "Ankylosaurus10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
-    "Baryonyx": "Baryonyx10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
-    "Beipiaosaurus": "Beipiaosaurus10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
-    "Carnotaurus": "Carnotaurus10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
-    "Ceratosaurus": "Ceratosaurus10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
-    "Deinosuchus": "Deinosuchus10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
-    "Diabloceratops": "Diabloceratops10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
-    "Dilophosaurus": "Dilophosaurus10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
-    "Dryosaurus": "Dryosaurus10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
-    "Gallimimus": "Gallimimus10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
-    "Giganotosaurus": "Giganotosaurus10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
-    "Herrerasaurus": "Herrerasaurus10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
-    "Hypsilophodon": "Hypsilophodon10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
-    "Maiasaura": "Maiasaura10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
-    "Omniraptor": "Omniraptor10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
-    "Pachycephalosaurus": "Pachycephalosaurus10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
-    "Pteranodon": "Pteranodon10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
-    "Puertasaurus": "Puertasaurus10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
-    "Shantungosaurus": "Shantungosaurus10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
-    "Spinosaurus": "Spinosaurus10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
-    "Stegosaurus": "Stegosaurus10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
-    "Tenontosaurus": "Tenontosaurus10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
-    "Triceratops": "Triceratops10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
-    "Troodon": "Troodon10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
-    "Tyrannosaurus": "Tyrannosaurus10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF"
+    "Allosaurus": "Allosaurus10006080EFF06080EFF00D9FFFFD1FAFFFF00F2FFFF00FFFFFF",
+    "Ankylosaurus": "Ankylosaurus10006080EFF06080EFF00D9FFFFD1FAFFFF00F2FFFF00FFFFFF",
+    "Baryonyx": "Baryonyx10006080EFF06080EFF00D9FFFFD1FAFFFF00F2FFFF00FFFFFF",
+    "Beipiaosaurus": "Beipiaosaurus10006080EFF06080EFF00D9FFFFD1FAFFFF00F2FFFF00FFFFFF",
+    "Carnotaurus": "Carnotaurus10006080EFF06080EFF00D9FFFFD1FAFFFF00F2FFFF00FFFFFF",
+    "Ceratosaurus": "Ceratosaurus10006080EFF06080EFF00D9FFFFD1FAFFFF00F2FFFF00FFFFFF",
+    "Deinosuchus": "Deinosuchus10006080EFF06080EFF00D9FFFFD1FAFFFF00F2FFFF00FFFFFF",
+    "Diabloceratops": "Diabloceratops10006080EFF06080EFF00D9FFFFD1FAFFFF00F2FFFF00FFFFFF",
+    "Dilophosaurus": "Dilophosaurus10006080EFF06080EFF00D9FFFFD1FAFFFF00F2FFFF00FFFFFF",
+    "Dryosaurus": "Dryosaurus10006080EFF06080EFF00D9FFFFD1FAFFFF00F2FFFF00FFFFFF",
+    "Gallimimus": "Gallimimus10006080EFF06080EFF00D9FFFFD1FAFFFF00F2FFFF00FFFFFF",
+    "Giganotosaurus": "Giganotosaurus10006080EFF06080EFF00D9FFFFD1FAFFFF00F2FFFF00FFFFFF",
+    "Herrerasaurus": "Herrerasaurus10006080EFF06080EFF00D9FFFFD1FAFFFF00F2FFFF00FFFFFF",
+    "Hypsilophodon": "Hypsilophodon10006080EFF06080EFF00D9FFFFD1FAFFFF00F2FFFF00FFFFFF",
+    "Maiasaura": "Maiasaura10006080EFF06080EFF00D9FFFFD1FAFFFF00F2FFFF00FFFFFF",
+    "Omniraptor": "Omniraptor10006080EFF06080EFF00D9FFFFD1FAFFFF00F2FFFF00FFFFFF",
+    "Pachycephalosaurus": "Pachycephalosaurus10006080EFF06080EFF00D9FFFFD1FAFFFF00F2FFFF00FFFFFF",
+    "Pteranodon": "Pteranodon10006080EFF06080EFF00D9FFFFD1FAFFFF00F2FFFF00FFFFFF",
+    "Puertasaurus": "Puertasaurus10006080EFF06080EFF00D9FFFFD1FAFFFF00F2FFFF00FFFFFF",
+    "Shantungosaurus": "Shantungosaurus10006080EFF06080EFF00D9FFFFD1FAFFFF00F2FFFF00FFFFFF",
+    "Spinosaurus": "Spinosaurus10006080EFF06080EFF00D9FFFFD1FAFFFF00F2FFFF00FFFFFF",
+    "Stegosaurus": "Stegosaurus10006080EFF06080EFF00D9FFFFD1FAFFFF00F2FFFF00FFFFFF",
+    "Tenontosaurus": "Tenontosaurus10006080EFF06080EFF00D9FFFFD1FAFFFF00F2FFFF00FFFFFF",
+    "Triceratops": "Triceratops10006080EFF06080EFF00D9FFFFD1FAFFFF00F2FFFF00FFFFFF",
+    "Troodon": "Troodon10006080EFF06080EFF00D9FFFFD1FAFFFF00F2FFFF00FFFFFF",
+    "Tyrannosaurus": "Tyrannosaurus10006080EFF06080EFF00D9FFFFD1FAFFFF00F2FFFF00FFFFFF"
   },
   "payload": {
     "class": "BP_Diabloceratops_C",
@@ -92,38 +92,38 @@
     "pattern": 1,
     "theme": 0,
     "markings": [
+      0.82,
+      0.98,
+      1.0,
+      1.0
+    ],
+    "flank": [
+      0.0,
+      0.85,
+      1.0,
+      1.0
+    ],
+    "underbelly": [
       0.003,
       0.005,
       0.01,
       1.0
     ],
-    "flank": [
-      0.0,
-      0.92,
-      1.0,
-      1.0
-    ],
-    "underbelly": [
-      0.0,
-      0.86,
-      1.0,
-      1.0
-    ],
     "body": [
-      0.65,
-      0.97,
-      1.0,
+      0.003,
+      0.005,
+      0.01,
       1.0
     ],
     "detail1": [
       0.0,
-      1.0,
+      0.88,
       1.0,
       1.0
     ],
     "male_display": [
       0.0,
-      1.0,
+      0.95,
       1.0,
       1.0
     ],
@@ -147,7 +147,7 @@
     ],
     "claws": [
       0.0,
-      0.9,
+      0.85,
       1.0,
       1.0
     ]
@@ -160,38 +160,38 @@
       "pattern": 1,
       "theme": 0,
       "markings": [
+        0.82,
+        0.98,
+        1.0,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.85,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
         0.003,
         0.005,
         0.01,
         1.0
       ],
-      "flank": [
-        0.0,
-        0.92,
-        1.0,
-        1.0
-      ],
-      "underbelly": [
-        0.0,
-        0.86,
-        1.0,
-        1.0
-      ],
       "body": [
-        0.65,
-        0.97,
-        1.0,
+        0.003,
+        0.005,
+        0.01,
         1.0
       ],
       "detail1": [
         0.0,
-        1.0,
+        0.88,
         1.0,
         1.0
       ],
       "male_display": [
         0.0,
-        1.0,
+        0.95,
         1.0,
         1.0
       ],
@@ -215,7 +215,7 @@
       ],
       "claws": [
         0.0,
-        0.9,
+        0.85,
         1.0,
         1.0
       ]
@@ -227,38 +227,38 @@
       "pattern": 1,
       "theme": 0,
       "markings": [
+        0.82,
+        0.98,
+        1.0,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.85,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
         0.003,
         0.005,
         0.01,
         1.0
       ],
-      "flank": [
-        0.0,
-        0.92,
-        1.0,
-        1.0
-      ],
-      "underbelly": [
-        0.0,
-        0.86,
-        1.0,
-        1.0
-      ],
       "body": [
-        0.65,
-        0.97,
-        1.0,
+        0.003,
+        0.005,
+        0.01,
         1.0
       ],
       "detail1": [
         0.0,
-        1.0,
+        0.88,
         1.0,
         1.0
       ],
       "male_display": [
         0.0,
-        1.0,
+        0.95,
         1.0,
         1.0
       ],
@@ -282,7 +282,7 @@
       ],
       "claws": [
         0.0,
-        0.9,
+        0.85,
         1.0,
         1.0
       ]
@@ -294,38 +294,38 @@
       "pattern": 1,
       "theme": 0,
       "markings": [
+        0.82,
+        0.98,
+        1.0,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.85,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
         0.003,
         0.005,
         0.01,
         1.0
       ],
-      "flank": [
-        0.0,
-        0.92,
-        1.0,
-        1.0
-      ],
-      "underbelly": [
-        0.0,
-        0.86,
-        1.0,
-        1.0
-      ],
       "body": [
-        0.65,
-        0.97,
-        1.0,
+        0.003,
+        0.005,
+        0.01,
         1.0
       ],
       "detail1": [
         0.0,
-        1.0,
+        0.88,
         1.0,
         1.0
       ],
       "male_display": [
         0.0,
-        1.0,
+        0.95,
         1.0,
         1.0
       ],
@@ -349,7 +349,7 @@
       ],
       "claws": [
         0.0,
-        0.9,
+        0.85,
         1.0,
         1.0
       ]
@@ -361,38 +361,38 @@
       "pattern": 1,
       "theme": 0,
       "markings": [
+        0.82,
+        0.98,
+        1.0,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.85,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
         0.003,
         0.005,
         0.01,
         1.0
       ],
-      "flank": [
-        0.0,
-        0.92,
-        1.0,
-        1.0
-      ],
-      "underbelly": [
-        0.0,
-        0.86,
-        1.0,
-        1.0
-      ],
       "body": [
-        0.65,
-        0.97,
-        1.0,
+        0.003,
+        0.005,
+        0.01,
         1.0
       ],
       "detail1": [
         0.0,
-        1.0,
+        0.88,
         1.0,
         1.0
       ],
       "male_display": [
         0.0,
-        1.0,
+        0.95,
         1.0,
         1.0
       ],
@@ -416,7 +416,7 @@
       ],
       "claws": [
         0.0,
-        0.9,
+        0.85,
         1.0,
         1.0
       ]
@@ -428,38 +428,38 @@
       "pattern": 1,
       "theme": 0,
       "markings": [
+        0.82,
+        0.98,
+        1.0,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.85,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
         0.003,
         0.005,
         0.01,
         1.0
       ],
-      "flank": [
-        0.0,
-        0.92,
-        1.0,
-        1.0
-      ],
-      "underbelly": [
-        0.0,
-        0.86,
-        1.0,
-        1.0
-      ],
       "body": [
-        0.65,
-        0.97,
-        1.0,
+        0.003,
+        0.005,
+        0.01,
         1.0
       ],
       "detail1": [
         0.0,
-        1.0,
+        0.88,
         1.0,
         1.0
       ],
       "male_display": [
         0.0,
-        1.0,
+        0.95,
         1.0,
         1.0
       ],
@@ -483,7 +483,7 @@
       ],
       "claws": [
         0.0,
-        0.9,
+        0.85,
         1.0,
         1.0
       ]
@@ -495,38 +495,38 @@
       "pattern": 1,
       "theme": 0,
       "markings": [
+        0.82,
+        0.98,
+        1.0,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.85,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
         0.003,
         0.005,
         0.01,
         1.0
       ],
-      "flank": [
-        0.0,
-        0.92,
-        1.0,
-        1.0
-      ],
-      "underbelly": [
-        0.0,
-        0.86,
-        1.0,
-        1.0
-      ],
       "body": [
-        0.65,
-        0.97,
-        1.0,
+        0.003,
+        0.005,
+        0.01,
         1.0
       ],
       "detail1": [
         0.0,
-        1.0,
+        0.88,
         1.0,
         1.0
       ],
       "male_display": [
         0.0,
-        1.0,
+        0.95,
         1.0,
         1.0
       ],
@@ -550,7 +550,7 @@
       ],
       "claws": [
         0.0,
-        0.9,
+        0.85,
         1.0,
         1.0
       ]
@@ -562,38 +562,38 @@
       "pattern": 1,
       "theme": 0,
       "markings": [
+        0.82,
+        0.98,
+        1.0,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.85,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
         0.003,
         0.005,
         0.01,
         1.0
       ],
-      "flank": [
-        0.0,
-        0.92,
-        1.0,
-        1.0
-      ],
-      "underbelly": [
-        0.0,
-        0.86,
-        1.0,
-        1.0
-      ],
       "body": [
-        0.65,
-        0.97,
-        1.0,
+        0.003,
+        0.005,
+        0.01,
         1.0
       ],
       "detail1": [
         0.0,
-        1.0,
+        0.88,
         1.0,
         1.0
       ],
       "male_display": [
         0.0,
-        1.0,
+        0.95,
         1.0,
         1.0
       ],
@@ -617,7 +617,7 @@
       ],
       "claws": [
         0.0,
-        0.9,
+        0.85,
         1.0,
         1.0
       ]
@@ -629,38 +629,38 @@
       "pattern": 1,
       "theme": 0,
       "markings": [
+        0.82,
+        0.98,
+        1.0,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.85,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
         0.003,
         0.005,
         0.01,
         1.0
       ],
-      "flank": [
-        0.0,
-        0.92,
-        1.0,
-        1.0
-      ],
-      "underbelly": [
-        0.0,
-        0.86,
-        1.0,
-        1.0
-      ],
       "body": [
-        0.65,
-        0.97,
-        1.0,
+        0.003,
+        0.005,
+        0.01,
         1.0
       ],
       "detail1": [
         0.0,
-        1.0,
+        0.88,
         1.0,
         1.0
       ],
       "male_display": [
         0.0,
-        1.0,
+        0.95,
         1.0,
         1.0
       ],
@@ -684,7 +684,7 @@
       ],
       "claws": [
         0.0,
-        0.9,
+        0.85,
         1.0,
         1.0
       ]
@@ -696,38 +696,38 @@
       "pattern": 1,
       "theme": 0,
       "markings": [
+        0.82,
+        0.98,
+        1.0,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.85,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
         0.003,
         0.005,
         0.01,
         1.0
       ],
-      "flank": [
-        0.0,
-        0.92,
-        1.0,
-        1.0
-      ],
-      "underbelly": [
-        0.0,
-        0.86,
-        1.0,
-        1.0
-      ],
       "body": [
-        0.65,
-        0.97,
-        1.0,
+        0.003,
+        0.005,
+        0.01,
         1.0
       ],
       "detail1": [
         0.0,
-        1.0,
+        0.88,
         1.0,
         1.0
       ],
       "male_display": [
         0.0,
-        1.0,
+        0.95,
         1.0,
         1.0
       ],
@@ -751,7 +751,7 @@
       ],
       "claws": [
         0.0,
-        0.9,
+        0.85,
         1.0,
         1.0
       ]
@@ -763,38 +763,38 @@
       "pattern": 1,
       "theme": 0,
       "markings": [
+        0.82,
+        0.98,
+        1.0,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.85,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
         0.003,
         0.005,
         0.01,
         1.0
       ],
-      "flank": [
-        0.0,
-        0.92,
-        1.0,
-        1.0
-      ],
-      "underbelly": [
-        0.0,
-        0.86,
-        1.0,
-        1.0
-      ],
       "body": [
-        0.65,
-        0.97,
-        1.0,
+        0.003,
+        0.005,
+        0.01,
         1.0
       ],
       "detail1": [
         0.0,
-        1.0,
+        0.88,
         1.0,
         1.0
       ],
       "male_display": [
         0.0,
-        1.0,
+        0.95,
         1.0,
         1.0
       ],
@@ -818,7 +818,7 @@
       ],
       "claws": [
         0.0,
-        0.9,
+        0.85,
         1.0,
         1.0
       ]
@@ -830,38 +830,38 @@
       "pattern": 1,
       "theme": 0,
       "markings": [
+        0.82,
+        0.98,
+        1.0,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.85,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
         0.003,
         0.005,
         0.01,
         1.0
       ],
-      "flank": [
-        0.0,
-        0.92,
-        1.0,
-        1.0
-      ],
-      "underbelly": [
-        0.0,
-        0.86,
-        1.0,
-        1.0
-      ],
       "body": [
-        0.65,
-        0.97,
-        1.0,
+        0.003,
+        0.005,
+        0.01,
         1.0
       ],
       "detail1": [
         0.0,
-        1.0,
+        0.88,
         1.0,
         1.0
       ],
       "male_display": [
         0.0,
-        1.0,
+        0.95,
         1.0,
         1.0
       ],
@@ -885,7 +885,7 @@
       ],
       "claws": [
         0.0,
-        0.9,
+        0.85,
         1.0,
         1.0
       ]
@@ -897,38 +897,38 @@
       "pattern": 1,
       "theme": 0,
       "markings": [
+        0.82,
+        0.98,
+        1.0,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.85,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
         0.003,
         0.005,
         0.01,
         1.0
       ],
-      "flank": [
-        0.0,
-        0.92,
-        1.0,
-        1.0
-      ],
-      "underbelly": [
-        0.0,
-        0.86,
-        1.0,
-        1.0
-      ],
       "body": [
-        0.65,
-        0.97,
-        1.0,
+        0.003,
+        0.005,
+        0.01,
         1.0
       ],
       "detail1": [
         0.0,
-        1.0,
+        0.88,
         1.0,
         1.0
       ],
       "male_display": [
         0.0,
-        1.0,
+        0.95,
         1.0,
         1.0
       ],
@@ -952,7 +952,7 @@
       ],
       "claws": [
         0.0,
-        0.9,
+        0.85,
         1.0,
         1.0
       ]
@@ -964,38 +964,38 @@
       "pattern": 1,
       "theme": 0,
       "markings": [
+        0.82,
+        0.98,
+        1.0,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.85,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
         0.003,
         0.005,
         0.01,
         1.0
       ],
-      "flank": [
-        0.0,
-        0.92,
-        1.0,
-        1.0
-      ],
-      "underbelly": [
-        0.0,
-        0.86,
-        1.0,
-        1.0
-      ],
       "body": [
-        0.65,
-        0.97,
-        1.0,
+        0.003,
+        0.005,
+        0.01,
         1.0
       ],
       "detail1": [
         0.0,
-        1.0,
+        0.88,
         1.0,
         1.0
       ],
       "male_display": [
         0.0,
-        1.0,
+        0.95,
         1.0,
         1.0
       ],
@@ -1019,7 +1019,7 @@
       ],
       "claws": [
         0.0,
-        0.9,
+        0.85,
         1.0,
         1.0
       ]
@@ -1031,38 +1031,38 @@
       "pattern": 1,
       "theme": 0,
       "markings": [
+        0.82,
+        0.98,
+        1.0,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.85,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
         0.003,
         0.005,
         0.01,
         1.0
       ],
-      "flank": [
-        0.0,
-        0.92,
-        1.0,
-        1.0
-      ],
-      "underbelly": [
-        0.0,
-        0.86,
-        1.0,
-        1.0
-      ],
       "body": [
-        0.65,
-        0.97,
-        1.0,
+        0.003,
+        0.005,
+        0.01,
         1.0
       ],
       "detail1": [
         0.0,
-        1.0,
+        0.88,
         1.0,
         1.0
       ],
       "male_display": [
         0.0,
-        1.0,
+        0.95,
         1.0,
         1.0
       ],
@@ -1086,7 +1086,7 @@
       ],
       "claws": [
         0.0,
-        0.9,
+        0.85,
         1.0,
         1.0
       ]
@@ -1098,38 +1098,38 @@
       "pattern": 1,
       "theme": 0,
       "markings": [
+        0.82,
+        0.98,
+        1.0,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.85,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
         0.003,
         0.005,
         0.01,
         1.0
       ],
-      "flank": [
-        0.0,
-        0.92,
-        1.0,
-        1.0
-      ],
-      "underbelly": [
-        0.0,
-        0.86,
-        1.0,
-        1.0
-      ],
       "body": [
-        0.65,
-        0.97,
-        1.0,
+        0.003,
+        0.005,
+        0.01,
         1.0
       ],
       "detail1": [
         0.0,
-        1.0,
+        0.88,
         1.0,
         1.0
       ],
       "male_display": [
         0.0,
-        1.0,
+        0.95,
         1.0,
         1.0
       ],
@@ -1153,7 +1153,7 @@
       ],
       "claws": [
         0.0,
-        0.9,
+        0.85,
         1.0,
         1.0
       ]
@@ -1165,38 +1165,38 @@
       "pattern": 1,
       "theme": 0,
       "markings": [
+        0.82,
+        0.98,
+        1.0,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.85,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
         0.003,
         0.005,
         0.01,
         1.0
       ],
-      "flank": [
-        0.0,
-        0.92,
-        1.0,
-        1.0
-      ],
-      "underbelly": [
-        0.0,
-        0.86,
-        1.0,
-        1.0
-      ],
       "body": [
-        0.65,
-        0.97,
-        1.0,
+        0.003,
+        0.005,
+        0.01,
         1.0
       ],
       "detail1": [
         0.0,
-        1.0,
+        0.88,
         1.0,
         1.0
       ],
       "male_display": [
         0.0,
-        1.0,
+        0.95,
         1.0,
         1.0
       ],
@@ -1220,7 +1220,7 @@
       ],
       "claws": [
         0.0,
-        0.9,
+        0.85,
         1.0,
         1.0
       ]
@@ -1232,38 +1232,38 @@
       "pattern": 1,
       "theme": 0,
       "markings": [
+        0.82,
+        0.98,
+        1.0,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.85,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
         0.003,
         0.005,
         0.01,
         1.0
       ],
-      "flank": [
-        0.0,
-        0.92,
-        1.0,
-        1.0
-      ],
-      "underbelly": [
-        0.0,
-        0.86,
-        1.0,
-        1.0
-      ],
       "body": [
-        0.65,
-        0.97,
-        1.0,
+        0.003,
+        0.005,
+        0.01,
         1.0
       ],
       "detail1": [
         0.0,
-        1.0,
+        0.88,
         1.0,
         1.0
       ],
       "male_display": [
         0.0,
-        1.0,
+        0.95,
         1.0,
         1.0
       ],
@@ -1287,7 +1287,7 @@
       ],
       "claws": [
         0.0,
-        0.9,
+        0.85,
         1.0,
         1.0
       ]
@@ -1299,38 +1299,38 @@
       "pattern": 1,
       "theme": 0,
       "markings": [
+        0.82,
+        0.98,
+        1.0,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.85,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
         0.003,
         0.005,
         0.01,
         1.0
       ],
-      "flank": [
-        0.0,
-        0.92,
-        1.0,
-        1.0
-      ],
-      "underbelly": [
-        0.0,
-        0.86,
-        1.0,
-        1.0
-      ],
       "body": [
-        0.65,
-        0.97,
-        1.0,
+        0.003,
+        0.005,
+        0.01,
         1.0
       ],
       "detail1": [
         0.0,
-        1.0,
+        0.88,
         1.0,
         1.0
       ],
       "male_display": [
         0.0,
-        1.0,
+        0.95,
         1.0,
         1.0
       ],
@@ -1354,7 +1354,7 @@
       ],
       "claws": [
         0.0,
-        0.9,
+        0.85,
         1.0,
         1.0
       ]
@@ -1366,38 +1366,38 @@
       "pattern": 1,
       "theme": 0,
       "markings": [
+        0.82,
+        0.98,
+        1.0,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.85,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
         0.003,
         0.005,
         0.01,
         1.0
       ],
-      "flank": [
-        0.0,
-        0.92,
-        1.0,
-        1.0
-      ],
-      "underbelly": [
-        0.0,
-        0.86,
-        1.0,
-        1.0
-      ],
       "body": [
-        0.65,
-        0.97,
-        1.0,
+        0.003,
+        0.005,
+        0.01,
         1.0
       ],
       "detail1": [
         0.0,
-        1.0,
+        0.88,
         1.0,
         1.0
       ],
       "male_display": [
         0.0,
-        1.0,
+        0.95,
         1.0,
         1.0
       ],
@@ -1421,7 +1421,7 @@
       ],
       "claws": [
         0.0,
-        0.9,
+        0.85,
         1.0,
         1.0
       ]
@@ -1433,38 +1433,38 @@
       "pattern": 1,
       "theme": 0,
       "markings": [
+        0.82,
+        0.98,
+        1.0,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.85,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
         0.003,
         0.005,
         0.01,
         1.0
       ],
-      "flank": [
-        0.0,
-        0.92,
-        1.0,
-        1.0
-      ],
-      "underbelly": [
-        0.0,
-        0.86,
-        1.0,
-        1.0
-      ],
       "body": [
-        0.65,
-        0.97,
-        1.0,
+        0.003,
+        0.005,
+        0.01,
         1.0
       ],
       "detail1": [
         0.0,
-        1.0,
+        0.88,
         1.0,
         1.0
       ],
       "male_display": [
         0.0,
-        1.0,
+        0.95,
         1.0,
         1.0
       ],
@@ -1488,7 +1488,7 @@
       ],
       "claws": [
         0.0,
-        0.9,
+        0.85,
         1.0,
         1.0
       ]
@@ -1500,38 +1500,38 @@
       "pattern": 1,
       "theme": 0,
       "markings": [
+        0.82,
+        0.98,
+        1.0,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.85,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
         0.003,
         0.005,
         0.01,
         1.0
       ],
-      "flank": [
-        0.0,
-        0.92,
-        1.0,
-        1.0
-      ],
-      "underbelly": [
-        0.0,
-        0.86,
-        1.0,
-        1.0
-      ],
       "body": [
-        0.65,
-        0.97,
-        1.0,
+        0.003,
+        0.005,
+        0.01,
         1.0
       ],
       "detail1": [
         0.0,
-        1.0,
+        0.88,
         1.0,
         1.0
       ],
       "male_display": [
         0.0,
-        1.0,
+        0.95,
         1.0,
         1.0
       ],
@@ -1555,7 +1555,7 @@
       ],
       "claws": [
         0.0,
-        0.9,
+        0.85,
         1.0,
         1.0
       ]
@@ -1567,38 +1567,38 @@
       "pattern": 1,
       "theme": 0,
       "markings": [
+        0.82,
+        0.98,
+        1.0,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.85,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
         0.003,
         0.005,
         0.01,
         1.0
       ],
-      "flank": [
-        0.0,
-        0.92,
-        1.0,
-        1.0
-      ],
-      "underbelly": [
-        0.0,
-        0.86,
-        1.0,
-        1.0
-      ],
       "body": [
-        0.65,
-        0.97,
-        1.0,
+        0.003,
+        0.005,
+        0.01,
         1.0
       ],
       "detail1": [
         0.0,
-        1.0,
+        0.88,
         1.0,
         1.0
       ],
       "male_display": [
         0.0,
-        1.0,
+        0.95,
         1.0,
         1.0
       ],
@@ -1622,7 +1622,7 @@
       ],
       "claws": [
         0.0,
-        0.9,
+        0.85,
         1.0,
         1.0
       ]
@@ -1634,38 +1634,38 @@
       "pattern": 1,
       "theme": 0,
       "markings": [
+        0.82,
+        0.98,
+        1.0,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.85,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
         0.003,
         0.005,
         0.01,
         1.0
       ],
-      "flank": [
-        0.0,
-        0.92,
-        1.0,
-        1.0
-      ],
-      "underbelly": [
-        0.0,
-        0.86,
-        1.0,
-        1.0
-      ],
       "body": [
-        0.65,
-        0.97,
-        1.0,
+        0.003,
+        0.005,
+        0.01,
         1.0
       ],
       "detail1": [
         0.0,
-        1.0,
+        0.88,
         1.0,
         1.0
       ],
       "male_display": [
         0.0,
-        1.0,
+        0.95,
         1.0,
         1.0
       ],
@@ -1689,7 +1689,7 @@
       ],
       "claws": [
         0.0,
-        0.9,
+        0.85,
         1.0,
         1.0
       ]
@@ -1701,38 +1701,38 @@
       "pattern": 1,
       "theme": 0,
       "markings": [
+        0.82,
+        0.98,
+        1.0,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.85,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
         0.003,
         0.005,
         0.01,
         1.0
       ],
-      "flank": [
-        0.0,
-        0.92,
-        1.0,
-        1.0
-      ],
-      "underbelly": [
-        0.0,
-        0.86,
-        1.0,
-        1.0
-      ],
       "body": [
-        0.65,
-        0.97,
-        1.0,
+        0.003,
+        0.005,
+        0.01,
         1.0
       ],
       "detail1": [
         0.0,
-        1.0,
+        0.88,
         1.0,
         1.0
       ],
       "male_display": [
         0.0,
-        1.0,
+        0.95,
         1.0,
         1.0
       ],
@@ -1756,7 +1756,7 @@
       ],
       "claws": [
         0.0,
-        0.9,
+        0.85,
         1.0,
         1.0
       ]
@@ -1768,38 +1768,38 @@
       "pattern": 1,
       "theme": 0,
       "markings": [
+        0.82,
+        0.98,
+        1.0,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.85,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
         0.003,
         0.005,
         0.01,
         1.0
       ],
-      "flank": [
-        0.0,
-        0.92,
-        1.0,
-        1.0
-      ],
-      "underbelly": [
-        0.0,
-        0.86,
-        1.0,
-        1.0
-      ],
       "body": [
-        0.65,
-        0.97,
-        1.0,
+        0.003,
+        0.005,
+        0.01,
         1.0
       ],
       "detail1": [
         0.0,
-        1.0,
+        0.88,
         1.0,
         1.0
       ],
       "male_display": [
         0.0,
-        1.0,
+        0.95,
         1.0,
         1.0
       ],
@@ -1823,7 +1823,7 @@
       ],
       "claws": [
         0.0,
-        0.9,
+        0.85,
         1.0,
         1.0
       ]
@@ -1835,38 +1835,38 @@
       "pattern": 1,
       "theme": 0,
       "markings": [
+        0.82,
+        0.98,
+        1.0,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.85,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
         0.003,
         0.005,
         0.01,
         1.0
       ],
-      "flank": [
-        0.0,
-        0.92,
-        1.0,
-        1.0
-      ],
-      "underbelly": [
-        0.0,
-        0.86,
-        1.0,
-        1.0
-      ],
       "body": [
-        0.65,
-        0.97,
-        1.0,
+        0.003,
+        0.005,
+        0.01,
         1.0
       ],
       "detail1": [
         0.0,
-        1.0,
+        0.88,
         1.0,
         1.0
       ],
       "male_display": [
         0.0,
-        1.0,
+        0.95,
         1.0,
         1.0
       ],
@@ -1890,7 +1890,7 @@
       ],
       "claws": [
         0.0,
-        0.9,
+        0.85,
         1.0,
         1.0
       ]

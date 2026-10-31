@@ -16,10 +16,10 @@ HAC_BANG_UE4_CHANNELS = {
     "Variation": 0,
     "Theme": 0,
     # Chuẩn kênh màu UE4 The Isle Evrima (có đầy đủ vệt sáng xanh ở Bụng, Lưng, Chân, Đầu, Mào, Gai lưng)
-    "Markings": {"R": 0.003, "G": 0.005, "B": 0.010, "A": 1.0},      # Nền da chính Đen Huyền
+    "Markings": {"R": 0.82, "G": 0.98, "B": 1.0, "A": 1.0},      # Nền da chính Đen Huyền
     "Flank": {"R": 0.0, "G": 0.92, "B": 1.0, "A": 1.0},              # Sọc sáng trên Lưng, Đầu, Chân, Sườn
-    "Underbelly": {"R": 0.0, "G": 0.86, "B": 1.0, "A": 1.0},         # Vệt sáng dưới Bụng, Cổ, Họng, Gầm đuôi
-    "Body": {"R": 0.65, "G": 0.97, "B": 1.0, "A": 1.0},              # Tia sét Trắng băng dọc Chân, Viền bụng, Đầu
+    "Underbelly": {"R": 0.003, "G": 0.005, "B": 0.010, "A": 1.0},         # Vệt sáng dưới Bụng, Cổ, Họng, Gầm đuôi
+    "Body": {"R": 0.003, "G": 0.005, "B": 0.010, "A": 1.0},              # Tia sét Trắng băng dọc Chân, Viền bụng, Đầu
     "Detail1": {"R": 0.0, "G": 1.0, "B": 1.0, "A": 1.0},             # Vảy cứng trên Lưng & Đầu
     "MaleDisplay": {"R": 0.0, "G": 1.0, "B": 1.0, "A": 1.0},         # Gai sống lưng, Viền mào & Sừng
     "EyeColor": {"R": 0.0, "G": 1.0, "B": 1.0, "A": 1.0},
@@ -27,10 +27,10 @@ HAC_BANG_UE4_CHANNELS = {
     "Mouth": {"R": 0.02, "G": 0.08, "B": 0.14, "A": 1.0},
     "Claws": {"R": 0.0, "G": 0.90, "B": 1.0, "A": 1.0},
     # Mảng float tương thích mọi phiên bản Save JSON của Evrima
-    "markings": [0.003, 0.005, 0.010, 1.0],
+    "markings": [0.82, 0.98, 1.0, 1.0],
     "flank": [0.0, 0.92, 1.0, 1.0],
-    "underbelly": [0.0, 0.86, 1.0, 1.0],
-    "body": [0.65, 0.97, 1.0, 1.0],
+    "underbelly": [0.003, 0.005, 0.010, 1.0],
+    "body": [0.003, 0.005, 0.010, 1.0],
     "detail1": [0.0, 1.0, 1.0, 1.0],
     "male_display": [0.0, 1.0, 1.0, 1.0],
     "eyes": [0.0, 1.0, 1.0, 1.0],
@@ -48,7 +48,7 @@ def patch_player_save_file(json_path: Path) -> bool:
 
     species_raw = str(raw.get("Class") or raw.get("class") or "Diabloceratops")
     clean_sp = species_raw.replace("BP_", "").replace("_C", "").strip() or "Diabloceratops"
-    skin_code = f"{clean_sp}10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF"
+    skin_code = f"{clean_sp}10006080EFF06080EFF00D9FFFFD1FAFFFF00F2FFFF00FFFFFF"
 
     # Cập nhật trực tiếp các trường Skin trong file Save của Server The Isle Evrima
     raw["SkinCode"] = skin_code

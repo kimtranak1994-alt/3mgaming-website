@@ -10,7 +10,7 @@
   "auto_reward_enabled": true,
   "ended_at": null,
   "is_settled": false,
-  "total_ai_kills": 95,
+  "total_ai_kills": 97,
   "hunters": {
     "76561199319764814": {
       "steam_id": "76561199319764814",
@@ -222,16 +222,17 @@
       "steam_id": "76561198670217946",
       "name": "Monter Ăn Chay",
       "species": "Stegosaurus",
-      "kills": 6,
+      "kills": 7,
       "prey_breakdown": {
         "Deer": 2,
         "Bullfrog": 1,
         "Compsognathus": 1,
         "Rabbit": 1,
-        "Tyrannosaurus": 1
+        "Tyrannosaurus": 1,
+        "Boar": 1
       },
-      "last_kill_at": "2026-10-31T09:30:47.372Z",
-      "last_prey": "Tyrannosaurus"
+      "last_kill_at": "2026-10-31T10:00:04.632Z",
+      "last_prey": "Boar"
     },
     "76561198751942670": {
       "steam_id": "76561198751942670",
@@ -245,6 +246,17 @@
       },
       "last_kill_at": "2026-10-31T07:26:30.128Z",
       "last_prey": "Boar"
+    },
+    "76561198684564795": {
+      "steam_id": "76561198684564795",
+      "name": "LengKeng",
+      "species": "IndoRex",
+      "kills": 1,
+      "prey_breakdown": {
+        "Deer": 1
+      },
+      "last_kill_at": "2026-10-31T09:58:55.720Z",
+      "last_prey": "Deer"
     }
   },
   "leaderboard": [
@@ -323,6 +335,25 @@
     },
     {
       "rank": 5,
+      "steam_id": "76561198670217946",
+      "name": "Monter Ăn Chay",
+      "species": "Stegosaurus",
+      "kills": 7,
+      "prey_breakdown": {
+        "Deer": 2,
+        "Bullfrog": 1,
+        "Compsognathus": 1,
+        "Rabbit": 1,
+        "Tyrannosaurus": 1,
+        "Boar": 1
+      },
+      "last_kill_at": "2026-10-31T10:00:04.632Z",
+      "last_prey": "Boar",
+      "is_top1": false,
+      "reward_xu": 0
+    },
+    {
+      "rank": 6,
       "steam_id": "76561199575258338",
       "name": "fatman",
       "species": "IndoRex",
@@ -335,24 +366,6 @@
       },
       "last_kill_at": "2026-10-31T04:30:58.806Z",
       "last_prey": "Deer",
-      "is_top1": false,
-      "reward_xu": 0
-    },
-    {
-      "rank": 6,
-      "steam_id": "76561198670217946",
-      "name": "Monter Ăn Chay",
-      "species": "Stegosaurus",
-      "kills": 6,
-      "prey_breakdown": {
-        "Deer": 2,
-        "Bullfrog": 1,
-        "Compsognathus": 1,
-        "Rabbit": 1,
-        "Tyrannosaurus": 1
-      },
-      "last_kill_at": "2026-10-31T09:30:47.372Z",
-      "last_prey": "Tyrannosaurus",
       "is_top1": false,
       "reward_xu": 0
     },
@@ -535,13 +548,27 @@
       "last_prey": "Seaturtle",
       "is_top1": false,
       "reward_xu": 0
+    },
+    {
+      "rank": 19,
+      "steam_id": "76561198684564795",
+      "name": "LengKeng",
+      "species": "IndoRex",
+      "kills": 1,
+      "prey_breakdown": {
+        "Deer": 1
+      },
+      "last_kill_at": "2026-10-31T09:58:55.720Z",
+      "last_prey": "Deer",
+      "is_top1": false,
+      "reward_xu": 0
     }
   ],
   "prey_summary": {
-    "Deer": 30,
+    "Deer": 31,
     "Psittacosaurus_Plains": 5,
     "Psittacosaurus_Coastal": 2,
-    "Boar": 20,
+    "Boar": 21,
     "Crab": 4,
     "Dryosaurus": 11,
     "Seaturtle": 6,
@@ -606,6 +633,7 @@
     "6886323",
     "6861552",
     "6889933",
+    "6928184",
     "6854585",
     "6758651",
     "6758188",
@@ -621,6 +649,7 @@
     "6757591",
     "6868749",
     "6885783",
+    "6927881",
     "6854760",
     "6740420",
     "6750576",
