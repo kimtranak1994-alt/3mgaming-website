@@ -213,6 +213,8 @@ const Garage = {
 
         if (img) img.src = this.getDinoImageUrl(data.species);
 
+        const nutr = data.nutrients || { carb: 100, protein: 100, lipid: 100 };
+        this.activeDinoNutrients = nutr;
         if (title) {
 
           const growthPct = Math.round((data.growth || 1.0) * 100);
@@ -225,6 +227,18 @@ const Garage = {
 
           title.textContent = `${data.species} (${growthPct}% - ${genderText}) [${dietLabel}]`;
 
+        }
+
+        const nutrBox = document.getElementById('garage-active-dino-nutrients');
+        if (nutrBox) {
+          nutrBox.innerHTML = `
+            <div style="display: flex; gap: 8px; align-items: center; margin-top: 6px; font-size: 0.78rem; flex-wrap: wrap;">
+              <span style="color: #94a3b8; font-weight: 600;">Dinh dưỡng dạ dày:</span>
+              <span style="padding: 2px 7px; border-radius: 6px; background: rgba(245, 158, 11, 0.2); border: 1px solid rgba(245, 158, 11, 0.4); color: #fbbf24; font-weight: 700;">🔶 A: <span id="active-nutr-val-a">${Math.round(nutr.carb || 100)}</span>%</span>
+              <span style="padding: 2px 7px; border-radius: 6px; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); color: #60a5fa; font-weight: 700;">🔷 B: <span id="active-nutr-val-b">${Math.round(nutr.protein || 100)}</span>%</span>
+              <span style="padding: 2px 7px; border-radius: 6px; background: rgba(168, 85, 247, 0.2); border: 1px solid rgba(168, 85, 247, 0.4); color: #c084fc; font-weight: 700;">🟣 Y: <span id="active-nutr-val-y">${Math.round(nutr.lipid || 100)}</span>%</span>
+            </div>
+          `;
         }
 
         if (status) {
@@ -914,15 +928,21 @@ const Garage = {
 
 
 
-      // Bước 1: Gửi step: "start" lên server để xác nhận trạng thái trực tuyến
+      // Lấy chỉ số A-B-Y hiện tại đang hiển thị
+      const curNutr = this.activeDinoNutrients || {
+        carb: parseFloat(document.getElementById('active-nutr-val-a')?.textContent || 100),
+        protein: parseFloat(document.getElementById('active-nutr-val-b')?.textContent || 100),
+        lipid: parseFloat(document.getElementById('active-nutr-val-y')?.textContent || 100)
+      };
 
+      // Bước 1: Gửi step: "start" lên server để xác nhận trạng thái trực tuyến và truyền dinh dưỡng A-B-Y
       const resStart = await fetch('/api/server/garage/store', {
 
         method: 'POST',
 
         headers: { 'Content-Type': 'application/json' },
 
-        body: JSON.stringify({ steam_id: steamId, step: 'start' })
+        body: JSON.stringify({ steam_id: steamId, step: 'start', nutrients: curNutr })
 
       });
 
@@ -1022,15 +1042,14 @@ const Garage = {
 
 
 
-      // Bước 3: Đã hết 30 giây an toàn -> Gọi API chính thức để cất dino vào Gara
-
+      // Bước 3: Đã hết 30 giây an toàn -> Gọi API chính thức để cất dino vào Gara kèm A-B-Y
       const resFinalize = await fetch('/api/server/garage/store', {
 
         method: 'POST',
 
         headers: { 'Content-Type': 'application/json' },
 
-        body: JSON.stringify({ steam_id: steamId, step: 'finalize' })
+        body: JSON.stringify({ steam_id: steamId, step: 'finalize', nutrients: curNutr })
 
       });
 

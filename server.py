@@ -2624,6 +2624,13 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             
 
             if sp:
+                snaps_map = load_garage_dino_snapshots()
+                last_nutr = (
+                    (snaps_map.get(f"{steam_id}_last_nutrients") or {}).get("nutrients")
+                    or (snaps_map.get(f"{steam_id}_{sp}") or {}).get("nutrients")
+                    or (snaps_map.get(f"{steam_id}_last_parked") or {}).get("nutrients")
+                    or {"carb": 100.0, "protein": 100.0, "lipid": 100.0}
+                )
 
                 self.send_json_response({
 
@@ -2642,6 +2649,12 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     "growth": growth,
 
                     "online": online,
+
+                    "nutrients": {
+                        "carb": round(safe_float(last_nutr.get("carb"), 100.0)),
+                        "protein": round(safe_float(last_nutr.get("protein"), 100.0)),
+                        "lipid": round(safe_float(last_nutr.get("lipid"), 100.0))
+                    },
 
                     "source": "active"
 
@@ -4818,7 +4831,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         self.handle_ai_hunt_post()
 
 
-    def capture_live_player_snapshot(self, steam_id):
+    def capture_live_player_snapshot(self, steam_id, custom_nutrients=None):
         """Chụp lại nguyên trạng 100% chỉ số khủng long đang sống trong game trước khi cất vào Gara."""
         if not steam_id:
             return None
@@ -4859,15 +4872,18 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
         existing_snaps = load_garage_dino_snapshots()
         last_nutr = (
-            (existing_snaps.get(f"{sid}_last_nutrients") or {}).get("nutrients")
+            (custom_nutrients if isinstance(custom_nutrients, dict) and any(safe_float(custom_nutrients.get(k), -1) >= 0 for k in ["carb", "protein", "lipid", "a", "b", "y"]) else None)
+            or (existing_snaps.get(f"{sid}_last_nutrients") or {}).get("nutrients")
             or (existing_snaps.get(f"{sid}_{species}") or {}).get("nutrients")
             or {}
         )
-        carb_v = safe_float(player_info.get("carb") if player_info.get("carb") is not None else last_nutr.get("carb"), 100.0)
-        prot_v = safe_float(player_info.get("protein") if player_info.get("protein") is not None else last_nutr.get("protein"), 100.0)
-        lipid_v = safe_float(player_info.get("lipid") if player_info.get("lipid") is not None else last_nutr.get("lipid"), 100.0)
-        if carb_v <= 0 and prot_v <= 0 and lipid_v <= 0:
-            carb_v, prot_v, lipid_v = 100.0, 100.0, 100.0
+        carb_v = safe_float(last_nutr.get("carb") if last_nutr.get("carb") is not None else (last_nutr.get("a") if last_nutr.get("a") is not None else player_info.get("carb")), 100.0)
+        prot_v = safe_float(last_nutr.get("protein") if last_nutr.get("protein") is not None else (last_nutr.get("b") if last_nutr.get("b") is not None else player_info.get("protein")), 100.0)
+        lipid_v = safe_float(last_nutr.get("lipid") if last_nutr.get("lipid") is not None else (last_nutr.get("y") if last_nutr.get("y") is not None else player_info.get("lipid")), 100.0)
+        carb_v = max(0.0, min(100.0, carb_v))
+        prot_v = max(0.0, min(100.0, prot_v))
+        lipid_v = max(0.0, min(100.0, lipid_v))
+        save_garage_dino_snapshot(f"{sid}_last_nutrients", {"nutrients": {"carb": carb_v, "protein": prot_v, "lipid": lipid_v}})
 
         dino_snap = {
             "species": species,
@@ -5362,13 +5378,19 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             # Lần 1: Khôi phục toàn diện ngay khi khủng long vừa spawn vào game
             apply_pass(include_growth_and_prime=True, pass_name="Pass 1")
 
-            # Lần 2 (sau 4.0s): Bổ trợ toàn diện phòng trường hợp client load map chậm
-            time.sleep(4.0)
+            # Lần 2 (sau 3.0s): Bổ trợ toàn diện phòng trường hợp client load map chậm
+            time.sleep(3.0)
             apply_pass(include_growth_and_prime=True, pass_name="Pass 2")
 
-            # Lần 3 (sau 4.5s): Khóa chặt Đột biến, Máu/Đói/Nước và Dinh dưỡng A-B-Y (không gọi lại setgrowth/setprime để tránh reset dạ dày)
-            time.sleep(4.5)
+            # Lần 3 (sau 3.5s): Khóa chặt Đột biến, Máu/Đói/Nước và Dinh dưỡng A-B-Y (không gọi lại setgrowth/setprime để tránh reset dạ dày)
+            time.sleep(3.5)
             apply_pass(include_growth_and_prime=False, pass_name="Pass 3 Final Lock")
+
+            # Lần 4 & 5: Tái kích hoạt riêng rẽ Dinh Dưỡng A - B - Y để đảm bảo dạ dày The Isle Evrima giữ trọn 100%
+            time.sleep(2.0)
+            self.fetch_islepilot("/commands", method="POST", body_data=nutr_payload)
+            time.sleep(3.0)
+            self.fetch_islepilot("/commands", method="POST", body_data=nutr_payload)
 
         threading.Thread(target=restore_worker, daemon=True).start()
         return dino_spec, dino_growth
@@ -5545,6 +5567,13 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
             step = payload.get("step", "finalize")
 
+            nutr_payload_in = payload.get("nutrients") or {}
+            if nutr_payload_in and isinstance(nutr_payload_in, dict):
+                c_in = safe_float(nutr_payload_in.get("carb", nutr_payload_in.get("a", 100)), 100.0)
+                p_in = safe_float(nutr_payload_in.get("protein", nutr_payload_in.get("b", 100)), 100.0)
+                l_in = safe_float(nutr_payload_in.get("lipid", nutr_payload_in.get("y", 100)), 100.0)
+                save_garage_dino_snapshot(f"{steam_id}_last_nutrients", {"nutrients": {"carb": c_in, "protein": p_in, "lipid": l_in}})
+
             # 1. BƯỚC KHỞI ĐỘNG (step == "start"): Kiểm tra người chơi có online trong game hay không và chụp snapshot lần 1
             if step == "start":
                 player_info = self.fetch_islepilot(f"/players/{steam_id}", bypass_cache=True)
@@ -5574,7 +5603,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     return
 
                 # Chụp snapshot đầy đủ dữ liệu khủng long (máu, nước, no, size, a-b-y, 16 ô đột biến)
-                self.capture_live_player_snapshot(steam_id)
+                self.capture_live_player_snapshot(steam_id, custom_nutrients=nutr_payload_in)
 
                 self.send_json_response({
                     "success": True,
@@ -5586,7 +5615,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 return
 
             # 2. BƯỚC HOÀN TẤT (step == "finalize"): Chụp lại snapshot ngay giây cuối trước khi gọi lệnh park
-            pre_snap = self.capture_live_player_snapshot(steam_id) or (load_garage_dino_snapshots().get(f"{steam_id}_last_parked") or {})
+            pre_snap = self.capture_live_player_snapshot(steam_id, custom_nutrients=nutr_payload_in) or (load_garage_dino_snapshots().get(f"{steam_id}_last_parked") or {})
             pre_garage = self.fetch_islepilot(f"/players/{steam_id}/garage", bypass_cache=True) or {}
             pre_ids = {str(gd.get("id")) for gd in (pre_garage.get("garage") or []) if gd.get("id")}
 
