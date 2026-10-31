@@ -773,27 +773,50 @@ const SkinShop = {
 
 
   openInStudio(skinId) {
+    let item = this.skins.find(s => s.id === skinId)
+      || (this.ownedSkins || []).find(s => s.id === skinId)
+      || (window.GarageSkins && GarageSkins.skins ? GarageSkins.skins.find(s => s.id === skinId) : null)
+      || this.skins[0];
 
-    const item = this.skins.find(s => s.id === skinId) || this.skins[0];
+    if (!item && skinId === 'skin_hac_bang_doc_quyen') {
+      item = {
+        id: 'skin_hac_bang_doc_quyen',
+        name: '👑 Màu Độc Quyền - Hắc Băng Lôi Điện',
+        species: 'Diabloceratops',
+        allSpecies: true,
+        universal: true,
+        pattern: 1,
+        palette: {
+          body: '#06080E',
+          markings: '#00D9FF',
+          underbelly: '#EEF8FF',
+          flank: '#00E5FF',
+          detail: '#6889A6',
+          display: '#00FFFF',
+          male_display: '#00FFFF',
+          eyes: '#00FFFF',
+          claws: '#00D9FF',
+          teeth: '#EEF8FF',
+          mouth: '#0A2233'
+        }
+      };
+    }
 
     if (window.SkinEditor) {
-
       SkinEditor._pendingSkin = item;
-
     }
 
     App.switchTab('skineditor');
 
     setTimeout(() => {
-
-      if (window.SkinEditor && SkinEditor.loadSkinObject) {
-
-        SkinEditor.loadSkinObject(item);
-
+      if (window.SkinEditor) {
+        if (item && SkinEditor.loadSkinObject) {
+          SkinEditor.loadSkinObject(item);
+        } else if (skinId === 'skin_hac_bang_doc_quyen' && SkinEditor.loadExclusiveHacBang) {
+          SkinEditor.loadExclusiveHacBang();
+        }
       }
-
-    }, 120);
-
+    }, 150);
   },
 
 
@@ -1457,17 +1480,25 @@ const SkinEditor = {
   init() {
 
     if (this._pendingSkin) {
-
       const p = this._pendingSkin;
-
       this._pendingSkin = null;
-
       this._userInteractedSpecies = true;
-
-      this.species = p.species || 'Tyrannosaurus';
-
+      const isUniv = Boolean(p.allSpecies || p.universal || p.id === 'skin_hac_bang_doc_quyen' || (p.species || '').toLowerCase().includes('tất cả'));
+      this._isUniversalSkin = isUniv;
+      if (isUniv) {
+        if (!this.species || this.species.toLowerCase().includes('tất cả') || this.species === 'All' || this.species === 'Tyrannosaurus') {
+          this.species = 'Diabloceratops';
+        }
+      } else {
+        this.species = p.species || 'Tyrannosaurus';
+      }
+      if (p.pattern !== undefined && !isNaN(parseInt(p.pattern, 10))) {
+        this.pattern = parseInt(p.pattern, 10);
+      }
       this.palette = { ...(p.palette || this.defaults[this.species] || this.defaults.Tyrannosaurus) };
-
+      if (this.palette.male_display && !this.palette.display) {
+        this.palette.display = this.palette.male_display;
+      }
     } else {
 
       if (!this.palette || Object.keys(this.palette).length === 0) {
@@ -3227,7 +3258,7 @@ const SkinEditor = {
     const numStr = `${this.pattern}${this.variation}${this.theme}`;
 
     if (this._isUniversalSkin) {
-      return ${this.species}${numStr}00D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF;
+      return `${this.species}${numStr}00D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF`;
     }
 
     const zones = [];

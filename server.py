@@ -5719,9 +5719,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             "palette": {
                 "body": "#06080E",
                 "markings": "#00D9FF",
-                "underbelly": "#00D9FF",
+                "underbelly": "#EEF8FF",
                 "flank": "#00E5FF",
-                "detail": "#EEF8FF",
+                "detail": "#6889A6",
                 "detail1": "#00FFFF",
                 "display": "#00FFFF",
                 "male_display": "#00FFFF",
