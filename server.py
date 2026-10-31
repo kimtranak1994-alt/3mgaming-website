@@ -540,24 +540,29 @@ def build_blueprint_skin_payload(species, sex, palette, variation=0, pattern=0, 
     is_hac_bang = body_hex in ["#06080E", "#080B12", "#05070C"] and markings_hex in ["#00D9FF", "#00E5FF", "#00FFFF"]
 
     if is_hac_bang:
-        # Trong UE4 M_Dinosaur_Master: markings (101) = Lưng/Đầu/Sừng/Chân, flank (001) = Thân giữa,
-        # underbelly (010) = Cổ/Họng, body (011) = Vùng lửa sườn dưới, male_display (100) = Gai lưng & Vân mào
+        # Trong UE4 M_Dinosaur_Master (đã kiểm chứng trên mesh.glb & tint_mask.png):
+        # - markings (101 Magenta, 64% diện tích): Nền da chủ đạo toàn thân -> Đen huyền (#06080E)
+        # - flank (001 Blue, 14.5% diện tích): Các đường sọc/vằn trên LƯNG, ĐẦU, CHÂN & SƯỜN -> Xanh ngọc sáng (#00E5FF)
+        # - underbelly (010 Green, 10% diện tích): Vùng lửa BỤNG, CỔ DƯỚI & ĐUÔI DƯỚI -> Xanh ngọc (#00D9FF)
+        # - body (011 Cyan, 9% diện tích): Các đường tia sét sắc nét ở CHÂN, BỤNG, ĐẦU & ĐUÔI -> Trắng băng xanh (#A6F7FF)
+        # - detail1 (110 Yellow): Hàng vảy gai trên LƯNG & ĐẦU -> Xanh ngọc phát sáng (#00FFFF)
+        # - male_display (100 Red): Hàng gai sống lưng, viền mào & sừng -> Xanh ngọc phát sáng (#00FFFF)
         return {
             "class": bp_class,
             "female": str(sex).lower() == "female",
             "variation": int(variation or 0),
             "pattern": int(pattern or 1),
             "theme": int(theme or 0),
-            "body": hex_to_float_rgba("#00D9FF"),
-            "markings": hex_to_float_rgba("#06080E"),
-            "flank": hex_to_float_rgba("#06080E"),
-            "underbelly": hex_to_float_rgba("#06080E"),
-            "detail1": hex_to_float_rgba("#EEF8FF"),
-            "eyes": hex_to_float_rgba(pal.get("eyes", "#00FFFF")),
-            "male_display": hex_to_float_rgba("#00D9FF"),
-            "teeth": hex_to_float_rgba(pal.get("teeth", "#EEF8FF")),
-            "mouth": hex_to_float_rgba(pal.get("mouth", "#0A2233")),
-            "claws": hex_to_float_rgba(pal.get("claws", "#00D9FF"))
+            "body": [0.65, 0.97, 1.0, 1.0],
+            "markings": [0.003, 0.005, 0.010, 1.0],
+            "flank": [0.0, 0.92, 1.0, 1.0],
+            "underbelly": [0.0, 0.86, 1.0, 1.0],
+            "detail1": [0.0, 1.0, 1.0, 1.0],
+            "eyes": [0.0, 1.0, 1.0, 1.0],
+            "male_display": [0.0, 1.0, 1.0, 1.0],
+            "teeth": [0.93, 0.97, 1.0, 1.0],
+            "mouth": [0.02, 0.08, 0.14, 1.0],
+            "claws": [0.0, 0.90, 1.0, 1.0]
         }
 
     return {
@@ -1222,9 +1227,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
             return
 
-        elif self.path == "/api/server/skins/apply":
+        elif self.path.split("?")[0] == "/api/server/skins/apply":
 
-            self.handle_apply_skin()
+            self.handle_studio_apply()
 
             return
 
@@ -1264,7 +1269,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
             return
 
-        elif self.path in ["/api/skin/set", "/api/studio/apply", "/api/server/skins/apply"]:
+        elif self.path.split("?")[0] in ["/api/skin/set", "/api/studio/apply", "/api/server/skins/apply"]:
 
             self.handle_studio_apply()
 
@@ -5714,19 +5719,19 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             "palette": {
                 "body": "#06080E",
                 "markings": "#00D9FF",
-                "underbelly": "#EEF8FF",
-                "flank": "#06080E",
-                "detail": "#6889A6",
-                "detail1": "#6889A6",
-                "display": "#00D9FF",
-                "male_display": "#00D9FF",
+                "underbelly": "#00D9FF",
+                "flank": "#00E5FF",
+                "detail": "#EEF8FF",
+                "detail1": "#00FFFF",
+                "display": "#00FFFF",
+                "male_display": "#00FFFF",
                 "eyes": "#00FFFF",
                 "claws": "#00D9FF",
                 "teeth": "#EEF8FF",
                 "mouth": "#0A2233"
             },
-            "code": "Diabloceratops10006080EFF00D9FFFF06080EFF06080EFF00D9FFFF00FFFFFF",
-            "skinCode": "Diabloceratops10006080EFF00D9FFFF06080EFF06080EFF00D9FFFF00FFFFFF",
+            "code": "Diabloceratops10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
+            "skinCode": "Diabloceratops10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
             "description": "Phiên bản giới hạn: Độc đáo • Cá tính • Khác biệt. Phối màu Đen Huyền (nền chủ đạo), Xanh Ngọc (tạo điểm nhấn), Trắng Băng (tăng độ sắc nét) và Xám Xanh (tạo chiều sâu). Tương thích tự động 100% cho TẤT CẢ khủng long trong server!"
         }
 
@@ -10681,11 +10686,19 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             except Exception:
                 pat_int = 1
 
-            is_hac_bang_apply = Boolean_hac_bang = (
+            top_pal = payload.get("palette") if isinstance(payload.get("palette"), dict) else {}
+            top_body = str(top_pal.get("body") or "").upper()
+            top_mark = str(top_pal.get("markings") or "").upper()
+            is_dark_body_arr = isinstance(body_val, (list, tuple)) and len(body_val) >= 3 and float(body_val[0]) < 0.08 and float(body_val[1]) < 0.08 and float(body_val[2]) < 0.12
+            is_cyan_mark_arr = isinstance(markings_val, (list, tuple)) and len(markings_val) >= 3 and float(markings_val[1]) > 0.60 and float(markings_val[2]) > 0.85
+
+            is_hac_bang_apply = (
                 is_universal or
                 skin_id == "skin_hac_bang_doc_quyen" or
+                (top_body in ["#06080E", "#080B12", "#05070C"] and top_mark in ["#00D9FF", "#00E5FF", "#00FFFF"]) or
                 (isinstance(body_val, str) and body_val.upper() in ["#06080E", "#080B12", "#05070C"] and
-                 isinstance(markings_val, str) and markings_val.upper() in ["#00D9FF", "#00E5FF", "#00FFFF"])
+                 isinstance(markings_val, str) and markings_val.upper() in ["#00D9FF", "#00E5FF", "#00FFFF"]) or
+                (is_dark_body_arr and is_cyan_mark_arr)
             )
 
             if is_hac_bang_apply:
@@ -10695,16 +10708,16 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     "variation": int(raw_bp.get("variation", 0) or 0),
                     "pattern": pat_int,
                     "theme": int(raw_bp.get("theme", 0) or 0),
-                    "body": hex_to_float_rgba("#00D9FF"),
-                    "markings": hex_to_float_rgba("#06080E"),
-                    "flank": hex_to_float_rgba("#06080E"),
-                    "underbelly": hex_to_float_rgba("#06080E"),
-                    "detail1": hex_to_float_rgba("#EEF8FF"),
-                    "eyes": hex_to_float_rgba("#00FFFF"),
-                    "male_display": hex_to_float_rgba("#00D9FF"),
-                    "teeth": hex_to_float_rgba("#EEF8FF"),
-                    "mouth": hex_to_float_rgba("#0A2233"),
-                    "claws": hex_to_float_rgba("#00D9FF")
+                    "body": [0.65, 0.97, 1.0, 1.0],
+                    "markings": [0.003, 0.005, 0.010, 1.0],
+                    "flank": [0.0, 0.92, 1.0, 1.0],
+                    "underbelly": [0.0, 0.86, 1.0, 1.0],
+                    "detail1": [0.0, 1.0, 1.0, 1.0],
+                    "eyes": [0.0, 1.0, 1.0, 1.0],
+                    "male_display": [0.0, 1.0, 1.0, 1.0],
+                    "teeth": [0.93, 0.97, 1.0, 1.0],
+                    "mouth": [0.02, 0.08, 0.14, 1.0],
+                    "claws": [0.0, 0.90, 1.0, 1.0]
                 }
             else:
                 sanitized_bp = {

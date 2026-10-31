@@ -81,10 +81,10 @@ const Studio = {
   palette: {
     body: '#06080E',
     markings: '#00D9FF',
-    flank: '#06080E',
+    flank: '#00E5FF',
     underbelly: '#EEF8FF',
     detail: '#6889A6',
-    male_display: '#00D9FF',
+    male_display: '#00FFFF',
     eyes: '#00FFFF',
     teeth: '#EEF8FF',
     mouth: '#0A2233',
@@ -719,9 +719,9 @@ const Studio = {
       body: '#06080E',
       markings: '#00D9FF',
       underbelly: '#EEF8FF',
-      flank: '#06080E',
+      flank: '#00E5FF',
       detail: '#6889A6',
-      male_display: '#00D9FF',
+      male_display: '#00FFFF',
       eyes: '#00FFFF',
       teeth: '#EEF8FF',
       mouth: '#0A2233',
@@ -809,33 +809,53 @@ const Studio = {
         const { SW, SH, bufX, bufY, bufZ, bufV, yTopSmooth, NBINS } = uv3d;
 
         const bolts = [
-          [0.67, 0.35, 0.60, 0.53, 0.015, 1.05],
-          [0.60, 0.53, 0.49, 0.66, 0.014, 1.02],
-          [0.63, 0.42, 0.56, 0.55, 0.011, 0.94],
-          [0.56, 0.55, 0.47, 0.62, 0.009, 0.88],
-          [0.58, 0.58, 0.53, 0.66, 0.009, 0.90],
-          [0.71, 0.59, 0.72, 0.42, 0.013, 1.00],
-          [0.72, 0.42, 0.68, 0.30, 0.012, 0.96],
-          [0.75, 0.55, 0.76, 0.38, 0.011, 0.94],
-          [0.79, 0.49, 0.80, 0.36, 0.010, 0.90],
-          [0.66, 0.33, 0.63, 0.19, 0.012, 0.98],
-          [0.63, 0.19, 0.66, 0.07, 0.010, 0.94],
-          [0.64, 0.22, 0.68, 0.12, 0.008, 0.86],
-          [0.36, 0.46, 0.40, 0.32, 0.013, 0.98],
-          [0.40, 0.32, 0.43, 0.18, 0.011, 0.95],
-          [0.43, 0.18, 0.41, 0.07, 0.010, 0.92],
-          [0.41, 0.27, 0.45, 0.16, 0.008, 0.85],
-          [0.35, 0.46, 0.23, 0.41, 0.012, 0.96],
-          [0.23, 0.41, 0.10, 0.37, 0.011, 0.94],
-          [0.26, 0.43, 0.16, 0.36, 0.008, 0.86]
+          // 1. ĐẦU, MÕM, MÁ, TRÁN & HÀM DƯỚI (Head, Snout, Cheek, Brow & Jaw: zn = 0.76..0.96, yn = 0.34..0.82)
+          [0.77, 0.57, 0.87, 0.51, 0.017, 1.04],
+          [0.87, 0.51, 0.95, 0.44, 0.015, 1.00],
+          [0.77, 0.48, 0.86, 0.41, 0.016, 1.00],
+          [0.80, 0.43, 0.90, 0.36, 0.014, 0.96],
+          [0.74, 0.60, 0.77, 0.84, 0.016, 1.00],
+          // 2. CỔ & ỨC TRƯỚC (Neck & Throat: zn = 0.68..0.80, yn = 0.28..0.60)
+          [0.71, 0.59, 0.72, 0.42, 0.015, 1.02],
+          [0.72, 0.42, 0.68, 0.28, 0.014, 0.98],
+          [0.75, 0.55, 0.76, 0.36, 0.013, 0.96],
+          [0.79, 0.50, 0.80, 0.35, 0.012, 0.94],
+          // 3. LƯNG TRÊN, LƯNG GIỮA & LƯNG SAU (Shoulder, Upper/Mid/Rear Back: zn = 0.28..0.67, yn = 0.48..0.66)
+          [0.67, 0.35, 0.60, 0.53, 0.017, 1.06],
+          [0.60, 0.53, 0.49, 0.66, 0.016, 1.04],
+          [0.63, 0.42, 0.56, 0.55, 0.013, 0.96],
+          [0.56, 0.55, 0.47, 0.62, 0.012, 0.94],
+          [0.58, 0.58, 0.44, 0.63, 0.016, 1.02],
+          [0.44, 0.63, 0.31, 0.57, 0.015, 1.00],
+          [0.51, 0.59, 0.38, 0.50, 0.014, 0.96],
+          [0.39, 0.57, 0.27, 0.48, 0.014, 0.95],
+          // 4. BỤNG DƯỚI & LỒNG NGỰC (Belly & Under-Ribcage: zn = 0.36..0.66, yn = 0.23..0.38)
+          [0.66, 0.27, 0.52, 0.33, 0.018, 1.04],
+          [0.52, 0.25, 0.38, 0.32, 0.018, 1.04],
+          [0.60, 0.24, 0.44, 0.27, 0.016, 1.00],
+          // 5. CHÂN TRƯỚC & CHÂN SAU (Front & Hind Legs: zn = 0.61..0.70 & 0.34..0.46, yn = 0.05..0.46)
+          [0.66, 0.35, 0.63, 0.19, 0.016, 1.02],
+          [0.63, 0.19, 0.66, 0.06, 0.014, 0.98],
+          [0.64, 0.24, 0.68, 0.11, 0.012, 0.92],
+          [0.68, 0.33, 0.67, 0.14, 0.013, 0.94],
+          [0.36, 0.47, 0.40, 0.31, 0.017, 1.02],
+          [0.40, 0.31, 0.43, 0.17, 0.015, 0.98],
+          [0.43, 0.17, 0.41, 0.06, 0.014, 0.96],
+          [0.41, 0.28, 0.45, 0.15, 0.012, 0.92],
+          [0.38, 0.43, 0.37, 0.16, 0.014, 0.95],
+          // 6. ĐUÔI (Tail: zn = 0.06..0.35, yn = 0.35..0.47)
+          [0.35, 0.46, 0.23, 0.41, 0.015, 1.00],
+          [0.23, 0.41, 0.08, 0.37, 0.014, 0.98],
+          [0.27, 0.43, 0.15, 0.36, 0.012, 0.92]
         ];
 
         const flameTongues = [
-          [0.59, 0.31, 0.52, 0.53, 0.036],
-          [0.56, 0.29, 0.47, 0.51, 0.044],
-          [0.53, 0.28, 0.44, 0.45, 0.042],
-          [0.49, 0.28, 0.42, 0.39, 0.038],
-          [0.60, 0.33, 0.55, 0.49, 0.028]
+          [0.61, 0.28, 0.53, 0.55, 0.040],
+          [0.57, 0.26, 0.48, 0.53, 0.048],
+          [0.53, 0.25, 0.44, 0.47, 0.046],
+          [0.48, 0.25, 0.41, 0.41, 0.042],
+          [0.62, 0.30, 0.56, 0.51, 0.032],
+          [0.44, 0.27, 0.38, 0.39, 0.036]
         ];
 
         const frillRays = [
@@ -860,6 +880,9 @@ const Studio = {
             const dg = data[i + 1];
             const db = data[i + 2];
             const t = mData[i] / 255.0;
+            const rMask = mData[i + 1] / 255.0;
+            const nMask = mData[i + 2] / 255.0;
+            const patVal = (pData[i] + pData[i + 1] + pData[i + 2]) / 765.0;
 
             const lum = (0.299 * dr + 0.587 * dg + 0.114 * db) / 255.0;
             const sc = clamp01((lum - 0.16) / 0.70);
@@ -869,6 +892,22 @@ const Studio = {
             let outR = (bodyRgb.r * 0.35) + scPow * 16.0 + spec * 36.0;
             let outG = (bodyRgb.g * 0.35) + scPow * 22.0 + spec * 48.0;
             let outB = (bodyRgb.b * 0.42) + scPow * 32.0 + spec * 66.0;
+
+            // A0. Kết hợp vân hoa văn gốc (tint_mask 001 Flank, 011 Body, 010 Underbelly) tạo đường sáng tự nhiên trên lưng, bụng, chân, đầu
+            const wFlank = (1.0 - t) * (1.0 - rMask) * nMask;
+            const wBodyStripes = (1.0 - t) * rMask * nMask;
+            const wBelly = (1.0 - t) * rMask * (1.0 - nMask);
+            const natStripe = clamp01((wFlank * 0.85 + wBodyStripes * 1.15 + wBelly * 0.75) * Math.max(0.42, patVal * 1.35));
+            if (natStripe > 0.18) {
+              const sBlend = Math.min(0.88, (natStripe - 0.18) * 1.45) * (0.55 + 0.55 * sc);
+              const useIce = natStripe > 0.68;
+              const nr = useIce ? underbellyRgb.r : markingsRgb.r;
+              const ng = useIce ? underbellyRgb.g : markingsRgb.g;
+              const nb = useIce ? underbellyRgb.b : markingsRgb.b;
+              outR = outR * (1.0 - sBlend) + nr * sBlend;
+              outG = outG * (1.0 - sBlend) + ng * sBlend;
+              outB = outB * (1.0 - sBlend) + nb * sBlend;
+            }
 
             const sx = Math.min(SW - 1, (x * SW) >> 10);
             const idx = rowOff + sx;
@@ -945,11 +984,11 @@ const Studio = {
                 }
               }
 
-              // C. Vùng lửa băng bên sườn dưới / bụng (Lower Ribcage Flame Patch)
-              if (zn >= 0.40 && zn <= 0.62 && yn >= 0.25 && yn <= 0.55) {
+              // C. Vùng lửa băng bên sườn dưới / bụng (Lower Ribcage & Belly Flame Patch)
+              if (zn >= 0.36 && zn <= 0.65 && yn >= 0.20 && yn <= 0.56) {
                 let flameVal = 0.0;
-                const dzB = (jZn - 0.515) / 0.092;
-                const dyB = (jYn - 0.310) / 0.072;
+                const dzB = (jZn - 0.510) / 0.105;
+                const dyB = (jYn - 0.300) / 0.082;
                 const baseD = Math.hypot(dzB, dyB);
                 if (baseD < 1.0) {
                   flameVal = (1.0 - baseD) * 0.98;
@@ -982,7 +1021,7 @@ const Studio = {
                 }
               }
 
-              // D. Tia sét Trắng băng & Xanh ngọc xé dọc vai, cổ, chân, đuôi (Diagonal Lightning Bolts)
+              // D. Tia sét Trắng băng & Xanh ngọc xé dọc đầu, lưng, bụng, chân, đuôi (Diagonal Lightning Bolts)
               let bestBolt = 0.0;
               for (let k = 0; k < bolts.length; k++) {
                 const [bz1, by1, bz2, by2, bw, bint] = bolts[k];
@@ -1206,6 +1245,9 @@ const Studio = {
   generateSkinCode() {
     const p = this.palette;
     const num = `${this.pattern}${this.variation}${this.theme}`;
+    if (this.isExclusiveHacBang) {
+      return `${this.species}${num}00D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF`;
+    }
     const cleanHex = (h) => (h || '#5A6B48').replace('#', '').toUpperCase().padEnd(6, '0').slice(0, 6) + 'FF';
     const hexes = [
       cleanHex(p.underbelly), cleanHex(p.body), cleanHex(p.flank),
@@ -1223,6 +1265,26 @@ const Studio = {
       const b = (num & 255) / 255.0;
       return [Number(r.toFixed(4)), Number(g.toFixed(4)), Number(b.toFixed(4)), 1.0];
     };
+
+    if (this.isExclusiveHacBang) {
+      return {
+        class: `BP_${this.species.replace(/[^a-zA-Z0-9]/g, '')}_C`,
+        female: this.sex === 'female',
+        variation: this.variation,
+        pattern: this.pattern,
+        theme: this.theme,
+        markings: [0.003, 0.005, 0.01, 1.0],
+        flank: [0.0, 0.92, 1.0, 1.0],
+        underbelly: [0.0, 0.86, 1.0, 1.0],
+        body: [0.65, 0.97, 1.0, 1.0],
+        detail1: [0.0, 1.0, 1.0, 1.0],
+        male_display: [0.0, 1.0, 1.0, 1.0],
+        eyes: [0.0, 1.0, 1.0, 1.0],
+        teeth: [0.9, 0.98, 1.0, 1.0],
+        mouth: [0.01, 0.04, 0.07, 1.0],
+        claws: [0.0, 0.92, 1.0, 1.0]
+      };
+    }
 
     return {
       class: `BP_${this.species.replace(/[^a-zA-Z0-9]/g, '')}_C`,
