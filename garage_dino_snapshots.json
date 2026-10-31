@@ -42,7 +42,12 @@
         "None"
       ]
     },
-    "parkedAt": "2026-10-31T05:58:21.056Z"
+    "parkedAt": "2026-10-31T05:58:21.056Z",
+    "nutrients": {
+      "carb": 100.0,
+      "protein": 100.0,
+      "lipid": 100.0
+    }
   },
   "cmvvzpqbj4h78py01x6tqgnwc": {
     "id": "cmvvzpqbj4h78py01x6tqgnwc",
@@ -87,7 +92,12 @@
         "None"
       ]
     },
-    "parkedAt": "2026-10-31T05:58:21.056Z"
+    "parkedAt": "2026-10-31T05:58:21.056Z",
+    "nutrients": {
+      "carb": 100.0,
+      "protein": 100.0,
+      "lipid": 100.0
+    }
   },
   "76561198975489051_cmvvz87zx4fx8n801z9p6u6u9": {
     "id": "cmvvz87zx4fx8n801z9p6u6u9",
@@ -132,7 +142,12 @@
         "None"
       ]
     },
-    "parkedAt": "2026-10-31T05:44:44.158Z"
+    "parkedAt": "2026-10-31T05:44:44.158Z",
+    "nutrients": {
+      "carb": 100.0,
+      "protein": 100.0,
+      "lipid": 100.0
+    }
   },
   "cmvvz87zx4fx8n801z9p6u6u9": {
     "id": "cmvvz87zx4fx8n801z9p6u6u9",
@@ -177,7 +192,12 @@
         "None"
       ]
     },
-    "parkedAt": "2026-10-31T05:44:44.158Z"
+    "parkedAt": "2026-10-31T05:44:44.158Z",
+    "nutrients": {
+      "carb": 100.0,
+      "protein": 100.0,
+      "lipid": 100.0
+    }
   },
   "76561198975489051_cmvv7d20j08kqpy01gh1lkrvt": {
     "id": "cmvv7d20j08kqpy01gh1lkrvt",
@@ -222,7 +242,12 @@
         "Accelerated Prey Drive"
       ]
     },
-    "parkedAt": "2026-10-30T16:44:40.436Z"
+    "parkedAt": "2026-10-30T16:44:40.436Z",
+    "nutrients": {
+      "carb": 100.0,
+      "protein": 100.0,
+      "lipid": 100.0
+    }
   },
   "cmvv7d20j08kqpy01gh1lkrvt": {
     "id": "cmvv7d20j08kqpy01gh1lkrvt",
@@ -267,7 +292,12 @@
         "Accelerated Prey Drive"
       ]
     },
-    "parkedAt": "2026-10-30T16:44:40.436Z"
+    "parkedAt": "2026-10-30T16:44:40.436Z",
+    "nutrients": {
+      "carb": 100.0,
+      "protein": 100.0,
+      "lipid": 100.0
+    }
   },
   "76561198975489051_cmvv734qz06i3o701k0moido4": {
     "id": "cmvv734qz06i3o701k0moido4",
@@ -312,7 +342,12 @@
         "None"
       ]
     },
-    "parkedAt": "2026-10-30T16:36:57.419Z"
+    "parkedAt": "2026-10-30T16:36:57.419Z",
+    "nutrients": {
+      "carb": 100.0,
+      "protein": 100.0,
+      "lipid": 100.0
+    }
   },
   "cmvv734qz06i3o701k0moido4": {
     "id": "cmvv734qz06i3o701k0moido4",
@@ -357,7 +392,12 @@
         "None"
       ]
     },
-    "parkedAt": "2026-10-30T16:36:57.419Z"
+    "parkedAt": "2026-10-30T16:36:57.419Z",
+    "nutrients": {
+      "carb": 100.0,
+      "protein": 100.0,
+      "lipid": 100.0
+    }
   },
   "76561198975489051_cmvpffflo1a68qj01azsvigyp": {
     "id": "cmvpffflo1a68qj01azsvigyp",
@@ -402,7 +442,12 @@
         "None"
       ]
     },
-    "parkedAt": "2026-10-26T15:43:51.228Z"
+    "parkedAt": "2026-10-26T15:43:51.228Z",
+    "nutrients": {
+      "carb": 100.0,
+      "protein": 100.0,
+      "lipid": 100.0
+    }
   },
   "cmvpffflo1a68qj01azsvigyp": {
     "id": "cmvpffflo1a68qj01azsvigyp",
@@ -447,7 +492,12 @@
         "None"
       ]
     },
-    "parkedAt": "2026-10-26T15:43:51.228Z"
+    "parkedAt": "2026-10-26T15:43:51.228Z",
+    "nutrients": {
+      "carb": 100.0,
+      "protein": 100.0,
+      "lipid": 100.0
+    }
   },
   "76561198975489051_cmvoxh7i72n75pm01adn2z61r": {
     "id": "cmvoxh7i72n75pm01adn2z61r",
@@ -492,7 +542,12 @@
         "Hydrodynamic"
       ]
     },
-    "parkedAt": "2026-10-26T07:21:20.959Z"
+    "parkedAt": "2026-10-26T07:21:20.959Z",
+    "nutrients": {
+      "carb": 100.0,
+      "protein": 100.0,
+      "lipid": 100.0
+    }
   },
   "cmvoxh7i72n75pm01adn2z61r": {
     "id": "cmvoxh7i72n75pm01adn2z61r",
@@ -537,7 +592,12 @@
         "Hydrodynamic"
       ]
     },
-    "parkedAt": "2026-10-26T07:21:20.959Z"
+    "parkedAt": "2026-10-26T07:21:20.959Z",
+    "nutrients": {
+      "carb": 100.0,
+      "protein": 100.0,
+      "lipid": 100.0
+    }
   },
   "76561198975489051_cmvni13xq5q6hpi01f0rul1j4": {
     "id": "cmvni13xq5q6hpi01f0rul1j4",
@@ -582,7 +642,12 @@
         "Congenital Hypoalgesia"
       ]
     },
-    "parkedAt": "2026-10-25T07:21:09.422Z"
+    "parkedAt": "2026-10-25T07:21:09.422Z",
+    "nutrients": {
+      "carb": 100.0,
+      "protein": 100.0,
+      "lipid": 100.0
+    }
   },
   "cmvni13xq5q6hpi01f0rul1j4": {
     "id": "cmvni13xq5q6hpi01f0rul1j4",
@@ -627,7 +692,12 @@
         "Congenital Hypoalgesia"
       ]
     },
-    "parkedAt": "2026-10-25T07:21:09.422Z"
+    "parkedAt": "2026-10-25T07:21:09.422Z",
+    "nutrients": {
+      "carb": 100.0,
+      "protein": 100.0,
+      "lipid": 100.0
+    }
   },
   "76561198975489051_cmvmgok1g6trspd01nc2ejrfq": {
     "id": "cmvmgok1g6trspd01nc2ejrfq",
@@ -672,7 +742,12 @@
         "None"
       ]
     },
-    "parkedAt": "2026-10-24T13:55:37.973Z"
+    "parkedAt": "2026-10-24T13:55:37.973Z",
+    "nutrients": {
+      "carb": 100.0,
+      "protein": 100.0,
+      "lipid": 100.0
+    }
   },
   "cmvmgok1g6trspd01nc2ejrfq": {
     "id": "cmvmgok1g6trspd01nc2ejrfq",
@@ -717,6 +792,11 @@
         "None"
       ]
     },
-    "parkedAt": "2026-10-24T13:55:37.973Z"
+    "parkedAt": "2026-10-24T13:55:37.973Z",
+    "nutrients": {
+      "carb": 100.0,
+      "protein": 100.0,
+      "lipid": 100.0
+    }
   }
 }

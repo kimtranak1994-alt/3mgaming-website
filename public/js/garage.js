@@ -582,13 +582,24 @@ const Garage = {
               <div class="stat-bar"><div class="stat-fill" style="width: ${dino.thirst}%; background: #3b82f6;"></div></div>
 
               <span style="font-weight: 700; color: #93c5fd; font-size: 0.78rem; white-space: nowrap; min-width: 95px; text-align: right;">
-
                 ${(dino.current_thirst !== undefined ? dino.current_thirst : Math.round((dino.thirst || 100) * 10)).toLocaleString()} / ${(dino.max_thirst || 1000).toLocaleString()}
-
               </span>
-
             </div>
-
+            <div class="stat-bar-container">
+              <span style="width: 55px; color: var(--text-muted);">Thể lực</span>
+              <div class="stat-bar"><div class="stat-fill" style="width: ${dino.stamina !== undefined ? dino.stamina : 100}%; background: #10b981;"></div></div>
+              <span style="font-weight: 700; color: #6ee7b7; font-size: 0.78rem; white-space: nowrap; min-width: 95px; text-align: right;">
+                ${Math.round(dino.stamina !== undefined ? dino.stamina : 100)}%
+              </span>
+            </div>
+            <div class="stat-bar-container" style="margin-top: 4px; padding-top: 6px; border-top: 1px dashed rgba(255,255,255,0.08); justify-content: space-between;">
+              <span style="color: var(--text-muted); font-size: 0.76rem;">Dinh dưỡng:</span>
+              <div style="display: flex; gap: 6px; align-items: center; font-size: 0.75rem; font-weight: 700;">
+                <span style="padding: 2px 6px; border-radius: 6px; background: rgba(245, 158, 11, 0.16); border: 1px solid rgba(245, 158, 11, 0.35); color: #fbbf24;" title="Carbohydrate (A)">🔶 A: ${Math.round((dino.nutrients && dino.nutrients.carb !== undefined) ? dino.nutrients.carb : (dino.nutrientsCarb !== undefined ? dino.nutrientsCarb : 100))}%</span>
+                <span style="padding: 2px 6px; border-radius: 6px; background: rgba(59, 130, 246, 0.16); border: 1px solid rgba(59, 130, 246, 0.35); color: #60a5fa;" title="Protein (B)">🔷 B: ${Math.round((dino.nutrients && dino.nutrients.protein !== undefined) ? dino.nutrients.protein : (dino.nutrientsProtein !== undefined ? dino.nutrientsProtein : 100))}%</span>
+                <span style="padding: 2px 6px; border-radius: 6px; background: rgba(168, 85, 247, 0.16); border: 1px solid rgba(168, 85, 247, 0.35); color: #c084fc;" title="Lipid (Y)">🟣 Y: ${Math.round((dino.nutrients && dino.nutrients.lipid !== undefined) ? dino.nutrients.lipid : (dino.nutrientsLipid !== undefined ? dino.nutrientsLipid : 100))}%</span>
+              </div>
+            </div>
           </div>
 
 

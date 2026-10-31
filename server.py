@@ -44,33 +44,58 @@ PUBLIC_DIR = os.path.join(os.path.dirname(__file__), "public")
 ACTIVE_FRIEND_CODES = {}
 
 SPECIES_BASE_STATS = {
-    "tyrannosaurus": {"hp": 12274, "prime_hp": 12274, "hunger": 4050, "thirst": 1000, "label": "12.2 Tấn (12,274 kg)", "prime_label": "12.2 Tấn (12,274 kg)"},
-    "triceratops": {"hp": 9500, "prime_hp": 13000, "hunger": 6250, "thirst": 1000, "label": "9.5 Tấn (9,500 kg)", "prime_label": "13.0 Tấn (13,000 kg)"},
-    "deinosuchus": {"hp": 8500, "prime_hp": 11500, "hunger": 4500, "thirst": 1000, "label": "8.5 Tấn (8,500 kg)", "prime_label": "11.5 Tấn (11,500 kg)"},
-    "indorex": {"hp": 9500, "prime_hp": 12500, "hunger": 4100, "thirst": 1000, "label": "9.5 Tấn (9,500 kg)", "prime_label": "12.5 Tấn (12,500 kg)"},
+    "tyrannosaurus": {"hp": 9500, "prime_hp": 12274, "hunger": 4050.42, "thirst": 1000, "label": "9.5 Tấn (9,500 kg)", "prime_label": "12.2 Tấn (12,274 kg)"},
+    "rex": {"hp": 9500, "prime_hp": 12274, "hunger": 4050.42, "thirst": 1000, "label": "9.5 Tấn (9,500 kg)", "prime_label": "12.2 Tấn (12,274 kg)"},
+    "triceratops": {"hp": 9500, "prime_hp": 12500, "hunger": 6250, "thirst": 1000, "label": "9.5 Tấn (9,500 kg)", "prime_label": "12.5 Tấn (12,500 kg)"},
+    "trike": {"hp": 9500, "prime_hp": 12500, "hunger": 6250, "thirst": 1000, "label": "9.5 Tấn (9,500 kg)", "prime_label": "12.5 Tấn (12,500 kg)"},
+    "deinosuchus": {"hp": 8000, "prime_hp": 11500, "hunger": 4500, "thirst": 1000, "label": "8.0 Tấn (8,000 kg)", "prime_label": "11.5 Tấn (11,500 kg)"},
+    "deino": {"hp": 8000, "prime_hp": 11500, "hunger": 4500, "thirst": 1000, "label": "8.0 Tấn (8,000 kg)", "prime_label": "11.5 Tấn (11,500 kg)"},
+    "indorex": {"hp": 9500, "prime_hp": 13000, "hunger": 4290, "thirst": 1000, "label": "9.5 Tấn (9,500 kg)", "prime_label": "13.0 Tấn (13,000 kg)"},
+    "indo": {"hp": 9500, "prime_hp": 13000, "hunger": 4290, "thirst": 1000, "label": "9.5 Tấn (9,500 kg)", "prime_label": "13.0 Tấn (13,000 kg)"},
     "spinosaurus": {"hp": 9500, "prime_hp": 15000, "hunger": 5000, "thirst": 1000, "label": "9.5 Tấn (9,500 kg)", "prime_label": "15.0 Tấn (15,000 kg)"},
+    "spino": {"hp": 9500, "prime_hp": 15000, "hunger": 5000, "thirst": 1000, "label": "9.5 Tấn (9,500 kg)", "prime_label": "15.0 Tấn (15,000 kg)"},
     "giganotosaurus": {"hp": 9000, "prime_hp": 12500, "hunger": 4500, "thirst": 1000, "label": "9.0 Tấn (9,000 kg)", "prime_label": "12.5 Tấn (12,500 kg)"},
-    "stegosaurus": {"hp": 6500, "prime_hp": 9000, "hunger": 4200, "thirst": 1000, "label": "6.5 Tấn (6,500 kg)", "prime_label": "9.0 Tấn (9,000 kg)"},
-    "allosaurus": {"hp": 2800, "prime_hp": 3800, "hunger": 925, "thirst": 1000, "label": "2.8 Tấn (2,800 kg)", "prime_label": "3.8 Tấn (3,800 kg)"},
+    "giga": {"hp": 9000, "prime_hp": 12500, "hunger": 4500, "thirst": 1000, "label": "9.0 Tấn (9,000 kg)", "prime_label": "12.5 Tấn (12,500 kg)"},
+    "stegosaurus": {"hp": 6000, "prime_hp": 9000, "hunger": 4200, "thirst": 1000, "label": "6.0 Tấn (6,000 kg)", "prime_label": "9.0 Tấn (9,000 kg)"},
+    "stego": {"hp": 6000, "prime_hp": 9000, "hunger": 4200, "thirst": 1000, "label": "6.0 Tấn (6,000 kg)", "prime_label": "9.0 Tấn (9,000 kg)"},
+    "allosaurus": {"hp": 2800, "prime_hp": 3800, "hunger": 1400, "thirst": 1000, "label": "2.8 Tấn (2,800 kg)", "prime_label": "3.8 Tấn (3,800 kg)"},
+    "allo": {"hp": 2800, "prime_hp": 3800, "hunger": 1400, "thirst": 1000, "label": "2.8 Tấn (2,800 kg)", "prime_label": "3.8 Tấn (3,800 kg)"},
     "carnotaurus": {"hp": 2600, "prime_hp": 3500, "hunger": 1800, "thirst": 1000, "label": "2.6 Tấn (2,600 kg)", "prime_label": "3.5 Tấn (3,500 kg)"},
+    "carno": {"hp": 2600, "prime_hp": 3500, "hunger": 1800, "thirst": 1000, "label": "2.6 Tấn (2,600 kg)", "prime_label": "3.5 Tấn (3,500 kg)"},
     "ceratosaurus": {"hp": 2200, "prime_hp": 3000, "hunger": 1500, "thirst": 1000, "label": "2.2 Tấn (2,200 kg)", "prime_label": "3.0 Tấn (3,000 kg)"},
+    "cera": {"hp": 2200, "prime_hp": 3000, "hunger": 1500, "thirst": 1000, "label": "2.2 Tấn (2,200 kg)", "prime_label": "3.0 Tấn (3,000 kg)"},
     "diabloceratops": {"hp": 3200, "prime_hp": 4300, "hunger": 2000, "thirst": 1000, "label": "3.2 Tấn (3,200 kg)", "prime_label": "4.3 Tấn (4,300 kg)"},
+    "diablo": {"hp": 3200, "prime_hp": 4300, "hunger": 2000, "thirst": 1000, "label": "3.2 Tấn (3,200 kg)", "prime_label": "4.3 Tấn (4,300 kg)"},
     "maiasaura": {"hp": 3300, "prime_hp": 4500, "hunger": 2200, "thirst": 1000, "label": "3.3 Tấn (3,300 kg)", "prime_label": "4.5 Tấn (4,500 kg)"},
-    "ankylosaurus": {"hp": 5000, "prime_hp": 7000, "hunger": 3500, "thirst": 1000, "label": "5.0 Tấn (5,000 kg)", "prime_label": "7.0 Tấn (7,000 kg)"},
+    "maia": {"hp": 3300, "prime_hp": 4500, "hunger": 2200, "thirst": 1000, "label": "3.3 Tấn (3,300 kg)", "prime_label": "4.5 Tấn (4,500 kg)"},
+    "ankylosaurus": {"hp": 5500, "prime_hp": 7500, "hunger": 3750, "thirst": 1000, "label": "5.5 Tấn (5,500 kg)", "prime_label": "7.5 Tấn (7,500 kg)"},
+    "anky": {"hp": 5500, "prime_hp": 7500, "hunger": 3750, "thirst": 1000, "label": "5.5 Tấn (5,500 kg)", "prime_label": "7.5 Tấn (7,500 kg)"},
     "tenontosaurus": {"hp": 1800, "prime_hp": 2500, "hunger": 1200, "thirst": 1000, "label": "1.8 Tấn (1,800 kg)", "prime_label": "2.5 Tấn (2,500 kg)"},
+    "tenonto": {"hp": 1800, "prime_hp": 2500, "hunger": 1200, "thirst": 1000, "label": "1.8 Tấn (1,800 kg)", "prime_label": "2.5 Tấn (2,500 kg)"},
     "dilophosaurus": {"hp": 1200, "prime_hp": 1600, "hunger": 800, "thirst": 1000, "label": "1.2 Tấn (1,200 kg)", "prime_label": "1.6 Tấn (1,600 kg)"},
+    "dilo": {"hp": 1200, "prime_hp": 1600, "hunger": 800, "thirst": 1000, "label": "1.2 Tấn (1,200 kg)", "prime_label": "1.6 Tấn (1,600 kg)"},
     "baryonyx": {"hp": 2400, "prime_hp": 3200, "hunger": 1400, "thirst": 1000, "label": "2.4 Tấn (2,400 kg)", "prime_label": "3.2 Tấn (3,200 kg)"},
+    "bary": {"hp": 2400, "prime_hp": 3200, "hunger": 1400, "thirst": 1000, "label": "2.4 Tấn (2,400 kg)", "prime_label": "3.2 Tấn (3,200 kg)"},
     "pachycephalosaurus": {"hp": 1100, "prime_hp": 1500, "hunger": 750, "thirst": 1000, "label": "1.1 Tấn (1,100 kg)", "prime_label": "1.5 Tấn (1,500 kg)"},
+    "pachy": {"hp": 1100, "prime_hp": 1500, "hunger": 750, "thirst": 1000, "label": "1.1 Tấn (1,100 kg)", "prime_label": "1.5 Tấn (1,500 kg)"},
     "omniraptor": {"hp": 850, "prime_hp": 1150, "hunger": 650, "thirst": 1000, "label": "850 kg", "prime_label": "1.15 Tấn (1,150 kg)"},
+    "omni": {"hp": 850, "prime_hp": 1150, "hunger": 650, "thirst": 1000, "label": "850 kg", "prime_label": "1.15 Tấn (1,150 kg)"},
     "gallimimus": {"hp": 750, "prime_hp": 1000, "hunger": 800, "thirst": 1000, "label": "750 kg", "prime_label": "1.0 Tấn (1,000 kg)"},
+    "galli": {"hp": 750, "prime_hp": 1000, "hunger": 800, "thirst": 1000, "label": "750 kg", "prime_label": "1.0 Tấn (1,000 kg)"},
     "herrerasaurus": {"hp": 650, "prime_hp": 900, "hunger": 550, "thirst": 1000, "label": "650 kg", "prime_label": "900 kg"},
+    "herrera": {"hp": 650, "prime_hp": 900, "hunger": 550, "thirst": 1000, "label": "650 kg", "prime_label": "900 kg"},
     "beipiaosaurus": {"hp": 400, "prime_hp": 550, "hunger": 450, "thirst": 1000, "label": "400 kg", "prime_label": "550 kg"},
+    "beipi": {"hp": 400, "prime_hp": 550, "hunger": 450, "thirst": 1000, "label": "400 kg", "prime_label": "550 kg"},
     "dryosaurus": {"hp": 300, "prime_hp": 400, "hunger": 350, "thirst": 1000, "label": "300 kg", "prime_label": "400 kg"},
+    "dryo": {"hp": 300, "prime_hp": 400, "hunger": 350, "thirst": 1000, "label": "300 kg", "prime_label": "400 kg"},
     "pteranodon": {"hp": 220, "prime_hp": 300, "hunger": 250, "thirst": 1000, "label": "220 kg", "prime_label": "300 kg"},
+    "ptera": {"hp": 220, "prime_hp": 300, "hunger": 250, "thirst": 1000, "label": "220 kg", "prime_label": "300 kg"},
     "troodon": {"hp": 150, "prime_hp": 200, "hunger": 120, "thirst": 1000, "label": "150 kg", "prime_label": "200 kg"},
     "hypsilophodon": {"hp": 120, "prime_hp": 160, "hunger": 100, "thirst": 1000, "label": "120 kg", "prime_label": "160 kg"},
+    "hypsi": {"hp": 120, "prime_hp": 160, "hunger": 100, "thirst": 1000, "label": "120 kg", "prime_label": "160 kg"},
     "puerta": {"hp": 38000, "prime_hp": 50000, "hunger": 15000, "thirst": 1000, "label": "38 Tấn (38,000 kg)", "prime_label": "50 Tấn (50,000 kg)"},
-    "therizinosaurus": {"hp": 6000, "prime_hp": 8500, "hunger": 4000, "thirst": 1000, "label": "6.0 Tấn (6,000 kg)", "prime_label": "8.5 Tấn (8,500 kg)"}
+    "therizinosaurus": {"hp": 6000, "prime_hp": 8500, "hunger": 4000, "thirst": 1000, "label": "6.0 Tấn (6,000 kg)", "prime_label": "8.5 Tấn (8,500 kg)"},
+    "theri": {"hp": 6000, "prime_hp": 8500, "hunger": 4000, "thirst": 1000, "label": "6.0 Tấn (6,000 kg)", "prime_label": "8.5 Tấn (8,500 kg)"}
 }
 
 def safe_float(val, default=1.0):
@@ -84,72 +109,61 @@ def safe_float(val, default=1.0):
     except (ValueError, TypeError):
         return float(default)
 
-def calc_dino_stats(species_name, growth, health_val, hunger_val, thirst_val, is_prime_elder=False):
-
-    s = (species_name or "").lower()
-
+def calc_dino_stats(species_name, growth, health_val, hunger_val, thirst_val, is_prime_elder=False, exact_max_hp=None, exact_max_hunger=None, exact_max_thirst=None, exact_raw_hp=None, exact_raw_hunger=None, exact_raw_thirst=None):
+    s = (species_name or "").lower().strip()
     base = {"hp": 3000, "prime_hp": 4100, "hunger": 1500, "thirst": 1000}
-
-    for k, v in SPECIES_BASE_STATS.items():
-
-        if k in s:
-
-            base = v
-
-            break
-
-            
+    if s in SPECIES_BASE_STATS:
+        base = SPECIES_BASE_STATS[s]
+    else:
+        for k, v in SPECIES_BASE_STATS.items():
+            if k in s or s in k:
+                base = v
+                break
 
     g = max(0.01, min(1.0, safe_float(growth, 1.0)))
-
     target_max_hp = base.get("prime_hp", base["hp"]) if is_prime_elder else base["hp"]
 
-    max_hp = int(target_max_hp * (0.2 + 0.8 * (g ** 1.2)))
+    if exact_max_hp is not None and safe_float(exact_max_hp, 0) > 10:
+        max_hp = round(safe_float(exact_max_hp, target_max_hp), 2)
+    elif is_prime_elder or g >= 0.75:
+        max_hp = int(target_max_hp)
+    else:
+        max_hp = int(target_max_hp * (0.2 + 0.8 * (g / 0.75)))
 
-    max_hunger = int(base["hunger"] * (0.3 + 0.7 * g))
+    if exact_max_hunger is not None and safe_float(exact_max_hunger, 0) > 10:
+        max_hunger = round(safe_float(exact_max_hunger, base["hunger"]), 2)
+    elif is_prime_elder or g >= 0.75:
+        max_hunger = round(float(base["hunger"]), 2)
+    else:
+        max_hunger = round(float(base["hunger"]) * (0.3 + 0.7 * (g / 0.75)), 2)
 
-    max_thirst = base["thirst"]
-
-    
+    if exact_max_thirst is not None and safe_float(exact_max_thirst, 0) > 10:
+        max_thirst = round(safe_float(exact_max_thirst, base["thirst"]), 2)
+    else:
+        max_thirst = float(base["thirst"])
 
     h_ratio = safe_float(health_val, 1.0)
-
-    if h_ratio > 1.0: h_ratio /= 100.0
-
+    if h_ratio > 1.0 and max_hp > 0:
+        h_ratio = h_ratio / max_hp if h_ratio > 100.0 else h_ratio / 100.0
     h_ratio = max(0.0, min(1.0, h_ratio))
-
-    current_hp = int(max_hp * h_ratio)
-
-    
+    current_hp = round(safe_float(exact_raw_hp, max_hp * h_ratio), 2) if exact_raw_hp is not None else round(max_hp * h_ratio, 2)
 
     hu_ratio = safe_float(hunger_val, 1.0)
-
-    if hu_ratio > 1.0: hu_ratio /= 100.0
-
+    if hu_ratio > 1.0 and max_hunger > 0:
+        hu_ratio = hu_ratio / max_hunger if hu_ratio > 100.0 else hu_ratio / 100.0
     hu_ratio = max(0.0, min(1.0, hu_ratio))
-
-    current_hunger = int(max_hunger * hu_ratio)
-
-    
+    current_hunger = round(safe_float(exact_raw_hunger, max_hunger * hu_ratio), 2) if exact_raw_hunger is not None else round(max_hunger * hu_ratio, 2)
 
     th_ratio = safe_float(thirst_val, 1.0)
-
-    if th_ratio > 1.0: th_ratio /= 100.0
-
+    if th_ratio > 1.0 and max_thirst > 0:
+        th_ratio = th_ratio / max_thirst if th_ratio > 100.0 else th_ratio / 100.0
     th_ratio = max(0.0, min(1.0, th_ratio))
-
-    current_thirst = int(max_thirst * th_ratio)
-
-    
+    current_thirst = round(safe_float(exact_raw_thirst, max_thirst * th_ratio), 2) if exact_raw_thirst is not None else round(max_thirst * th_ratio, 2)
 
     return {
-
-        "current_hp": current_hp, "max_hp": max_hp, "health_pct": round(h_ratio * 100),
-
-        "current_hunger": current_hunger, "max_hunger": max_hunger, "hunger_pct": round(hu_ratio * 100),
-
-        "current_thirst": current_thirst, "max_thirst": max_thirst, "thirst_pct": round(th_ratio * 100)
-
+        "current_hp": int(round(current_hp)), "raw_hp": current_hp, "max_hp": int(round(max_hp)), "raw_max_hp": max_hp, "health_pct": round(h_ratio * 100, 1),
+        "current_hunger": int(round(current_hunger)), "raw_hunger": current_hunger, "max_hunger": int(round(max_hunger)), "raw_max_hunger": max_hunger, "hunger_pct": round(hu_ratio * 100, 1),
+        "current_thirst": int(round(current_thirst)), "raw_thirst": current_thirst, "max_thirst": int(round(max_thirst)), "raw_max_thirst": max_thirst, "thirst_pct": round(th_ratio * 100, 1)
     }
 
 CUSTOM_NAMES_FILE = os.path.join(os.path.dirname(__file__), "dino_names.json")
@@ -265,14 +279,40 @@ def load_garage_dino_snapshots():
     return {}
 
 def save_garage_dino_snapshot(key, snapshot_data):
-    if not key or not snapshot_data:
+    if not key or not snapshot_data or not isinstance(snapshot_data, dict):
         return
     base_dir = os.path.dirname(os.path.abspath(__file__))
     primary_file = os.path.join(base_dir, "garage_dino_snapshots.json")
     sub_file = os.path.join(base_dir, "3mgaming-website", "garage_dino_snapshots.json")
     backup_file = os.path.join(base_dir, ".persistent_garage_dino_snapshots.json")
     data = load_garage_dino_snapshots()
-    data[str(key)] = snapshot_data
+    k_str = str(key)
+    existing = data.get(k_str)
+    if isinstance(existing, dict):
+        merged = dict(existing)
+        for fk, fv in snapshot_data.items():
+            if fv is not None:
+                if fk == "nutrients" and isinstance(fv, dict) and isinstance(existing.get("nutrients"), dict):
+                    n_merged = dict(existing["nutrients"])
+                    for nk, nv in fv.items():
+                        if nv is not None and safe_float(nv, 0) > 0:
+                            n_merged[nk] = safe_float(nv, 100.0)
+                    merged["nutrients"] = n_merged
+                elif fk == "mutationSlots" and isinstance(fv, dict):
+                    has_any = any(any(m and m != "None" for m in (fv.get(slot) or [])) for slot in ["active", "parent", "elderA", "elderB"])
+                    if has_any or not existing.get("mutationSlots"):
+                        merged["mutationSlots"] = fv
+                else:
+                    merged[fk] = fv
+        if "nutrients" not in merged or not isinstance(merged.get("nutrients"), dict):
+            merged["nutrients"] = {"carb": 100.0, "protein": 100.0, "lipid": 100.0}
+        data[k_str] = merged
+    else:
+        snap_copy = dict(snapshot_data)
+        if "nutrients" not in snap_copy or not isinstance(snap_copy.get("nutrients"), dict):
+            snap_copy["nutrients"] = {"carb": 100.0, "protein": 100.0, "lipid": 100.0}
+        data[k_str] = snap_copy
+
     for fpath in [primary_file, sub_file, backup_file]:
         try:
             os.makedirs(os.path.dirname(fpath), exist_ok=True)
@@ -1394,6 +1434,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                         "protein": 100.0,
                         "lipid": 100.0
                     })
+                    save_garage_dino_snapshot(f"{target_steam_id}_last_nutrients", {"nutrients": {"carb": 100.0, "protein": 100.0, "lipid": 100.0}, "nutrientsCarb": 100.0, "nutrientsProtein": 100.0, "nutrientsLipid": 100.0})
 
                     self.send_json_response({"ok": True, "message": "Hồi phục toàn diện thành công", "result": res})
                     return
@@ -1429,6 +1470,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     cmd_body["protein"] = prot_val
                     cmd_body["lipid"] = lipid_val
                     res = self.fetch_islepilot("/commands", method="POST", body_data=cmd_body)
+                    save_garage_dino_snapshot(f"{target_steam_id}_last_nutrients", {"nutrients": {"carb": carb_val, "protein": prot_val, "lipid": lipid_val}, "nutrientsCarb": carb_val, "nutrientsProtein": prot_val, "nutrientsLipid": lipid_val})
                     if res and (res.get("ok") is True or "commandId" in res):
                         self.send_json_response({"ok": True, "result": res})
                     else:
@@ -1696,38 +1738,18 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                         self.send_json_response({"ok": True, "message": "Thành công", "result": {"ok": True}})
                         return
                     else:
-                        remote_garage = self.fetch_islepilot(f"/players/{target_steam_id}/garage") or {}
-                        dino_muts = []
-                        dino_spec = None
-                        dino_growth = 1.0
-                        is_prime = False
+                        remote_garage = self.fetch_islepilot(f"/players/{target_steam_id}/garage", bypass_cache=True) or {}
+                        target_gd = None
                         for gd in remote_garage.get("garage", []):
                             if str(gd.get("id")) == str(dino_id):
-                                raw_m = gd.get("mutations") or (gd.get("mutationSlots", {}).get("active")) or []
-                                dino_muts = [m for m in raw_m if m and str(m).strip() != "None"]
-                                dino_spec = gd.get("species")
-                                dino_growth = float(gd.get("growth", 1.0) or 1.0)
-                                is_prime = bool(gd.get("isPrimeElder"))
+                                target_gd = gd
                                 break
-                        restore_body = {}
-                        if dino_muts:
-                            restore_body["mutations"] = dino_muts
-                        res = self.fetch_islepilot(f"/players/{target_steam_id}/garage/{dino_id}/restore", method="POST", body_data=restore_body)
-                        if not res or (res.get("ok") is not True and "commandId" not in res):
-                            # Dự phòng unpark không kèm gen nếu tính năng chọn gen tại garage đang tắt trên IslePilot
-                            res = self.fetch_islepilot(f"/players/{target_steam_id}/garage/{dino_id}/restore", method="POST", body_data={})
-
+                        res = self.fetch_islepilot(f"/players/{target_steam_id}/garage/{dino_id}/restore", method="POST", body_data={})
                         if res and (res.get("ok") is True or "commandId" in res):
-                            # BẢO TOÀN NGUYÊN VẸN MÁU, NƯỚC, ĐÓI, CHẤT A B Y VÀ VỊ TRÍ TỌA ĐỘ KHI CẤT
-                            self.apply_dino_in_game_worker(
+                            self.restore_dino_full_state_worker(
                                 steam_id=target_steam_id,
-                                species=dino_spec,
-                                gender=None,
-                                growth_val=dino_growth,
-                                is_prime=is_prime,
-                                mutations=dino_muts,
-                                needs_swap=False,
-                                preserve_vitals=True
+                                dino_id=dino_id,
+                                target_gd=target_gd
                             )
                             self.send_json_response({"ok": True, "message": "Thành công", "result": res})
                         else:
@@ -1735,6 +1757,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                             self.send_json_response({"ok": False, "error": err_msg}, status=400)
                         return
                 elif action == "park_garage_dino":
+                    self.capture_live_player_snapshot(target_steam_id)
                     res = self.fetch_islepilot(f"/players/{target_steam_id}/garage/park", method="POST")
                     if res and (res.get("ok") is True or "commandId" in res):
                         self.send_json_response({"ok": True, "result": res})
@@ -2269,7 +2292,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 
         t = threading.Thread(target=worker, daemon=True)
         t.start()
-    def fetch_islepilot(self, endpoint, method="GET", body_data=None):
+    def fetch_islepilot(self, endpoint, method="GET", body_data=None, bypass_cache=False):
         api_key = config.get("ISLEPILOT_API_KEY", "").strip()
         base_url = "https://islepilot.eu/api/v1"
         if not api_key:
@@ -2284,7 +2307,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
         # 1. Kiểm tra cache GET để tránh bị IslePilot rate-limit (HTTP 429)
         ttl = 0
-        if method == "GET":
+        if method == "GET" and not bypass_cache:
             if clean_key.startswith("/players/"):
                 ttl = 4.0  # Cache 4s cho thông tin player / ví
             elif clean_key == "/players":
@@ -2312,36 +2335,45 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         if body_data is not None:
             data_bytes = json.dumps(body_data).encode("utf-8")
 
-        req = urllib.request.Request(url, data=data_bytes, method=method)
-        req.add_header("Authorization", f"Bearer {api_key}")
-        req.add_header("x-api-key", api_key)
-        req.add_header("User-Agent", "3MGAMING-Portal/1.0")
-        if data_bytes is not None:
-            req.add_header("Content-Type", "application/json")
+        max_attempts = 3 if method == "POST" else 1
+        for attempt in range(max_attempts):
+            req = urllib.request.Request(url, data=data_bytes, method=method)
+            req.add_header("Authorization", f"Bearer {api_key}")
+            req.add_header("x-api-key", api_key)
+            req.add_header("User-Agent", "3MGAMING-Portal/1.0")
+            if data_bytes is not None:
+                req.add_header("Content-Type", "application/json")
 
-        try:
-            with urllib.request.urlopen(req, timeout=6) as response:
-                if response.status in [200, 201]:
-                    res_json = json.loads(response.read().decode("utf-8"))
-                    if method == "GET" and ttl > 0:
-                        DinoRequestHandler._islepilot_cache[clean_key] = (now_ts, res_json)
-                    return res_json
-        except urllib.error.HTTPError as e:
-            # Nếu gặp lỗi HTTP 429 hoặc 5xx, tự động trả về dữ liệu cache gần nhất nếu có
-            if clean_key in DinoRequestHandler._islepilot_cache:
-                _, fallback_val = DinoRequestHandler._islepilot_cache[clean_key]
-                return fallback_val
             try:
-                err_content = e.read().decode("utf-8")
-                return json.loads(err_content)
-            except Exception:
-                pass
-            print(f"[IslePilot API] Gọi {url} HTTP {e.code}")
-        except Exception as e:
-            if clean_key in DinoRequestHandler._islepilot_cache:
-                _, fallback_val = DinoRequestHandler._islepilot_cache[clean_key]
-                return fallback_val
-            print(f"[IslePilot API] Gọi {url} thất bại: {e}")
+                with urllib.request.urlopen(req, timeout=8) as response:
+                    if response.status in [200, 201]:
+                        res_json = json.loads(response.read().decode("utf-8"))
+                        if method == "GET":
+                            DinoRequestHandler._islepilot_cache[clean_key] = (time.time(), res_json)
+                        return res_json
+            except urllib.error.HTTPError as e:
+                if method == "POST" and e.code in [429, 500, 502, 503, 504] and attempt < max_attempts - 1:
+                    time.sleep(0.8 * (attempt + 1))
+                    continue
+                if method == "GET" and not bypass_cache and clean_key in DinoRequestHandler._islepilot_cache:
+                    _, fallback_val = DinoRequestHandler._islepilot_cache[clean_key]
+                    return fallback_val
+                try:
+                    err_content = e.read().decode("utf-8")
+                    return json.loads(err_content)
+                except Exception:
+                    pass
+                print(f"[IslePilot API] Gọi {url} HTTP {e.code}")
+                break
+            except Exception as e:
+                if method == "POST" and attempt < max_attempts - 1:
+                    time.sleep(0.8 * (attempt + 1))
+                    continue
+                if method == "GET" and not bypass_cache and clean_key in DinoRequestHandler._islepilot_cache:
+                    _, fallback_val = DinoRequestHandler._islepilot_cache[clean_key]
+                    return fallback_val
+                print(f"[IslePilot API] Gọi {url} thất bại: {e}")
+                break
 
         return None
 
@@ -4786,156 +4818,215 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         self.handle_ai_hunt_post()
 
 
+    def capture_live_player_snapshot(self, steam_id):
+        """Chụp lại nguyên trạng 100% chỉ số khủng long đang sống trong game trước khi cất vào Gara."""
+        if not steam_id:
+            return None
+        sid = str(steam_id).strip()
+        player_info = self.fetch_islepilot(f"/players/{sid}", bypass_cache=True)
+        if not player_info or not isinstance(player_info, dict) or not player_info.get("species"):
+            return None
+
+        species = player_info.get("species")
+        growth_val = safe_float(player_info.get("growth"), 1.0)
+        if growth_val > 1.0:
+            growth_val /= 100.0
+        growth_val = max(0.01, min(1.0, growth_val))
+
+        raw_h = safe_float(player_info.get("health"), 0.0)
+        max_h = safe_float(player_info.get("maxHealth"), 0.0)
+        h_ratio = (raw_h / max_h) if max_h > 0 else 1.0
+        h_ratio = max(0.01, min(1.0, h_ratio))
+
+        raw_hu = safe_float(player_info.get("hunger"), 0.0)
+        max_hu = safe_float(player_info.get("maxHunger"), 0.0)
+        hu_ratio = (raw_hu / max_hu) if max_hu > 0 else 1.0
+        hu_ratio = max(0.01, min(1.0, hu_ratio))
+
+        raw_t = safe_float(player_info.get("thirst"), 0.0)
+        max_t = safe_float(player_info.get("maxThirst"), 1000.0)
+        t_ratio = (raw_t / max_t) if max_t > 0 else 1.0
+        t_ratio = max(0.01, min(1.0, t_ratio))
+
+        st_val = safe_float(player_info.get("stamina"), 1.0)
+        st_ratio = (st_val / 1000.0) if st_val > 100.0 else ((st_val / 100.0) if st_val > 1.0 else st_val)
+        st_ratio = max(0.1, min(1.0, st_ratio))
+
+        p_muts = player_info.get("mutationSlots")
+        if p_muts and isinstance(p_muts, dict):
+            save_garage_saved_mutation(f"{sid}_last_parked", p_muts)
+            save_garage_saved_mutation(f"{sid}_{species}", p_muts)
+
+        existing_snaps = load_garage_dino_snapshots()
+        last_nutr = (
+            (existing_snaps.get(f"{sid}_last_nutrients") or {}).get("nutrients")
+            or (existing_snaps.get(f"{sid}_{species}") or {}).get("nutrients")
+            or {}
+        )
+        carb_v = safe_float(player_info.get("carb") if player_info.get("carb") is not None else last_nutr.get("carb"), 100.0)
+        prot_v = safe_float(player_info.get("protein") if player_info.get("protein") is not None else last_nutr.get("protein"), 100.0)
+        lipid_v = safe_float(player_info.get("lipid") if player_info.get("lipid") is not None else last_nutr.get("lipid"), 100.0)
+        if carb_v <= 0 and prot_v <= 0 and lipid_v <= 0:
+            carb_v, prot_v, lipid_v = 100.0, 100.0, 100.0
+
+        dino_snap = {
+            "species": species,
+            "female": bool(player_info.get("female", False)),
+            "gender": "Female" if player_info.get("female") else "Male",
+            "growth": growth_val,
+            "health": h_ratio,
+            "raw_health": round(raw_h, 2) if raw_h > 0 else None,
+            "maxHealth": round(max_h, 2) if max_h > 0 else None,
+            "hunger": hu_ratio,
+            "raw_hunger": round(raw_hu, 2) if raw_hu > 0 else None,
+            "maxHunger": round(max_hu, 2) if max_hu > 0 else None,
+            "thirst": t_ratio,
+            "raw_thirst": round(raw_t, 2) if raw_t > 0 else None,
+            "maxThirst": round(max_t, 2) if max_t > 0 else 1000.0,
+            "stamina": st_ratio,
+            "bleed": safe_float(player_info.get("bleed"), 0.0),
+            "mutationSlots": p_muts,
+            "mutations": list((p_muts or {}).get("active") or []),
+            "isPrimeElder": bool(player_info.get("isPrimeElder", False)),
+            "primeEligible": bool(player_info.get("primeEligible", False)),
+            "prime": player_info.get("prime") or {},
+            "position": player_info.get("position") or {},
+            "nutrients": {
+                "carb": carb_v,
+                "protein": prot_v,
+                "lipid": lipid_v
+            },
+            "capturedAt": datetime.datetime.now().isoformat()
+        }
+        save_garage_dino_snapshot(f"{sid}_last_parked", dino_snap)
+        save_garage_dino_snapshot(f"{sid}_{species}", dino_snap)
+        return dino_snap
+
     def handle_garage(self):
-
-        # Lấy steam_id từ query parameter hoặc cookie
-
         query = urllib.parse.urlparse(self.path).query
-
         q_params = urllib.parse.parse_qs(query)
-
         active_steam_id = q_params.get("steam_id", [None])[0]
 
         if not active_steam_id:
-
             cookie_header = self.headers.get("Cookie", "")
-
             match = re.search(r"steam_user=([^;:]+)", cookie_header)
-
             if match:
-
                 active_steam_id = match.group(1)
 
-        # Nếu chưa đăng nhập, dùng steamId mẫu từ danh sách người chơi online
-
         if not active_steam_id:
-
             players_data = self.fetch_islepilot("/players")
-
             if players_data and "players" in players_data and len(players_data["players"]) > 0:
-
                 active_steam_id = players_data["players"][0].get("steamId")
 
         if active_steam_id:
-
             remote_garage = self.fetch_islepilot(f"/players/{active_steam_id}/garage")
-
             if remote_garage and "garage" in remote_garage:
-
                 dinos = []
-
                 custom_names = load_custom_names()
-
                 deleted_dinos = load_deleted_dinos()
+                snapshots_map = load_garage_dino_snapshots()
 
                 for d in remote_garage["garage"]:
-                    if str(d.get("id")) in deleted_dinos:
+                    d_id = str(d.get("id") or "")
+                    if d_id in deleted_dinos:
                         continue
 
-                    # Lưu dự phòng 100% mutationSlots vào bộ nhớ để không bao giờ bị mất khi rút
-                    d_m_slots = d.get("mutationSlots")
-                    if d_m_slots and isinstance(d_m_slots, dict):
-                        save_garage_saved_mutation(f"{active_steam_id}_{d.get('id')}", d_m_slots)
-                        save_garage_saved_mutation(str(d.get("id")), d_m_slots)
-                        if d.get("species"):
-                            save_garage_saved_mutation(f"{active_steam_id}_{d.get('species')}", d_m_slots)
+                    d_spec = d.get("species", "Tyrannosaurus")
+                    existing_snap = (
+                        snapshots_map.get(f"{active_steam_id}_{d_id}")
+                        or snapshots_map.get(d_id)
+                        or {}
+                    )
+                    species_snap = snapshots_map.get(f"{active_steam_id}_{d_spec}") or {}
 
-                    # Lưu snapshot đầy đủ dữ liệu khủng long (máu, nước, no, size, gen)
-                    save_garage_dino_snapshot(f"{active_steam_id}_{d.get('id')}", d)
-                    save_garage_dino_snapshot(str(d.get("id")), d)
+                    # Lưu dự phòng 100% mutationSlots vào bộ nhớ để không bao giờ bị mất khi rút
+                    d_m_slots = d.get("mutationSlots") or existing_snap.get("mutationSlots") or species_snap.get("mutationSlots")
+                    if d_m_slots and isinstance(d_m_slots, dict):
+                        save_garage_saved_mutation(f"{active_steam_id}_{d_id}", d_m_slots)
+                        save_garage_saved_mutation(d_id, d_m_slots)
+                        if d_spec:
+                            save_garage_saved_mutation(f"{active_steam_id}_{d_spec}", d_m_slots)
+
+                    # Gộp dữ liệu từ IslePilot garage với snapshot chi tiết (không ghi đè mất nutrients / raw_health / maxHealth)
+                    nutr_obj = (
+                        existing_snap.get("nutrients")
+                        or species_snap.get("nutrients")
+                        or {"carb": 100.0, "protein": 100.0, "lipid": 100.0}
+                    )
+                    merged_d_snap = dict(existing_snap)
+                    merged_d_snap.update(d)
+                    merged_d_snap["nutrients"] = nutr_obj
+                    if d_m_slots:
+                        merged_d_snap["mutationSlots"] = d_m_slots
+                    for rich_k in ["raw_health", "maxHealth", "raw_hunger", "maxHunger", "raw_thirst", "maxThirst", "position", "prime", "primeEligible"]:
+                        if merged_d_snap.get(rich_k) is None and existing_snap.get(rich_k) is not None:
+                            merged_d_snap[rich_k] = existing_snap[rich_k]
+
+                    save_garage_dino_snapshot(f"{active_steam_id}_{d_id}", merged_d_snap)
+                    save_garage_dino_snapshot(d_id, merged_d_snap)
 
                     growth = safe_float(d.get("growth"), 1.0)
-
                     growth_val = round(growth * 100, 1)
-
                     if growth_val >= 100.0:
-
                         growth_val = 100
-
                         stage = "Adult"
-
                     elif growth_val >= 60.0:
-
                         stage = "Sub-Adult"
-
                     elif growth_val >= 20.0:
-
                         stage = "Juvenile"
-
                     else:
-
                         stage = "Baby"
 
+                    is_prime_elder = bool(d.get("isPrimeElder", False))
                     stats = calc_dino_stats(
-
-                        d.get("species", "Tyrannosaurus"),
-
+                        d_spec,
                         growth,
-
                         d.get("health", 1.0),
-
                         d.get("hunger", 1.0),
-
-                        d.get("thirst", 1.0)
-
+                        d.get("thirst", 1.0),
+                        is_prime_elder=is_prime_elder,
+                        exact_max_hp=merged_d_snap.get("maxHealth"),
+                        exact_max_hunger=merged_d_snap.get("maxHunger"),
+                        exact_max_thirst=merged_d_snap.get("maxThirst"),
+                        exact_raw_hp=merged_d_snap.get("raw_health"),
+                        exact_raw_hunger=merged_d_snap.get("raw_hunger"),
+                        exact_raw_thirst=merged_d_snap.get("raw_thirst")
                     )
 
                     gender = "Cái (Female)" if d.get("gender") == "Female" else "Đực (Male)"
-
-                    is_prime_elder = d.get("isPrimeElder", False)
-
                     mutations = d.get("mutations", [])
-
-                    dino_name = custom_names.get(d.get("id")) or d.get("name")
-
-                    # Lấy thời gian cất thực tế từ IslePilot (parkedAt)
+                    dino_name = custom_names.get(d_id) or d.get("name")
 
                     parked_at_raw = d.get("parkedAt") or d.get("storedAt") or d.get("createdAt")
-
                     formatted_stored_at = "Gần đây"
-
                     if parked_at_raw:
-
                         try:
-
                             clean_ts = parked_at_raw.replace("Z", "+00:00")
-
                             dt_utc = datetime.datetime.fromisoformat(clean_ts)
-
                             tz_vn = datetime.timezone(datetime.timedelta(hours=7))
-
                             dt_vn = dt_utc.astimezone(tz_vn)
-
                             formatted_stored_at = dt_vn.strftime("%H:%M:%S - %d/%m/%Y")
-
                         except Exception:
-
                             formatted_stored_at = str(parked_at_raw)
 
-                    s_name_raw = (d.get("species") or "").lower()
+                    s_name_raw = (d_spec or "").lower()
                     w_lbl = d.get("weight_label")
                     if "spino" in s_name_raw and is_prime_elder:
                         w_lbl = "15.0 Tấn (15,000 kg)"
-                        stats["max_hp"] = 15000
-                        stats["current_hp"] = 15000
-                    elif "trice" in s_name_raw and is_prime_elder:
-                        w_lbl = "13.0 Tấn (13,000 kg)"
-                        stats["max_hp"] = 13000
-                        stats["current_hp"] = 13000
                     elif not w_lbl:
                         w_lbl = "Chuẩn Prime Elder" if is_prime_elder else "Chuẩn"
 
                     dinos.append({
                         "id": d.get("id"),
                         "name": dino_name,
-                        "species": d.get("species", "Tyrannosaurus"),
+                        "species": d_spec,
                         "gender": gender,
                         "growth": growth,
                         "growth_percent": growth_val,
                         "stage": stage,
                         "is_prime_elder": is_prime_elder,
                         "mutations": mutations,
-                        "mutationSlots": d.get("mutationSlots", {}),
+                        "mutationSlots": d_m_slots or d.get("mutationSlots", {}),
                         "weight": stats["max_hp"],
                         "weight_label": w_lbl,
                         "current_hp": stats["current_hp"],
@@ -4947,7 +5038,12 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                         "current_thirst": stats["current_thirst"],
                         "max_thirst": stats["max_thirst"],
                         "thirst": stats["thirst_pct"],
-                        "stamina": 100,
+                        "stamina": round(safe_float(d.get("stamina"), 1.0) * 100) if safe_float(d.get("stamina"), 1.0) <= 1.0 else round(safe_float(d.get("stamina"), 100.0)),
+                        "nutrients": {
+                            "carb": round(safe_float(nutr_obj.get("carb"), 100.0)),
+                            "protein": round(safe_float(nutr_obj.get("protein"), 100.0)),
+                            "lipid": round(safe_float(nutr_obj.get("lipid"), 100.0))
+                        },
                         "stored_at": formatted_stored_at,
                         "parked_at": parked_at_raw,
                         "status": "stored"
@@ -4965,17 +5061,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                         is_p = bool(gd.get("isPrimeElder", False) or gd.get("is_prime_elder", False))
                         spec_raw = gd.get("species", "Tyrannosaurus")
                         stats = calc_dino_stats(spec_raw, g_growth, 1.0, 1.0, 1.0, is_p)
-                        w_lbl = gd.get("weight_label")
-                        if "spino" in spec_raw.lower() and is_p:
-                            w_lbl = "15.0 Tấn (15,000 kg)"
-                            stats["max_hp"] = 15000
-                            stats["current_hp"] = 15000
-                        elif "trice" in spec_raw.lower() and is_p:
-                            w_lbl = "13.0 Tấn (13,000 kg)"
-                            stats["max_hp"] = 13000
-                            stats["current_hp"] = 13000
-                        elif not w_lbl:
-                            w_lbl = "Chuẩn Prime Elder" if is_p else "Chuẩn"
+                        w_lbl = gd.get("weight_label") or ("Chuẩn Prime Elder" if is_p else "Chuẩn")
                         dinos.append({
                             "id": gd.get("id"),
                             "name": gd.get("name") or gd.get("species"),
@@ -4999,29 +5085,23 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                             "max_thirst": stats["max_thirst"],
                             "thirst": stats["thirst_pct"],
                             "stamina": 100,
+                            "nutrients": {"carb": 100, "protein": 100, "lipid": 100},
                             "stored_at": gd.get("parkedAt", "Vừa thêm"),
                             "parked_at": gd.get("parkedAt"),
                             "status": "stored",
                             "source": "admin_granted"
                         })
-                except Exception as e:
+                except Exception:
                     pass
 
                 self.send_json_response({
-
                     "slots_total": config.get("MAX_GARAGE_SLOTS", 5),
                     "park_seconds": config.get("GARAGE_PARK_SECONDS", 30),
-
                     "slots_used": len(dinos),
-
                     "dinos": dinos,
-
                     "steam_id": active_steam_id,
-
                     "deleted_ids": list(deleted_dinos.keys())
-
                 })
-
                 return
 
         # Kiểm tra gift dinos khi IslePilot garage trống
@@ -5039,17 +5119,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     is_p = bool(gd.get("isPrimeElder", False) or gd.get("is_prime_elder", False))
                     spec_raw = gd.get("species", "Tyrannosaurus")
                     stats = calc_dino_stats(spec_raw, g_growth, 1.0, 1.0, 1.0, is_p)
-                    w_lbl = gd.get("weight_label")
-                    if "spino" in spec_raw.lower() and is_p:
-                        w_lbl = "15.0 Tấn (15,000 kg)"
-                        stats["max_hp"] = 15000
-                        stats["current_hp"] = 15000
-                    elif "trice" in spec_raw.lower() and is_p:
-                        w_lbl = "13.0 Tấn (13,000 kg)"
-                        stats["max_hp"] = 13000
-                        stats["current_hp"] = 13000
-                    elif not w_lbl:
-                        w_lbl = "Chuẩn Prime Elder" if is_p else "Chuẩn"
+                    w_lbl = gd.get("weight_label") or ("Chuẩn Prime Elder" if is_p else "Chuẩn")
                     fallback_dinos.append({
                         "id": gd.get("id"),
                         "name": gd.get("name") or gd.get("species"),
@@ -5072,6 +5142,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                         "max_thirst": stats["max_thirst"],
                         "thirst": stats["thirst_pct"],
                         "stamina": 100,
+                        "nutrients": {"carb": 100, "protein": 100, "lipid": 100},
                         "stored_at": gd.get("parkedAt", "Vừa thêm"),
                         "parked_at": gd.get("parkedAt"),
                         "status": "stored",
@@ -5081,17 +5152,226 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 pass
 
         self.send_json_response({
-
             "slots_total": config.get("MAX_GARAGE_SLOTS", 5),
             "park_seconds": config.get("GARAGE_PARK_SECONDS", 30),
-
             "slots_used": len(fallback_dinos),
-
             "dinos": fallback_dinos,
-
             "deleted_ids": list(deleted_dinos.keys())
-
         })
+
+    def restore_dino_full_state_worker(self, steam_id, dino_id, target_gd=None, fallback_species=None):
+        """Khôi phục 100% nguyên vẹn tất cả dữ liệu khủng long (Size, Máu, Đói, Nước, Thể lực, Dinh dưỡng A-B-Y, Prime Elder và 16 ô Đột biến) sau khi rút từ Gara."""
+        sid = str(steam_id).strip()
+        did = str(dino_id).strip()
+
+        snapshots_map = load_garage_dino_snapshots()
+        snap_data = (
+            snapshots_map.get(f"{sid}_{did}")
+            or snapshots_map.get(did)
+            or (snapshots_map.get(f"{sid}_{target_gd.get('species')}") if target_gd and target_gd.get("species") else None)
+            or (snapshots_map.get(f"{sid}_{fallback_species}") if fallback_species else None)
+            or snapshots_map.get(f"{sid}_last_parked")
+            or {}
+        )
+
+        dino_spec = (target_gd.get("species") if target_gd else None) or snap_data.get("species") or fallback_species or "Tyrannosaurus"
+        raw_growth = target_gd.get("growth") if (target_gd and target_gd.get("growth") is not None) else snap_data.get("growth")
+        dino_growth = safe_float(raw_growth, 1.0)
+        if dino_growth > 1.0:
+            dino_growth /= 100.0
+        dino_growth = max(0.01, min(1.0, dino_growth))
+
+        dino_health_ratio = safe_float(target_gd.get("health") if (target_gd and target_gd.get("health") is not None) else snap_data.get("health"), 1.0)
+        if dino_health_ratio > 1.0:
+            dino_health_ratio = dino_health_ratio / 100.0 if dino_health_ratio <= 100.0 else 1.0
+        dino_health_ratio = max(0.01, min(1.0, dino_health_ratio))
+
+        dino_hunger_ratio = safe_float(target_gd.get("hunger") if (target_gd and target_gd.get("hunger") is not None) else snap_data.get("hunger"), 1.0)
+        if dino_hunger_ratio > 1.0:
+            dino_hunger_ratio = dino_hunger_ratio / 100.0 if dino_hunger_ratio <= 100.0 else 1.0
+        dino_hunger_ratio = max(0.01, min(1.0, dino_hunger_ratio))
+
+        dino_thirst_ratio = safe_float(target_gd.get("thirst") if (target_gd and target_gd.get("thirst") is not None) else snap_data.get("thirst"), 1.0)
+        if dino_thirst_ratio > 1.0:
+            dino_thirst_ratio = dino_thirst_ratio / 100.0 if dino_thirst_ratio <= 100.0 else 1.0
+        dino_thirst_ratio = max(0.01, min(1.0, dino_thirst_ratio))
+
+        dino_stamina = safe_float(target_gd.get("stamina") if (target_gd and target_gd.get("stamina") is not None) else snap_data.get("stamina"), 1.0)
+        saved_bleed = safe_float(snap_data.get("bleed"), 0.0)
+        is_prime = bool((target_gd.get("isPrimeElder") if (target_gd and target_gd.get("isPrimeElder") is not None) else None) or snap_data.get("isPrimeElder", False))
+
+        saved_raw_hp = snap_data.get("raw_health")
+        saved_max_hp = snap_data.get("maxHealth")
+        saved_raw_hu = snap_data.get("raw_hunger")
+        saved_max_hu = snap_data.get("maxHunger")
+        saved_raw_th = snap_data.get("raw_thirst")
+        saved_max_th = snap_data.get("maxThirst")
+
+        saved_muts_map = load_garage_saved_mutations()
+        dino_mutation_slots = (
+            (target_gd.get("mutationSlots") if target_gd and isinstance(target_gd.get("mutationSlots"), dict) else None)
+            or snap_data.get("mutationSlots")
+            or saved_muts_map.get(f"{sid}_{did}")
+            or saved_muts_map.get(did)
+            or saved_muts_map.get(f"{sid}_{dino_spec}")
+            or saved_muts_map.get(f"{sid}_last_parked")
+            or {}
+        )
+        if not dino_mutation_slots and target_gd and isinstance(target_gd.get("mutations"), list):
+            dino_mutation_slots = {"active": target_gd["mutations"]}
+
+        full_slots = {
+            "active": list(dino_mutation_slots.get("active") or ["None", "None", "None", "None"]),
+            "parent": list(dino_mutation_slots.get("parent") or ["None", "None", "None", "None"]),
+            "elderA": list(dino_mutation_slots.get("elderA") or ["None", "None", "None", "None"]),
+            "elderB": list(dino_mutation_slots.get("elderB") or ["None", "None", "None", "None"])
+        }
+        for k in ["active", "parent", "elderA", "elderB"]:
+            cleaned_k = []
+            for m in full_slots[k][:4]:
+                m_s = str(m).strip() if m else "None"
+                if m_s.lower() == "enlarged meniscus":
+                    m_s = "Enlarged Meniscus"
+                cleaned_k.append(m_s if m_s else "None")
+            while len(cleaned_k) < 4:
+                cleaned_k.append("None")
+            full_slots[k] = cleaned_k
+
+        nutrients = snap_data.get("nutrients") or {}
+        carb_val = safe_float(nutrients.get("carb") if nutrients.get("carb") is not None else nutrients.get("a"), 100.0)
+        prot_val = safe_float(nutrients.get("protein") if nutrients.get("protein") is not None else nutrients.get("b"), 100.0)
+        lipid_val = safe_float(nutrients.get("lipid") if nutrients.get("lipid") is not None else nutrients.get("y"), 100.0)
+        if carb_val <= 0 and prot_val <= 0 and lipid_val <= 0:
+            carb_val, prot_val, lipid_val = 100.0, 100.0, 100.0
+
+        target_scale = 0.5 if "indo" in str(dino_spec).lower() else 1.0
+        st_val = dino_stamina * 1000.0 if dino_stamina <= 1.0 else (dino_stamina * 10.0 if dino_stamina <= 100.0 else dino_stamina)
+        st_val = max(100.0, min(1000.0, st_val))
+
+        body_muts = {
+            "action": "mutations",
+            "steamId": sid,
+            "active": full_slots["active"][:4],
+            "parent": full_slots["parent"][:4],
+            "elderA": full_slots["elderA"][:4],
+            "elderB": full_slots["elderB"][:4],
+            "mutationSlots": full_slots
+        }
+        nutr_payload = {
+            "action": "setnutrition",
+            "steamId": sid,
+            "carb": carb_val,
+            "protein": prot_val,
+            "lipid": lipid_val
+        }
+
+        def compute_exact_stat_payload():
+            live_p = self.fetch_islepilot(f"/players/{sid}", bypass_cache=True) or {}
+            live_max_hp = safe_float(live_p.get("maxHealth"), 0.0)
+            live_max_hu = safe_float(live_p.get("maxHunger"), 0.0)
+            live_max_th = safe_float(live_p.get("maxThirst"), 0.0)
+
+            calc = calc_dino_stats(
+                dino_spec,
+                dino_growth,
+                dino_health_ratio,
+                dino_hunger_ratio,
+                dino_thirst_ratio,
+                is_prime_elder=is_prime,
+                exact_max_hp=live_max_hp if live_max_hp > 100 else saved_max_hp,
+                exact_max_hunger=live_max_hu if live_max_hu > 50 else saved_max_hu,
+                exact_max_thirst=live_max_th if live_max_th > 50 else saved_max_th,
+                exact_raw_hp=saved_raw_hp if (saved_raw_hp and (live_max_hp <= 100 or abs(live_max_hp - safe_float(saved_max_hp, live_max_hp)) < 50)) else None,
+                exact_raw_hunger=saved_raw_hu if (saved_raw_hu and (live_max_hu <= 50 or abs(live_max_hu - safe_float(saved_max_hu, live_max_hu)) < 50)) else None,
+                exact_raw_thirst=saved_raw_th
+            )
+            return {
+                "action": "setstats",
+                "steamId": sid,
+                "health": calc["raw_hp"],
+                "hunger": calc["raw_hunger"],
+                "thirst": calc["raw_thirst"],
+                "bleed": saved_bleed
+            }
+
+        def apply_pass(include_growth_and_prime=True, pass_name="Pass 1"):
+            try:
+                if include_growth_and_prime:
+                    # 1. Đặt Growth chính xác
+                    self.fetch_islepilot("/commands", method="POST", body_data={
+                        "action": "setgrowth",
+                        "steamId": sid,
+                        "growth": dino_growth,
+                        "frozen": False
+                    })
+                    time.sleep(0.45)
+
+                    # 2. Nếu là Prime Elder, áp dụng Prime TRƯỚC khi setstats và setnutrition
+                    if is_prime:
+                        self.fetch_islepilot("/commands", method="POST", body_data={
+                            "action": "setprime",
+                            "steamId": sid,
+                            "eligible": True,
+                            "conditions": 10,
+                            "isElder": True,
+                            "stacks": 10
+                        })
+                        time.sleep(0.45)
+
+                    # 3. Đặt Scale chuẩn (IndoRex 0.5x, còn lại 1.0x)
+                    self.fetch_islepilot("/commands", method="POST", body_data={
+                        "action": "scale",
+                        "steamId": sid,
+                        "scale": target_scale
+                    })
+                    time.sleep(0.45)
+
+                # 4. Khôi phục đầy đủ 16 ô Đột biến gen (Active, Parent, Elder A, Elder B)
+                self.fetch_islepilot("/commands", method="POST", body_data=body_muts)
+                time.sleep(0.45)
+
+                # 5. Khôi phục chính xác Máu, Thức ăn, Nước, Bleed theo đúng chỉ số lúc cất
+                stat_payload = compute_exact_stat_payload()
+                self.fetch_islepilot("/commands", method="POST", body_data=stat_payload)
+                time.sleep(0.45)
+
+                # 6. Khôi phục Thể lực (Stamina)
+                self.fetch_islepilot("/commands", method="POST", body_data={
+                    "action": "setstamina",
+                    "steamId": sid,
+                    "stamina": st_val
+                })
+                time.sleep(0.45)
+
+                # 7. Khôi phục Dinh dưỡng A - B - Y (Carb, Protein, Lipid) SAU CÙNG để không bị lệnh nào khác reset!
+                self.fetch_islepilot("/commands", method="POST", body_data=nutr_payload)
+                print(f"[Garage Restore {pass_name}] Hoàn tất đồng bộ 100% ({dino_spec}, Growth={dino_growth}, HP={stat_payload['health']}, A-B-Y={carb_val}/{prot_val}/{lipid_val}) cho {sid}")
+            except Exception as e:
+                print(f"[Garage Restore {pass_name} Error] {e}")
+
+        def restore_worker():
+            # Chờ tối thiểu 3.0s rồi kiểm tra xem nhân vật đã spawn hoàn tất vào map chưa
+            time.sleep(3.0)
+            for _ in range(5):
+                lp = self.fetch_islepilot(f"/players/{sid}", bypass_cache=True) or {}
+                if lp.get("online") and lp.get("species"):
+                    break
+                time.sleep(1.0)
+            time.sleep(0.8)
+
+            # Lần 1: Khôi phục toàn diện ngay khi khủng long vừa spawn vào game
+            apply_pass(include_growth_and_prime=True, pass_name="Pass 1")
+
+            # Lần 2 (sau 4.0s): Bổ trợ toàn diện phòng trường hợp client load map chậm
+            time.sleep(4.0)
+            apply_pass(include_growth_and_prime=True, pass_name="Pass 2")
+
+            # Lần 3 (sau 4.5s): Khóa chặt Đột biến, Máu/Đói/Nước và Dinh dưỡng A-B-Y (không gọi lại setgrowth/setprime để tránh reset dạ dày)
+            time.sleep(4.5)
+            apply_pass(include_growth_and_prime=False, pass_name="Pass 3 Final Lock")
+
+        threading.Thread(target=restore_worker, daemon=True).start()
+        return dino_spec, dino_growth
 
     def handle_garage_spawn(self):
         try:
@@ -5154,8 +5434,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 self.send_json_response({"success": True, "message": "Thành công"})
                 return
 
-            # 1. Tìm thông tin chi tiết khủng long từ remote garage hoặc snapshot đã lưu
-            remote_garage = self.fetch_islepilot(f"/players/{steam_id}/garage") or {}
+            # 1. Tìm thông tin chi tiết khủng long từ remote garage (bypass_cache=True)
+            remote_garage = self.fetch_islepilot(f"/players/{steam_id}/garage", bypass_cache=True) or {}
             target_gd = None
             if remote_garage and "garage" in remote_garage:
                 for gd in remote_garage["garage"]:
@@ -5163,209 +5443,20 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                         target_gd = gd
                         break
 
-            # Lấy snapshot dự phòng đã lưu lúc cất
-            snapshots_map = load_garage_dino_snapshots()
-            snap_data = (
-                snapshots_map.get(f"{steam_id}_{dino_id}")
-                or snapshots_map.get(str(dino_id))
-                or snapshots_map.get(f"{steam_id}_{species}")
-                or snapshots_map.get(f"{steam_id}_last_parked")
-                or {}
-            )
-
-            # Tổng hợp đầy đủ các thuộc tính gốc
-            dino_spec = (target_gd.get("species") if target_gd else None) or snap_data.get("species") or species
-            raw_growth = target_gd.get("growth") if target_gd and target_gd.get("growth") is not None else snap_data.get("growth")
-            dino_growth = safe_float(raw_growth, 1.0)
-            if dino_growth > 1.0:
-                dino_growth /= 100.0
-            dino_growth = max(0.01, min(1.0, dino_growth))
-
-            dino_health = safe_float(target_gd.get("health") if target_gd and target_gd.get("health") is not None else snap_data.get("health"), 1.0)
-            dino_hunger = safe_float(target_gd.get("hunger") if target_gd and target_gd.get("hunger") is not None else snap_data.get("hunger"), 1.0)
-            dino_thirst = safe_float(target_gd.get("thirst") if target_gd and target_gd.get("thirst") is not None else snap_data.get("thirst"), 1.0)
-            dino_stamina = safe_float(target_gd.get("stamina") if target_gd and target_gd.get("stamina") is not None else snap_data.get("stamina"), 1.0)
-            is_prime = bool((target_gd.get("isPrimeElder") if target_gd else None) or snap_data.get("isPrimeElder", False))
-
-            saved_muts_map = load_garage_saved_mutations()
-            dino_mutation_slots = (
-                (target_gd.get("mutationSlots") if target_gd and isinstance(target_gd.get("mutationSlots"), dict) else None)
-                or snap_data.get("mutationSlots")
-                or saved_muts_map.get(f"{steam_id}_{dino_id}")
-                or saved_muts_map.get(str(dino_id))
-                or saved_muts_map.get(f"{steam_id}_{dino_spec}")
-                or saved_muts_map.get(f"{steam_id}_last_parked")
-                or {}
-            )
-
-            # Chuẩn hóa toàn bộ 4 nhóm đột biến: active, parent, elderA, elderB (đủ 16 slot)
-            full_slots = {
-                "active": list(dino_mutation_slots.get("active") or ["None", "None", "None", "None"]),
-                "parent": list(dino_mutation_slots.get("parent") or ["None", "None", "None", "None"]),
-                "elderA": list(dino_mutation_slots.get("elderA") or ["None", "None", "None", "None"]),
-                "elderB": list(dino_mutation_slots.get("elderB") or ["None", "None", "None", "None"])
-            }
-            for k in ["active", "parent", "elderA", "elderB"]:
-                full_slots[k] = [(str(m).strip() if m else "None") for m in full_slots[k][:4]]
-                while len(full_slots[k]) < 4:
-                    full_slots[k].append("None")
-
             # 2. Gọi lệnh restore từ IslePilot
             res = self.fetch_islepilot(f"/players/{steam_id}/garage/{dino_id}/restore", method="POST", body_data={})
 
             if res and (res.get("ok") is True or "commandId" in res):
-                # KHỞI CHẠY TIẾN TRÌNH ĐỒNG BỘ 100% SIZE, MÁU, ĐÓI, NƯỚC, A-B-Y VÀ ĐỘT BIẾN
-                def restore_worker():
-                    # Chờ 3.5 giây để nhân vật Evrima load vào bản đồ game hoàn chỉnh
-                    time.sleep(3.5)
-
-                    # 1. ĐẶT KÍCH THƯỚC (GROWTH) CHUẨN XÁC Y NHƯ LÚC CẤT (KHẮC PHỤC LỖI BỊ THU NHỎ SIZE)
-                    try:
-                        self.fetch_islepilot("/commands", method="POST", body_data={
-                            "action": "setgrowth",
-                            "steamId": str(steam_id),
-                            "growth": dino_growth,
-                            "frozen": False
-                        })
-                        print(f"[Garage Restore] Đã setgrowth = {dino_growth} chuẩn xác cho Steam {steam_id}")
-                    except Exception as e:
-                        print(f"[Garage Restore Growth Error] {e}")
-
-                    time.sleep(0.3)
-
-                    # 2. ĐẶT SCALE: Chuẩn hóa IndoRex là 0.5x, còn tất cả con khác giữ nguyên 1.0x
-                    target_scale = 0.5 if "indo" in str(dino_spec).lower() else 1.0
-                    try:
-                        self.fetch_islepilot("/commands", method="POST", body_data={
-                            "action": "scale",
-                            "steamId": str(steam_id),
-                            "scale": target_scale
-                        })
-                        print(f"[Garage Restore] Đã đặt scale = {target_scale} cho {dino_spec} (Steam {steam_id})")
-                    except Exception:
-                        pass
-
-                    time.sleep(0.3)
-
-                    # 3. ĐỒNG BỘ MÁU (HEALTH), NƯỚC (THIRST), NO (HUNGER)
-                    stats_calc = calc_dino_stats(dino_spec, dino_growth, dino_health, dino_hunger, dino_thirst, is_prime)
-                    target_hp = stats_calc["current_hp"]
-                    target_hunger = stats_calc["current_hunger"]
-                    target_thirst = stats_calc["current_thirst"]
-
-                    stat_payload = {
-                        "action": "setstats",
-                        "steamId": str(steam_id),
-                        "health": target_hp,
-                        "hunger": target_hunger,
-                        "thirst": target_thirst,
-                        "bleed": 0.0
-                    }
-                    try:
-                        self.fetch_islepilot("/commands", method="POST", body_data=stat_payload)
-                        print(f"[Garage Restore] Đã setstats (HP: {target_hp}, Hunger: {target_hunger}, Thirst: {target_thirst}) cho Steam {steam_id}")
-                    except Exception as e:
-                        print(f"[Garage Restore Stats Error] {e}")
-
-                    time.sleep(0.3)
-
-                    # 4. ĐỒNG BỘ THỂ LỰC (STAMINA)
-                    try:
-                        st_val = safe_float(dino_stamina, 1.0)
-                        if st_val <= 1.0:
-                            st_val *= 1000.0
-                        self.fetch_islepilot("/commands", method="POST", body_data={
-                            "action": "setstamina",
-                            "steamId": str(steam_id),
-                            "stamina": max(100.0, min(1000.0, st_val))
-                        })
-                    except Exception:
-                        pass
-
-                    time.sleep(0.3)
-
-                    # 5. ĐỒNG BỘ DINH DƯỠNG A, B, Y (CARB, PROTEIN, LIPID)
-                    nutrients = snap_data.get("nutrients") or {}
-                    carb_val = safe_float(nutrients.get("carb") if nutrients.get("carb") is not None else nutrients.get("a"), 100.0)
-                    prot_val = safe_float(nutrients.get("protein") if nutrients.get("protein") is not None else nutrients.get("b"), 100.0)
-                    lipid_val = safe_float(nutrients.get("lipid") if nutrients.get("lipid") is not None else nutrients.get("y"), 100.0)
-                    try:
-                        self.fetch_islepilot("/commands", method="POST", body_data={
-                            "action": "setnutrition",
-                            "steamId": str(steam_id),
-                            "carb": carb_val,
-                            "protein": prot_val,
-                            "lipid": lipid_val
-                        })
-                        print(f"[Garage Restore] Đã setnutrition A-B-Y ({carb_val}/{prot_val}/{lipid_val}) cho Steam {steam_id}")
-                    except Exception as e:
-                        print(f"[Garage Restore Nutrition Error] {e}")
-
-                    time.sleep(0.3)
-
-                    # 6. ĐỒNG BỘ 100% ĐỘT BIẾN GEN (MUTATIONS ĐỦ 16 SLOT)
-                    body_muts = {
-                        "action": "mutations",
-                        "steamId": str(steam_id),
-                        "active": full_slots["active"][:4],
-                        "parent": full_slots["parent"][:4],
-                        "elderA": full_slots["elderA"][:4],
-                        "elderB": full_slots["elderB"][:4],
-                        "mutationSlots": full_slots
-                    }
-                    try:
-                        self.fetch_islepilot("/commands", method="POST", body_data=body_muts)
-                        print(f"[Garage Restore] Đã phục hồi 100% Đột biến gen cho Steam {steam_id}")
-                    except Exception as e:
-                        print(f"[Garage Restore Mutations Error] {e}")
-
-                    # 7. NẾU LÀ PRIME ELDER: ÁP DỤNG PRIME
-                    if is_prime:
-                        time.sleep(0.4)
-                        try:
-                            self.fetch_islepilot("/commands", method="POST", body_data={
-                                "action": "setprime",
-                                "steamId": str(steam_id),
-                                "eligible": True,
-                                "conditions": 10,
-                                "isElder": True,
-                                "stacks": 10
-                            })
-                            time.sleep(0.3)
-                            self.fetch_islepilot("/commands", method="POST", body_data={
-                                "action": "scale",
-                                "steamId": str(steam_id),
-                                "scale": target_scale
-                            })
-                        except Exception:
-                            pass
-
-                    # 8. BỔ TRỢ LẦN 2 (REINFORCE) SAU 4 GIÂY ĐỂ ĐẢM BẢO ENGINE GAME GHI NHẬN VĨNH VIỄN
-                    time.sleep(4.0)
-                    try:
-                        self.fetch_islepilot("/commands", method="POST", body_data={
-                            "action": "setgrowth",
-                            "steamId": str(steam_id),
-                            "growth": dino_growth,
-                            "frozen": False
-                        })
-                        self.fetch_islepilot("/commands", method="POST", body_data={
-                            "action": "scale",
-                            "steamId": str(steam_id),
-                            "scale": target_scale
-                        })
-                        self.fetch_islepilot("/commands", method="POST", body_data=stat_payload)
-                        self.fetch_islepilot("/commands", method="POST", body_data=body_muts)
-                        print(f"[Garage Restore Reinforce] Bổ trợ lần 2 thành công cho Steam {steam_id}")
-                    except Exception:
-                        pass
-
-                threading.Thread(target=restore_worker, daemon=True).start()
-
+                dino_spec, dino_growth = self.restore_dino_full_state_worker(
+                    steam_id=steam_id,
+                    dino_id=dino_id,
+                    target_gd=target_gd,
+                    fallback_species=species
+                )
                 self.send_json_response({
                     "success": True,
                     "ok": True,
-                    "message": f"Đã lấy thành công {dino_spec} ra game (bảo toàn 100% Size {round(dino_growth * 100)}%, Máu, Nước, No, Dinh dưỡng A-B-Y và Đột biến)!",
+                    "message": f"Đã lấy thành công {dino_spec} ra game (bảo toàn 100% Size {round(dino_growth * 100, 1)}%, Máu, Nước, No, Dinh dưỡng A-B-Y và 16 ô Đột biến)!",
                     "dino_id": str(dino_id)
                 })
                 return
@@ -5396,10 +5487,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 self.send_json_response({"success": False, "ok": False, "message": "Vui lòng đăng nhập Steam trước khi xóa khủng long!"}, 401)
                 return
 
-            # 1. Luôn ghi nhận vào danh sách xóa vĩnh viễn (Persistent Blacklist)
             save_deleted_dino(dino_id, steam_id)
 
-            # 2. Xóa triệt để trong user_gift_dinos.json nếu có
             gifts = load_user_gift_dinos()
             user_gifts = gifts.get(str(steam_id), [])
             new_gifts = [g for g in user_gifts if str(g.get("id")) != dino_id]
@@ -5407,7 +5496,6 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 gifts[str(steam_id)] = new_gifts
                 save_user_gift_dinos(gifts)
 
-            # 3. Xóa tên tùy chỉnh nếu có trong custom_dino_names.json
             try:
                 names_data = load_custom_names()
                 if dino_id in names_data:
@@ -5417,13 +5505,11 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             except Exception:
                 pass
 
-            # 4. Thử gọi API bán / xóa của IslePilot nếu server cho phép
             try:
                 self.fetch_islepilot(f"/players/{steam_id}/garage/{dino_id}/sell", method="POST", body_data={})
             except Exception:
                 pass
 
-            # Trả về thành công 100%
             self.send_json_response({
                 "success": True,
                 "ok": True,
@@ -5451,7 +5537,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         try:
             length = int(self.headers.get("Content-Length", 0))
             payload = json.loads(self.rfile.read(length).decode("utf-8")) if length > 0 else {}
-            steam_id = payload.get("steam_id") or self.get_active_steam_id()
+            steam_id = str(payload.get("steam_id") or self.get_active_steam_id() or "").strip()
 
             if not steam_id:
                 self.send_json_response({"success": False, "ok": False, "message": "Thất bại"}, 401)
@@ -5459,22 +5545,22 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
             step = payload.get("step", "finalize")
 
-            # 1. BƯỚC KHỞI ĐỘNG (step == "start"): Kiểm tra người chơi có online trong game hay không
+            # 1. BƯỚC KHỞI ĐỘNG (step == "start"): Kiểm tra người chơi có online trong game hay không và chụp snapshot lần 1
             if step == "start":
-                player_info = self.fetch_islepilot(f"/players/{steam_id}")
+                player_info = self.fetch_islepilot(f"/players/{steam_id}", bypass_cache=True)
                 is_online = False
                 if isinstance(player_info, dict) and player_info.get("online"):
                     is_online = True
                 else:
-                    players_list = self.fetch_islepilot("/players")
+                    players_list = self.fetch_islepilot("/players", bypass_cache=True)
                     if isinstance(players_list, dict) and "players" in players_list:
                         for p in players_list["players"]:
-                            if p.get("steamId") == steam_id:
+                            if str(p.get("steamId")) == steam_id:
                                 is_online = True
                                 break
                     elif isinstance(players_list, list):
                         for p in players_list:
-                            if p.get("steamId") == steam_id:
+                            if str(p.get("steamId")) == steam_id:
                                 is_online = True
                                 break
 
@@ -5487,50 +5573,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     }, 400)
                     return
 
-                # Lưu snapshot đầy đủ dữ liệu khủng long (máu, nước, no, size, a-b-y, mutations) trước khi cất
-                if player_info and isinstance(player_info, dict):
-                    growth_val = safe_float(player_info.get("growth"), 1.0)
-                    h_val = safe_float(player_info.get("health"), 100.0)
-                    max_h = safe_float(player_info.get("maxHealth"), 100.0)
-                    h_ratio = h_val / max_h if max_h > 0 else 1.0
+                # Chụp snapshot đầy đủ dữ liệu khủng long (máu, nước, no, size, a-b-y, 16 ô đột biến)
+                self.capture_live_player_snapshot(steam_id)
 
-                    hu_val = safe_float(player_info.get("hunger"), 100.0)
-                    max_hu = safe_float(player_info.get("maxHunger"), 100.0)
-                    hu_ratio = hu_val / max_hu if max_hu > 0 else 1.0
-
-                    t_val = safe_float(player_info.get("thirst"), 1000.0)
-                    max_t = safe_float(player_info.get("maxThirst"), 1000.0)
-                    t_ratio = t_val / max_t if max_t > 0 else 1.0
-
-                    st_val = safe_float(player_info.get("stamina"), 100.0)
-
-                    p_muts = player_info.get("mutationSlots")
-                    if p_muts and isinstance(p_muts, dict):
-                        save_garage_saved_mutation(f"{steam_id}_last_parked", p_muts)
-                        if player_info.get("species"):
-                            save_garage_saved_mutation(f"{steam_id}_{player_info.get('species')}", p_muts)
-
-                    dino_snap = {
-                        "species": player_info.get("species"),
-                        "gender": "Female" if player_info.get("female") else "Male",
-                        "growth": growth_val,
-                        "health": h_ratio,
-                        "hunger": hu_ratio,
-                        "thirst": t_ratio,
-                        "stamina": st_val / 100.0 if st_val > 1.0 else st_val,
-                        "mutationSlots": p_muts,
-                        "isPrimeElder": bool(player_info.get("isPrimeElder", False)),
-                        "nutrients": {
-                            "carb": safe_float(player_info.get("carb"), 100.0),
-                            "protein": safe_float(player_info.get("protein"), 100.0),
-                            "lipid": safe_float(player_info.get("lipid"), 100.0)
-                        }
-                    }
-                    save_garage_dino_snapshot(f"{steam_id}_last_parked", dino_snap)
-                    if player_info.get("species"):
-                        save_garage_dino_snapshot(f"{steam_id}_{player_info.get('species')}", dino_snap)
-
-                # Người chơi đang trực tuyến: Trả về đếm ngược 30 giây (CHƯA gọi lệnh cất để đảm bảo thời gian an toàn)
                 self.send_json_response({
                     "success": True,
                     "ok": True,
@@ -5540,40 +5585,58 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 })
                 return
 
-            # 2. BƯỚC HOÀN TẤT (step == "finalize"): Khi đã chạy hết 30s đếm ngược, mới chính thức gọi API cất dino
+            # 2. BƯỚC HOÀN TẤT (step == "finalize"): Chụp lại snapshot ngay giây cuối trước khi gọi lệnh park
+            pre_snap = self.capture_live_player_snapshot(steam_id) or (load_garage_dino_snapshots().get(f"{steam_id}_last_parked") or {})
+            pre_garage = self.fetch_islepilot(f"/players/{steam_id}/garage", bypass_cache=True) or {}
+            pre_ids = {str(gd.get("id")) for gd in (pre_garage.get("garage") or []) if gd.get("id")}
+
             res = self.fetch_islepilot(f"/players/{steam_id}/garage/park", method="POST", body_data={})
             if res and isinstance(res, dict):
-                if res.get("ok") or res.get("success"):
-                    try:
-                        fresh_garage = self.fetch_islepilot(f"/players/{steam_id}/garage") or {}
-                        gar_list = fresh_garage.get("garage", [])
-                        if gar_list:
-                            latest_dino = gar_list[-1]
-                            d_id = latest_dino.get("id")
-                            if d_id:
-                                p_muts = latest_dino.get("mutationSlots") or load_garage_saved_mutations().get(f"{steam_id}_last_parked")
-                                if p_muts:
-                                    save_garage_saved_mutation(f"{steam_id}_{d_id}", p_muts)
-                                    save_garage_saved_mutation(str(d_id), p_muts)
+                if res.get("ok") or res.get("success") or "commandId" in res:
+                    def bind_snapshot_to_new_garage_item():
+                        for wait_s in [0.6, 1.5, 3.0]:
+                            time.sleep(wait_s)
+                            try:
+                                fresh_garage = self.fetch_islepilot(f"/players/{steam_id}/garage", bypass_cache=True) or {}
+                                gar_list = fresh_garage.get("garage", [])
+                                if not gar_list:
+                                    continue
+                                target_new = None
+                                for gd in gar_list:
+                                    if str(gd.get("id")) not in pre_ids:
+                                        target_new = gd
+                                        break
+                                if not target_new:
+                                    target_new = gar_list[-1]
+                                d_id = target_new.get("id")
+                                if d_id:
+                                    p_muts = target_new.get("mutationSlots") or pre_snap.get("mutationSlots") or load_garage_saved_mutations().get(f"{steam_id}_last_parked")
+                                    if p_muts:
+                                        save_garage_saved_mutation(f"{steam_id}_{d_id}", p_muts)
+                                        save_garage_saved_mutation(str(d_id), p_muts)
 
-                                snap = load_garage_dino_snapshots().get(f"{steam_id}_last_parked") or {}
-                                merged_snap = {
-                                    "id": d_id,
-                                    "species": latest_dino.get("species") or snap.get("species"),
-                                    "gender": latest_dino.get("gender") or snap.get("gender"),
-                                    "growth": safe_float(latest_dino.get("growth") or snap.get("growth"), 1.0),
-                                    "health": safe_float(latest_dino.get("health") if latest_dino.get("health") is not None else snap.get("health"), 1.0),
-                                    "hunger": safe_float(latest_dino.get("hunger") if latest_dino.get("hunger") is not None else snap.get("hunger"), 1.0),
-                                    "thirst": safe_float(latest_dino.get("thirst") if latest_dino.get("thirst") is not None else snap.get("thirst"), 1.0),
-                                    "stamina": safe_float(latest_dino.get("stamina") if latest_dino.get("stamina") is not None else snap.get("stamina"), 1.0),
-                                    "mutationSlots": p_muts,
-                                    "isPrimeElder": bool(latest_dino.get("isPrimeElder") if latest_dino.get("isPrimeElder") is not None else snap.get("isPrimeElder", False)),
-                                    "nutrients": snap.get("nutrients") or {"carb": 100.0, "protein": 100.0, "lipid": 100.0}
-                                }
-                                save_garage_dino_snapshot(f"{steam_id}_{d_id}", merged_snap)
-                                save_garage_dino_snapshot(str(d_id), merged_snap)
-                    except Exception as e:
-                        print(f"[Garage Store Finalize Snap Error] {e}")
+                                    merged_snap = dict(pre_snap)
+                                    merged_snap.update({
+                                        "id": d_id,
+                                        "species": target_new.get("species") or pre_snap.get("species"),
+                                        "gender": target_new.get("gender") or pre_snap.get("gender"),
+                                        "growth": safe_float(target_new.get("growth") if target_new.get("growth") is not None else pre_snap.get("growth"), 1.0),
+                                        "health": safe_float(target_new.get("health") if target_new.get("health") is not None else pre_snap.get("health"), 1.0),
+                                        "hunger": safe_float(target_new.get("hunger") if target_new.get("hunger") is not None else pre_snap.get("hunger"), 1.0),
+                                        "thirst": safe_float(target_new.get("thirst") if target_new.get("thirst") is not None else pre_snap.get("thirst"), 1.0),
+                                        "stamina": safe_float(target_new.get("stamina") if target_new.get("stamina") is not None else pre_snap.get("stamina"), 1.0),
+                                        "mutationSlots": p_muts,
+                                        "isPrimeElder": bool(target_new.get("isPrimeElder") if target_new.get("isPrimeElder") is not None else pre_snap.get("isPrimeElder", False)),
+                                        "nutrients": pre_snap.get("nutrients") or {"carb": 100.0, "protein": 100.0, "lipid": 100.0}
+                                    })
+                                    save_garage_dino_snapshot(f"{steam_id}_{d_id}", merged_snap)
+                                    save_garage_dino_snapshot(str(d_id), merged_snap)
+                                    if merged_snap.get("species"):
+                                        save_garage_dino_snapshot(f"{steam_id}_{merged_snap['species']}", merged_snap)
+                            except Exception as e:
+                                print(f"[Garage Store Finalize Snap Error] {e}")
+
+                    threading.Thread(target=bind_snapshot_to_new_garage_item, daemon=True).start()
 
                     self.send_json_response({
                         "success": True,
