@@ -3165,9 +3165,14 @@ const SkinEditor = {
             </div>
           </div>
         </div>
-        <button type="button" class="btn-primary" style="padding: 7px 12px; font-size: 0.78rem; font-weight: 800; background: linear-gradient(135deg, #00D9FF, #0284C7); color: #041019; border: none; border-radius: 6px; white-space: nowrap; cursor: pointer;" onclick="SkinEditor.loadExclusiveHacBang()">
-          ⚡ Nạp Màu Độc Quyền
-        </button>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+          <button type="button" class="btn-primary" style="padding: 7px 12px; font-size: 0.78rem; font-weight: 800; background: linear-gradient(135deg, #00D9FF, #0284C7); color: #041019; border: none; border-radius: 6px; white-space: nowrap; cursor: pointer;" onclick="SkinEditor.loadExclusiveHacBang()">
+            ⚡ Nạp Màu Độc Quyền
+          </button>
+          <a href="/assets/mods/Mod_Skin_Hac_Bang_Loi_Dien_Standalone.zip" download="Mod_Skin_Hac_Bang_Loi_Dien_Standalone.zip" class="btn-secondary" style="padding: 7px 10px; font-size: 0.75rem; font-weight: 700; border: 1px solid rgba(0, 240, 118, 0.55); background: rgba(0, 240, 118, 0.14); color: #4ade80; border-radius: 6px; text-decoration: none; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px;">
+            📦 Tải File Mod Riêng (No IslePilot)
+          </a>
+        </div>
       </div>
     `;
 

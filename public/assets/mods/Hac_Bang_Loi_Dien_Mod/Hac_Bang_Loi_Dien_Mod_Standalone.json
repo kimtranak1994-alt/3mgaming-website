@@ -1,0 +1,1899 @@
+{
+  "mod_id": "mod_hac_bang_loi_dien_standalone",
+  "name": "👑 Mod Skin Độc Lập - Hắc Băng Lôi Điện (100% Chuẩn Gốc - Không Cần IslePilot)",
+  "version": "2.0.0",
+  "standalone": true,
+  "requires_islepilot": false,
+  "allSpecies": true,
+  "universal": true,
+  "species": "Diabloceratops",
+  "supported_species": [
+    "Allosaurus",
+    "Ankylosaurus",
+    "Baryonyx",
+    "Beipiaosaurus",
+    "Carnotaurus",
+    "Ceratosaurus",
+    "Deinosuchus",
+    "Diabloceratops",
+    "Dilophosaurus",
+    "Dryosaurus",
+    "Gallimimus",
+    "Giganotosaurus",
+    "Herrerasaurus",
+    "Hypsilophodon",
+    "Maiasaura",
+    "Omniraptor",
+    "Pachycephalosaurus",
+    "Pteranodon",
+    "Puertasaurus",
+    "Shantungosaurus",
+    "Spinosaurus",
+    "Stegosaurus",
+    "Tenontosaurus",
+    "Triceratops",
+    "Troodon",
+    "Tyrannosaurus"
+  ],
+  "pattern": 1,
+  "variation": 0,
+  "theme": 0,
+  "palette": {
+    "body": "#06080E",
+    "markings": "#00D9FF",
+    "underbelly": "#EEF8FF",
+    "flank": "#00E5FF",
+    "detail": "#6889A6",
+    "detail1": "#00FFFF",
+    "display": "#00FFFF",
+    "male_display": "#00FFFF",
+    "eyes": "#00FFFF",
+    "claws": "#00D9FF",
+    "teeth": "#EEF8FF",
+    "mouth": "#0A2233"
+  },
+  "baked_textures": {
+    "diffuse": "/assets/mods/Hac_Bang_Loi_Dien_Mod/Textures_3D_Baked/diffuse_hac_bang.png",
+    "tint_mask": "/assets/mods/Hac_Bang_Loi_Dien_Mod/Textures_3D_Baked/tint_mask_hac_bang.png",
+    "pattern_adult": "/assets/mods/Hac_Bang_Loi_Dien_Mod/Textures_3D_Baked/pattern_hac_bang.png"
+  },
+  "skin_codes_by_species": {
+    "Allosaurus": "Allosaurus10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
+    "Ankylosaurus": "Ankylosaurus10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
+    "Baryonyx": "Baryonyx10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
+    "Beipiaosaurus": "Beipiaosaurus10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
+    "Carnotaurus": "Carnotaurus10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
+    "Ceratosaurus": "Ceratosaurus10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
+    "Deinosuchus": "Deinosuchus10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
+    "Diabloceratops": "Diabloceratops10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
+    "Dilophosaurus": "Dilophosaurus10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
+    "Dryosaurus": "Dryosaurus10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
+    "Gallimimus": "Gallimimus10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
+    "Giganotosaurus": "Giganotosaurus10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
+    "Herrerasaurus": "Herrerasaurus10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
+    "Hypsilophodon": "Hypsilophodon10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
+    "Maiasaura": "Maiasaura10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
+    "Omniraptor": "Omniraptor10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
+    "Pachycephalosaurus": "Pachycephalosaurus10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
+    "Pteranodon": "Pteranodon10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
+    "Puertasaurus": "Puertasaurus10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
+    "Shantungosaurus": "Shantungosaurus10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
+    "Spinosaurus": "Spinosaurus10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
+    "Stegosaurus": "Stegosaurus10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
+    "Tenontosaurus": "Tenontosaurus10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
+    "Triceratops": "Triceratops10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
+    "Troodon": "Troodon10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
+    "Tyrannosaurus": "Tyrannosaurus10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF"
+  },
+  "payload": {
+    "class": "BP_Diabloceratops_C",
+    "female": false,
+    "variation": 0,
+    "pattern": 1,
+    "theme": 0,
+    "markings": [
+      0.003,
+      0.005,
+      0.01,
+      1.0
+    ],
+    "flank": [
+      0.0,
+      0.92,
+      1.0,
+      1.0
+    ],
+    "underbelly": [
+      0.0,
+      0.86,
+      1.0,
+      1.0
+    ],
+    "body": [
+      0.65,
+      0.97,
+      1.0,
+      1.0
+    ],
+    "detail1": [
+      0.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "male_display": [
+      0.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "eyes": [
+      0.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "teeth": [
+      0.93,
+      0.97,
+      1.0,
+      1.0
+    ],
+    "mouth": [
+      0.02,
+      0.08,
+      0.14,
+      1.0
+    ],
+    "claws": [
+      0.0,
+      0.9,
+      1.0,
+      1.0
+    ]
+  },
+  "blueprints_by_species": {
+    "Allosaurus": {
+      "class": "BP_Allosaurus_C",
+      "female": false,
+      "variation": 0,
+      "pattern": 1,
+      "theme": 0,
+      "markings": [
+        0.003,
+        0.005,
+        0.01,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.92,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
+        0.0,
+        0.86,
+        1.0,
+        1.0
+      ],
+      "body": [
+        0.65,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "detail1": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "male_display": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "eyes": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "teeth": [
+        0.93,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "mouth": [
+        0.02,
+        0.08,
+        0.14,
+        1.0
+      ],
+      "claws": [
+        0.0,
+        0.9,
+        1.0,
+        1.0
+      ]
+    },
+    "Ankylosaurus": {
+      "class": "BP_Ankylosaurus_C",
+      "female": false,
+      "variation": 0,
+      "pattern": 1,
+      "theme": 0,
+      "markings": [
+        0.003,
+        0.005,
+        0.01,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.92,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
+        0.0,
+        0.86,
+        1.0,
+        1.0
+      ],
+      "body": [
+        0.65,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "detail1": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "male_display": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "eyes": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "teeth": [
+        0.93,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "mouth": [
+        0.02,
+        0.08,
+        0.14,
+        1.0
+      ],
+      "claws": [
+        0.0,
+        0.9,
+        1.0,
+        1.0
+      ]
+    },
+    "Baryonyx": {
+      "class": "BP_Baryonyx_C",
+      "female": false,
+      "variation": 0,
+      "pattern": 1,
+      "theme": 0,
+      "markings": [
+        0.003,
+        0.005,
+        0.01,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.92,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
+        0.0,
+        0.86,
+        1.0,
+        1.0
+      ],
+      "body": [
+        0.65,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "detail1": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "male_display": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "eyes": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "teeth": [
+        0.93,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "mouth": [
+        0.02,
+        0.08,
+        0.14,
+        1.0
+      ],
+      "claws": [
+        0.0,
+        0.9,
+        1.0,
+        1.0
+      ]
+    },
+    "Beipiaosaurus": {
+      "class": "BP_Beipiaosaurus_C",
+      "female": false,
+      "variation": 0,
+      "pattern": 1,
+      "theme": 0,
+      "markings": [
+        0.003,
+        0.005,
+        0.01,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.92,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
+        0.0,
+        0.86,
+        1.0,
+        1.0
+      ],
+      "body": [
+        0.65,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "detail1": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "male_display": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "eyes": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "teeth": [
+        0.93,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "mouth": [
+        0.02,
+        0.08,
+        0.14,
+        1.0
+      ],
+      "claws": [
+        0.0,
+        0.9,
+        1.0,
+        1.0
+      ]
+    },
+    "Carnotaurus": {
+      "class": "BP_Carnotaurus_C",
+      "female": false,
+      "variation": 0,
+      "pattern": 1,
+      "theme": 0,
+      "markings": [
+        0.003,
+        0.005,
+        0.01,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.92,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
+        0.0,
+        0.86,
+        1.0,
+        1.0
+      ],
+      "body": [
+        0.65,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "detail1": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "male_display": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "eyes": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "teeth": [
+        0.93,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "mouth": [
+        0.02,
+        0.08,
+        0.14,
+        1.0
+      ],
+      "claws": [
+        0.0,
+        0.9,
+        1.0,
+        1.0
+      ]
+    },
+    "Ceratosaurus": {
+      "class": "BP_Ceratosaurus_C",
+      "female": false,
+      "variation": 0,
+      "pattern": 1,
+      "theme": 0,
+      "markings": [
+        0.003,
+        0.005,
+        0.01,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.92,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
+        0.0,
+        0.86,
+        1.0,
+        1.0
+      ],
+      "body": [
+        0.65,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "detail1": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "male_display": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "eyes": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "teeth": [
+        0.93,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "mouth": [
+        0.02,
+        0.08,
+        0.14,
+        1.0
+      ],
+      "claws": [
+        0.0,
+        0.9,
+        1.0,
+        1.0
+      ]
+    },
+    "Deinosuchus": {
+      "class": "BP_Deinosuchus_C",
+      "female": false,
+      "variation": 0,
+      "pattern": 1,
+      "theme": 0,
+      "markings": [
+        0.003,
+        0.005,
+        0.01,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.92,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
+        0.0,
+        0.86,
+        1.0,
+        1.0
+      ],
+      "body": [
+        0.65,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "detail1": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "male_display": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "eyes": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "teeth": [
+        0.93,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "mouth": [
+        0.02,
+        0.08,
+        0.14,
+        1.0
+      ],
+      "claws": [
+        0.0,
+        0.9,
+        1.0,
+        1.0
+      ]
+    },
+    "Diabloceratops": {
+      "class": "BP_Diabloceratops_C",
+      "female": false,
+      "variation": 0,
+      "pattern": 1,
+      "theme": 0,
+      "markings": [
+        0.003,
+        0.005,
+        0.01,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.92,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
+        0.0,
+        0.86,
+        1.0,
+        1.0
+      ],
+      "body": [
+        0.65,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "detail1": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "male_display": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "eyes": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "teeth": [
+        0.93,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "mouth": [
+        0.02,
+        0.08,
+        0.14,
+        1.0
+      ],
+      "claws": [
+        0.0,
+        0.9,
+        1.0,
+        1.0
+      ]
+    },
+    "Dilophosaurus": {
+      "class": "BP_Dilophosaurus_C",
+      "female": false,
+      "variation": 0,
+      "pattern": 1,
+      "theme": 0,
+      "markings": [
+        0.003,
+        0.005,
+        0.01,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.92,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
+        0.0,
+        0.86,
+        1.0,
+        1.0
+      ],
+      "body": [
+        0.65,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "detail1": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "male_display": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "eyes": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "teeth": [
+        0.93,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "mouth": [
+        0.02,
+        0.08,
+        0.14,
+        1.0
+      ],
+      "claws": [
+        0.0,
+        0.9,
+        1.0,
+        1.0
+      ]
+    },
+    "Dryosaurus": {
+      "class": "BP_Dryosaurus_C",
+      "female": false,
+      "variation": 0,
+      "pattern": 1,
+      "theme": 0,
+      "markings": [
+        0.003,
+        0.005,
+        0.01,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.92,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
+        0.0,
+        0.86,
+        1.0,
+        1.0
+      ],
+      "body": [
+        0.65,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "detail1": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "male_display": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "eyes": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "teeth": [
+        0.93,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "mouth": [
+        0.02,
+        0.08,
+        0.14,
+        1.0
+      ],
+      "claws": [
+        0.0,
+        0.9,
+        1.0,
+        1.0
+      ]
+    },
+    "Gallimimus": {
+      "class": "BP_Gallimimus_C",
+      "female": false,
+      "variation": 0,
+      "pattern": 1,
+      "theme": 0,
+      "markings": [
+        0.003,
+        0.005,
+        0.01,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.92,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
+        0.0,
+        0.86,
+        1.0,
+        1.0
+      ],
+      "body": [
+        0.65,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "detail1": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "male_display": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "eyes": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "teeth": [
+        0.93,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "mouth": [
+        0.02,
+        0.08,
+        0.14,
+        1.0
+      ],
+      "claws": [
+        0.0,
+        0.9,
+        1.0,
+        1.0
+      ]
+    },
+    "Giganotosaurus": {
+      "class": "BP_Giganotosaurus_C",
+      "female": false,
+      "variation": 0,
+      "pattern": 1,
+      "theme": 0,
+      "markings": [
+        0.003,
+        0.005,
+        0.01,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.92,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
+        0.0,
+        0.86,
+        1.0,
+        1.0
+      ],
+      "body": [
+        0.65,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "detail1": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "male_display": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "eyes": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "teeth": [
+        0.93,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "mouth": [
+        0.02,
+        0.08,
+        0.14,
+        1.0
+      ],
+      "claws": [
+        0.0,
+        0.9,
+        1.0,
+        1.0
+      ]
+    },
+    "Herrerasaurus": {
+      "class": "BP_Herrerasaurus_C",
+      "female": false,
+      "variation": 0,
+      "pattern": 1,
+      "theme": 0,
+      "markings": [
+        0.003,
+        0.005,
+        0.01,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.92,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
+        0.0,
+        0.86,
+        1.0,
+        1.0
+      ],
+      "body": [
+        0.65,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "detail1": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "male_display": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "eyes": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "teeth": [
+        0.93,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "mouth": [
+        0.02,
+        0.08,
+        0.14,
+        1.0
+      ],
+      "claws": [
+        0.0,
+        0.9,
+        1.0,
+        1.0
+      ]
+    },
+    "Hypsilophodon": {
+      "class": "BP_Hypsilophodon_C",
+      "female": false,
+      "variation": 0,
+      "pattern": 1,
+      "theme": 0,
+      "markings": [
+        0.003,
+        0.005,
+        0.01,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.92,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
+        0.0,
+        0.86,
+        1.0,
+        1.0
+      ],
+      "body": [
+        0.65,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "detail1": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "male_display": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "eyes": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "teeth": [
+        0.93,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "mouth": [
+        0.02,
+        0.08,
+        0.14,
+        1.0
+      ],
+      "claws": [
+        0.0,
+        0.9,
+        1.0,
+        1.0
+      ]
+    },
+    "Maiasaura": {
+      "class": "BP_Maiasaura_C",
+      "female": false,
+      "variation": 0,
+      "pattern": 1,
+      "theme": 0,
+      "markings": [
+        0.003,
+        0.005,
+        0.01,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.92,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
+        0.0,
+        0.86,
+        1.0,
+        1.0
+      ],
+      "body": [
+        0.65,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "detail1": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "male_display": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "eyes": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "teeth": [
+        0.93,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "mouth": [
+        0.02,
+        0.08,
+        0.14,
+        1.0
+      ],
+      "claws": [
+        0.0,
+        0.9,
+        1.0,
+        1.0
+      ]
+    },
+    "Omniraptor": {
+      "class": "BP_Omniraptor_C",
+      "female": false,
+      "variation": 0,
+      "pattern": 1,
+      "theme": 0,
+      "markings": [
+        0.003,
+        0.005,
+        0.01,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.92,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
+        0.0,
+        0.86,
+        1.0,
+        1.0
+      ],
+      "body": [
+        0.65,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "detail1": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "male_display": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "eyes": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "teeth": [
+        0.93,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "mouth": [
+        0.02,
+        0.08,
+        0.14,
+        1.0
+      ],
+      "claws": [
+        0.0,
+        0.9,
+        1.0,
+        1.0
+      ]
+    },
+    "Pachycephalosaurus": {
+      "class": "BP_Pachycephalosaurus_C",
+      "female": false,
+      "variation": 0,
+      "pattern": 1,
+      "theme": 0,
+      "markings": [
+        0.003,
+        0.005,
+        0.01,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.92,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
+        0.0,
+        0.86,
+        1.0,
+        1.0
+      ],
+      "body": [
+        0.65,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "detail1": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "male_display": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "eyes": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "teeth": [
+        0.93,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "mouth": [
+        0.02,
+        0.08,
+        0.14,
+        1.0
+      ],
+      "claws": [
+        0.0,
+        0.9,
+        1.0,
+        1.0
+      ]
+    },
+    "Pteranodon": {
+      "class": "BP_Pteranodon_C",
+      "female": false,
+      "variation": 0,
+      "pattern": 1,
+      "theme": 0,
+      "markings": [
+        0.003,
+        0.005,
+        0.01,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.92,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
+        0.0,
+        0.86,
+        1.0,
+        1.0
+      ],
+      "body": [
+        0.65,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "detail1": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "male_display": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "eyes": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "teeth": [
+        0.93,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "mouth": [
+        0.02,
+        0.08,
+        0.14,
+        1.0
+      ],
+      "claws": [
+        0.0,
+        0.9,
+        1.0,
+        1.0
+      ]
+    },
+    "Puertasaurus": {
+      "class": "BP_Puertasaurus_C",
+      "female": false,
+      "variation": 0,
+      "pattern": 1,
+      "theme": 0,
+      "markings": [
+        0.003,
+        0.005,
+        0.01,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.92,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
+        0.0,
+        0.86,
+        1.0,
+        1.0
+      ],
+      "body": [
+        0.65,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "detail1": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "male_display": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "eyes": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "teeth": [
+        0.93,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "mouth": [
+        0.02,
+        0.08,
+        0.14,
+        1.0
+      ],
+      "claws": [
+        0.0,
+        0.9,
+        1.0,
+        1.0
+      ]
+    },
+    "Shantungosaurus": {
+      "class": "BP_Shantungosaurus_C",
+      "female": false,
+      "variation": 0,
+      "pattern": 1,
+      "theme": 0,
+      "markings": [
+        0.003,
+        0.005,
+        0.01,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.92,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
+        0.0,
+        0.86,
+        1.0,
+        1.0
+      ],
+      "body": [
+        0.65,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "detail1": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "male_display": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "eyes": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "teeth": [
+        0.93,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "mouth": [
+        0.02,
+        0.08,
+        0.14,
+        1.0
+      ],
+      "claws": [
+        0.0,
+        0.9,
+        1.0,
+        1.0
+      ]
+    },
+    "Spinosaurus": {
+      "class": "BP_Spinosaurus_C",
+      "female": false,
+      "variation": 0,
+      "pattern": 1,
+      "theme": 0,
+      "markings": [
+        0.003,
+        0.005,
+        0.01,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.92,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
+        0.0,
+        0.86,
+        1.0,
+        1.0
+      ],
+      "body": [
+        0.65,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "detail1": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "male_display": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "eyes": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "teeth": [
+        0.93,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "mouth": [
+        0.02,
+        0.08,
+        0.14,
+        1.0
+      ],
+      "claws": [
+        0.0,
+        0.9,
+        1.0,
+        1.0
+      ]
+    },
+    "Stegosaurus": {
+      "class": "BP_Stegosaurus_C",
+      "female": false,
+      "variation": 0,
+      "pattern": 1,
+      "theme": 0,
+      "markings": [
+        0.003,
+        0.005,
+        0.01,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.92,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
+        0.0,
+        0.86,
+        1.0,
+        1.0
+      ],
+      "body": [
+        0.65,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "detail1": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "male_display": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "eyes": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "teeth": [
+        0.93,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "mouth": [
+        0.02,
+        0.08,
+        0.14,
+        1.0
+      ],
+      "claws": [
+        0.0,
+        0.9,
+        1.0,
+        1.0
+      ]
+    },
+    "Tenontosaurus": {
+      "class": "BP_Tenontosaurus_C",
+      "female": false,
+      "variation": 0,
+      "pattern": 1,
+      "theme": 0,
+      "markings": [
+        0.003,
+        0.005,
+        0.01,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.92,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
+        0.0,
+        0.86,
+        1.0,
+        1.0
+      ],
+      "body": [
+        0.65,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "detail1": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "male_display": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "eyes": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "teeth": [
+        0.93,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "mouth": [
+        0.02,
+        0.08,
+        0.14,
+        1.0
+      ],
+      "claws": [
+        0.0,
+        0.9,
+        1.0,
+        1.0
+      ]
+    },
+    "Triceratops": {
+      "class": "BP_Triceratops_C",
+      "female": false,
+      "variation": 0,
+      "pattern": 1,
+      "theme": 0,
+      "markings": [
+        0.003,
+        0.005,
+        0.01,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.92,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
+        0.0,
+        0.86,
+        1.0,
+        1.0
+      ],
+      "body": [
+        0.65,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "detail1": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "male_display": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "eyes": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "teeth": [
+        0.93,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "mouth": [
+        0.02,
+        0.08,
+        0.14,
+        1.0
+      ],
+      "claws": [
+        0.0,
+        0.9,
+        1.0,
+        1.0
+      ]
+    },
+    "Troodon": {
+      "class": "BP_Troodon_C",
+      "female": false,
+      "variation": 0,
+      "pattern": 1,
+      "theme": 0,
+      "markings": [
+        0.003,
+        0.005,
+        0.01,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.92,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
+        0.0,
+        0.86,
+        1.0,
+        1.0
+      ],
+      "body": [
+        0.65,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "detail1": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "male_display": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "eyes": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "teeth": [
+        0.93,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "mouth": [
+        0.02,
+        0.08,
+        0.14,
+        1.0
+      ],
+      "claws": [
+        0.0,
+        0.9,
+        1.0,
+        1.0
+      ]
+    },
+    "Tyrannosaurus": {
+      "class": "BP_Tyrannosaurus_C",
+      "female": false,
+      "variation": 0,
+      "pattern": 1,
+      "theme": 0,
+      "markings": [
+        0.003,
+        0.005,
+        0.01,
+        1.0
+      ],
+      "flank": [
+        0.0,
+        0.92,
+        1.0,
+        1.0
+      ],
+      "underbelly": [
+        0.0,
+        0.86,
+        1.0,
+        1.0
+      ],
+      "body": [
+        0.65,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "detail1": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "male_display": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "eyes": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "teeth": [
+        0.93,
+        0.97,
+        1.0,
+        1.0
+      ],
+      "mouth": [
+        0.02,
+        0.08,
+        0.14,
+        1.0
+      ],
+      "claws": [
+        0.0,
+        0.9,
+        1.0,
+        1.0
+      ]
+    }
+  }
+}
