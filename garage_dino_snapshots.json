@@ -1,0 +1,722 @@
+{
+  "76561198975489051_cmvvzpqbj4h78py01x6tqgnwc": {
+    "id": "cmvvzpqbj4h78py01x6tqgnwc",
+    "name": null,
+    "species": "Carnotaurus",
+    "gender": "Male",
+    "growth": 0.94,
+    "health": 1,
+    "hunger": 0.8728703703703704,
+    "thirst": 0.890003,
+    "stamina": 1,
+    "isPrimeElder": true,
+    "mutations": [
+      "Hemomania",
+      "Hematophagy",
+      "Multichambered Lungs",
+      "Accelerated Prey Drive"
+    ],
+    "mutationSlots": {
+      "active": [
+        "Hemomania",
+        "Hematophagy",
+        "Multichambered Lungs",
+        "Accelerated Prey Drive"
+      ],
+      "parent": [
+        "None",
+        "None",
+        "None",
+        "None"
+      ],
+      "elderA": [
+        "None",
+        "None",
+        "None",
+        "None"
+      ],
+      "elderB": [
+        "None",
+        "None",
+        "None",
+        "None"
+      ]
+    },
+    "parkedAt": "2026-10-31T05:58:21.056Z"
+  },
+  "cmvvzpqbj4h78py01x6tqgnwc": {
+    "id": "cmvvzpqbj4h78py01x6tqgnwc",
+    "name": null,
+    "species": "Carnotaurus",
+    "gender": "Male",
+    "growth": 0.94,
+    "health": 1,
+    "hunger": 0.8728703703703704,
+    "thirst": 0.890003,
+    "stamina": 1,
+    "isPrimeElder": true,
+    "mutations": [
+      "Hemomania",
+      "Hematophagy",
+      "Multichambered Lungs",
+      "Accelerated Prey Drive"
+    ],
+    "mutationSlots": {
+      "active": [
+        "Hemomania",
+        "Hematophagy",
+        "Multichambered Lungs",
+        "Accelerated Prey Drive"
+      ],
+      "parent": [
+        "None",
+        "None",
+        "None",
+        "None"
+      ],
+      "elderA": [
+        "None",
+        "None",
+        "None",
+        "None"
+      ],
+      "elderB": [
+        "None",
+        "None",
+        "None",
+        "None"
+      ]
+    },
+    "parkedAt": "2026-10-31T05:58:21.056Z"
+  },
+  "76561198975489051_cmvvz87zx4fx8n801z9p6u6u9": {
+    "id": "cmvvz87zx4fx8n801z9p6u6u9",
+    "name": null,
+    "species": "Triceratops",
+    "gender": "Female",
+    "growth": 0.857112,
+    "health": 0.553363,
+    "hunger": 0.9229073684210527,
+    "thirst": 0.854807,
+    "stamina": 1,
+    "isPrimeElder": false,
+    "mutations": [
+      "Hypervigilance",
+      "Multichambered Lungs",
+      "Hydroregenerative",
+      "None"
+    ],
+    "mutationSlots": {
+      "active": [
+        "Hypervigilance",
+        "Multichambered Lungs",
+        "Hydroregenerative",
+        "None"
+      ],
+      "parent": [
+        "Osteosclerosis",
+        "Congenital Hypoalgesia",
+        "Enlarged meniscus",
+        "Epidermal Fibrosis"
+      ],
+      "elderA": [
+        "Xerocole Adaptation",
+        "Photosynthetic Regeneration",
+        "Truculency",
+        "Cellular Regeneration"
+      ],
+      "elderB": [
+        "None",
+        "None",
+        "None",
+        "None"
+      ]
+    },
+    "parkedAt": "2026-10-31T05:44:44.158Z"
+  },
+  "cmvvz87zx4fx8n801z9p6u6u9": {
+    "id": "cmvvz87zx4fx8n801z9p6u6u9",
+    "name": null,
+    "species": "Triceratops",
+    "gender": "Female",
+    "growth": 0.857112,
+    "health": 0.553363,
+    "hunger": 0.9229073684210527,
+    "thirst": 0.854807,
+    "stamina": 1,
+    "isPrimeElder": false,
+    "mutations": [
+      "Hypervigilance",
+      "Multichambered Lungs",
+      "Hydroregenerative",
+      "None"
+    ],
+    "mutationSlots": {
+      "active": [
+        "Hypervigilance",
+        "Multichambered Lungs",
+        "Hydroregenerative",
+        "None"
+      ],
+      "parent": [
+        "Osteosclerosis",
+        "Congenital Hypoalgesia",
+        "Enlarged meniscus",
+        "Epidermal Fibrosis"
+      ],
+      "elderA": [
+        "Xerocole Adaptation",
+        "Photosynthetic Regeneration",
+        "Truculency",
+        "Cellular Regeneration"
+      ],
+      "elderB": [
+        "None",
+        "None",
+        "None",
+        "None"
+      ]
+    },
+    "parkedAt": "2026-10-31T05:44:44.158Z"
+  },
+  "76561198975489051_cmvv7d20j08kqpy01gh1lkrvt": {
+    "id": "cmvv7d20j08kqpy01gh1lkrvt",
+    "name": null,
+    "species": "Tyrannosaurus",
+    "gender": "Female",
+    "growth": 0.791764,
+    "health": 1,
+    "hunger": 0.7177432931864279,
+    "thirst": 0.941474,
+    "stamina": 1,
+    "isPrimeElder": true,
+    "mutations": [
+      "Wader",
+      "Nocturnal",
+      "Photosynthetic Tissue",
+      "Hydrodynamic"
+    ],
+    "mutationSlots": {
+      "active": [
+        "Wader",
+        "Nocturnal",
+        "Photosynthetic Tissue",
+        "Hydrodynamic"
+      ],
+      "parent": [
+        "Enlarged meniscus",
+        "Multichambered Lungs",
+        "Hydroregenerative",
+        "Hematophagy"
+      ],
+      "elderA": [
+        "Hemomania",
+        "Gastronomic Regeneration",
+        "Congenital Hypoalgesia",
+        "Hypermetabolic Inanition"
+      ],
+      "elderB": [
+        "Cellular Regeneration",
+        "Osteosclerosis",
+        "Epidermal Fibrosis",
+        "Accelerated Prey Drive"
+      ]
+    },
+    "parkedAt": "2026-10-30T16:44:40.436Z"
+  },
+  "cmvv7d20j08kqpy01gh1lkrvt": {
+    "id": "cmvv7d20j08kqpy01gh1lkrvt",
+    "name": null,
+    "species": "Tyrannosaurus",
+    "gender": "Female",
+    "growth": 0.791764,
+    "health": 1,
+    "hunger": 0.7177432931864279,
+    "thirst": 0.941474,
+    "stamina": 1,
+    "isPrimeElder": true,
+    "mutations": [
+      "Wader",
+      "Nocturnal",
+      "Photosynthetic Tissue",
+      "Hydrodynamic"
+    ],
+    "mutationSlots": {
+      "active": [
+        "Wader",
+        "Nocturnal",
+        "Photosynthetic Tissue",
+        "Hydrodynamic"
+      ],
+      "parent": [
+        "Enlarged meniscus",
+        "Multichambered Lungs",
+        "Hydroregenerative",
+        "Hematophagy"
+      ],
+      "elderA": [
+        "Hemomania",
+        "Gastronomic Regeneration",
+        "Congenital Hypoalgesia",
+        "Hypermetabolic Inanition"
+      ],
+      "elderB": [
+        "Cellular Regeneration",
+        "Osteosclerosis",
+        "Epidermal Fibrosis",
+        "Accelerated Prey Drive"
+      ]
+    },
+    "parkedAt": "2026-10-30T16:44:40.436Z"
+  },
+  "76561198975489051_cmvv734qz06i3o701k0moido4": {
+    "id": "cmvv734qz06i3o701k0moido4",
+    "name": null,
+    "species": "Quetz",
+    "gender": "Male",
+    "growth": 0.999345,
+    "health": 1,
+    "hunger": 0.8062171717171717,
+    "thirst": 0.723912,
+    "stamina": 1,
+    "isPrimeElder": true,
+    "mutations": [
+      "Hemomania",
+      "Accelerated Prey Drive",
+      "Cellular Regeneration",
+      "Multichambered Lungs"
+    ],
+    "mutationSlots": {
+      "active": [
+        "Hemomania",
+        "Accelerated Prey Drive",
+        "Cellular Regeneration",
+        "Multichambered Lungs"
+      ],
+      "parent": [
+        "None",
+        "None",
+        "None",
+        "None"
+      ],
+      "elderA": [
+        "None",
+        "None",
+        "None",
+        "None"
+      ],
+      "elderB": [
+        "None",
+        "None",
+        "None",
+        "None"
+      ]
+    },
+    "parkedAt": "2026-10-30T16:36:57.419Z"
+  },
+  "cmvv734qz06i3o701k0moido4": {
+    "id": "cmvv734qz06i3o701k0moido4",
+    "name": null,
+    "species": "Quetz",
+    "gender": "Male",
+    "growth": 0.999345,
+    "health": 1,
+    "hunger": 0.8062171717171717,
+    "thirst": 0.723912,
+    "stamina": 1,
+    "isPrimeElder": true,
+    "mutations": [
+      "Hemomania",
+      "Accelerated Prey Drive",
+      "Cellular Regeneration",
+      "Multichambered Lungs"
+    ],
+    "mutationSlots": {
+      "active": [
+        "Hemomania",
+        "Accelerated Prey Drive",
+        "Cellular Regeneration",
+        "Multichambered Lungs"
+      ],
+      "parent": [
+        "None",
+        "None",
+        "None",
+        "None"
+      ],
+      "elderA": [
+        "None",
+        "None",
+        "None",
+        "None"
+      ],
+      "elderB": [
+        "None",
+        "None",
+        "None",
+        "None"
+      ]
+    },
+    "parkedAt": "2026-10-30T16:36:57.419Z"
+  },
+  "76561198975489051_cmvpffflo1a68qj01azsvigyp": {
+    "id": "cmvpffflo1a68qj01azsvigyp",
+    "name": null,
+    "species": "Troodon",
+    "gender": "Male",
+    "growth": 1,
+    "health": 1,
+    "hunger": 0.836659090909091,
+    "thirst": 0.804012,
+    "stamina": 1,
+    "isPrimeElder": true,
+    "mutations": [
+      "Hematophagy",
+      "Hemomania",
+      "Accelerated Prey Drive",
+      "Multichambered Lungs"
+    ],
+    "mutationSlots": {
+      "active": [
+        "Hematophagy",
+        "Hemomania",
+        "Accelerated Prey Drive",
+        "Multichambered Lungs"
+      ],
+      "parent": [
+        "None",
+        "None",
+        "None",
+        "None"
+      ],
+      "elderA": [
+        "None",
+        "None",
+        "None",
+        "None"
+      ],
+      "elderB": [
+        "None",
+        "None",
+        "None",
+        "None"
+      ]
+    },
+    "parkedAt": "2026-10-26T15:43:51.228Z"
+  },
+  "cmvpffflo1a68qj01azsvigyp": {
+    "id": "cmvpffflo1a68qj01azsvigyp",
+    "name": null,
+    "species": "Troodon",
+    "gender": "Male",
+    "growth": 1,
+    "health": 1,
+    "hunger": 0.836659090909091,
+    "thirst": 0.804012,
+    "stamina": 1,
+    "isPrimeElder": true,
+    "mutations": [
+      "Hematophagy",
+      "Hemomania",
+      "Accelerated Prey Drive",
+      "Multichambered Lungs"
+    ],
+    "mutationSlots": {
+      "active": [
+        "Hematophagy",
+        "Hemomania",
+        "Accelerated Prey Drive",
+        "Multichambered Lungs"
+      ],
+      "parent": [
+        "None",
+        "None",
+        "None",
+        "None"
+      ],
+      "elderA": [
+        "None",
+        "None",
+        "None",
+        "None"
+      ],
+      "elderB": [
+        "None",
+        "None",
+        "None",
+        "None"
+      ]
+    },
+    "parkedAt": "2026-10-26T15:43:51.228Z"
+  },
+  "76561198975489051_cmvoxh7i72n75pm01adn2z61r": {
+    "id": "cmvoxh7i72n75pm01adn2z61r",
+    "name": null,
+    "species": "Deinosuchus",
+    "gender": "Male",
+    "growth": 0.896356,
+    "health": 1,
+    "hunger": 0.4943241819826876,
+    "thirst": 0.9801960000000001,
+    "stamina": 0.182222,
+    "isPrimeElder": true,
+    "mutations": [
+      "Multichambered Lungs",
+      "Osteosclerosis",
+      "Enlarged meniscus",
+      "Submerged Optical Retention"
+    ],
+    "mutationSlots": {
+      "active": [
+        "Multichambered Lungs",
+        "Osteosclerosis",
+        "Enlarged meniscus",
+        "Submerged Optical Retention"
+      ],
+      "parent": [
+        "Epidermal Fibrosis",
+        "Gastronomic Regeneration",
+        "Increased Inspiratory Capacity",
+        "Hypermetabolic Inanition"
+      ],
+      "elderA": [
+        "Hemomania",
+        "Cellular Regeneration",
+        "Congenital Hypoalgesia",
+        "None"
+      ],
+      "elderB": [
+        "Accelerated Prey Drive",
+        "Accelerated Prey Drive",
+        "Hydrodynamic",
+        "Hydrodynamic"
+      ]
+    },
+    "parkedAt": "2026-10-26T07:21:20.959Z"
+  },
+  "cmvoxh7i72n75pm01adn2z61r": {
+    "id": "cmvoxh7i72n75pm01adn2z61r",
+    "name": null,
+    "species": "Deinosuchus",
+    "gender": "Male",
+    "growth": 0.896356,
+    "health": 1,
+    "hunger": 0.4943241819826876,
+    "thirst": 0.9801960000000001,
+    "stamina": 0.182222,
+    "isPrimeElder": true,
+    "mutations": [
+      "Multichambered Lungs",
+      "Osteosclerosis",
+      "Enlarged meniscus",
+      "Submerged Optical Retention"
+    ],
+    "mutationSlots": {
+      "active": [
+        "Multichambered Lungs",
+        "Osteosclerosis",
+        "Enlarged meniscus",
+        "Submerged Optical Retention"
+      ],
+      "parent": [
+        "Epidermal Fibrosis",
+        "Gastronomic Regeneration",
+        "Increased Inspiratory Capacity",
+        "Hypermetabolic Inanition"
+      ],
+      "elderA": [
+        "Hemomania",
+        "Cellular Regeneration",
+        "Congenital Hypoalgesia",
+        "None"
+      ],
+      "elderB": [
+        "Accelerated Prey Drive",
+        "Accelerated Prey Drive",
+        "Hydrodynamic",
+        "Hydrodynamic"
+      ]
+    },
+    "parkedAt": "2026-10-26T07:21:20.959Z"
+  },
+  "76561198975489051_cmvni13xq5q6hpi01f0rul1j4": {
+    "id": "cmvni13xq5q6hpi01f0rul1j4",
+    "name": null,
+    "species": "Spinosaurus",
+    "gender": "Male",
+    "growth": 0.786515,
+    "health": 1,
+    "hunger": 0.8818592381455753,
+    "thirst": 0.546073,
+    "stamina": 1,
+    "isPrimeElder": true,
+    "mutations": [
+      "Submerged Optical Retention",
+      "Wader",
+      "Nocturnal",
+      "Photosynthetic Tissue"
+    ],
+    "mutationSlots": {
+      "active": [
+        "Submerged Optical Retention",
+        "Wader",
+        "Nocturnal",
+        "Photosynthetic Tissue"
+      ],
+      "parent": [
+        "Enlarged meniscus",
+        "Multichambered Lungs",
+        "Hydroregenerative",
+        "Hypermetabolic Inanition"
+      ],
+      "elderA": [
+        "Epidermal Fibrosis",
+        "Gastronomic Regeneration",
+        "Hydrodynamic",
+        "Cellular Regeneration"
+      ],
+      "elderB": [
+        "Hemomania",
+        "Accelerated Prey Drive",
+        "Osteosclerosis",
+        "Congenital Hypoalgesia"
+      ]
+    },
+    "parkedAt": "2026-10-25T07:21:09.422Z"
+  },
+  "cmvni13xq5q6hpi01f0rul1j4": {
+    "id": "cmvni13xq5q6hpi01f0rul1j4",
+    "name": null,
+    "species": "Spinosaurus",
+    "gender": "Male",
+    "growth": 0.786515,
+    "health": 1,
+    "hunger": 0.8818592381455753,
+    "thirst": 0.546073,
+    "stamina": 1,
+    "isPrimeElder": true,
+    "mutations": [
+      "Submerged Optical Retention",
+      "Wader",
+      "Nocturnal",
+      "Photosynthetic Tissue"
+    ],
+    "mutationSlots": {
+      "active": [
+        "Submerged Optical Retention",
+        "Wader",
+        "Nocturnal",
+        "Photosynthetic Tissue"
+      ],
+      "parent": [
+        "Enlarged meniscus",
+        "Multichambered Lungs",
+        "Hydroregenerative",
+        "Hypermetabolic Inanition"
+      ],
+      "elderA": [
+        "Epidermal Fibrosis",
+        "Gastronomic Regeneration",
+        "Hydrodynamic",
+        "Cellular Regeneration"
+      ],
+      "elderB": [
+        "Hemomania",
+        "Accelerated Prey Drive",
+        "Osteosclerosis",
+        "Congenital Hypoalgesia"
+      ]
+    },
+    "parkedAt": "2026-10-25T07:21:09.422Z"
+  },
+  "76561198975489051_cmvmgok1g6trspd01nc2ejrfq": {
+    "id": "cmvmgok1g6trspd01nc2ejrfq",
+    "name": null,
+    "species": "Giganotosaurus",
+    "gender": "Male",
+    "growth": 0.843146,
+    "health": 0.888962,
+    "hunger": 0.9644004403079757,
+    "thirst": 0.9460940000000001,
+    "stamina": 1,
+    "isPrimeElder": true,
+    "mutations": [
+      "Enhanced Digestion",
+      "Multichambered Lungs",
+      "Wader",
+      "Hydrodynamic"
+    ],
+    "mutationSlots": {
+      "active": [
+        "Enhanced Digestion",
+        "Multichambered Lungs",
+        "Wader",
+        "Hydrodynamic"
+      ],
+      "parent": [
+        "Enlarged meniscus",
+        "Photosynthetic Tissue",
+        "Nocturnal",
+        "Hypermetabolic Inanition"
+      ],
+      "elderA": [
+        "Cellular Regeneration",
+        "Gastronomic Regeneration",
+        "Epidermal Fibrosis",
+        "Osteosclerosis"
+      ],
+      "elderB": [
+        "Hemomania",
+        "Accelerated Prey Drive",
+        "Congenital Hypoalgesia",
+        "None"
+      ]
+    },
+    "parkedAt": "2026-10-24T13:55:37.973Z"
+  },
+  "cmvmgok1g6trspd01nc2ejrfq": {
+    "id": "cmvmgok1g6trspd01nc2ejrfq",
+    "name": null,
+    "species": "Giganotosaurus",
+    "gender": "Male",
+    "growth": 0.843146,
+    "health": 0.888962,
+    "hunger": 0.9644004403079757,
+    "thirst": 0.9460940000000001,
+    "stamina": 1,
+    "isPrimeElder": true,
+    "mutations": [
+      "Enhanced Digestion",
+      "Multichambered Lungs",
+      "Wader",
+      "Hydrodynamic"
+    ],
+    "mutationSlots": {
+      "active": [
+        "Enhanced Digestion",
+        "Multichambered Lungs",
+        "Wader",
+        "Hydrodynamic"
+      ],
+      "parent": [
+        "Enlarged meniscus",
+        "Photosynthetic Tissue",
+        "Nocturnal",
+        "Hypermetabolic Inanition"
+      ],
+      "elderA": [
+        "Cellular Regeneration",
+        "Gastronomic Regeneration",
+        "Epidermal Fibrosis",
+        "Osteosclerosis"
+      ],
+      "elderB": [
+        "Hemomania",
+        "Accelerated Prey Drive",
+        "Congenital Hypoalgesia",
+        "None"
+      ]
+    },
+    "parkedAt": "2026-10-24T13:55:37.973Z"
+  }
+}
