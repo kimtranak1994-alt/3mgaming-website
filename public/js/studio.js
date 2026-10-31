@@ -12,6 +12,7 @@ const Studio = {
   variation: 0,
   theme: 0,
   growth: 1.0,
+  isExclusiveHacBang: true,
   designName: '👑 Màu Độc Quyền - Hắc Băng Lôi Điện',
 
   // Steam Auth & Active Dino State
@@ -31,8 +32,8 @@ const Studio = {
   cachedTextures: {},
 
   // Chamber settings
-  chamberPreset: 'amber',
-  exposure: 1.15,
+  chamberPreset: 'blue',
+  exposure: 1.18,
   autoRotate: false,
   rotSpeed: 0.8,
   cleanView: false,
@@ -78,15 +79,15 @@ const Studio = {
 
   // Color layers (Mặc định: Màu Độc Quyền - Hắc Băng Lôi Điện)
   palette: {
-    body: '#080B12',
+    body: '#06080E',
     markings: '#00D9FF',
-    flank: '#101C2E',
+    flank: '#06080E',
     underbelly: '#EEF8FF',
     detail: '#6889A6',
-    male_display: '#00E5FF',
+    male_display: '#00D9FF',
     eyes: '#00FFFF',
     teeth: '#EEF8FF',
-    mouth: '#103A52',
+    mouth: '#0A2233',
     claws: '#00D9FF'
   },
 
@@ -446,25 +447,166 @@ const Studio = {
 
   applyChamberPreset(name, customHex = null) {
     this.chamberPreset = name;
-    let colorSet = this.chamberColors[name] || this.chamberColors.amber;
+    let colorSet = this.chamberColors[name] || this.chamberColors.blue;
     if (name === 'custom' && customHex) {
       colorSet = { bg: '#080a10', light: customHex, ground: '#151922' };
     }
 
     if (this.scene) {
       this.scene.background = new THREE.Color(colorSet.bg);
-      this.scene.fog = new THREE.FogExp2(colorSet.bg, 0.05);
+      this.scene.fog = new THREE.FogExp2(colorSet.bg, 0.045);
     }
     if (this.dirLight) {
-      this.dirLight.color.set(colorSet.light);
+      this.dirLight.color.set('#ffffff');
     }
     if (this.ambientLight) {
-      this.ambientLight.color.set(colorSet.light);
+      this.ambientLight.color.set('#f4f8ff');
+    }
+    if (this.fillLight) {
+      this.fillLight.color.set(colorSet.light);
     }
 
     document.querySelectorAll('.chamber-swatch').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.chamber === name);
     });
+  },
+
+  buildSmoothUv3DMap(model) {
+    const SW = 512, SH = 512;
+    const bufX = new Float32Array(SW * SH);
+    const bufY = new Float32Array(SW * SH);
+    const bufZ = new Float32Array(SW * SH);
+    const bufV = new Uint8Array(SW * SH);
+    const NBINS = 120;
+    const yTopBins = new Float32Array(NBINS);
+
+    let maxX = 0.001;
+    let minY = Infinity, maxY = -Infinity;
+    let minZ = Infinity, maxZ = -Infinity;
+
+    const meshes = [];
+    model.traverse((child) => {
+      if (child instanceof THREE.Mesh && child.geometry) {
+        const matName = `${child.name || ''} ${(child.material && child.material.name) || ''}`.toLowerCase();
+        if (/eye|iris|pupil/.test(matName)) return;
+        const posAttr = child.geometry.attributes.position;
+        const uvAttr = child.geometry.attributes.uv;
+        if (!posAttr || !uvAttr) return;
+        meshes.push(child.geometry);
+        const count = posAttr.count;
+        for (let i = 0; i < count; i++) {
+          const x = Math.abs(posAttr.getX(i));
+          const y = posAttr.getY(i);
+          const z = posAttr.getZ(i);
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+          if (z < minZ) minZ = z;
+          if (z > maxZ) maxZ = z;
+        }
+      }
+    });
+
+    if (meshes.length === 0 || maxY <= minY || maxZ <= minZ) return null;
+    const spanY = Math.max(0.001, maxY - minY);
+    const spanZ = Math.max(0.001, maxZ - minZ);
+
+    for (const geom of meshes) {
+      const posAttr = geom.attributes.position;
+      const count = posAttr.count;
+      for (let i = 0; i < count; i++) {
+        const yn = (posAttr.getY(i) - minY) / spanY;
+        const zn = (posAttr.getZ(i) - minZ) / spanZ;
+        const b = Math.min(NBINS - 1, Math.max(0, Math.floor(zn * NBINS)));
+        if (yn > yTopBins[b]) yTopBins[b] = yn;
+      }
+    }
+
+    let yTopSmooth = new Float32Array(yTopBins);
+    for (let pass = 0; pass < 2; pass++) {
+      const next = new Float32Array(NBINS);
+      for (let i = 0; i < NBINS; i++) {
+        const prev = yTopSmooth[Math.max(0, i - 1)];
+        const cur = yTopSmooth[i];
+        const nxt = yTopSmooth[Math.min(NBINS - 1, i + 1)];
+        next[i] = (prev + cur * 2 + nxt) / 4.0;
+      }
+      yTopSmooth = next;
+    }
+
+    for (const geom of meshes) {
+      const posAttr = geom.attributes.position;
+      const uvAttr = geom.attributes.uv;
+      const idxAttr = geom.index;
+      const triCount = idxAttr ? idxAttr.count : posAttr.count;
+
+      for (let i = 0; i < triCount; i += 3) {
+        const i0 = idxAttr ? idxAttr.getX(i) : i;
+        const i1 = idxAttr ? idxAttr.getX(i + 1) : i + 1;
+        const i2 = idxAttr ? idxAttr.getX(i + 2) : i + 2;
+
+        const u0 = ((uvAttr.getX(i0) % 1) + 1) % 1;
+        const v0 = ((uvAttr.getY(i0) % 1) + 1) % 1;
+        const u1 = ((uvAttr.getX(i1) % 1) + 1) % 1;
+        const v1 = ((uvAttr.getY(i1) % 1) + 1) % 1;
+        const u2 = ((uvAttr.getX(i2) % 1) + 1) % 1;
+        const v2 = ((uvAttr.getY(i2) % 1) + 1) % 1;
+
+        if (Math.max(u0, u1, u2) - Math.min(u0, u1, u2) > 0.35 ||
+            Math.max(v0, v1, v2) - Math.min(v0, v1, v2) > 0.35) {
+          continue;
+        }
+
+        const x0 = u0 * SW, y0 = v0 * SH;
+        const x1 = u1 * SW, y1 = v1 * SH;
+        const x2 = u2 * SW, y2 = v2 * SH;
+        const denom = (y1 - y2) * (x0 - x2) + (x2 - x1) * (y0 - y2);
+        if (Math.abs(denom) < 1e-6) continue;
+        const invD = 1.0 / denom;
+
+        const xn0 = Math.abs(posAttr.getX(i0)) / maxX;
+        const yn0 = (posAttr.getY(i0) - minY) / spanY;
+        const zn0 = (posAttr.getZ(i0) - minZ) / spanZ;
+
+        const xn1 = Math.abs(posAttr.getX(i1)) / maxX;
+        const yn1 = (posAttr.getY(i1) - minY) / spanY;
+        const zn1 = (posAttr.getZ(i1) - minZ) / spanZ;
+
+        const xn2 = Math.abs(posAttr.getX(i2)) / maxX;
+        const yn2 = (posAttr.getY(i2) - minY) / spanY;
+        const zn2 = (posAttr.getZ(i2) - minZ) / spanZ;
+
+        const minPx = Math.max(0, Math.floor(Math.min(x0, x1, x2)) - 1);
+        const maxPx = Math.min(SW - 1, Math.ceil(Math.max(x0, x1, x2)) + 1);
+        const minPy = Math.max(0, Math.floor(Math.min(y0, y1, y2)) - 1);
+        const maxPy = Math.min(SH - 1, Math.ceil(Math.max(y0, y1, y2)) + 1);
+
+        for (let py = minPy; py <= maxPy; py++) {
+          const pyc = py + 0.5;
+          const rowOff = py * SW;
+          for (let px = minPx; px <= maxPx; px++) {
+            const pxc = px + 0.5;
+            const w0 = ((y1 - y2) * (pxc - x2) + (x2 - x1) * (pyc - y2)) * invD;
+            const w1 = ((y2 - y0) * (pxc - x2) + (x0 - x2) * (pyc - y2)) * invD;
+            const w2 = 1.0 - w0 - w1;
+            if (w0 >= -0.08 && w1 >= -0.08 && w2 >= -0.08) {
+              let cw0 = Math.max(0, w0), cw1 = Math.max(0, w1), cw2 = Math.max(0, w2);
+              const s = cw0 + cw1 + cw2;
+              if (s > 0) {
+                cw0 /= s; cw1 /= s; cw2 /= s;
+                const idx = rowOff + px;
+                bufX[idx] = cw0 * xn0 + cw1 * xn1 + cw2 * xn2;
+                bufY[idx] = cw0 * yn0 + cw1 * yn1 + cw2 * yn2;
+                bufZ[idx] = cw0 * zn0 + cw1 * zn1 + cw2 * zn2;
+                bufV[idx] = 1;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return { SW, SH, bufX, bufY, bufZ, bufV, yTopSmooth, NBINS };
   },
 
   async loadSpecies(speciesName) {
@@ -510,13 +652,15 @@ const Studio = {
         this.dinoModel = null;
       }
 
+      const model = gltf.scene;
+      const uv3d = this.buildSmoothUv3DMap(model);
+
       this.cachedTextures[speciesName] = {
         diffuse: diffImg,
         pattern: patImg,
-        tintMask: maskImg
+        tintMask: maskImg,
+        uv3d: uv3d
       };
-
-      const model = gltf.scene;
 
       model.traverse((child) => {
         if (child instanceof THREE.Mesh) {
@@ -524,8 +668,8 @@ const Studio = {
           const newMats = origMats.map(origMat => {
             const mat = new THREE.MeshStandardMaterial({
               color: '#ffffff',
-              roughness: 0.95,
-              metalness: 0.05,
+              roughness: 0.62,
+              metalness: 0.08,
               transparent: origMat && 'transparent' in origMat && !!origMat.transparent,
               opacity: origMat && 'opacity' in origMat ? Number(origMat.opacity) : 1,
               side: THREE.FrontSide
@@ -567,19 +711,20 @@ const Studio = {
   },
 
   applyExclusivePreset() {
+    this.isExclusiveHacBang = true;
     this.pattern = 1;
     this.variation = 0;
     this.theme = 0;
     this.palette = {
-      body: '#080B12',
+      body: '#06080E',
       markings: '#00D9FF',
       underbelly: '#EEF8FF',
-      flank: '#101C2E',
+      flank: '#06080E',
       detail: '#6889A6',
-      male_display: '#00E5FF',
+      male_display: '#00D9FF',
       eyes: '#00FFFF',
       teeth: '#EEF8FF',
-      mouth: '#103A52',
+      mouth: '#0A2233',
       claws: '#00D9FF'
     };
     const nameInput = document.getElementById('design-name');
@@ -588,7 +733,7 @@ const Studio = {
     this.renderChannels();
     this.updateMaterialTexture();
     this.updateSkinCodeDisplay();
-    this.showToast(`👑 Đã nạp Màu Độc Quyền (Hắc Băng Lôi Điện) lên ${this.species}! Bạn có thể đổi sang bất kỳ loài Dino nào để xem 3D.`, 'success');
+    this.showToast(`👑 Đã nạp Màu Độc Quyền (Hắc Băng Lôi Điện) chuẩn 100% lên ${this.species}!`, 'success');
   },
 
   async applyExclusivePresetInGame() {
@@ -608,6 +753,14 @@ const Studio = {
     };
     const lerp = (a, b, t) => Math.round(a * (1 - t) + b * t);
     const clamp01 = (v) => Math.max(0, Math.min(1, v));
+    const distToSeg = (px, py, x1, y1, x2, y2) => {
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const l2 = dx * dx + dy * dy;
+      if (l2 === 0) return [Math.hypot(px - x1, py - y1), 0];
+      const t = Math.max(0, Math.min(1, ((px - x1) * dx + (py - y1) * dy) / l2));
+      return [Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy)), t];
+    };
 
     const canvas = document.createElement('canvas');
     const width = 1024;
@@ -634,65 +787,297 @@ const Studio = {
       maskCtx.drawImage(tex.tintMask, 0, 0, width, height);
       const maskData = maskCtx.getImageData(0, 0, width, height);
 
-      const bodyRgb = hexToRgb(this.palette.body || '#080B12');
+      const bodyRgb = hexToRgb(this.palette.body || '#06080E');
       const markingsRgb = hexToRgb(this.palette.markings || '#00D9FF');
-      const flankRgb = hexToRgb(this.palette.flank || '#101C2E');
+      const flankRgb = hexToRgb(this.palette.flank || '#06080E');
       const underbellyRgb = hexToRgb(this.palette.underbelly || '#EEF8FF');
       const detailRgb = hexToRgb(this.palette.detail || '#6889A6');
-      const displayRgb = hexToRgb(this.palette.male_display || this.palette.display || '#00E5FF');
+      const displayRgb = hexToRgb(this.palette.male_display || this.palette.display || '#00D9FF');
       const isDisplayBlack = displayRgb.r === 0 && displayRgb.g === 0 && displayRgb.b === 0;
+
+      const isHacBang = Boolean(
+        this.isExclusiveHacBang ||
+        (bodyRgb.r <= 20 && bodyRgb.g <= 25 && bodyRgb.b <= 38 && markingsRgb.b >= 200 && markingsRgb.g >= 170)
+      );
 
       const data = outData.data;
       const pData = patData.data;
       const mData = maskData.data;
-      const len = data.length;
+      const uv3d = tex.uv3d;
 
-      for (let i = 0; i < len; i += 4) {
-        if (data[i + 3] === 0) continue;
-        const t = mData[i] / 255.0;
-        const r = mData[i + 1] / 255.0;
-        const n = mData[i + 2] / 255.0;
-        const patVal = (pData[i] + pData[i + 1] + pData[i + 2]) / 765.0;
+      if (isHacBang && uv3d) {
+        const { SW, SH, bufX, bufY, bufZ, bufV, yTopSmooth, NBINS } = uv3d;
 
-        const baseR = data[i];
-        const baseG = data[i + 1];
-        const baseB = data[i + 2];
+        const bolts = [
+          [0.67, 0.35, 0.60, 0.53, 0.015, 1.05],
+          [0.60, 0.53, 0.49, 0.66, 0.014, 1.02],
+          [0.63, 0.42, 0.56, 0.55, 0.011, 0.94],
+          [0.56, 0.55, 0.47, 0.62, 0.009, 0.88],
+          [0.58, 0.58, 0.53, 0.66, 0.009, 0.90],
+          [0.71, 0.59, 0.72, 0.42, 0.013, 1.00],
+          [0.72, 0.42, 0.68, 0.30, 0.012, 0.96],
+          [0.75, 0.55, 0.76, 0.38, 0.011, 0.94],
+          [0.79, 0.49, 0.80, 0.36, 0.010, 0.90],
+          [0.66, 0.33, 0.63, 0.19, 0.012, 0.98],
+          [0.63, 0.19, 0.66, 0.07, 0.010, 0.94],
+          [0.64, 0.22, 0.68, 0.12, 0.008, 0.86],
+          [0.36, 0.46, 0.40, 0.32, 0.013, 0.98],
+          [0.40, 0.32, 0.43, 0.18, 0.011, 0.95],
+          [0.43, 0.18, 0.41, 0.07, 0.010, 0.92],
+          [0.41, 0.27, 0.45, 0.16, 0.008, 0.85],
+          [0.35, 0.46, 0.23, 0.41, 0.012, 0.96],
+          [0.23, 0.41, 0.10, 0.37, 0.011, 0.94],
+          [0.26, 0.43, 0.16, 0.36, 0.008, 0.86]
+        ];
 
-        const u = (1 - t) * r * n;
-        const m = t * (1 - r) * n * patVal;
-        const j = (1 - t) * (1 - r) * n;
-        const w = (1 - t) * r * (1 - n);
-        const N = t * r * (1 - n) * patVal;
-        const C = t * (1 - r) * (1 - n) * Math.max(0.35, patVal);
-        const S = u + m + j + w + N + C;
-        const L = S > 0 ? S : 1;
+        const flameTongues = [
+          [0.59, 0.31, 0.52, 0.53, 0.036],
+          [0.56, 0.29, 0.47, 0.51, 0.044],
+          [0.53, 0.28, 0.44, 0.45, 0.042],
+          [0.49, 0.28, 0.42, 0.39, 0.038],
+          [0.60, 0.33, 0.55, 0.49, 0.028]
+        ];
 
-        const M = (bodyRgb.r * u + markingsRgb.r * m + flankRgb.r * j + underbellyRgb.r * w + detailRgb.r * N + displayRgb.r * C) / L;
-        const E = (bodyRgb.g * u + markingsRgb.g * m + flankRgb.g * j + underbellyRgb.g * w + detailRgb.g * N + displayRgb.g * C) / L;
-        const F = (bodyRgb.b * u + markingsRgb.b * m + flankRgb.b * j + underbellyRgb.b * w + detailRgb.b * N + displayRgb.b * C) / L;
+        const frillRays = [
+          [0.00, 0.55, 0.00, 0.79, 0.040, 1.00],
+          [0.03, 0.57, 0.15, 0.73, 0.026, 0.95],
+          [0.09, 0.64, 0.22, 0.71, 0.018, 0.85],
+          [0.05, 0.56, 0.29, 0.70, 0.028, 0.95],
+          [0.16, 0.62, 0.35, 0.66, 0.018, 0.85],
+          [0.06, 0.55, 0.42, 0.65, 0.026, 0.92],
+          [0.22, 0.59, 0.46, 0.61, 0.018, 0.82],
+          [0.07, 0.54, 0.48, 0.58, 0.024, 0.90]
+        ];
 
-        const z = 0.28 + (0.299 * baseR + 0.587 * baseG + 0.114 * baseB) / 255 * 0.9;
-        const I = 255 * clamp01(M / 255 * z);
-        const T = 255 * clamp01(E / 255 * z);
-        const A = 255 * clamp01(F / 255 * z);
-        const _ = clamp01(1.35 * S);
-        const D = clamp01(_ + 0.45 * (1 - Math.max(M, E, F) / 255));
+        for (let y = 0; y < height; y++) {
+          const sy = Math.min(SH - 1, (y * SH) >> 10);
+          const rowOff = sy * SW;
+          for (let x = 0; x < width; x++) {
+            const i = (y * width + x) << 2;
+            if (data[i + 3] === 0) continue;
 
-        let P = lerp(baseR, I, D);
-        let B = lerp(baseG, T, D);
-        let U = lerp(baseB, A, D);
+            const dr = data[i];
+            const dg = data[i + 1];
+            const db = data[i + 2];
+            const t = mData[i] / 255.0;
 
-        if (isDisplayBlack && C > 0.01) {
-          const e = clamp01(2.6 * C + 0.22 * patVal);
-          P = lerp(P, 0, e);
-          B = lerp(B, 0, e);
-          U = lerp(U, 0, e);
-          if (C > 0.32) { P = 0; B = 0; U = 0; }
+            const lum = (0.299 * dr + 0.587 * dg + 0.114 * db) / 255.0;
+            const sc = clamp01((lum - 0.16) / 0.70);
+            const scPow = sc * sc * (3.0 - 2.0 * sc);
+            const spec = Math.pow(Math.max(0.0, (lum - 0.50) / 0.50), 1.80);
+
+            let outR = (bodyRgb.r * 0.35) + scPow * 16.0 + spec * 36.0;
+            let outG = (bodyRgb.g * 0.35) + scPow * 22.0 + spec * 48.0;
+            let outB = (bodyRgb.b * 0.42) + scPow * 32.0 + spec * 66.0;
+
+            const sx = Math.min(SW - 1, (x * SW) >> 10);
+            const idx = rowOff + sx;
+            if (bufV[idx]) {
+              const xn = bufX[idx];
+              const yn = bufY[idx];
+              const zn = bufZ[idx];
+
+              const n1 = Math.sin(zn * 125.0 + yn * 85.0) * 0.5 + Math.cos(zn * 230.0 - yn * 175.0) * 0.35 + (lum - 0.5) * 0.25;
+              const jZn = zn + n1 * 0.0075;
+              const jYn = yn + Math.cos(zn * 155.0 + yn * 105.0) * 0.0065;
+
+              // A. Hàng gai sống lưng & đuôi (Dorsal Spines)
+              const zBin = Math.min(NBINS - 1, Math.max(0, Math.floor(zn * NBINS)));
+              const yTop = yTopSmooth[zBin];
+              if (zn >= 0.05 && zn <= 0.65 && yn > 0.35 && xn < 0.075) {
+                const distTop = Math.max(0.0, yTop - yn);
+                const spineBand = zn > 0.25 ? 0.026 : 0.019;
+                if (distTop < spineBand) {
+                  const slantZ = zn + distTop * 0.55;
+                  const phase = (slantZ * 28.0) % 1.0;
+                  const toothH = clamp01(0.84 - Math.abs(phase - 0.42) * 2.0);
+                  if (distTop < spineBand * toothH) {
+                    let spineT = 1.0 - (distTop / Math.max(0.001, spineBand * toothH));
+                    const xFade = clamp01((0.075 - xn) / 0.045);
+                    spineT *= xFade;
+                    if (spineT > 0.10) {
+                      let sr, sg, sb;
+                      if (spineT < 0.52) {
+                        sr = markingsRgb.r; sg = markingsRgb.g; sb = markingsRgb.b;
+                      } else {
+                        const tw = (spineT - 0.52) / 0.48;
+                        sr = markingsRgb.r * (1.0 - tw) + underbellyRgb.r * tw;
+                        sg = markingsRgb.g * (1.0 - tw) + underbellyRgb.g * tw;
+                        sb = markingsRgb.b * (1.0 - tw) + underbellyRgb.b * tw;
+                      }
+                      const scaleM = 0.65 + 0.50 * sc;
+                      const blend = Math.min(1.0, spineT * 1.6);
+                      outR = outR * (1.0 - blend) + sr * scaleM * blend;
+                      outG = outG * (1.0 - blend) + sg * scaleM * blend;
+                      outB = outB * (1.0 - blend) + sb * scaleM * blend;
+                    }
+                  }
+                }
+              }
+
+              // B. Vân tia sét tỏa ra trong mào (Frill Inner Radial Veins)
+              if (zn >= 0.71 && zn <= 0.83 && yn >= 0.52 && yn <= 0.80 && t > 0.45) {
+                const jXn = xn + Math.sin(yn * 140.0 + xn * 90.0) * 0.010;
+                let bestFrill = 0.0;
+                for (let k = 0; k < frillRays.length; k++) {
+                  const [fx1, fy1, fx2, fy2, fw, fint] = frillRays[k];
+                  const [dF, tF] = distToSeg(jXn, jYn, fx1, fy1, fx2, fy2);
+                  const curFw = fw * (1.0 - 0.55 * tF);
+                  if (dF < curFw) {
+                    const vf = (1.0 - dF / curFw) * fint;
+                    if (vf > bestFrill) bestFrill = vf;
+                  }
+                }
+                if (bestFrill > 0.10) {
+                  let vr, vg, vb;
+                  if (bestFrill < 0.50) {
+                    vr = markingsRgb.r; vg = markingsRgb.g; vb = markingsRgb.b;
+                  } else if (bestFrill < 0.72) {
+                    vr = detailRgb.r; vg = Math.min(255, detailRgb.g + 45); vb = Math.min(255, detailRgb.b + 55);
+                  } else {
+                    vr = underbellyRgb.r; vg = underbellyRgb.g; vb = underbellyRgb.b;
+                  }
+                  const scaleM = 0.58 + 0.58 * sc;
+                  const bf = Math.min(1.0, (bestFrill - 0.08) * 3.2);
+                  outR = outR * (1.0 - bf) + vr * scaleM * bf;
+                  outG = outG * (1.0 - bf) + vg * scaleM * bf;
+                  outB = outB * (1.0 - bf) + vb * scaleM * bf;
+                }
+              }
+
+              // C. Vùng lửa băng bên sườn dưới / bụng (Lower Ribcage Flame Patch)
+              if (zn >= 0.40 && zn <= 0.62 && yn >= 0.25 && yn <= 0.55) {
+                let flameVal = 0.0;
+                const dzB = (jZn - 0.515) / 0.092;
+                const dyB = (jYn - 0.310) / 0.072;
+                const baseD = Math.hypot(dzB, dyB);
+                if (baseD < 1.0) {
+                  flameVal = (1.0 - baseD) * 0.98;
+                }
+                for (let k = 0; k < flameTongues.length; k++) {
+                  const [fz1, fy1, fz2, fy2, fw] = flameTongues[k];
+                  const tEst = clamp01((jYn - fy1) / Math.max(0.01, fy2 - fy1));
+                  const curveZ = Math.sin(tEst * Math.PI) * 0.014;
+                  const [dSeg, tSeg] = distToSeg(jZn + curveZ, jYn, fz1, fy1, fz2, fy2);
+                  const curW = fw * (1.0 - 0.72 * tSeg);
+                  if (dSeg < curW) {
+                    const vf = (1.0 - dSeg / curW) * (1.0 - 0.08 * tSeg);
+                    if (vf > flameVal) flameVal = vf;
+                  }
+                }
+                if (flameVal > 0.12) {
+                  let fr, fg, fb;
+                  if (flameVal < 0.42) {
+                    fr = markingsRgb.r; fg = markingsRgb.g; fb = markingsRgb.b;
+                  } else if (flameVal < 0.66) {
+                    fr = detailRgb.r; fg = Math.min(255, detailRgb.g + 28); fb = Math.min(255, detailRgb.b + 38);
+                  } else {
+                    fr = underbellyRgb.r; fg = underbellyRgb.g; fb = underbellyRgb.b;
+                  }
+                  const scaleMod = 0.52 + 0.64 * sc;
+                  const bFl = Math.min(1.0, (flameVal - 0.10) * 3.2);
+                  outR = outR * (1.0 - bFl) + fr * scaleMod * bFl;
+                  outG = outG * (1.0 - bFl) + fg * scaleMod * bFl;
+                  outB = outB * (1.0 - bFl) + fb * scaleMod * bFl;
+                }
+              }
+
+              // D. Tia sét Trắng băng & Xanh ngọc xé dọc vai, cổ, chân, đuôi (Diagonal Lightning Bolts)
+              let bestBolt = 0.0;
+              for (let k = 0; k < bolts.length; k++) {
+                const [bz1, by1, bz2, by2, bw, bint] = bolts[k];
+                const [dB, tB] = distToSeg(jZn, jYn, bz1, by1, bz2, by2);
+                const endTaper = Math.min(1.0, Math.min(tB * 4.5, (1.0 - tB) * 4.0) + 0.20);
+                const effW = bw * endTaper;
+                if (dB < effW) {
+                  const bVal = (1.0 - dB / effW) * bint;
+                  if (bVal > bestBolt) bestBolt = bVal;
+                }
+              }
+              if (bestBolt > 0.10) {
+                let lr, lg, lb;
+                if (bestBolt < 0.48) {
+                  lr = markingsRgb.r; lg = markingsRgb.g; lb = markingsRgb.b;
+                } else if (bestBolt < 0.66) {
+                  lr = detailRgb.r; lg = Math.min(255, detailRgb.g + 45); lb = Math.min(255, detailRgb.b + 55);
+                } else {
+                  lr = underbellyRgb.r; lg = underbellyRgb.g; lb = underbellyRgb.b;
+                }
+                const scaleMod = 0.58 + 0.58 * sc;
+                const bLt = Math.min(1.0, (bestBolt - 0.08) * 3.5);
+                outR = outR * (1.0 - bLt) + lr * scaleMod * bLt;
+                outG = outG * (1.0 - bLt) + lg * scaleMod * bLt;
+                outB = outB * (1.0 - bLt) + lb * scaleMod * bLt;
+              }
+
+              // E. Đầu móng chân Xanh ngọc & Trắng băng (Claw Tips Only)
+              if (yn < 0.024) {
+                const clawT = clamp01((0.024 - yn) / 0.024);
+                const cr = (markingsRgb.r * (1.0 - clawT) + underbellyRgb.r * clawT) * (0.65 + 0.5 * sc);
+                const cg = (markingsRgb.g * (1.0 - clawT) + underbellyRgb.g * clawT) * (0.65 + 0.5 * sc);
+                const cb = (markingsRgb.b * (1.0 - clawT) + underbellyRgb.b * clawT) * (0.65 + 0.5 * sc);
+                const bCl = Math.min(1.0, clawT * 1.8);
+                outR = outR * (1.0 - bCl) + cr * bCl;
+                outG = outG * (1.0 - bCl) + cg * bCl;
+                outB = outB * (1.0 - bCl) + cb * bCl;
+              }
+            }
+
+            data[i] = Math.min(255, Math.max(0, Math.round(outR)));
+            data[i + 1] = Math.min(255, Math.max(0, Math.round(outG)));
+            data[i + 2] = Math.min(255, Math.max(0, Math.round(outB)));
+          }
         }
+      } else {
+        const len = data.length;
+        for (let i = 0; i < len; i += 4) {
+          if (data[i + 3] === 0) continue;
+          const t = mData[i] / 255.0;
+          const r = mData[i + 1] / 255.0;
+          const n = mData[i + 2] / 255.0;
+          const patVal = (pData[i] + pData[i + 1] + pData[i + 2]) / 765.0;
 
-        data[i] = P;
-        data[i + 1] = B;
-        data[i + 2] = U;
+          const baseR = data[i];
+          const baseG = data[i + 1];
+          const baseB = data[i + 2];
+
+          // 101 Magenta (m) = Main Upper Body/Back/Head; 011 Cyan (u) = Lower Ribcage Markings
+          const m = t * (1 - r) * n;
+          const u = (1 - t) * r * n * patVal;
+          const j = (1 - t) * (1 - r) * n;
+          const w = (1 - t) * r * (1 - n);
+          const N = t * r * (1 - n) * patVal;
+          const C = t * (1 - r) * (1 - n) * Math.max(0.35, patVal);
+          const S = u + m + j + w + N + C;
+          const L = S > 0 ? S : 1;
+
+          const M = (bodyRgb.r * m + markingsRgb.r * u + flankRgb.r * j + underbellyRgb.r * w + detailRgb.r * N + displayRgb.r * C) / L;
+          const E = (bodyRgb.g * m + markingsRgb.g * u + flankRgb.g * j + underbellyRgb.g * w + detailRgb.g * N + displayRgb.g * C) / L;
+          const F = (bodyRgb.b * m + markingsRgb.b * u + flankRgb.b * j + underbellyRgb.b * w + detailRgb.b * N + displayRgb.b * C) / L;
+
+          const z = 0.28 + (0.299 * baseR + 0.587 * baseG + 0.114 * baseB) / 255 * 0.9;
+          const I = 255 * clamp01(M / 255 * z);
+          const T = 255 * clamp01(E / 255 * z);
+          const A = 255 * clamp01(F / 255 * z);
+          const _ = clamp01(1.35 * S);
+          const D = clamp01(_ + 0.45 * (1 - Math.max(M, E, F) / 255));
+
+          let P = lerp(baseR, I, D);
+          let B = lerp(baseG, T, D);
+          let U = lerp(baseB, A, D);
+
+          if (isDisplayBlack && C > 0.01) {
+            const e = clamp01(2.6 * C + 0.22 * patVal);
+            P = lerp(P, 0, e);
+            B = lerp(B, 0, e);
+            U = lerp(U, 0, e);
+            if (C > 0.32) { P = 0; B = 0; U = 0; }
+          }
+
+          data[i] = P;
+          data[i + 1] = B;
+          data[i + 2] = U;
+        }
       }
       ctx.putImageData(outData, 0, 0);
     }
@@ -702,8 +1087,6 @@ const Studio = {
     newTex.colorSpace = THREE.SRGBColorSpace;
 
     const eyesColor = new THREE.Color(this.palette.eyes || '#00FFFF');
-    const displayColor = new THREE.Color(this.palette.male_display || this.palette.display || '#00E5FF');
-    const isDisplayBlack = displayColor.getHex() === 0;
     const defaultWhite = new THREE.Color('#ffffff');
 
     this.dinoModel.traverse((child) => {
@@ -721,11 +1104,6 @@ const Studio = {
             mat.emissive.copy(eyesColor);
             mat.emissiveIntensity = 0.45;
             mat.map = null;
-          } else if (/display|crest|horn|spike/.test(matName)) {
-            mat.color.copy(displayColor);
-            mat.map = isDisplayBlack ? null : newTex;
-            mat.emissive.copy(displayColor);
-            mat.emissiveIntensity = 0.15 * (!isDisplayBlack ? 1 : 0);
           }
           mat.needsUpdate = true;
         }
@@ -799,6 +1177,7 @@ const Studio = {
   },
 
   randomise() {
+    this.isExclusiveHacBang = false;
     const naturalTones = [
       '#2b3a2a', '#44533c', '#5e6f53', '#7a896d', '#8c9c7e',
       '#403020', '#5c4530', '#7b5e43', '#9c7959', '#bfa07d',

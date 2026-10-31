@@ -15,27 +15,27 @@
     "imageUrl": "/assets/images/skin_hac_bang_doc_quyen.jpg",
     "image": "/assets/images/skin_hac_bang_doc_quyen.jpg",
     "colors": [
-      "#080B12",
+      "#06080E",
       "#00D9FF",
       "#EEF8FF",
       "#6889A6"
     ],
     "palette": {
-      "body": "#080B12",
+      "body": "#06080E",
       "markings": "#00D9FF",
       "underbelly": "#EEF8FF",
-      "flank": "#101C2E",
+      "flank": "#06080E",
       "detail": "#6889A6",
       "detail1": "#6889A6",
-      "display": "#00E5FF",
-      "male_display": "#00E5FF",
+      "display": "#00D9FF",
+      "male_display": "#00D9FF",
       "eyes": "#00FFFF",
       "claws": "#00D9FF",
       "teeth": "#EEF8FF",
-      "mouth": "#103A52"
+      "mouth": "#0A2233"
     },
-    "code": "Diabloceratops100EEF8FFFF080B12FF101C2EFF00D9FFFF00E5FFFF00FFFFFF",
-    "skinCode": "Diabloceratops100EEF8FFFF080B12FF101C2EFF00D9FFFF00E5FFFF00FFFFFF",
+    "code": "Diabloceratops10006080EFF00D9FFFF06080EFF06080EFF00D9FFFF00FFFFFF",
+    "skinCode": "Diabloceratops10006080EFF00D9FFFF06080EFF06080EFF00D9FFFF00FFFFFF",
     "description": "Phiên bản giới hạn: Độc đáo • Cá tính • Khác biệt. Phối màu Đen Huyền (nền chủ đạo), Xanh Ngọc (tạo điểm nhấn), Trắng Băng (tăng độ sắc nét) và Xám Xanh (tạo chiều sâu). Hỗ trợ áp dụng tự động cho TẤT CẢ các loài khủng long trong server!",
     "created_at": "2026-10-31 14:15:00"
   },
