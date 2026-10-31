@@ -10,23 +10,23 @@
   "auto_reward_enabled": true,
   "ended_at": null,
   "is_settled": false,
-  "total_ai_kills": 61,
+  "total_ai_kills": 75,
   "hunters": {
     "76561199319764814": {
       "steam_id": "76561199319764814",
       "name": "Máy Đẻ",
-      "species": "Spinosaurus",
-      "kills": 20,
+      "species": "Triceratops",
+      "kills": 24,
       "prey_breakdown": {
-        "Deer": 7,
+        "Deer": 9,
         "Psittacosaurus_Plains": 5,
-        "Psittacosaurus_Coastal": 1,
+        "Psittacosaurus_Coastal": 2,
         "Crab": 1,
-        "Dryosaurus": 3,
+        "Dryosaurus": 4,
         "Seaturtle": 1,
         "Boar": 2
       },
-      "last_kill_at": "2026-10-31T04:39:16.361Z",
+      "last_kill_at": "2026-10-31T06:30:26.072Z",
       "last_prey": "Deer"
     },
     "76561198435078947": {
@@ -85,12 +85,14 @@
       "steam_id": "76561199483156684",
       "name": "Thich Du Thư",
       "species": "Tyrannosaurus",
-      "kills": 1,
+      "kills": 3,
       "prey_breakdown": {
-        "Chicken": 1
+        "Chicken": 1,
+        "Crab": 1,
+        "Deer": 1
       },
-      "last_kill_at": "2026-10-30T17:20:04.011Z",
-      "last_prey": "Chicken"
+      "last_kill_at": "2026-10-31T06:11:21.879Z",
+      "last_prey": "Deer"
     },
     "76561198628218497": {
       "steam_id": "76561198628218497",
@@ -169,12 +171,38 @@
       "steam_id": "76561198737423924",
       "name": "Zyrex",
       "species": "Carnotaurus",
-      "kills": 1,
+      "kills": 5,
       "prey_breakdown": {
-        "Deer": 1
+        "Deer": 2,
+        "Boar": 2,
+        "Dryosaurus": 1
       },
-      "last_kill_at": "2026-10-31T04:52:35.876Z",
+      "last_kill_at": "2026-10-31T05:07:21.209Z",
       "last_prey": "Deer"
+    },
+    "76561198975489051": {
+      "steam_id": "76561198975489051",
+      "name": "Nứng Nừng Nưng",
+      "species": "Carnotaurus",
+      "kills": 2,
+      "prey_breakdown": {
+        "Bullfrog": 1,
+        "Boar": 1
+      },
+      "last_kill_at": "2026-10-31T05:48:31.276Z",
+      "last_prey": "Boar"
+    },
+    "76561199580968218": {
+      "steam_id": "76561199580968218",
+      "name": "LôgLồnDíhRăg",
+      "species": "Tyrannosaurus",
+      "kills": 2,
+      "prey_breakdown": {
+        "Dryosaurus": 1,
+        "Seaturtle": 1
+      },
+      "last_kill_at": "2026-10-31T06:13:34.172Z",
+      "last_prey": "Seaturtle"
     }
   },
   "leaderboard": [
@@ -182,18 +210,18 @@
       "rank": 1,
       "steam_id": "76561199319764814",
       "name": "Máy Đẻ",
-      "species": "Spinosaurus",
-      "kills": 20,
+      "species": "Triceratops",
+      "kills": 24,
       "prey_breakdown": {
-        "Deer": 7,
+        "Deer": 9,
         "Psittacosaurus_Plains": 5,
-        "Psittacosaurus_Coastal": 1,
+        "Psittacosaurus_Coastal": 2,
         "Crab": 1,
-        "Dryosaurus": 3,
+        "Dryosaurus": 4,
         "Seaturtle": 1,
         "Boar": 2
       },
-      "last_kill_at": "2026-10-31T04:39:16.361Z",
+      "last_kill_at": "2026-10-31T06:30:26.072Z",
       "last_prey": "Deer",
       "is_top1": true,
       "reward_xu": 1000
@@ -253,6 +281,22 @@
     },
     {
       "rank": 5,
+      "steam_id": "76561198737423924",
+      "name": "Zyrex",
+      "species": "Carnotaurus",
+      "kills": 5,
+      "prey_breakdown": {
+        "Deer": 2,
+        "Boar": 2,
+        "Dryosaurus": 1
+      },
+      "last_kill_at": "2026-10-31T05:07:21.209Z",
+      "last_prey": "Deer",
+      "is_top1": false,
+      "reward_xu": 0
+    },
+    {
+      "rank": 6,
       "steam_id": "76561198762346878",
       "name": "ÂnRicot",
       "species": "Tyrannosaurus",
@@ -268,7 +312,23 @@
       "reward_xu": 0
     },
     {
-      "rank": 6,
+      "rank": 7,
+      "steam_id": "76561199483156684",
+      "name": "Thich Du Thư",
+      "species": "Tyrannosaurus",
+      "kills": 3,
+      "prey_breakdown": {
+        "Chicken": 1,
+        "Crab": 1,
+        "Deer": 1
+      },
+      "last_kill_at": "2026-10-31T06:11:21.879Z",
+      "last_prey": "Deer",
+      "is_top1": false,
+      "reward_xu": 0
+    },
+    {
+      "rank": 8,
       "steam_id": "76561198655873474",
       "name": "Phenyl Đẹp Trai",
       "species": "IndoRex",
@@ -283,7 +343,7 @@
       "reward_xu": 0
     },
     {
-      "rank": 7,
+      "rank": 9,
       "steam_id": "76561198624342405",
       "name": "bethom06",
       "species": "Austroraptor",
@@ -297,7 +357,7 @@
       "reward_xu": 0
     },
     {
-      "rank": 8,
+      "rank": 10,
       "steam_id": "76561199175571899",
       "name": "ông 6 hồ wesrell",
       "species": "Indominus",
@@ -312,7 +372,37 @@
       "reward_xu": 0
     },
     {
-      "rank": 9,
+      "rank": 11,
+      "steam_id": "76561198975489051",
+      "name": "Nứng Nừng Nưng",
+      "species": "Carnotaurus",
+      "kills": 2,
+      "prey_breakdown": {
+        "Bullfrog": 1,
+        "Boar": 1
+      },
+      "last_kill_at": "2026-10-31T05:48:31.276Z",
+      "last_prey": "Boar",
+      "is_top1": false,
+      "reward_xu": 0
+    },
+    {
+      "rank": 12,
+      "steam_id": "76561199580968218",
+      "name": "LôgLồnDíhRăg",
+      "species": "Tyrannosaurus",
+      "kills": 2,
+      "prey_breakdown": {
+        "Dryosaurus": 1,
+        "Seaturtle": 1
+      },
+      "last_kill_at": "2026-10-31T06:13:34.172Z",
+      "last_prey": "Seaturtle",
+      "is_top1": false,
+      "reward_xu": 0
+    },
+    {
+      "rank": 13,
       "steam_id": "76561198435078947",
       "name": "thienchung1712",
       "species": "Giganotosaurus",
@@ -326,7 +416,7 @@
       "reward_xu": 0
     },
     {
-      "rank": 10,
+      "rank": 14,
       "steam_id": "76561199035531243",
       "name": "Chú 5 Dần",
       "species": "Spinosaurus",
@@ -340,21 +430,7 @@
       "reward_xu": 0
     },
     {
-      "rank": 11,
-      "steam_id": "76561199483156684",
-      "name": "Thich Du Thư",
-      "species": "Tyrannosaurus",
-      "kills": 1,
-      "prey_breakdown": {
-        "Chicken": 1
-      },
-      "last_kill_at": "2026-10-30T17:20:04.011Z",
-      "last_prey": "Chicken",
-      "is_top1": false,
-      "reward_xu": 0
-    },
-    {
-      "rank": 12,
+      "rank": 15,
       "steam_id": "76561198628218497",
       "name": "Dark_Knight",
       "species": "Tyrannosaurus",
@@ -366,97 +442,98 @@
       "last_prey": "Seaturtle",
       "is_top1": false,
       "reward_xu": 0
-    },
-    {
-      "rank": 13,
-      "steam_id": "76561198737423924",
-      "name": "Zyrex",
-      "species": "Carnotaurus",
-      "kills": 1,
-      "prey_breakdown": {
-        "Deer": 1
-      },
-      "last_kill_at": "2026-10-31T04:52:35.876Z",
-      "last_prey": "Deer",
-      "is_top1": false,
-      "reward_xu": 0
     }
   ],
   "prey_summary": {
-    "Deer": 19,
+    "Deer": 23,
     "Psittacosaurus_Plains": 5,
-    "Psittacosaurus_Coastal": 1,
-    "Boar": 12,
-    "Crab": 2,
-    "Dryosaurus": 7,
-    "Seaturtle": 5,
+    "Psittacosaurus_Coastal": 2,
+    "Boar": 15,
+    "Crab": 3,
+    "Dryosaurus": 10,
+    "Seaturtle": 6,
     "Chicken": 3,
     "Compsognathus": 4,
     "Gallimimus": 1,
-    "Goat": 2
+    "Goat": 2,
+    "Bullfrog": 1
   },
   "processed_kill_ids": [
-    "6755748",
-    "6741189",
-    "6755597",
-    "6749264",
-    "6753180",
-    "6757814",
-    "6757702",
-    "6747390",
-    "6750735",
-    "6744878",
-    "6756878",
-    "6857122",
-    "6744558",
-    "6750084",
-    "6739193",
-    "6859912",
-    "6830056",
-    "6758188",
-    "6744638",
-    "6861552",
-    "6853171",
-    "6744946",
-    "6854760",
-    "6743583",
-    "6744732",
-    "6854585",
-    "6856227",
-    "6750576",
-    "6856770",
-    "6757591",
-    "6738855",
-    "6744919",
-    "6858844",
-    "6754300",
-    "6755380",
-    "6749349",
-    "6749187",
-    "6744651",
-    "6855858",
-    "6748808",
-    "6756656",
-    "6858979",
-    "6745003",
-    "6859987",
-    "6739673",
-    "6738886",
-    "6746908",
-    "6741102",
-    "6740885",
-    "6744930",
-    "6747381",
-    "6758651",
-    "6755536",
-    "6755338",
-    "6740420",
-    "6754377",
-    "6854885",
-    "6742397",
-    "6741691",
     "6753266",
-    "6741385"
+    "6747381",
+    "6868945",
+    "6859912",
+    "6744946",
+    "6749349",
+    "6744651",
+    "6739673",
+    "6749264",
+    "6755338",
+    "6755748",
+    "6758188",
+    "6744919",
+    "6742397",
+    "6870405",
+    "6854760",
+    "6873781",
+    "6747390",
+    "6758651",
+    "6740885",
+    "6741102",
+    "6743583",
+    "6738855",
+    "6861552",
+    "6741189",
+    "6744558",
+    "6875062",
+    "6741385",
+    "6862717",
+    "6862886",
+    "6744638",
+    "6757702",
+    "6855858",
+    "6859987",
+    "6740420",
+    "6744930",
+    "6750084",
+    "6754377",
+    "6741691",
+    "6858979",
+    "6862867",
+    "6830056",
+    "6748808",
+    "6744732",
+    "6856770",
+    "6749187",
+    "6754300",
+    "6854885",
+    "6868749",
+    "6757591",
+    "6756656",
+    "6869214",
+    "6755597",
+    "6853171",
+    "6755536",
+    "6739193",
+    "6862662",
+    "6856227",
+    "6874906",
+    "6746908",
+    "6750576",
+    "6744878",
+    "6750735",
+    "6875611",
+    "6745003",
+    "6879532",
+    "6857122",
+    "6756878",
+    "6854585",
+    "6753180",
+    "6870209",
+    "6755380",
+    "6858844",
+    "6757814",
+    "6738886"
   ],
   "reward_history": [
     {
@@ -513,18 +590,18 @@
     "rank": 1,
     "steam_id": "76561199319764814",
     "name": "Máy Đẻ",
-    "species": "Spinosaurus",
-    "kills": 20,
+    "species": "Triceratops",
+    "kills": 24,
     "prey_breakdown": {
-      "Deer": 7,
+      "Deer": 9,
       "Psittacosaurus_Plains": 5,
-      "Psittacosaurus_Coastal": 1,
+      "Psittacosaurus_Coastal": 2,
       "Crab": 1,
-      "Dryosaurus": 3,
+      "Dryosaurus": 4,
       "Seaturtle": 1,
       "Boar": 2
     },
-    "last_kill_at": "2026-10-31T04:39:16.361Z",
+    "last_kill_at": "2026-10-31T06:30:26.072Z",
     "last_prey": "Deer",
     "is_top1": true,
     "reward_xu": 1000

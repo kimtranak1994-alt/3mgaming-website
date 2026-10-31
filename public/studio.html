@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skin Studio 3D — 3MGAMING EVRIMA</title>
+  <link rel="icon" type="image/png" href="/assets/images/logo.png">
+  <link rel="stylesheet" href="/css/studio.css?v=1.0">
+</head>
+<body>
+
+  <!-- TOP HEADER -->
+  <header class="studio-header">
+    <div style="display: flex; align-items: center; gap: 14px;">
+      <a href="/" class="studio-brand">
+        <span class="brand-dot"></span>
+        <span>3MGAMING</span>
+      </a>
+      <span class="studio-badge">Skin Studio 3D</span>
+    </div>
+
+    <div class="studio-top-nav">
+      <a href="/" class="studio-nav-btn">
+        <span>🏠</span> <span>Trang chủ Web</span>
+      </a>
+      <a href="/#garage" class="studio-nav-btn">
+        <span>🦖</span> <span>Gara Dino</span>
+      </a>
+      <a href="/#skins" class="studio-nav-btn">
+        <span>🗃️</span> <span>Kho Skin</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- WORKSPACE -->
+  <main class="studio-workspace">
+
+    <!-- 3D VIEWPORT -->
+    <section class="studio-viewport">
+      <!-- 3D Canvas -->
+      <canvas id="stage-canvas" aria-label="3D Dinosaur Viewport"></canvas>
+
+      <!-- Loading overlay -->
+      <div id="viewport-loading" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(11, 15, 25, 0.85); padding: 14px 28px; border-radius: 8px; border: 1px solid var(--border-subtle); font-weight: 700; color: #fff; z-index: 50; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.6);">
+        ⏳ Đang nạp mô hình 3D & texture...
+      </div>
+
+      <!-- Specimen Selector -->
+      <div class="specimen-nav">
+        <button type="button" class="spec-arrow-btn" id="spec-prev" title="Loài trước">&lsaquo;</button>
+        <select id="spec-select" class="spec-select" title="Chọn loài khủng long"></select>
+        <button type="button" class="spec-arrow-btn" id="spec-next" title="Loài tiếp theo">&rsaquo;</button>
+        <span class="diet-pill diet-carnivore" id="spec-diet">🥩 Ăn Thịt</span>
+      </div>
+
+      <!-- Floating Chamber Controls -->
+      <div class="chamber-controls">
+        <div class="chamber-row">
+          <span class="chamber-label">Ánh Sáng:</span>
+          <div class="chamber-swatches">
+            <button type="button" class="chamber-swatch" data-chamber="amber" style="background: #f59e0b;" title="Amber"></button>
+            <button type="button" class="chamber-swatch" data-chamber="jade" style="background: #2dd4bf;" title="Jade"></button>
+            <button type="button" class="chamber-swatch" data-chamber="ember" style="background: #f97316;" title="Ember"></button>
+            <button type="button" class="chamber-swatch" data-chamber="blue" style="background: #38bdf8;" title="Blue"></button>
+            <button type="button" class="chamber-swatch" data-chamber="green" style="background: #22c55e;" title="Green"></button>
+            <button type="button" class="chamber-swatch" data-chamber="white" style="background: #f8fafc;" title="White"></button>
+            <button type="button" class="chamber-swatch" data-chamber="red" style="background: #ef4444;" title="Red"></button>
+            <button type="button" class="chamber-swatch" data-chamber="pink" style="background: #ec4899;" title="Pink"></button>
+            <input type="color" id="bg-custom-picker" class="chamber-picker" value="#ff2a85" title="Màu tự chọn">
+          </div>
+        </div>
+
+        <div class="chamber-row" style="justify-content: space-between; margin-top: 4px;">
+          <button type="button" class="viewport-btn" id="btn-autorotate" title="Tự động xoay bàn xoay">
+            <span>⟳</span> <span>TỰ XOAY</span>
+          </button>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 0.72rem; color: var(--text-dim);">ĐỘ SÁNG</span>
+            <input type="range" id="exposure-slider" class="studio-slider" min="0.6" max="1.8" step="0.05" value="1.15" style="width: 80px;" title="Chamber light exposure">
+          </div>
+          <button type="button" class="viewport-btn" id="btn-clean-view" title="Ẩn UI xem toàn cảnh">
+            <span>👁️</span> <span>TOÀN MÀN</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Drag Hint -->
+      <div class="viewport-hint" id="viewport-hint">
+        Kéo chuột để xoay 360° · Cuộn chuột để thu phóng
+      </div>
+
+      <!-- Stage Bottom Bar -->
+      <div class="stage-foot">
+        <div class="growth-wrap">
+          <span class="growth-label">Giai đoạn:</span>
+          <input type="range" id="growth-slider" class="growth-slider" min="10" max="100" value="100" title="Kéo để xem giai đoạn tăng trưởng">
+          <span class="growth-readout" id="growth-readout">100% · Adult (Trưởng thành)</span>
+        </div>
+
+        <div class="stage-readout">
+          <span>LOÀI: <b id="readout-species">Tyrannosaurus</b></span>
+          <span>CHẾ ĐỘ ĂN: <b id="readout-diet">CARNIVORE</b></span>
+          <span>RENDER: <b style="color: var(--success);">WEBGL 3D</b></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT CONTROL DECK -->
+    <aside class="studio-deck">
+      <!-- Tabs -->
+      <div class="deck-tabs">
+        <button type="button" class="deck-tab active" data-tab="editor">
+          <span>🎨</span> <span>Thiết Kế</span>
+        </button>
+        <button type="button" class="deck-tab" data-tab="mod">
+          <span>📁</span> <span>Nhập Mod Ngoài</span>
+        </button>
+        <button type="button" class="deck-tab" data-tab="saved">
+          <span>🎒</span> <span>Bản Lưu</span>
+        </button>
+      </div>
+
+      <!-- PANE 1: EDITOR -->
+      <div class="deck-body deck-pane" id="pane-editor">
+        <!-- Tên thiết kế -->
+        <div class="deck-section">
+          <div class="deck-title">
+            <span>Tên Bản Thiết Kế</span>
+          </div>
+          <input type="text" id="design-name" class="design-input" placeholder="Đặt tên cho skin này..." value="Shadow Tyrant">
+        </div>
+
+        <!-- Hoa văn (Pattern) -->
+        <div class="deck-section">
+          <div class="deck-title">
+            <span>Hoa Văn (Pattern)</span>
+          </div>
+          <div class="chips-group" id="pattern-chips"></div>
+        </div>
+
+        <!-- Các lớp màu (Channels) -->
+        <div class="deck-section">
+          <div class="deck-title">
+            <span>Bảng Phân Vùng Màu (Color Channels)</span>
+            <button type="button" class="btn-deck" id="btn-randomise" style="padding: 3px 8px; font-size: 0.72rem;">🎲 Ngẫu Nhiên</button>
+          </div>
+          <div class="channel-list" id="channel-list"></div>
+        </div>
+
+        <!-- Nút hành động -->
+        <div class="deck-actions">
+          <button type="button" class="btn-primary-apply" id="btn-apply-ingame">
+            <span>⚡</span> <span>ÁP DỤNG TRONG GAME</span>
+          </button>
+
+          <div class="btn-grid">
+            <button type="button" class="btn-deck" id="btn-save-design">
+              <span>💾</span> <span>Lưu Bản Thiết Kế</span>
+            </button>
+            <button type="button" class="btn-deck" id="btn-copy-code">
+              <span>📋</span> <span>Sao Chép Mã Code</span>
+            </button>
+          </div>
+
+          <div class="btn-grid" style="margin-top: 4px;">
+            <button type="button" class="btn-deck" id="btn-copy-json">
+              <span>📋</span> <span>Sao Chép JSON Blueprint</span>
+            </button>
+            <button type="button" class="btn-deck" id="btn-download-json">
+              <span>📥</span> <span>Tải File Skin (.json)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick Code Box -->
+        <div class="deck-section" style="margin-top: 10px; border-bottom: none;">
+          <div class="deck-title">
+            <span>Mã Game Evrima Hiện Tại</span>
+          </div>
+          <input type="text" id="skin-code-display" class="design-input" readonly style="font-family: var(--font-mono); font-size: 0.75rem; color: #a5f3fc;" value="">
+        </div>
+      </div>
+
+      <!-- PANE 2: MOD WORKSHOP (EXTERNAL MOD IMPORT) -->
+      <div class="deck-body deck-pane" id="pane-mod" style="display: none;">
+        <div class="deck-section">
+          <div class="deck-title">
+            <span>Nạp File Mod Skin Bên Ngoài</span>
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;">
+            Hệ thống hỗ trợ nạp <b>mọi tệp mod skin từ bên ngoài</b> (.json, .txt, Blueprint Evrima, mã Skin Workshop). Bỏ vô là server chấp nhận ngay!
+          </p>
+
+          <!-- Dropzone -->
+          <div class="mod-dropzone" id="mod-dropzone">
+            <span class="mod-drop-ico">📂</span>
+            <div class="mod-drop-title">Kéo & Thả File Skin Vào Đây</div>
+            <div class="mod-drop-sub">hoặc bấm để chọn file .json / .txt từ máy tính</div>
+            <input type="file" id="mod-file-input" accept=".json,.txt" style="display: none;">
+          </div>
+        </div>
+
+        <div class="deck-section">
+          <div class="deck-title">
+            <span>Hoặc Dán Trực Tiếp Mã / JSON Mod</span>
+          </div>
+          <textarea id="mod-textarea" class="mod-textarea" placeholder="Dán mã code Evrima hoặc toàn bộ JSON Blueprint của mod skin vào đây..."></textarea>
+          <button type="button" class="btn-primary-apply" id="btn-parse-mod" style="margin-top: 8px; padding: 10px; font-size: 0.88rem;">
+            <span>📥</span> <span>Phân Tích & Nạp Mod Skin Này</span>
+          </button>
+        </div>
+
+        <!-- Status Result Alert -->
+        <div id="mod-import-status" class="status-alert status-info" style="display: none;">
+          <span>Sẵn sàng nạp mod skin từ bên ngoài.</span>
+        </div>
+      </div>
+
+      <!-- PANE 3: SAVED DESIGNS -->
+      <div class="deck-body deck-pane" id="pane-saved" style="display: none;">
+        <div class="deck-section" style="border-bottom: none;">
+          <div class="deck-title">
+            <span>Các Bản Thiết Kế Đã Lưu</span>
+          </div>
+          <div class="saved-list" id="saved-skins-list"></div>
+        </div>
+      </div>
+    </aside>
+
+  </main>
+
+  <!-- Three.js Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+
+  <!-- Studio Controller -->
+  <script src="/js/studio.js?v=1.0"></script>
+</body>
+</html>

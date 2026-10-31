@@ -871,6 +871,18 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
         # 21. CDN Proxy & Cache cho 3D Dinosaur Models / Textures
 
+        elif self.path in ["/studio", "/studio/"]:
+            self.path = "/studio.html"
+            return super().do_GET()
+
+        elif self.path == "/api/species":
+            self.handle_studio_species()
+            return
+
+        elif self.path == "/api/palettes":
+            self.handle_studio_palettes()
+            return
+
         elif self.path.startswith("/cdn/dinos/"):
 
             self.handle_cdn_proxy()
@@ -1246,9 +1258,21 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
             return
 
-        elif self.path == "/api/skin/set":
+        elif self.path in ["/api/skin/set", "/api/studio/apply", "/api/server/skins/apply"]:
 
-            self.handle_skin_set()
+            self.handle_studio_apply()
+
+            return
+
+        elif self.path == "/api/designs/code":
+
+            self.handle_skin_code()
+
+            return
+
+        elif self.path == "/api/designs/import":
+
+            self.handle_skin_import()
 
             return
 
@@ -10437,6 +10461,147 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
         except Exception as e:
 
+            self.send_json_response({"ok": False, "success": False, "error": str(e)}, 500)
+
+    def handle_studio_species(self):
+        species_list = [
+            {"species": "Tyrannosaurus", "label": "Tyrannosaurus Rex", "diet": "carnivore", "animated": True},
+            {"species": "Carnotaurus", "label": "Carnotaurus", "diet": "carnivore", "animated": True},
+            {"species": "Ceratosaurus", "label": "Ceratosaurus", "diet": "carnivore", "animated": True},
+            {"species": "Deinosuchus", "label": "Deinosuchus", "diet": "carnivore", "animated": True},
+            {"species": "Diabloceratops", "label": "Diabloceratops", "diet": "herbivore", "animated": True},
+            {"species": "Dilophosaurus", "label": "Dilophosaurus", "diet": "carnivore", "animated": True},
+            {"species": "Dromaeosaurus", "label": "Dromaeosaurus", "diet": "carnivore", "animated": True},
+            {"species": "Dryosaurus", "label": "Dryosaurus", "diet": "herbivore", "animated": True},
+            {"species": "Gallimimus", "label": "Gallimimus", "diet": "omnivore", "animated": True},
+            {"species": "Herrerasaurus", "label": "Herrerasaurus", "diet": "carnivore", "animated": True},
+            {"species": "Hypsilophodon", "label": "Hypsilophodon", "diet": "herbivore", "animated": True},
+            {"species": "Maiasaura", "label": "Maiasaura", "diet": "herbivore", "animated": True},
+            {"species": "Omniraptor", "label": "Omniraptor", "diet": "carnivore", "animated": True},
+            {"species": "Pachycephalosaurus", "label": "Pachycephalosaurus", "diet": "omnivore", "animated": True},
+            {"species": "Pteranodon", "label": "Pteranodon", "diet": "carnivore", "animated": True},
+            {"species": "Stegosaurus", "label": "Stegosaurus", "diet": "herbivore", "animated": True},
+            {"species": "Tenontosaurus", "label": "Tenontosaurus", "diet": "herbivore", "animated": True},
+            {"species": "Triceratops", "label": "Triceratops", "diet": "herbivore", "animated": True},
+            {"species": "Troodon", "label": "Troodon", "diet": "carnivore", "animated": True},
+            {"species": "Allosaurus", "label": "Allosaurus", "diet": "carnivore", "animated": True},
+            {"species": "Austroraptor", "label": "Austroraptor", "diet": "carnivore", "animated": True},
+            {"species": "Baryonyx", "label": "Baryonyx", "diet": "carnivore", "animated": False},
+            {"species": "Beipiaosaurus", "label": "Beipiaosaurus", "diet": "omnivore", "animated": True}
+        ]
+        self.send_json_response({"ok": True, "species": species_list})
+
+    def handle_studio_palettes(self):
+        palettes = {
+            "Tyrannosaurus": {"body": [0.29, 0.33, 0.23, 1.0], "markings": [0.17, 0.2, 0.13, 1.0], "flank": [0.39, 0.44, 0.31, 1.0], "underbelly": [0.77, 0.73, 0.63, 1.0], "detail1": [0.12, 0.08, 0.07, 1.0], "male_display": [0.66, 0.24, 0.14, 1.0], "eyes": [0.88, 0.56, 0.14, 1.0]},
+            "Carnotaurus": {"body": [0.38, 0.21, 0.13, 1.0], "markings": [0.06, 0.04, 0.03, 1.0], "flank": [0.22, 0.1, 0.08, 1.0], "underbelly": [0.42, 0.31, 0.25, 1.0], "detail1": [0.0, 0.0, 0.0, 1.0], "male_display": [0.43, 0.09, 0.04, 1.0], "eyes": [1.0, 1.0, 1.0, 1.0]},
+            "Ceratosaurus": {"body": [0.35, 0.32, 0.25, 1.0], "markings": [0.1, 0.09, 0.08, 1.0], "flank": [0.45, 0.38, 0.28, 1.0], "underbelly": [0.6, 0.55, 0.45, 1.0], "detail1": [0.2, 0.15, 0.1, 1.0], "male_display": [0.55, 0.15, 0.1, 1.0], "eyes": [0.9, 0.7, 0.2, 1.0]}
+        }
+        self.send_json_response({"ok": True, "palettes": palettes})
+
+    def handle_skin_import(self):
+        try:
+            length = int(self.headers.get("Content-Length", 0))
+            payload = json.loads(self.rfile.read(length).decode("utf-8")) if length > 0 else {}
+            code = payload.get("code", "")
+            parsed = parse_evrima_skin_code(code)
+            if parsed:
+                self.send_json_response({"ok": True, "skin": parsed})
+            else:
+                self.send_json_response({"ok": False, "error": "Mã skin không hợp lệ"}, 400)
+        except Exception as e:
+            self.send_json_response({"ok": False, "error": str(e)}, 500)
+
+    def handle_studio_apply(self):
+        try:
+            length = int(self.headers.get("Content-Length", 0))
+            payload = json.loads(self.rfile.read(length).decode("utf-8")) if length > 0 else {}
+            steam_id = payload.get("steam_id") or payload.get("targetSteamId") or self.get_active_steam_id()
+            species = payload.get("species", "Tyrannosaurus")
+            
+            raw_bp = payload.get("payload") or payload.get("blueprint") or payload.get("recipe") or payload
+            
+            def to_float_rgba(val, default=(0.5, 0.5, 0.5, 1.0)):
+                if isinstance(val, (list, tuple)) and len(val) >= 3:
+                    try:
+                        r = float(val[0])
+                        g = float(val[1])
+                        b = float(val[2])
+                        a = float(val[3]) if len(val) > 3 else 1.0
+                        if r > 1.0 or g > 1.0 or b > 1.0:
+                            r, g, b = r / 255.0, g / 255.0, b / 255.0
+                        return [round(max(0.0, min(1.0, r)), 4),
+                                round(max(0.0, min(1.0, g)), 4),
+                                round(max(0.0, min(1.0, b)), 4),
+                                round(max(0.0, min(1.0, a)), 4)]
+                    except Exception:
+                        pass
+                elif isinstance(val, str):
+                    try:
+                        h = val.replace("#", "").strip()
+                        if len(h) >= 6:
+                            num = int(h[:6], 16)
+                            return [round(((num >> 16) & 255) / 255.0, 4),
+                                    round(((num >> 8) & 255) / 255.0, 4),
+                                    round((num & 255) / 255.0, 4),
+                                    1.0]
+                    except Exception:
+                        pass
+                return list(default)
+
+            clean_sp = re.sub(r'[^a-zA-Z0-9]+', '', str(species))
+            bp_class = f"BP_{clean_sp}_C"
+            
+            color_src = raw_bp.get("palette") or raw_bp.get("colors") or raw_bp
+            
+            body_val = color_src.get("body") or color_src.get("primary") or color_src.get("skin") or [0.29, 0.33, 0.23, 1.0]
+            markings_val = color_src.get("markings") or color_src.get("stripes") or color_src.get("pattern") or [0.17, 0.2, 0.13, 1.0]
+            flank_val = color_src.get("flank") or color_src.get("secondary") or color_src.get("side") or [0.39, 0.44, 0.31, 1.0]
+            underbelly_val = color_src.get("underbelly") or color_src.get("belly") or color_src.get("throat") or [0.77, 0.73, 0.63, 1.0]
+            detail_val = color_src.get("detail1") or color_src.get("detail") or color_src.get("accent") or [0.12, 0.08, 0.07, 1.0]
+            male_display_val = color_src.get("male_display") or color_src.get("display") or color_src.get("crest") or [0.66, 0.24, 0.14, 1.0]
+            eyes_val = color_src.get("eyes") or color_src.get("eye") or [0.88, 0.56, 0.14, 1.0]
+            teeth_val = color_src.get("teeth") or color_src.get("tooth") or [0.87, 0.87, 0.87, 1.0]
+            mouth_val = color_src.get("mouth") or color_src.get("tongue") or [0.66, 0.24, 0.14, 1.0]
+            claws_val = color_src.get("claws") or color_src.get("talons") or [0.12, 0.08, 0.07, 1.0]
+            
+            female = bool(raw_bp.get("female", False))
+            if "sex" in raw_bp:
+                female = str(raw_bp.get("sex")).lower().startswith("fe")
+
+            sanitized_bp = {
+                "class": bp_class,
+                "female": female,
+                "variation": int(raw_bp.get("variation", 0)),
+                "pattern": int(raw_bp.get("pattern", 0)),
+                "theme": int(raw_bp.get("theme", 0)),
+                "body": to_float_rgba(body_val, [0.29, 0.33, 0.23, 1.0]),
+                "markings": to_float_rgba(markings_val, [0.17, 0.2, 0.13, 1.0]),
+                "flank": to_float_rgba(flank_val, [0.39, 0.44, 0.31, 1.0]),
+                "underbelly": to_float_rgba(underbelly_val, [0.77, 0.73, 0.63, 1.0]),
+                "detail1": to_float_rgba(detail_val, [0.12, 0.08, 0.07, 1.0]),
+                "eyes": to_float_rgba(eyes_val, [0.88, 0.56, 0.14, 1.0]),
+                "male_display": to_float_rgba(male_display_val, [0.66, 0.24, 0.14, 1.0]),
+                "teeth": to_float_rgba(teeth_val, [0.87, 0.87, 0.87, 1.0]),
+                "mouth": to_float_rgba(mouth_val, [0.66, 0.24, 0.14, 1.0]),
+                "claws": to_float_rgba(claws_val, [0.12, 0.08, 0.07, 1.0])
+            }
+            
+            body_data = {
+                "payload": sanitized_bp
+            }
+            
+            res = self.fetch_islepilot(f"/players/{steam_id}/skin/apply", method="POST", body_data=body_data)
+            if isinstance(res, dict) and "limited to one every few seconds" in res.get("error", ""):
+                time.sleep(3.5)
+                res = self.fetch_islepilot(f"/players/{steam_id}/skin/apply", method="POST", body_data=body_data)
+                
+            if res and (res.get("ok") or res.get("jobId") or not res.get("error")):
+                self.send_json_response({"ok": True, "success": True, "message": "Áp dụng skin thành công!", "jobId": res.get("jobId", "")})
+            else:
+                err = res.get("error") if isinstance(res, dict) else "Lỗi máy chủ IslePilot"
+                self.send_json_response({"ok": False, "success": False, "error": err, "message": err}, 400)
+        except Exception as e:
             self.send_json_response({"ok": False, "success": False, "error": str(e)}, 500)
 
     def handle_cdn_proxy(self):
