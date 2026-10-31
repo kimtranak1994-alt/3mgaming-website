@@ -3263,7 +3263,7 @@ const SkinEditor = {
     const numStr = `${this.pattern}${this.variation}${this.theme}`;
 
     if (this._isUniversalSkin) {
-      return `${this.species}${numStr}00D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF`;
+      return `${this.species}${numStr}06080EFF06080EFF00D9FFFFD1FAFFFF00F2FFFF00FFFFFF`;
     }
 
     const zones = [];

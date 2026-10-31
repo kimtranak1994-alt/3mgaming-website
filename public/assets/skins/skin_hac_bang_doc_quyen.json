@@ -7,17 +7,17 @@
   "pattern": 1,
   "variation": 0,
   "theme": 0,
-  "code": "Diabloceratops10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
-  "skinCode": "Diabloceratops10000D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF",
+  "code": "Diabloceratops10006080EFF06080EFF00D9FFFFD1FAFFFF00F2FFFF00FFFFFF",
+  "skinCode": "Diabloceratops10006080EFF06080EFF00D9FFFFD1FAFFFF00F2FFFF00FFFFFF",
   "palette": {
     "body": "#06080E",
     "markings": "#00D9FF",
     "underbelly": "#EEF8FF",
-    "flank": "#00E5FF",
+    "flank": "#00D9FF",
     "detail": "#6889A6",
-    "detail1": "#00FFFF",
-    "display": "#00FFFF",
-    "male_display": "#00FFFF",
+    "detail1": "#00E0FF",
+    "display": "#00F2FF",
+    "male_display": "#00F2FF",
     "eyes": "#00FFFF",
     "claws": "#00D9FF",
     "teeth": "#EEF8FF",
@@ -30,12 +30,12 @@
     "pattern": 1,
     "theme": 0,
     "body": [
-      0.65,
-      0.97,
-      1.0,
+      0.003,
+      0.005,
+      0.01,
       1.0
     ],
-    "markings": [
+    "underbelly": [
       0.003,
       0.005,
       0.01,
@@ -43,29 +43,29 @@
     ],
     "flank": [
       0.0,
-      0.92,
+      0.85,
       1.0,
       1.0
     ],
-    "underbelly": [
-      0.0,
-      0.86,
+    "markings": [
+      0.82,
+      0.98,
       1.0,
       1.0
     ],
     "detail1": [
       0.0,
-      1.0,
-      1.0,
-      1.0
-    ],
-    "eyes": [
-      0.0,
-      1.0,
+      0.88,
       1.0,
       1.0
     ],
     "male_display": [
+      0.0,
+      0.95,
+      1.0,
+      1.0
+    ],
+    "eyes": [
       0.0,
       1.0,
       1.0,
@@ -85,7 +85,7 @@
     ],
     "claws": [
       0.0,
-      0.9,
+      0.85,
       1.0,
       1.0
     ]

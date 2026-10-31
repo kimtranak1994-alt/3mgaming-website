@@ -1246,7 +1246,7 @@ const Studio = {
     const p = this.palette;
     const num = `${this.pattern}${this.variation}${this.theme}`;
     if (this.isExclusiveHacBang) {
-      return `${this.species}${num}00D9FFFFA6F7FFFF00E5FFFF06080EFF00FFFFFF00FFFFFF`;
+      return `${this.species}${num}06080EFF06080EFF00D9FFFFD1FAFFFF00F2FFFF00FFFFFF`;
     }
     const cleanHex = (h) => (h || '#5A6B48').replace('#', '').toUpperCase().padEnd(6, '0').slice(0, 6) + 'FF';
     const hexes = [
@@ -1273,16 +1273,16 @@ const Studio = {
         variation: this.variation,
         pattern: this.pattern,
         theme: this.theme,
-        markings: [0.003, 0.005, 0.01, 1.0],
-        flank: [0.0, 0.92, 1.0, 1.0],
-        underbelly: [0.0, 0.86, 1.0, 1.0],
-        body: [0.65, 0.97, 1.0, 1.0],
-        detail1: [0.0, 1.0, 1.0, 1.0],
-        male_display: [0.0, 1.0, 1.0, 1.0],
+        body: [0.003, 0.005, 0.01, 1.0],
+        underbelly: [0.003, 0.005, 0.01, 1.0],
+        flank: [0.0, 0.85, 1.0, 1.0],
+        markings: [0.82, 0.98, 1.0, 1.0],
+        detail1: [0.0, 0.88, 1.0, 1.0],
+        male_display: [0.0, 0.95, 1.0, 1.0],
         eyes: [0.0, 1.0, 1.0, 1.0],
-        teeth: [0.9, 0.98, 1.0, 1.0],
-        mouth: [0.01, 0.04, 0.07, 1.0],
-        claws: [0.0, 0.92, 1.0, 1.0]
+        teeth: [0.93, 0.97, 1.0, 1.0],
+        mouth: [0.02, 0.08, 0.14, 1.0],
+        claws: [0.0, 0.85, 1.0, 1.0]
       };
     }
 
