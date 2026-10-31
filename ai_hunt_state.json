@@ -10,7 +10,7 @@
   "auto_reward_enabled": true,
   "ended_at": null,
   "is_settled": false,
-  "total_ai_kills": 83,
+  "total_ai_kills": 89,
   "hunters": {
     "76561199319764814": {
       "steam_id": "76561199319764814",
@@ -85,14 +85,14 @@
       "steam_id": "76561199483156684",
       "name": "Thich Du Thư",
       "species": "Tyrannosaurus",
-      "kills": 3,
+      "kills": 4,
       "prey_breakdown": {
         "Chicken": 1,
-        "Crab": 1,
+        "Crab": 2,
         "Deer": 1
       },
-      "last_kill_at": "2026-10-31T06:11:21.879Z",
-      "last_prey": "Deer"
+      "last_kill_at": "2026-10-31T07:20:36.816Z",
+      "last_prey": "Crab"
     },
     "76561198628218497": {
       "steam_id": "76561198628218497",
@@ -208,14 +208,14 @@
       "steam_id": "76561198655251333",
       "name": "QuocThinhhYeuEM",
       "species": "IndoRex",
-      "kills": 7,
+      "kills": 9,
       "prey_breakdown": {
         "Dryosaurus": 1,
         "Deer": 3,
-        "Boar": 2,
+        "Boar": 4,
         "Goat": 1
       },
-      "last_kill_at": "2026-10-31T07:06:59.134Z",
+      "last_kill_at": "2026-10-31T07:21:56.507Z",
       "last_prey": "Boar"
     },
     "76561198670217946": {
@@ -228,6 +228,19 @@
       },
       "last_kill_at": "2026-10-31T07:00:35.050Z",
       "last_prey": "Deer"
+    },
+    "76561198751942670": {
+      "steam_id": "76561198751942670",
+      "name": "haibangtk2",
+      "species": "Omniraptor",
+      "kills": 3,
+      "prey_breakdown": {
+        "Deer": 1,
+        "Rabbit": 1,
+        "Boar": 1
+      },
+      "last_kill_at": "2026-10-31T07:26:30.128Z",
+      "last_prey": "Boar"
     }
   },
   "leaderboard": [
@@ -272,6 +285,23 @@
     },
     {
       "rank": 3,
+      "steam_id": "76561198655251333",
+      "name": "QuocThinhhYeuEM",
+      "species": "IndoRex",
+      "kills": 9,
+      "prey_breakdown": {
+        "Dryosaurus": 1,
+        "Deer": 3,
+        "Boar": 4,
+        "Goat": 1
+      },
+      "last_kill_at": "2026-10-31T07:21:56.507Z",
+      "last_prey": "Boar",
+      "is_top1": false,
+      "reward_xu": 0
+    },
+    {
+      "rank": 4,
       "steam_id": "76561198796029510",
       "name": "Hà Nhi",
       "species": "Spinosaurus",
@@ -284,23 +314,6 @@
       },
       "last_kill_at": "2026-10-30T17:54:13.949Z",
       "last_prey": "Gallimimus",
-      "is_top1": false,
-      "reward_xu": 0
-    },
-    {
-      "rank": 4,
-      "steam_id": "76561198655251333",
-      "name": "QuocThinhhYeuEM",
-      "species": "IndoRex",
-      "kills": 7,
-      "prey_breakdown": {
-        "Dryosaurus": 1,
-        "Deer": 3,
-        "Boar": 2,
-        "Goat": 1
-      },
-      "last_kill_at": "2026-10-31T07:06:59.134Z",
-      "last_prey": "Boar",
       "is_top1": false,
       "reward_xu": 0
     },
@@ -339,6 +352,22 @@
     },
     {
       "rank": 7,
+      "steam_id": "76561199483156684",
+      "name": "Thich Du Thư",
+      "species": "Tyrannosaurus",
+      "kills": 4,
+      "prey_breakdown": {
+        "Chicken": 1,
+        "Crab": 2,
+        "Deer": 1
+      },
+      "last_kill_at": "2026-10-31T07:20:36.816Z",
+      "last_prey": "Crab",
+      "is_top1": false,
+      "reward_xu": 0
+    },
+    {
+      "rank": 8,
       "steam_id": "76561198762346878",
       "name": "ÂnRicot",
       "species": "Tyrannosaurus",
@@ -354,23 +383,23 @@
       "reward_xu": 0
     },
     {
-      "rank": 8,
-      "steam_id": "76561199483156684",
-      "name": "Thich Du Thư",
-      "species": "Tyrannosaurus",
+      "rank": 9,
+      "steam_id": "76561198751942670",
+      "name": "haibangtk2",
+      "species": "Omniraptor",
       "kills": 3,
       "prey_breakdown": {
-        "Chicken": 1,
-        "Crab": 1,
-        "Deer": 1
+        "Deer": 1,
+        "Rabbit": 1,
+        "Boar": 1
       },
-      "last_kill_at": "2026-10-31T06:11:21.879Z",
-      "last_prey": "Deer",
+      "last_kill_at": "2026-10-31T07:26:30.128Z",
+      "last_prey": "Boar",
       "is_top1": false,
       "reward_xu": 0
     },
     {
-      "rank": 9,
+      "rank": 10,
       "steam_id": "76561198655873474",
       "name": "Phenyl Đẹp Trai",
       "species": "IndoRex",
@@ -385,7 +414,7 @@
       "reward_xu": 0
     },
     {
-      "rank": 10,
+      "rank": 11,
       "steam_id": "76561198624342405",
       "name": "bethom06",
       "species": "Austroraptor",
@@ -399,7 +428,7 @@
       "reward_xu": 0
     },
     {
-      "rank": 11,
+      "rank": 12,
       "steam_id": "76561199175571899",
       "name": "ông 6 hồ wesrell",
       "species": "Indominus",
@@ -414,7 +443,7 @@
       "reward_xu": 0
     },
     {
-      "rank": 12,
+      "rank": 13,
       "steam_id": "76561198975489051",
       "name": "Nứng Nừng Nưng",
       "species": "Carnotaurus",
@@ -429,7 +458,7 @@
       "reward_xu": 0
     },
     {
-      "rank": 13,
+      "rank": 14,
       "steam_id": "76561199580968218",
       "name": "LôgLồnDíhRăg",
       "species": "Tyrannosaurus",
@@ -444,7 +473,7 @@
       "reward_xu": 0
     },
     {
-      "rank": 14,
+      "rank": 15,
       "steam_id": "76561198435078947",
       "name": "thienchung1712",
       "species": "Giganotosaurus",
@@ -458,7 +487,7 @@
       "reward_xu": 0
     },
     {
-      "rank": 15,
+      "rank": 16,
       "steam_id": "76561199035531243",
       "name": "Chú 5 Dần",
       "species": "Spinosaurus",
@@ -472,7 +501,7 @@
       "reward_xu": 0
     },
     {
-      "rank": 16,
+      "rank": 17,
       "steam_id": "76561198628218497",
       "name": "Dark_Knight",
       "species": "Tyrannosaurus",
@@ -486,7 +515,7 @@
       "reward_xu": 0
     },
     {
-      "rank": 17,
+      "rank": 18,
       "steam_id": "76561198670217946",
       "name": "Monter Ăn Chay",
       "species": "Anky",
@@ -501,18 +530,19 @@
     }
   ],
   "prey_summary": {
-    "Deer": 27,
+    "Deer": 28,
     "Psittacosaurus_Plains": 5,
     "Psittacosaurus_Coastal": 2,
-    "Boar": 17,
-    "Crab": 3,
+    "Boar": 20,
+    "Crab": 4,
     "Dryosaurus": 11,
     "Seaturtle": 6,
     "Chicken": 3,
     "Compsognathus": 4,
     "Gallimimus": 1,
     "Goat": 3,
-    "Bullfrog": 1
+    "Bullfrog": 1,
+    "Rabbit": 1
   },
   "processed_kill_ids": [
     "6856227",
@@ -522,6 +552,7 @@
     "6755536",
     "6870405",
     "6739193",
+    "6889891",
     "6738855",
     "6854885",
     "6830056",
@@ -555,6 +586,8 @@
     "6868749",
     "6870209",
     "6755380",
+    "6890256",
+    "6889933",
     "6739673",
     "6858979",
     "6854760",
@@ -568,12 +601,14 @@
     "6742397",
     "6875611",
     "6744919",
+    "6888929",
     "6884800",
     "6886130",
     "6749187",
     "6753180",
     "6862717",
     "6738886",
+    "6891230",
     "6749264",
     "6744651",
     "6758188",
@@ -591,6 +626,7 @@
     "6886254",
     "6744946",
     "6740420",
+    "6889697",
     "6856770",
     "6755748",
     "6744558",
