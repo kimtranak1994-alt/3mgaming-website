@@ -5686,99 +5686,128 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
     # --- 8 Tính Năng Server IslePilot Mới ---
 
+    def get_exclusive_universal_skin(self):
+        return {
+            "id": "skin_hac_bang_doc_quyen",
+            "name": "👑 Màu Độc Quyền - Hắc Băng Lôi Điện (Phiên bản giới hạn)",
+            "species": "Tất cả các loài",
+            "allSpecies": True,
+            "universal": True,
+            "bought": True,
+            "usesLeft": None,
+            "maxUses": None,
+            "price": 0,
+            "pattern": 1,
+            "variation": 0,
+            "theme": 0,
+            "badge": "👑 Độc Quyền Server • Mọi Dino",
+            "themeColor": "#00D9FF",
+            "imageUrl": "/assets/images/skin_hac_bang_doc_quyen.jpg",
+            "image": "/assets/images/skin_hac_bang_doc_quyen.jpg",
+            "colors": ["#080B12", "#00D9FF", "#EEF8FF", "#6889A6"],
+            "palette": {
+                "body": "#080B12",
+                "markings": "#00D9FF",
+                "underbelly": "#EEF8FF",
+                "flank": "#101C2E",
+                "detail": "#6889A6",
+                "detail1": "#6889A6",
+                "display": "#00E5FF",
+                "male_display": "#00E5FF",
+                "eyes": "#00FFFF",
+                "claws": "#00D9FF",
+                "teeth": "#EEF8FF",
+                "mouth": "#103A52"
+            },
+            "code": "Diabloceratops100EEF8FFFF080B12FF101C2EFF00D9FFFF00E5FFFF00FFFFFF",
+            "skinCode": "Diabloceratops100EEF8FFFF080B12FF101C2EFF00D9FFFF00E5FFFF00FFFFFF",
+            "description": "Phiên bản giới hạn: Độc đáo • Cá tính • Khác biệt. Phối màu Đen Huyền (nền chủ đạo), Xanh Ngọc (tạo điểm nhấn), Trắng Băng (tăng độ sắc nét) và Xám Xanh (tạo chiều sâu). Tương thích tự động 100% cho TẤT CẢ khủng long trong server!"
+        }
+
     def enrich_skin_data(self, s):
-
         if not isinstance(s, dict):
-
             return s
-
+        skin_id = str(s.get("id") or "")
         name = s.get("name") or ""
-
         name_lower = name.lower()
-
         species = s.get("species") or "Tyrannosaurus"
 
-        # Skin Hồng Nam Tính chuẩn 3D theo API IslePilot
+        if skin_id == "skin_hac_bang_doc_quyen" or any(k in name_lower for k in ["hắc băng", "hac bang", "độc quyền", "doc quyen", "lôi điện"]):
+            excl = self.get_exclusive_universal_skin()
+            for k, v in excl.items():
+                if k not in s or s[k] is None:
+                    s[k] = v
+            s["palette"] = excl["palette"]
+            s["allSpecies"] = True
+            s["universal"] = True
+            s["imageUrl"] = excl["imageUrl"]
+            s["image"] = excl["image"]
+            return s
 
         if any(k in name_lower for k in ["hồng", "hong", "pink", "nam tính", "nam tinh"]):
-
             s["palette"] = {
-
                 "underbelly": "#FFB6C1",
-
                 "body": "#E84393",
-
                 "flank": "#FD79A8",
-
                 "markings": "#8E44AD",
-
                 "display": "#FF1493",
-
                 "eyes": "#00F076",
-
                 "detail": "#2C3E50"
-
             }
-
             s["code"] = "Tyrannosaurus000FFB6C1FFE84393FFFD79A8FF8E44ADFFFF1493FF00F076FF"
-
             s["skinCode"] = s["code"]
-
             s["themeColor"] = "#E84393"
-
             s["badge"] = "🌸 Hồng Nam Tính"
-
             s["imageUrl"] = "/assets/images/tyrannosaurus_hong_nam_tinh.png"
-
             s["image"] = "/assets/images/tyrannosaurus_hong_nam_tinh.png"
-
         elif "palette" not in s:
-
-            s["palette"] = {
-
-                "underbelly": "#C4BAA1",
-
-                "body": "#4A543B",
-
-                "flank": "#647050",
-
-                "markings": "#2B3221",
-
-                "display": "#A83C24",
-
-                "eyes": "#E08F24",
-
-                "detail": "#1F1512"
-
-            }
-
+            colors_arr = s.get("colors")
+            if isinstance(colors_arr, list) and len(colors_arr) >= 3:
+                s["palette"] = {
+                    "body": colors_arr[0],
+                    "markings": colors_arr[1],
+                    "underbelly": colors_arr[2],
+                    "flank": colors_arr[3] if len(colors_arr) > 3 else colors_arr[0],
+                    "display": colors_arr[1],
+                    "eyes": "#00FFFF",
+                    "detail": colors_arr[2]
+                }
+            else:
+                s["palette"] = {
+                    "underbelly": "#C4BAA1",
+                    "body": "#4A543B",
+                    "flank": "#647050",
+                    "markings": "#2B3221",
+                    "display": "#A83C24",
+                    "eyes": "#E08F24",
+                    "detail": "#1F1512"
+                }
             s["code"] = f"{species}000C4BAA1FF4A543BFF647050FF2B3221FFA83C24FFE08F24FF"
-
             s["skinCode"] = s["code"]
-
             s["themeColor"] = "#00F076"
-
         return s
 
     def handle_shop_skins(self):
-
-        # Trả về 100% dữ liệu chính xác từ IslePilot API của server kèm bảng màu 3D
-
         remote = self.fetch_islepilot("/shop/skins")
         skins = []
         if remote and "skins" in remote:
             raw_skins = remote.get("skins", [])
             skins = [self.enrich_skin_data(s) for s in raw_skins]
-        
-        # Merge custom admin skins
+
+        custom_list = []
         if os.path.exists("admin_custom_skins.json"):
             try:
                 with open("admin_custom_skins.json", "r", encoding="utf-8") as f:
-                    custom_skins = json.load(f)
-                    skins = list(custom_skins) + list(skins)
+                    raw_custom = json.load(f)
+                    custom_list = [self.enrich_skin_data(dict(cs)) for cs in raw_custom if isinstance(cs, dict)]
             except Exception:
                 pass
 
+        if not any(s.get("id") == "skin_hac_bang_doc_quyen" for s in custom_list):
+            custom_list.insert(0, self.get_exclusive_universal_skin())
+
+        existing_ids = {s.get("id") for s in custom_list}
+        skins = custom_list + [s for s in skins if s.get("id") not in existing_ids]
         self.send_json_response({"skins": skins})
 
     def handle_shop_dinos(self):
@@ -9766,22 +9795,18 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             self.send_json_response({"ok": False, "message": f"Lỗi xử lý nhận thưởng: {e}"}, 500)
 
     def handle_player_skins(self):
-
         steam_id = self.get_active_steam_id()
-
         remote = self.fetch_islepilot(f"/players/{steam_id}/skins")
-
+        skins = []
         if remote and "skins" in remote:
-
             raw_skins = remote.get("skins", [])
-
             skins = [self.enrich_skin_data(s) for s in raw_skins]
 
-            self.send_json_response({"skins": skins})
+        excl = self.get_exclusive_universal_skin()
+        if not any(s.get("id") == excl["id"] for s in skins):
+            skins.insert(0, excl)
 
-            return
-
-        self.send_json_response({"skins": []})
+        self.send_json_response({"skins": skins})
 
     def handle_referral(self):
 
@@ -10184,45 +10209,36 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
 
     def handle_buy_skin(self):
-
         try:
-
             length = int(self.headers.get("Content-Length", 0))
-
             payload = json.loads(self.rfile.read(length).decode("utf-8")) if length > 0 else {}
-
-            skin_id = payload.get("skin_id") or payload.get("shopSkinId")
-
+            skin_id = str(payload.get("skin_id") or payload.get("shopSkinId") or "").strip()
             steam_id = payload.get("steam_id") or self.get_active_steam_id()
 
             if not skin_id:
-
                 self.send_json_response({"success": False, "message": "Thiếu mã Skin cần mua!"}, 400)
-
                 return
 
-            # Gửi yêu cầu mua / nhận Skin trực tiếp qua IslePilot API
+            if skin_id == "skin_hac_bang_doc_quyen" or skin_id.startswith("custom_"):
+                self.send_json_response({
+                    "success": True,
+                    "ok": True,
+                    "message": "🎉 Đã nhận Skin Độc Quyền Server (Hắc Băng Lôi Điện - Dùng cho mọi Dino) vào Kho Skin!"
+                })
+                return
 
             res = self.fetch_islepilot(f"/players/{steam_id}/skins", method="POST", body_data={"shopSkinId": skin_id})
-
             if res and res.get("ok"):
-
-                self.send_json_response({"success": True, "message": "Thành công"})
-
+                self.send_json_response({"success": True, "ok": True, "message": "Thành công"})
                 return
 
             err = res.get("error") if res else "Không thể kết nối đến máy chủ IslePilot."
-
             if "already own" in str(err).lower():
-
-                self.send_json_response({"success": False, "message": "Bạn đã sở hữu Skin này trong Kho Skin rồi!"})
-
+                self.send_json_response({"success": True, "ok": True, "message": "Bạn đã sở hữu Skin này trong Kho Skin rồi!"})
                 return
 
             self.send_json_response({"success": False, "message": "Thất bại"}, 400)
-
         except Exception as e:
-
             self.send_json_response({"success": False, "message": f"Lỗi hệ thống: {e}"}, 500)
 
     def handle_buy_dino(self):
@@ -10528,11 +10544,76 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         try:
             length = int(self.headers.get("Content-Length", 0))
             payload = json.loads(self.rfile.read(length).decode("utf-8")) if length > 0 else {}
-            steam_id = payload.get("steam_id") or payload.get("targetSteamId") or self.get_active_steam_id()
-            species = payload.get("species", "Tyrannosaurus")
-            
+            steam_id = str(payload.get("steam_id") or payload.get("targetSteamId") or self.get_active_steam_id() or "").strip()
+            skin_id = str(payload.get("skin_id") or payload.get("skinId") or "").strip()
+            requested_species = str(payload.get("species") or "").strip()
+            is_universal = bool(payload.get("allSpecies") or payload.get("universal") or skin_id == "skin_hac_bang_doc_quyen")
+
+            # 1. Tự động phát hiện loài khủng long (species) & giới tính (female) mà người chơi đang chơi trong Server
+            live_species = None
+            live_female = None
+            if steam_id:
+                try:
+                    p_info = self.fetch_islepilot(f"/players/{steam_id}")
+                    if isinstance(p_info, dict) and p_info.get("species"):
+                        live_species = str(p_info.get("species")).strip()
+                        if "female" in p_info and p_info.get("female") is not None:
+                            live_female = bool(p_info.get("female"))
+                except Exception:
+                    pass
+
+                if not live_species:
+                    try:
+                        p_list = self.fetch_islepilot("/players")
+                        players_arr = p_list.get("players", []) if isinstance(p_list, dict) else (p_list if isinstance(p_list, list) else [])
+                        for p in players_arr:
+                            if str(p.get("steamId") or "") == steam_id and p.get("species"):
+                                live_species = str(p.get("species")).strip()
+                                if "female" in p and p.get("female") is not None:
+                                    live_female = bool(p.get("female"))
+                                break
+                    except Exception:
+                        pass
+
+            # 2. Nếu có skin_id (từ Kho Skin hoặc Shop Skin): kiểm tra xem có phải Skin Độc Quyền / Custom hay Skin IslePilot gốc
+            matched_custom_skin = None
+            if skin_id == "skin_hac_bang_doc_quyen":
+                matched_custom_skin = self.get_exclusive_universal_skin()
+                is_universal = True
+            elif skin_id and os.path.exists("admin_custom_skins.json"):
+                try:
+                    with open("admin_custom_skins.json", "r", encoding="utf-8") as f:
+                        for cs in json.load(f):
+                            if isinstance(cs, dict) and str(cs.get("id")) == skin_id:
+                                matched_custom_skin = self.enrich_skin_data(dict(cs))
+                                if matched_custom_skin.get("allSpecies") or matched_custom_skin.get("universal"):
+                                    is_universal = True
+                                break
+                except Exception:
+                    pass
+
+            # Nếu là skin_id thường của IslePilot (không phải skin độc quyền/custom và không gửi kèm bảng màu tùy chỉnh)
+            if skin_id and not matched_custom_skin and not payload.get("palette") and not payload.get("payload"):
+                res_direct = self.fetch_islepilot(f"/players/{steam_id}/skins/{skin_id}/apply", method="POST", body_data={})
+                if res_direct and (res_direct.get("ok") or res_direct.get("jobId") or not res_direct.get("error")):
+                    self.send_json_response({
+                        "ok": True,
+                        "success": True,
+                        "message": "⚡ Đã áp dụng Skin vào nhân vật trong game thành công!",
+                        "jobId": res_direct.get("jobId", "")
+                    })
+                    return
+
             raw_bp = payload.get("payload") or payload.get("blueprint") or payload.get("recipe") or payload
-            
+            if matched_custom_skin and not payload.get("palette") and not payload.get("payload"):
+                raw_bp = matched_custom_skin
+
+            # Quyết định loài khủng long đích để đóng gói Blueprint:
+            # Ưu tiên loài đang online thực tế trong server để sử dụng được cho TẤT CẢ dino trong server!
+            target_species = live_species or requested_species
+            if not target_species or target_species.lower() in ["all", "tất cả các loài", "tat ca cac loai", "mọi loài"]:
+                target_species = live_species or "Diabloceratops"
+
             def to_float_rgba(val, default=(0.5, 0.5, 0.5, 1.0)):
                 if isinstance(val, (list, tuple)) and len(val) >= 3:
                     try:
@@ -10561,60 +10642,80 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                         pass
                 return list(default)
 
-            clean_sp = re.sub(r'[^a-zA-Z0-9]+', '', str(species))
+            clean_sp = re.sub(r'[^a-zA-Z0-9]+', '', str(target_species))
             bp_class = f"BP_{clean_sp}_C"
-            
+
             color_src = raw_bp.get("palette") or raw_bp.get("colors") or raw_bp
-            
-            body_val = color_src.get("body") or color_src.get("primary") or color_src.get("skin") or [0.29, 0.33, 0.23, 1.0]
-            markings_val = color_src.get("markings") or color_src.get("stripes") or color_src.get("pattern") or [0.17, 0.2, 0.13, 1.0]
-            flank_val = color_src.get("flank") or color_src.get("secondary") or color_src.get("side") or [0.39, 0.44, 0.31, 1.0]
-            underbelly_val = color_src.get("underbelly") or color_src.get("belly") or color_src.get("throat") or [0.77, 0.73, 0.63, 1.0]
-            detail_val = color_src.get("detail1") or color_src.get("detail") or color_src.get("accent") or [0.12, 0.08, 0.07, 1.0]
-            male_display_val = color_src.get("male_display") or color_src.get("display") or color_src.get("crest") or [0.66, 0.24, 0.14, 1.0]
-            eyes_val = color_src.get("eyes") or color_src.get("eye") or [0.88, 0.56, 0.14, 1.0]
-            teeth_val = color_src.get("teeth") or color_src.get("tooth") or [0.87, 0.87, 0.87, 1.0]
-            mouth_val = color_src.get("mouth") or color_src.get("tongue") or [0.66, 0.24, 0.14, 1.0]
-            claws_val = color_src.get("claws") or color_src.get("talons") or [0.12, 0.08, 0.07, 1.0]
-            
-            female = bool(raw_bp.get("female", False))
-            if "sex" in raw_bp:
-                female = str(raw_bp.get("sex")).lower().startswith("fe")
+            if isinstance(color_src, list):
+                color_src = matched_custom_skin.get("palette", {}) if matched_custom_skin else {}
+
+            body_val = color_src.get("body") or color_src.get("primary") or color_src.get("skin") or [0.0314, 0.0431, 0.0706, 1.0]
+            markings_val = color_src.get("markings") or color_src.get("stripes") or color_src.get("pattern") or [0.0, 0.851, 1.0, 1.0]
+            flank_val = color_src.get("flank") or color_src.get("secondary") or color_src.get("side") or [0.0627, 0.1098, 0.1804, 1.0]
+            underbelly_val = color_src.get("underbelly") or color_src.get("belly") or color_src.get("throat") or [0.9333, 0.9725, 1.0, 1.0]
+            detail_val = color_src.get("detail1") or color_src.get("detail") or color_src.get("accent") or [0.4078, 0.5373, 0.651, 1.0]
+            male_display_val = color_src.get("male_display") or color_src.get("display") or color_src.get("crest") or [0.0, 0.898, 1.0, 1.0]
+            eyes_val = color_src.get("eyes") or color_src.get("eye") or [0.0, 1.0, 1.0, 1.0]
+            teeth_val = color_src.get("teeth") or color_src.get("tooth") or [0.9333, 0.9725, 1.0, 1.0]
+            mouth_val = color_src.get("mouth") or color_src.get("tongue") or [0.0627, 0.2275, 0.3216, 1.0]
+            claws_val = color_src.get("claws") or color_src.get("talons") or [0.0, 0.851, 1.0, 1.0]
+
+            if live_female is not None:
+                female = live_female
+            else:
+                female = bool(raw_bp.get("female", False))
+                if "sex" in raw_bp:
+                    female = str(raw_bp.get("sex")).lower().startswith("fe")
+                elif "sex" in payload:
+                    female = str(payload.get("sex")).lower().startswith("fe")
+
+            pat_raw = raw_bp.get("pattern", 1 if matched_custom_skin else 0)
+            try:
+                pat_int = int(pat_raw)
+            except Exception:
+                pat_int = 1
 
             sanitized_bp = {
                 "class": bp_class,
                 "female": female,
-                "variation": int(raw_bp.get("variation", 0)),
-                "pattern": int(raw_bp.get("pattern", 0)),
-                "theme": int(raw_bp.get("theme", 0)),
-                "body": to_float_rgba(body_val, [0.29, 0.33, 0.23, 1.0]),
-                "markings": to_float_rgba(markings_val, [0.17, 0.2, 0.13, 1.0]),
-                "flank": to_float_rgba(flank_val, [0.39, 0.44, 0.31, 1.0]),
-                "underbelly": to_float_rgba(underbelly_val, [0.77, 0.73, 0.63, 1.0]),
-                "detail1": to_float_rgba(detail_val, [0.12, 0.08, 0.07, 1.0]),
-                "eyes": to_float_rgba(eyes_val, [0.88, 0.56, 0.14, 1.0]),
-                "male_display": to_float_rgba(male_display_val, [0.66, 0.24, 0.14, 1.0]),
-                "teeth": to_float_rgba(teeth_val, [0.87, 0.87, 0.87, 1.0]),
-                "mouth": to_float_rgba(mouth_val, [0.66, 0.24, 0.14, 1.0]),
-                "claws": to_float_rgba(claws_val, [0.12, 0.08, 0.07, 1.0])
+                "variation": int(raw_bp.get("variation", 0) or 0),
+                "pattern": pat_int,
+                "theme": int(raw_bp.get("theme", 0) or 0),
+                "body": to_float_rgba(body_val, [0.0314, 0.0431, 0.0706, 1.0]),
+                "markings": to_float_rgba(markings_val, [0.0, 0.851, 1.0, 1.0]),
+                "flank": to_float_rgba(flank_val, [0.0627, 0.1098, 0.1804, 1.0]),
+                "underbelly": to_float_rgba(underbelly_val, [0.9333, 0.9725, 1.0, 1.0]),
+                "detail1": to_float_rgba(detail_val, [0.4078, 0.5373, 0.651, 1.0]),
+                "eyes": to_float_rgba(eyes_val, [0.0, 1.0, 1.0, 1.0]),
+                "male_display": to_float_rgba(male_display_val, [0.0, 0.898, 1.0, 1.0]),
+                "teeth": to_float_rgba(teeth_val, [0.9333, 0.9725, 1.0, 1.0]),
+                "mouth": to_float_rgba(mouth_val, [0.0627, 0.2275, 0.3216, 1.0]),
+                "claws": to_float_rgba(claws_val, [0.0, 0.851, 1.0, 1.0])
             }
-            
+
             body_data = {
                 "payload": sanitized_bp
             }
-            
+
             res = self.fetch_islepilot(f"/players/{steam_id}/skin/apply", method="POST", body_data=body_data)
             if isinstance(res, dict) and "limited to one every few seconds" in res.get("error", ""):
                 time.sleep(3.5)
                 res = self.fetch_islepilot(f"/players/{steam_id}/skin/apply", method="POST", body_data=body_data)
-                
+
             if res and (res.get("ok") or res.get("jobId") or not res.get("error")):
-                self.send_json_response({"ok": True, "success": True, "message": "Áp dụng skin thành công!", "jobId": res.get("jobId", "")})
+                self.send_json_response({
+                    "ok": True,
+                    "success": True,
+                    "species": target_species,
+                    "class": bp_class,
+                    "message": f"⚡ Đã áp dụng Skin thành công cho khủng long {target_species} trong Server!",
+                    "jobId": res.get("jobId", "")
+                })
             else:
                 err = res.get("error") if isinstance(res, dict) else "Lỗi máy chủ IslePilot"
                 self.send_json_response({"ok": False, "success": False, "error": err, "message": err}, 400)
         except Exception as e:
-            self.send_json_response({"ok": False, "success": False, "error": str(e)}, 500)
+            self.send_json_response({"ok": False, "success": False, "error": str(e), "message": str(e)}, 500)
 
     def handle_cdn_proxy(self):
 

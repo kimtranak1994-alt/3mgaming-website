@@ -6,13 +6,13 @@
 
 const Studio = {
   // State
-  species: 'Tyrannosaurus',
+  species: 'Diabloceratops',
   sex: 'male',
-  pattern: 0,
+  pattern: 1,
   variation: 0,
   theme: 0,
   growth: 1.0,
-  designName: 'Shadow Tyrant',
+  designName: '👑 Màu Độc Quyền - Hắc Băng Lôi Điện',
 
   // Steam Auth & Active Dino State
   steamUser: null,
@@ -76,18 +76,18 @@ const Studio = {
     pink:  { bg: '#1c0817', light: '#ec4899', ground: '#3b1232' }
   },
 
-  // Color layers
+  // Color layers (Mặc định: Màu Độc Quyền - Hắc Băng Lôi Điện)
   palette: {
-    body: '#4a543b',
-    markings: '#2b3221',
-    flank: '#647050',
-    underbelly: '#c4baa1',
-    detail: '#1f1512',
-    male_display: '#a83c24',
-    eyes: '#e08f24',
-    teeth: '#dedede',
-    mouth: '#a83c24',
-    claws: '#1f1512'
+    body: '#080B12',
+    markings: '#00D9FF',
+    flank: '#101C2E',
+    underbelly: '#EEF8FF',
+    detail: '#6889A6',
+    male_display: '#00E5FF',
+    eyes: '#00FFFF',
+    teeth: '#EEF8FF',
+    mouth: '#103A52',
+    claws: '#00D9FF'
   },
 
   channelDefs: [
@@ -520,13 +520,20 @@ const Studio = {
 
       model.traverse((child) => {
         if (child instanceof THREE.Mesh) {
-          const mat = new THREE.MeshStandardMaterial({
-            color: '#ffffff',
-            roughness: 0.95,
-            metalness: 0.05,
-            side: THREE.FrontSide
+          const origMats = Array.isArray(child.material) ? child.material : [child.material];
+          const newMats = origMats.map(origMat => {
+            const mat = new THREE.MeshStandardMaterial({
+              color: '#ffffff',
+              roughness: 0.95,
+              metalness: 0.05,
+              transparent: origMat && 'transparent' in origMat && !!origMat.transparent,
+              opacity: origMat && 'opacity' in origMat ? Number(origMat.opacity) : 1,
+              side: THREE.FrontSide
+            });
+            mat.name = `${child.name} ${(origMat && origMat.name) || ''}`.toLowerCase();
+            return mat;
           });
-          child.material = mat;
+          child.material = Array.isArray(child.material) ? newMats : newMats[0];
         }
       });
 
@@ -559,6 +566,36 @@ const Studio = {
     }
   },
 
+  applyExclusivePreset() {
+    this.pattern = 1;
+    this.variation = 0;
+    this.theme = 0;
+    this.palette = {
+      body: '#080B12',
+      markings: '#00D9FF',
+      underbelly: '#EEF8FF',
+      flank: '#101C2E',
+      detail: '#6889A6',
+      male_display: '#00E5FF',
+      eyes: '#00FFFF',
+      teeth: '#EEF8FF',
+      mouth: '#103A52',
+      claws: '#00D9FF'
+    };
+    const nameInput = document.getElementById('design-name');
+    if (nameInput) nameInput.value = '👑 Màu Độc Quyền - Hắc Băng Lôi Điện';
+    this.renderPatternChips();
+    this.renderChannels();
+    this.updateMaterialTexture();
+    this.updateSkinCodeDisplay();
+    this.showToast(`👑 Đã nạp Màu Độc Quyền (Hắc Băng Lôi Điện) lên ${this.species}! Bạn có thể đổi sang bất kỳ loài Dino nào để xem 3D.`, 'success');
+  },
+
+  async applyExclusivePresetInGame() {
+    this.applyExclusivePreset();
+    await this.applyInGame();
+  },
+
   updateMaterialTexture() {
     if (!this.dinoModel) return;
     const tex = this.cachedTextures[this.species];
@@ -569,6 +606,8 @@ const Studio = {
       const val = parseInt(t.length === 3 ? t.split('').map(c => c + c).join('') : t, 16) || 0;
       return { r: (val >> 16) & 255, g: (val >> 8) & 255, b: val & 255 };
     };
+    const lerp = (a, b, t) => Math.round(a * (1 - t) + b * t);
+    const clamp01 = (v) => Math.max(0, Math.min(1, v));
 
     const canvas = document.createElement('canvas');
     const width = 1024;
@@ -585,21 +624,23 @@ const Studio = {
     if (tex.pattern && tex.tintMask) {
       const patCanvas = document.createElement('canvas');
       patCanvas.width = width; patCanvas.height = height;
-      const patCtx = patCanvas.getContext('2d');
+      const patCtx = patCanvas.getContext('2d', { willReadFrequently: true });
       patCtx.drawImage(tex.pattern, 0, 0, width, height);
       const patData = patCtx.getImageData(0, 0, width, height);
 
       const maskCanvas = document.createElement('canvas');
       maskCanvas.width = width; maskCanvas.height = height;
-      const maskCtx = maskCanvas.getContext('2d');
+      const maskCtx = maskCanvas.getContext('2d', { willReadFrequently: true });
       maskCtx.drawImage(tex.tintMask, 0, 0, width, height);
       const maskData = maskCtx.getImageData(0, 0, width, height);
 
-      const bodyRgb = hexToRgb(this.palette.body);
-      const markingsRgb = hexToRgb(this.palette.markings);
-      const flankRgb = hexToRgb(this.palette.flank);
-      const underbellyRgb = hexToRgb(this.palette.underbelly);
-      const detailRgb = hexToRgb(this.palette.detail);
+      const bodyRgb = hexToRgb(this.palette.body || '#080B12');
+      const markingsRgb = hexToRgb(this.palette.markings || '#00D9FF');
+      const flankRgb = hexToRgb(this.palette.flank || '#101C2E');
+      const underbellyRgb = hexToRgb(this.palette.underbelly || '#EEF8FF');
+      const detailRgb = hexToRgb(this.palette.detail || '#6889A6');
+      const displayRgb = hexToRgb(this.palette.male_display || this.palette.display || '#00E5FF');
+      const isDisplayBlack = displayRgb.r === 0 && displayRgb.g === 0 && displayRgb.b === 0;
 
       const data = outData.data;
       const pData = patData.data;
@@ -608,30 +649,50 @@ const Studio = {
 
       for (let i = 0; i < len; i += 4) {
         if (data[i + 3] === 0) continue;
-        const mr = mData[i] / 255.0;
-        const mg = mData[i + 1] / 255.0;
-        const mb = mData[i + 2] / 255.0;
-        const pat = pData[i] / 255.0;
+        const t = mData[i] / 255.0;
+        const r = mData[i + 1] / 255.0;
+        const n = mData[i + 2] / 255.0;
+        const patVal = (pData[i] + pData[i + 1] + pData[i + 2]) / 765.0;
 
-        let tr = (bodyRgb.r * (1 - mg) + underbellyRgb.r * mg) * (1 - mr) + flankRgb.r * mr;
-        let tg = (bodyRgb.g * (1 - mg) + underbellyRgb.g * mg) * (1 - mr) + flankRgb.g * mr;
-        let tb = (bodyRgb.b * (1 - mg) + underbellyRgb.b * mg) * (1 - mr) + flankRgb.b * mr;
+        const baseR = data[i];
+        const baseG = data[i + 1];
+        const baseB = data[i + 2];
 
-        if (pat > 0.1) {
-          tr = tr * (1 - pat) + markingsRgb.r * pat;
-          tg = tg * (1 - pat) + markingsRgb.g * pat;
-          tb = tb * (1 - pat) + markingsRgb.b * pat;
+        const u = (1 - t) * r * n;
+        const m = t * (1 - r) * n * patVal;
+        const j = (1 - t) * (1 - r) * n;
+        const w = (1 - t) * r * (1 - n);
+        const N = t * r * (1 - n) * patVal;
+        const C = t * (1 - r) * (1 - n) * Math.max(0.35, patVal);
+        const S = u + m + j + w + N + C;
+        const L = S > 0 ? S : 1;
+
+        const M = (bodyRgb.r * u + markingsRgb.r * m + flankRgb.r * j + underbellyRgb.r * w + detailRgb.r * N + displayRgb.r * C) / L;
+        const E = (bodyRgb.g * u + markingsRgb.g * m + flankRgb.g * j + underbellyRgb.g * w + detailRgb.g * N + displayRgb.g * C) / L;
+        const F = (bodyRgb.b * u + markingsRgb.b * m + flankRgb.b * j + underbellyRgb.b * w + detailRgb.b * N + displayRgb.b * C) / L;
+
+        const z = 0.28 + (0.299 * baseR + 0.587 * baseG + 0.114 * baseB) / 255 * 0.9;
+        const I = 255 * clamp01(M / 255 * z);
+        const T = 255 * clamp01(E / 255 * z);
+        const A = 255 * clamp01(F / 255 * z);
+        const _ = clamp01(1.35 * S);
+        const D = clamp01(_ + 0.45 * (1 - Math.max(M, E, F) / 255));
+
+        let P = lerp(baseR, I, D);
+        let B = lerp(baseG, T, D);
+        let U = lerp(baseB, A, D);
+
+        if (isDisplayBlack && C > 0.01) {
+          const e = clamp01(2.6 * C + 0.22 * patVal);
+          P = lerp(P, 0, e);
+          B = lerp(B, 0, e);
+          U = lerp(U, 0, e);
+          if (C > 0.32) { P = 0; B = 0; U = 0; }
         }
 
-        if (mb > 0.2) {
-          tr = tr * (1 - mb) + detailRgb.r * mb;
-          tg = tg * (1 - mb) + detailRgb.g * mb;
-          tb = tb * (1 - mb) + detailRgb.b * mb;
-        }
-
-        data[i] = Math.round((data[i] / 255.0) * tr);
-        data[i + 1] = Math.round((data[i + 1] / 255.0) * tg);
-        data[i + 2] = Math.round((data[i + 2] / 255.0) * tb);
+        data[i] = P;
+        data[i + 1] = B;
+        data[i + 2] = U;
       }
       ctx.putImageData(outData, 0, 0);
     }
@@ -640,10 +701,34 @@ const Studio = {
     newTex.flipY = false;
     newTex.colorSpace = THREE.SRGBColorSpace;
 
+    const eyesColor = new THREE.Color(this.palette.eyes || '#00FFFF');
+    const displayColor = new THREE.Color(this.palette.male_display || this.palette.display || '#00E5FF');
+    const isDisplayBlack = displayColor.getHex() === 0;
+    const defaultWhite = new THREE.Color('#ffffff');
+
     this.dinoModel.traverse((child) => {
       if (child instanceof THREE.Mesh && child.material) {
-        child.material.map = newTex;
-        child.material.needsUpdate = true;
+        const mats = Array.isArray(child.material) ? child.material : [child.material];
+        for (const mat of mats) {
+          const matName = (mat.name || '').toLowerCase();
+          mat.map = newTex;
+          mat.color.copy(defaultWhite);
+          mat.emissive.set('#000000');
+          mat.emissiveIntensity = 0;
+
+          if (/eye|iris|pupil/.test(matName)) {
+            mat.color.copy(eyesColor);
+            mat.emissive.copy(eyesColor);
+            mat.emissiveIntensity = 0.45;
+            mat.map = null;
+          } else if (/display|crest|horn|spike/.test(matName)) {
+            mat.color.copy(displayColor);
+            mat.map = isDisplayBlack ? null : newTex;
+            mat.emissive.copy(displayColor);
+            mat.emissiveIntensity = 0.15 * (!isDisplayBlack ? 1 : 0);
+          }
+          mat.needsUpdate = true;
+        }
       }
     });
   },
@@ -1371,6 +1456,9 @@ const Studio = {
     if (btnDownload) btnDownload.addEventListener('click', () => this.downloadJson());
   }
 };
+
+window.Studio = Studio;
+window.StudioApp = Studio;
 
 document.addEventListener('DOMContentLoaded', () => {
   Studio.init();

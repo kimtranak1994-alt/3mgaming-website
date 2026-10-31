@@ -1,5 +1,45 @@
 [
   {
+    "id": "skin_hac_bang_doc_quyen",
+    "name": "👑 Màu Độc Quyền - Hắc Băng Lôi Điện (Phiên bản giới hạn)",
+    "species": "Tất cả các loài",
+    "allSpecies": true,
+    "universal": true,
+    "price": 0,
+    "maxUses": null,
+    "pattern": 1,
+    "variation": 0,
+    "theme": 0,
+    "badge": "👑 Độc Quyền Server • Mọi Dino",
+    "themeColor": "#00D9FF",
+    "imageUrl": "/assets/images/skin_hac_bang_doc_quyen.jpg",
+    "image": "/assets/images/skin_hac_bang_doc_quyen.jpg",
+    "colors": [
+      "#080B12",
+      "#00D9FF",
+      "#EEF8FF",
+      "#6889A6"
+    ],
+    "palette": {
+      "body": "#080B12",
+      "markings": "#00D9FF",
+      "underbelly": "#EEF8FF",
+      "flank": "#101C2E",
+      "detail": "#6889A6",
+      "detail1": "#6889A6",
+      "display": "#00E5FF",
+      "male_display": "#00E5FF",
+      "eyes": "#00FFFF",
+      "claws": "#00D9FF",
+      "teeth": "#EEF8FF",
+      "mouth": "#103A52"
+    },
+    "code": "Diabloceratops100EEF8FFFF080B12FF101C2EFF00D9FFFF00E5FFFF00FFFFFF",
+    "skinCode": "Diabloceratops100EEF8FFFF080B12FF101C2EFF00D9FFFF00E5FFFF00FFFFFF",
+    "description": "Phiên bản giới hạn: Độc đáo • Cá tính • Khác biệt. Phối màu Đen Huyền (nền chủ đạo), Xanh Ngọc (tạo điểm nhấn), Trắng Băng (tăng độ sắc nét) và Xám Xanh (tạo chiều sâu). Hỗ trợ áp dụng tự động cho TẤT CẢ các loài khủng long trong server!",
+    "created_at": "2026-10-31 14:15:00"
+  },
+  {
     "id": "custom_1792939973886",
     "name": "vip 1",
     "species": "Allosaurus",

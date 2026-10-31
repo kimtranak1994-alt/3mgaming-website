@@ -1,0 +1,41 @@
+{
+  "id": "skin_hac_bang_doc_quyen",
+  "name": "👑 Màu Độc Quyền - Hắc Băng Lôi Điện (Phiên bản giới hạn)",
+  "allSpecies": true,
+  "universal": true,
+  "species": "All",
+  "pattern": 1,
+  "variation": 0,
+  "theme": 0,
+  "palette": {
+    "body": "#080B12",
+    "markings": "#00D9FF",
+    "underbelly": "#EEF8FF",
+    "flank": "#101C2E",
+    "detail": "#6889A6",
+    "detail1": "#6889A6",
+    "display": "#00E5FF",
+    "male_display": "#00E5FF",
+    "eyes": "#00FFFF",
+    "claws": "#00D9FF",
+    "teeth": "#EEF8FF",
+    "mouth": "#103A52"
+  },
+  "payload": {
+    "class": "BP_Diabloceratops_C",
+    "female": false,
+    "variation": 0,
+    "pattern": 1,
+    "theme": 0,
+    "body": [0.0314, 0.0431, 0.0706, 1.0],
+    "markings": [0.0, 0.851, 1.0, 1.0],
+    "flank": [0.0627, 0.1098, 0.1804, 1.0],
+    "underbelly": [0.9333, 0.9725, 1.0, 1.0],
+    "detail1": [0.4078, 0.5373, 0.651, 1.0],
+    "eyes": [0.0, 1.0, 1.0, 1.0],
+    "male_display": [0.0, 0.898, 1.0, 1.0],
+    "teeth": [0.9333, 0.9725, 1.0, 1.0],
+    "mouth": [0.0627, 0.2275, 0.3216, 1.0],
+    "claws": [0.0, 0.851, 1.0, 1.0]
+  }
+}

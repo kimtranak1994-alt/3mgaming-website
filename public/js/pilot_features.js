@@ -362,6 +362,10 @@ const SkinShop = {
 
     const name = (item.name || '').toLowerCase();
 
+    if (item.id === 'skin_hac_bang_doc_quyen' || name.includes('hắc băng') || name.includes('hac bang') || name.includes('độc quyền')) {
+      return '/assets/images/skin_hac_bang_doc_quyen.jpg';
+    }
+
     if (name.includes('hồng') || name.includes('hong') || name.includes('pink') || name.includes('nam tính')) {
 
       return '/assets/images/tyrannosaurus_hong_nam_tinh.png';
@@ -486,7 +490,7 @@ const SkinShop = {
 
     if (this.activeFilter !== 'all') {
 
-      list = list.filter(s => (s.species || '').toLowerCase().includes(this.activeFilter.toLowerCase()));
+      list = list.filter(s => s.allSpecies || s.universal || (s.species || '').toLowerCase().includes(this.activeFilter.toLowerCase()));
 
     }
 
@@ -698,7 +702,11 @@ const SkinShop = {
 
               </button>
 
-              ${isOwned ? `
+              ${(item.allSpecies || item.universal) ? `
+                <button class="btn-primary" style="flex: 1.25; padding: 8px 10px; font-size: 0.8rem; background: linear-gradient(135deg, #00d9ff, #0284c7); border: 1px solid #38bdf8; color: #041019; font-weight: 800; cursor: pointer;" onclick="GarageSkins.applySkin('${item.id}', '${item.name}')">
+                  ⚡ Áp Dụng Ngay (Mọi Dino)
+                </button>
+              ` : isOwned ? `
 
                 <button class="btn-primary" style="flex: 1; padding: 8px 10px; font-size: 0.8rem; background: rgba(0, 240, 118, 0.15); border: 1px solid var(--accent); color: var(--accent); cursor: pointer;" onclick="App.switchTab('skins')">
 
@@ -1086,11 +1094,11 @@ const GarageSkins = {
 
       if (data.success || data.ok) {
 
-        App.showToast("Thành công");
+        App.showToast(data.message || "⚡ Đã áp dụng Skin vào khủng long trong Server thành công!");
 
       } else {
 
-        App.showToast("Thất bại");
+        App.showToast(data.message || data.error || "Thất bại");
 
       }
 
@@ -1364,17 +1372,63 @@ const SkinEditor = {
 
 
 
+  loadExclusiveHacBang() {
+    this._isUniversalSkin = true;
+    this.pattern = 1;
+    this.variation = 0;
+    this.theme = 0;
+    this.palette = {
+      body: '#080B12',
+      markings: '#00D9FF',
+      underbelly: '#EEF8FF',
+      flank: '#101C2E',
+      detail: '#6889A6',
+      display: '#00E5FF',
+      eyes: '#00FFFF',
+      claws: '#00D9FF',
+      teeth: '#EEF8FF',
+      mouth: '#103A52'
+    };
+    const inPat = document.getElementById('skineditor-input-pattern');
+    if (inPat) inPat.value = 1;
+    this.renderZones();
+    this.updatePreview();
+    this.queueTextureUpdate();
+    if (!this.isAutoRotating) {
+      this.toggleAutoRotate(true);
+    }
+    App.showToast(`👑 Đã nạp Màu Độc Quyền Hắc Băng Lôi Điện cho ${this.species} (Hỗ trợ mọi loài Dino)!`);
+  },
+
   loadSkinObject(item) {
 
     if (!item) return;
 
-    this.species = item.species || 'Tyrannosaurus';
+    const isUniv = Boolean(item.allSpecies || item.universal || item.id === 'skin_hac_bang_doc_quyen' || (item.species || '').toLowerCase().includes('tất cả'));
+    this._isUniversalSkin = isUniv;
+
+    if (isUniv) {
+      if (!this.species || this.species.toLowerCase().includes('tất cả') || this.species === 'All') {
+        this.species = 'Diabloceratops';
+      }
+    } else {
+      this.species = item.species || 'Tyrannosaurus';
+    }
+
+    if (item.pattern !== undefined && !isNaN(parseInt(item.pattern, 10))) {
+      this.pattern = parseInt(item.pattern, 10);
+      const inPat = document.getElementById('skineditor-input-pattern');
+      if (inPat) inPat.value = this.pattern;
+    }
 
     this.palette = { ...(item.palette || this.defaults[this.species] || this.defaults.Tyrannosaurus) };
+    if (this.palette.male_display && !this.palette.display) {
+      this.palette.display = this.palette.male_display;
+    }
 
     const badgeSp = document.getElementById('skineditor-badge-species');
 
-    if (badgeSp) badgeSp.textContent = this.species;
+    if (badgeSp) badgeSp.textContent = isUniv ? `${this.species} (Mọi Loài)` : this.species;
 
     const selectSp = document.getElementById('skineditor-select-species');
 
@@ -1394,7 +1448,7 @@ const SkinEditor = {
 
     }
 
-    App.showToast(`🌸 Đang hiển thị 3D Skin: "${item.name}" với màu chuẩn API!`);
+    App.showToast(`👑 Đang hiển thị 3D Skin: "${item.name}" (Có thể đổi sang bất kỳ loài Dino nào để xem & áp dụng)!`);
 
   },
 
@@ -2510,16 +2564,18 @@ const SkinEditor = {
 
     this.species = sp;
 
-    const def = this.defaults[sp] || this.defaults.Tyrannosaurus;
+    if (!this._isUniversalSkin) {
+      const def = this.defaults[sp] || this.defaults.Tyrannosaurus;
 
-    for (const key of Object.keys(def)) {
+      for (const key of Object.keys(def)) {
 
-      if (!this.lockedZones[key]) {
+        if (!this.lockedZones[key]) {
 
-        this.palette[key] = def[key];
+          this.palette[key] = def[key];
+
+        }
 
       }
-
     }
 
     const badgeSp = document.getElementById('skineditor-badge-species');
@@ -2808,7 +2864,27 @@ const SkinEditor = {
 
 
 
-    container.innerHTML = zones.map(key => {
+    const exclusiveBanner = `
+      <div style="grid-column: 1 / -1; background: linear-gradient(135deg, rgba(8,11,18,0.96), rgba(16,28,46,0.95)); border: 1px solid rgba(0, 217, 255, 0.55); border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px; box-shadow: 0 6px 20px rgba(0, 217, 255, 0.15);">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <img src="/assets/images/skin_hac_bang_doc_quyen.jpg" alt="Màu Độc Quyền" style="width: 48px; height: 48px; object-fit: cover; border-radius: 8px; border: 1px solid #00D9FF;">
+          <div>
+            <div style="font-size: 0.85rem; font-weight: 800; color: #00D9FF;">👑 Màu Độc Quyền: Hắc Băng Lôi Điện (Mọi Dino)</div>
+            <div style="font-size: 0.72rem; color: #94a3b8; display: flex; gap: 6px; align-items: center; margin-top: 3px;">
+              <span style="display:inline-flex;align-items:center;gap:3px;"><i style="width:8px;height:8px;border-radius:50%;background:#080B12;border:1px solid #fff;display:inline-block;"></i>Đen huyền</span>
+              <span style="display:inline-flex;align-items:center;gap:3px;"><i style="width:8px;height:8px;border-radius:50%;background:#00D9FF;display:inline-block;"></i>Xanh ngọc</span>
+              <span style="display:inline-flex;align-items:center;gap:3px;"><i style="width:8px;height:8px;border-radius:50%;background:#EEF8FF;display:inline-block;"></i>Trắng băng</span>
+              <span style="display:inline-flex;align-items:center;gap:3px;"><i style="width:8px;height:8px;border-radius:50%;background:#6889A6;display:inline-block;"></i>Xám xanh</span>
+            </div>
+          </div>
+        </div>
+        <button type="button" class="btn-primary" style="padding: 7px 12px; font-size: 0.78rem; font-weight: 800; background: linear-gradient(135deg, #00D9FF, #0284C7); color: #041019; border: none; border-radius: 6px; white-space: nowrap; cursor: pointer;" onclick="SkinEditor.loadExclusiveHacBang()">
+          ⚡ Nạp Màu Độc Quyền
+        </button>
+      </div>
+    `;
+
+    container.innerHTML = exclusiveBanner + zones.map(key => {
 
       const info = this.zoneLabels[key] || { name: key, desc: '' };
 
