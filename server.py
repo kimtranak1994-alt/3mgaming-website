@@ -5805,13 +5805,13 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             "themeColor": "#00D9FF",
             "imageUrl": "/assets/images/skin_hac_bang_doc_quyen.jpg",
             "image": "/assets/images/skin_hac_bang_doc_quyen.jpg",
-            "colors": ["#06080E", "#00D9FF", "#EEF8FF", "#6889A6"],
+            "colors": ["#06080E", "#00D9FF", "#FFFFFF", "#06080E"],
             "palette": {
                 "body": "#06080E",
                 "markings": "#00D9FF",
-                "underbelly": "#EEF8FF",
-                "flank": "#00E5FF",
-                "detail": "#6889A6",
+                "underbelly": "#06080E",
+                "flank": "#06080E",
+                "detail": "#D1FAFF",
                 "detail1": "#00FFFF",
                 "display": "#00FFFF",
                 "male_display": "#00FFFF",
@@ -5820,8 +5820,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "teeth": "#EEF8FF",
                 "mouth": "#0A2233"
             },
-            "code": "Diabloceratops10006080EFF06080EFF00D9FFFFD1FAFFFF00F2FFFF00FFFFFF",
-            "skinCode": "Diabloceratops10006080EFF06080EFF00D9FFFFD1FAFFFF00F2FFFF00FFFFFF",
+            "code": "Triceratops10006080EFF06080EFF06080EFF00D9FFFF00FFFFFF00FFFFFF",
+            "skinCode": "Triceratops10006080EFF06080EFF06080EFF00D9FFFF00FFFFFF00FFFFFF",
+            "modDownloadUrl": "/assets/mods/Mod_Skin_Hac_Bang_Loi_Dien_Triceratops.zip",
             "description": "Phiên bản giới hạn: Độc đáo • Cá tính • Khác biệt. Phối màu Đen Huyền (nền chủ đạo), Xanh Ngọc (tạo điểm nhấn), Trắng Băng (tăng độ sắc nét) và Xám Xanh (tạo chiều sâu). Tương thích tự động 100% cho TẤT CẢ khủng long trong server!"
         }
 
@@ -10793,9 +10794,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     "theme": int(raw_bp.get("theme", 0) or 0),
                     "body": [0.003, 0.005, 0.010, 1.0],
                     "underbelly": [0.003, 0.005, 0.010, 1.0],
-                    "flank": [0.0, 0.85, 1.0, 1.0],
-                    "markings": [0.82, 0.98, 1.0, 1.0],
-                    "detail1": [0.0, 0.88, 1.0, 1.0],
+                    "flank": [0.003, 0.005, 0.010, 1.0],
+                    "markings": [0.0, 0.85, 1.0, 1.0],
+                    "detail1": [0.82, 0.98, 1.0, 1.0],
                     "eyes": [0.0, 1.0, 1.0, 1.0],
                     "male_display": [0.0, 0.95, 1.0, 1.0],
                     "teeth": [0.93, 0.97, 1.0, 1.0],

@@ -1615,7 +1615,7 @@
     "active": [
       "Multichambered Lungs",
       "Osteosclerosis",
-      "Enlarged meniscus",
+      "Hemomania",
       "Submerged Optical Retention"
     ],
     "parent": [
@@ -1628,7 +1628,7 @@
       "Hemomania",
       "Cellular Regeneration",
       "Congenital Hypoalgesia",
-      "None"
+      "Multichambered Lungs"
     ],
     "elderB": [
       "Accelerated Prey Drive",
@@ -1775,7 +1775,7 @@
       "Hydrodynamic"
     ],
     "parent": [
-      "Enlarged meniscus",
+      "Hemomania",
       "Photosynthetic Tissue",
       "Nocturnal",
       "Hypermetabolic Inanition"
@@ -1790,7 +1790,7 @@
       "Hemomania",
       "Accelerated Prey Drive",
       "Congenital Hypoalgesia",
-      "None"
+      "Multichambered Lungs"
     ]
   },
   "76561198975489051_cmvwfa1v76onsmr01ktamwqi8": {
@@ -2025,6 +2025,110 @@
       "Epidermal Fibrosis",
       "Osteosclerosis",
       "Congenital Hypoalgesia"
+    ]
+  },
+  "76561198975489051_cmvwkvg2z7p7opp01doz8xl98": {
+    "active": [
+      "Multichambered Lungs",
+      "Osteosclerosis",
+      "Hemomania",
+      "Submerged Optical Retention"
+    ],
+    "parent": [
+      "Epidermal Fibrosis",
+      "Gastronomic Regeneration",
+      "Increased Inspiratory Capacity",
+      "Hypermetabolic Inanition"
+    ],
+    "elderA": [
+      "Hemomania",
+      "Cellular Regeneration",
+      "Congenital Hypoalgesia",
+      "Multichambered Lungs"
+    ],
+    "elderB": [
+      "Accelerated Prey Drive",
+      "Accelerated Prey Drive",
+      "Hydrodynamic",
+      "Hydrodynamic"
+    ]
+  },
+  "cmvwkvg2z7p7opp01doz8xl98": {
+    "active": [
+      "Multichambered Lungs",
+      "Osteosclerosis",
+      "Hemomania",
+      "Submerged Optical Retention"
+    ],
+    "parent": [
+      "Epidermal Fibrosis",
+      "Gastronomic Regeneration",
+      "Increased Inspiratory Capacity",
+      "Hypermetabolic Inanition"
+    ],
+    "elderA": [
+      "Hemomania",
+      "Cellular Regeneration",
+      "Congenital Hypoalgesia",
+      "Multichambered Lungs"
+    ],
+    "elderB": [
+      "Accelerated Prey Drive",
+      "Accelerated Prey Drive",
+      "Hydrodynamic",
+      "Hydrodynamic"
+    ]
+  },
+  "76561198975489051_cmvwknhs47nvxn801bxx6zmaq": {
+    "active": [
+      "Enhanced Digestion",
+      "Multichambered Lungs",
+      "Wader",
+      "Hydrodynamic"
+    ],
+    "parent": [
+      "Hemomania",
+      "Photosynthetic Tissue",
+      "Nocturnal",
+      "Hypermetabolic Inanition"
+    ],
+    "elderA": [
+      "Cellular Regeneration",
+      "Gastronomic Regeneration",
+      "Epidermal Fibrosis",
+      "Osteosclerosis"
+    ],
+    "elderB": [
+      "Hemomania",
+      "Accelerated Prey Drive",
+      "Congenital Hypoalgesia",
+      "Multichambered Lungs"
+    ]
+  },
+  "cmvwknhs47nvxn801bxx6zmaq": {
+    "active": [
+      "Enhanced Digestion",
+      "Multichambered Lungs",
+      "Wader",
+      "Hydrodynamic"
+    ],
+    "parent": [
+      "Hemomania",
+      "Photosynthetic Tissue",
+      "Nocturnal",
+      "Hypermetabolic Inanition"
+    ],
+    "elderA": [
+      "Cellular Regeneration",
+      "Gastronomic Regeneration",
+      "Epidermal Fibrosis",
+      "Osteosclerosis"
+    ],
+    "elderB": [
+      "Hemomania",
+      "Accelerated Prey Drive",
+      "Congenital Hypoalgesia",
+      "Multichambered Lungs"
     ]
   }
 }

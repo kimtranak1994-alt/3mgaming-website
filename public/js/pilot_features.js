@@ -702,6 +702,11 @@ const SkinShop = {
 
               </button>
 
+              ${(item.id === 'skin_hac_bang_doc_quyen' || (item.name || '').includes('Hăc Băng') || (item.name || '').includes('hac bang')) ? `
+                <a href="/assets/mods/Mod_Skin_Hac_Bang_Loi_Dien_Triceratops.zip" download class="btn-secondary" style="flex: 1; padding: 8px 10px; font-size: 0.78rem; display: flex; align-items: center; justify-content: center; gap: 4px; border-color: #38bdf8; color: #38bdf8; text-decoration: none; font-weight: 700;" title="Tải file mod riêng chuẩn 100% không qua IslePilot">
+                  📦 Tải Mod (.zip)
+                </a>
+              ` : ''}
               ${(item.allSpecies || item.universal) ? `
                 <button class="btn-primary" style="flex: 1.25; padding: 8px 10px; font-size: 0.8rem; background: linear-gradient(135deg, #00d9ff, #0284c7); border: 1px solid #38bdf8; color: #041019; font-weight: 800; cursor: pointer;" onclick="GarageSkins.applySkin('${item.id}', '${item.name}')">
                   ⚡ Áp Dụng Ngay (Mọi Dino)
@@ -1432,7 +1437,7 @@ const SkinEditor = {
 
     if (isUniv) {
       if (!this.species || this.species.toLowerCase().includes('tất cả') || this.species === 'All') {
-        this.species = 'Diabloceratops';
+        this.species = 'Triceratops';
       }
     } else {
       this.species = item.species || 'Tyrannosaurus';
@@ -1487,7 +1492,7 @@ const SkinEditor = {
       this._isUniversalSkin = isUniv;
       if (isUniv) {
         if (!this.species || this.species.toLowerCase().includes('tất cả') || this.species === 'All' || this.species === 'Tyrannosaurus') {
-          this.species = 'Diabloceratops';
+          this.species = 'Triceratops';
         }
       } else {
         this.species = p.species || 'Tyrannosaurus';

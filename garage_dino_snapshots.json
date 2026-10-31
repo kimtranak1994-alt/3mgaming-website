@@ -1198,5 +1198,205 @@
       "protein": 100.0,
       "lipid": 100.0
     }
+  },
+  "76561198975489051_cmvwkvg2z7p7opp01doz8xl98": {
+    "id": "cmvwkvg2z7p7opp01doz8xl98",
+    "name": null,
+    "species": "Deinosuchus",
+    "gender": "Male",
+    "growth": 0.904689,
+    "health": 1,
+    "hunger": 0.433869956205621,
+    "thirst": 1,
+    "stamina": 0.6931660000000001,
+    "isPrimeElder": true,
+    "mutations": [
+      "Multichambered Lungs",
+      "Osteosclerosis",
+      "Hemomania",
+      "Submerged Optical Retention"
+    ],
+    "mutationSlots": {
+      "active": [
+        "Multichambered Lungs",
+        "Osteosclerosis",
+        "Hemomania",
+        "Submerged Optical Retention"
+      ],
+      "parent": [
+        "Epidermal Fibrosis",
+        "Gastronomic Regeneration",
+        "Increased Inspiratory Capacity",
+        "Hypermetabolic Inanition"
+      ],
+      "elderA": [
+        "Hemomania",
+        "Cellular Regeneration",
+        "Congenital Hypoalgesia",
+        "Multichambered Lungs"
+      ],
+      "elderB": [
+        "Accelerated Prey Drive",
+        "Accelerated Prey Drive",
+        "Hydrodynamic",
+        "Hydrodynamic"
+      ]
+    },
+    "parkedAt": "2026-10-31T15:50:39.659Z",
+    "nutrients": {
+      "carb": 100.0,
+      "protein": 100.0,
+      "lipid": 100.0
+    }
+  },
+  "cmvwkvg2z7p7opp01doz8xl98": {
+    "id": "cmvwkvg2z7p7opp01doz8xl98",
+    "name": null,
+    "species": "Deinosuchus",
+    "gender": "Male",
+    "growth": 0.904689,
+    "health": 1,
+    "hunger": 0.433869956205621,
+    "thirst": 1,
+    "stamina": 0.6931660000000001,
+    "isPrimeElder": true,
+    "mutations": [
+      "Multichambered Lungs",
+      "Osteosclerosis",
+      "Hemomania",
+      "Submerged Optical Retention"
+    ],
+    "mutationSlots": {
+      "active": [
+        "Multichambered Lungs",
+        "Osteosclerosis",
+        "Hemomania",
+        "Submerged Optical Retention"
+      ],
+      "parent": [
+        "Epidermal Fibrosis",
+        "Gastronomic Regeneration",
+        "Increased Inspiratory Capacity",
+        "Hypermetabolic Inanition"
+      ],
+      "elderA": [
+        "Hemomania",
+        "Cellular Regeneration",
+        "Congenital Hypoalgesia",
+        "Multichambered Lungs"
+      ],
+      "elderB": [
+        "Accelerated Prey Drive",
+        "Accelerated Prey Drive",
+        "Hydrodynamic",
+        "Hydrodynamic"
+      ]
+    },
+    "parkedAt": "2026-10-31T15:50:39.659Z",
+    "nutrients": {
+      "carb": 100.0,
+      "protein": 100.0,
+      "lipid": 100.0
+    }
+  },
+  "76561198975489051_cmvwknhs47nvxn801bxx6zmaq": {
+    "id": "cmvwknhs47nvxn801bxx6zmaq",
+    "name": null,
+    "species": "Giganotosaurus",
+    "gender": "Male",
+    "growth": 0.849813,
+    "health": 0.935066,
+    "hunger": 0.9319984989814517,
+    "thirst": 0.920187,
+    "stamina": 1,
+    "isPrimeElder": true,
+    "mutations": [
+      "Enhanced Digestion",
+      "Multichambered Lungs",
+      "Wader",
+      "Hydrodynamic"
+    ],
+    "mutationSlots": {
+      "active": [
+        "Enhanced Digestion",
+        "Multichambered Lungs",
+        "Wader",
+        "Hydrodynamic"
+      ],
+      "parent": [
+        "Hemomania",
+        "Photosynthetic Tissue",
+        "Nocturnal",
+        "Hypermetabolic Inanition"
+      ],
+      "elderA": [
+        "Cellular Regeneration",
+        "Gastronomic Regeneration",
+        "Epidermal Fibrosis",
+        "Osteosclerosis"
+      ],
+      "elderB": [
+        "Hemomania",
+        "Accelerated Prey Drive",
+        "Congenital Hypoalgesia",
+        "Multichambered Lungs"
+      ]
+    },
+    "parkedAt": "2026-10-31T15:44:28.612Z",
+    "nutrients": {
+      "carb": 100.0,
+      "protein": 100.0,
+      "lipid": 100.0
+    }
+  },
+  "cmvwknhs47nvxn801bxx6zmaq": {
+    "id": "cmvwknhs47nvxn801bxx6zmaq",
+    "name": null,
+    "species": "Giganotosaurus",
+    "gender": "Male",
+    "growth": 0.849813,
+    "health": 0.935066,
+    "hunger": 0.9319984989814517,
+    "thirst": 0.920187,
+    "stamina": 1,
+    "isPrimeElder": true,
+    "mutations": [
+      "Enhanced Digestion",
+      "Multichambered Lungs",
+      "Wader",
+      "Hydrodynamic"
+    ],
+    "mutationSlots": {
+      "active": [
+        "Enhanced Digestion",
+        "Multichambered Lungs",
+        "Wader",
+        "Hydrodynamic"
+      ],
+      "parent": [
+        "Hemomania",
+        "Photosynthetic Tissue",
+        "Nocturnal",
+        "Hypermetabolic Inanition"
+      ],
+      "elderA": [
+        "Cellular Regeneration",
+        "Gastronomic Regeneration",
+        "Epidermal Fibrosis",
+        "Osteosclerosis"
+      ],
+      "elderB": [
+        "Hemomania",
+        "Accelerated Prey Drive",
+        "Congenital Hypoalgesia",
+        "Multichambered Lungs"
+      ]
+    },
+    "parkedAt": "2026-10-31T15:44:28.612Z",
+    "nutrients": {
+      "carb": 100.0,
+      "protein": 100.0,
+      "lipid": 100.0
+    }
   }
 }
