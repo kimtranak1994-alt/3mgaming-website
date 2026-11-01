@@ -1,15 +1,14 @@
-// Module Quản lý Gara Khủng Long (IslePilot Dino Garage)
+// Module Quản lý Gara Khủng Long (Đồng bộ 100% chuẩn IslePilot API v1 - https://3mgaming.islepilot.eu/garage)
 
 const Garage = {
-
   dinos: [],
-
   slotsTotal: 5,
-
   currentMode: 'all',
   autoRefreshTimer: null,
   isRefreshing: false,
   isSpawning: false,
+  storeCountdownTimer: null,
+  isStoring: false,
 
   getDeletedDinos() {
     try {
@@ -31,265 +30,192 @@ const Garage = {
     } catch (e) {}
   },
 
-
+  removeDeletedDino(id) {
+    if (!id) return;
+    try {
+      const sId = String(id);
+      const list = this.getDeletedDinos().filter(item => String(item) !== sId);
+      localStorage.setItem('deleted_garage_dinos', JSON.stringify(list));
+    } catch (e) {}
+  },
 
   isCarnivore(species) {
-
     const s = (species || '').toLowerCase().trim();
-
-    // Danh sách các loài Ăn Cỏ (Herbivores) chính xác trên server
-
+    // Danh sách đầy đủ các loài Ăn Cỏ (Herbivores) trên IslePilot (bao gồm tên rút gọn của mod như Anky, Puerta)
     const herbivores = [
-
       'triceratops', 'trike',
-
       'diabloceratops', 'diablo',
-
       'stegosaurus', 'stego',
-
       'tenontosaurus', 'tenonto',
-
       'pachycephalosaurus', 'pachy',
-
       'gallimimus', 'galli',
-
       'hypsilophodon', 'hypsi',
-
       'dryosaurus', 'dryo',
-
       'beipiaosaurus', 'beipi',
-
       'maiasaura', 'maia',
-
-      'ankylosaurus', 'ankyl',
-
+      'ankylosaurus', 'ankyl', 'anky',
       'puertasaurus', 'puerta',
-
-      'therizinosaurus', 'theri'
-
+      'therizinosaurus', 'theri',
+      'camarasaurus', 'camara',
+      'kentrosaurus', 'kentro',
+      'avaceratops', 'ava',
+      'psittacosaurus', 'psittaco',
+      'shantungosaurus', 'shant',
+      'magyarosaurus', 'magy'
     ];
 
     for (const h of herbivores) {
-
       if (s === h || s.startsWith(h) || s.includes(h)) {
-
         return false;
-
       }
-
     }
-
-    // Các loài còn lại (Tyrannosaurus, Allosaurus, Carnotaurus, Ceratosaurus, Deinosuchus, Dilophosaurus, Herrerasaurus, Omniraptor, Troodon, Spinosaurus, Giganotosaurus, Baryonyx, IndoRex, Pteranodon) là ăn thịt
-
     return true;
-
   },
-
-
 
   getDinoImageUrl(species) {
-
     if (!species) return '/assets/images/Tyrannosaurus.webp';
-
     const s = species.toLowerCase().trim();
 
-
-
-    // 1. Kiểm tra loài có tên đặc biệt trước để tránh trùng lặp chuỗi
-
-    if (s.includes('tyranno') || s.includes('t-rex') || s.includes('rex')) return '/assets/images/Tyrannosaurus.webp';
-
+    if (s.includes('tyranno') || s.includes('t-rex') || s.includes('rex') || s.includes('indominus') || s.includes('indo')) {
+      return '/assets/images/Tyrannosaurus.webp';
+    }
     if (s.includes('triceratops') || s.includes('trike')) return 'https://islepilot.eu/cdn/dino-art/render/Triceratops.webp';
-
     if (s.includes('diabloceratops') || s.includes('diablo')) return 'https://islepilot.eu/cdn/dino-art/render/Diabloceratops.webp';
-
     if (s.includes('ceratosaurus') || s.startsWith('cera')) return 'https://islepilot.eu/cdn/dino-art/render/Ceratosaurus.webp';
-
     if (s.includes('carnotaurus') || s.includes('carno')) return 'https://islepilot.eu/cdn/dino-art/render/Carnotaurus.webp';
-
-    if (s.includes('allosaurus') || s.includes('allo')) return 'https://islepilot.eu/cdn/dino-art/render/Allosaurus.webp';
-
+    if (s.includes('allosaurus') || s.includes('allo') || s.includes('giganotosaurus') || s.includes('giga')) {
+      return 'https://islepilot.eu/cdn/dino-art/render/Allosaurus.webp';
+    }
     if (s.includes('deinosuchus') || s.includes('deino')) return 'https://islepilot.eu/cdn/dino-art/render/Deinosuchus.webp';
-
-    if (s.includes('stegosaurus') || s.includes('stego')) return 'https://islepilot.eu/cdn/dino-art/render/Stegosaurus.webp';
-
+    if (s.includes('stegosaurus') || s.includes('stego') || s.includes('anky')) {
+      return 'https://islepilot.eu/cdn/dino-art/render/Stegosaurus.webp';
+    }
     if (s.includes('omniraptor') || s.includes('omni') || s.includes('raptor')) return 'https://islepilot.eu/cdn/dino-art/render/Omniraptor.webp';
-
     if (s.includes('troodon')) return 'https://islepilot.eu/cdn/dino-art/render/Troodon.webp';
-
-    if (s.includes('pteranodon') || s.includes('ptera')) return 'https://islepilot.eu/cdn/dino-art/render/Pteranodon.webp';
-
+    if (s.includes('pteranodon') || s.includes('ptera') || s.includes('quetz')) {
+      return 'https://islepilot.eu/cdn/dino-art/render/Pteranodon.webp';
+    }
     if (s.includes('tenontosaurus') || s.includes('tenonto')) return 'https://islepilot.eu/cdn/dino-art/render/Tenontosaurus.webp';
-
     if (s.includes('pachycephalosaurus') || s.includes('pachy')) return 'https://islepilot.eu/cdn/dino-art/render/Pachycephalosaurus.webp';
-
     if (s.includes('gallimimus') || s.includes('galli')) return 'https://islepilot.eu/cdn/dino-art/render/Gallimimus.webp';
-
     if (s.includes('herrerasaurus') || s.includes('herrera')) return 'https://islepilot.eu/cdn/dino-art/render/Herrerasaurus.webp';
-
-    if (s.includes('beipiaosaurus') || s.includes('beipi')) return 'https://islepilot.eu/cdn/dino-art/render/Beipiaosaurus.webp';
-
+    if (s.includes('beipiaosaurus') || s.includes('beipi') || s.includes('theri')) {
+      return 'https://islepilot.eu/cdn/dino-art/render/Beipiaosaurus.webp';
+    }
     if (s.includes('hypsilophodon') || s.includes('hypsi')) return 'https://islepilot.eu/cdn/dino-art/render/Hypsilophodon.webp';
-
     if (s.includes('dryosaurus') || s.includes('dryo')) return 'https://islepilot.eu/cdn/dino-art/render/Dryosaurus.webp';
-
     if (s.includes('dilophosaurus') || s.includes('dilo')) return 'https://islepilot.eu/cdn/dino-art/render/Dilophosaurus.webp';
+    if (s.includes('baryonyx') || s.includes('bary') || s.includes('spino')) {
+      return 'https://islepilot.eu/cdn/dino-art/render/Baryonyx.webp';
+    }
+    if (s.includes('maiasaura') || s.includes('maia') || s.includes('puerta')) {
+      return 'https://islepilot.eu/cdn/dino-art/render/Maiasaura.webp';
+    }
 
-    if (s.includes('baryonyx') || s.includes('bary')) return 'https://islepilot.eu/cdn/dino-art/render/Baryonyx.webp';
-
-    if (s.includes('maiasaura') || s.includes('maia')) return 'https://islepilot.eu/cdn/dino-art/render/Maiasaura.webp';
-
-    if (s.includes('spinosaurus') || s.includes('spino')) return 'https://islepilot.eu/cdn/dino-art/render/Spinosaurus.webp';
-
-    if (s.includes('giganotosaurus') || s.includes('giga')) return 'https://islepilot.eu/cdn/dino-art/render/Giganotosaurus.webp';
-
-    if (s.includes('ankylosaurus') || s.includes('ankyl')) return 'https://islepilot.eu/cdn/dino-art/render/Ankylosaurus.webp';
-
-    if (s.includes('puerta')) return 'https://islepilot.eu/cdn/dino-art/render/Puerta.webp';
-
-    if (s.includes('therizinosaurus') || s.includes('theri')) return 'https://islepilot.eu/cdn/dino-art/render/Therizinosaurus.webp';
-
-
-
-    const formattedName = species.charAt(0).toUpperCase() + species.slice(1).split(' ')[0];
-
-    return `https://islepilot.eu/cdn/dino-art/render/${formattedName}.webp`;
-
+    return '/assets/images/Tyrannosaurus.webp';
   },
-
-
 
   getDinoIcon(species) {
-
     const s = (species || '').toLowerCase();
-
-    if (s.includes('tyrannosaurus') || s.includes('t-rex') || s.includes('rex')) return '🦖';
-
-    if (s.includes('spino') || s.includes('deinosuchus')) return '🐊';
-
-    if (s.includes('carno') || s.includes('cera') || s.includes('allo')) return '🦕';
-
-    if (s.includes('stego') || s.includes('diablo') || s.includes('trike') || s.includes('triceratops')) return '🛡️';
-
-    if (s.includes('omni') || s.includes('troodon') || s.includes('raptor')) return '🦅';
-
+    if (s.includes('tyrannosaurus') || s.includes('t-rex') || s.includes('rex') || s.includes('indo')) return '🦖';
+    if (s.includes('spino') || s.includes('deinosuchus') || s.includes('bary')) return '🐊';
+    if (s.includes('ptera') || s.includes('quetz')) return '🦅';
+    if (s.includes('stego') || s.includes('diablo') || s.includes('trike') || s.includes('triceratops') || s.includes('anky')) return '🛡️';
+    if (s.includes('omni') || s.includes('troodon') || s.includes('raptor')) return '🦖';
     if (s.includes('tenonto') || s.includes('pachy') || s.includes('galli')) return '🦘';
-
     return '🦕';
-
   },
 
-
-
   async renderActiveDino() {
-
     const banner = document.getElementById('garage-active-dino-banner');
-
     if (!banner) return;
-
     try {
-
       const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
-
       const steamParam = (user && user.steamId) ? `?steam_id=${user.steamId}` : '';
-
       const res = await fetch(`/api/player/active-dino${steamParam}`);
-
       if (!res.ok) return;
-
       const data = await res.json();
-
       if (data && data.species) {
-
         banner.style.display = 'flex';
-
         const img = document.getElementById('garage-active-dino-img');
-
         const title = document.getElementById('garage-active-dino-title');
-
         const status = document.getElementById('garage-active-dino-status');
-
-
 
         if (img) img.src = this.getDinoImageUrl(data.species);
 
         const nutr = data.nutrients || { carb: 100, protein: 100, lipid: 100 };
         this.activeDinoNutrients = nutr;
+
         if (title) {
-
-          const growthPct = Math.round((data.growth || 1.0) * 100);
-
-          const genderText = (data.female || data.gender === 'female') ? '♀ Cái' : '♂ Đực';
-
+          const growthPct = data.growth_percent !== undefined ? data.growth_percent : Math.round((data.growth || 1.0) * 1000) / 10;
+          const genderText = (data.female || data.gender === 'female') ? '♀ Cái (Female)' : '♂ Đực (Male)';
           const isCarno = this.isCarnivore(data.species);
-
           const dietLabel = isCarno ? '🍖 Ăn Thịt' : '🌿 Ăn Cỏ';
-
-          title.textContent = `${data.species} (${growthPct}% - ${genderText}) [${dietLabel}]`;
-
+          const primeTag = data.isPrimeElder ? ' • 👑 Prime Elder' : '';
+          title.textContent = `${data.species} (${growthPct}% - ${genderText}) [${dietLabel}${primeTag}]`;
         }
 
         const nutrBox = document.getElementById('garage-active-dino-nutrients');
         if (nutrBox) {
-          const valA = Math.round(nutr.carb !== undefined ? nutr.carb : 100);
-          const valB = Math.round(nutr.protein !== undefined ? nutr.protein : 100);
-          const valY = Math.round(nutr.lipid !== undefined ? nutr.lipid : 100);
+          const hpCur = Math.round(data.health || 0).toLocaleString();
+          const hpMax = Math.round(data.maxHealth || 0).toLocaleString();
+          const hpPct = data.health_percent !== undefined ? data.health_percent : 100;
+
+          const huCur = Math.round(data.hunger || 0).toLocaleString();
+          const huMax = Math.round(data.maxHunger || 0).toLocaleString();
+          const huPct = data.hunger_percent !== undefined ? data.hunger_percent : 100;
+
+          const thCur = Math.round(data.thirst || 0).toLocaleString();
+          const thMax = Math.round(data.maxThirst || 0).toLocaleString();
+          const thPct = data.thirst_percent !== undefined ? data.thirst_percent : 100;
+
+          const activeMuts = ((data.mutationSlots && data.mutationSlots.active) || data.mutations || [])
+            .filter(m => m && m !== 'None' && String(m).trim() !== '');
+
+          const mutBadgesHtml = activeMuts.length > 0
+            ? activeMuts.map(m => `<span style="padding: 2px 7px; border-radius: 5px; background: rgba(16, 185, 129, 0.16); border: 1px solid rgba(16, 185, 129, 0.35); color: #34d399; font-weight: 600;">🧬 ${m}</span>`).join('')
+            : `<span style="color: #64748b;">Chưa có đột biến</span>`;
+
           nutrBox.innerHTML = `
             <div style="display: flex; gap: 8px; align-items: center; margin-top: 8px; font-size: 0.78rem; flex-wrap: wrap;">
-              <span style="color: #94a3b8; font-weight: 700;">Dinh dưỡng sinh tồn:</span>
-              <span style="padding: 2px 8px; border-radius: 6px; background: rgba(245, 158, 11, 0.16); border: 1px solid rgba(245, 158, 11, 0.35); color: #fbbf24; font-weight: 700;" title="Carbohydrate (A)">🔶 A: ${valA}%</span>
-              <span style="padding: 2px 8px; border-radius: 6px; background: rgba(59, 130, 246, 0.16); border: 1px solid rgba(59, 130, 246, 0.35); color: #60a5fa; font-weight: 700;" title="Protein (B)">🔷 B: ${valB}%</span>
-              <span style="padding: 2px 8px; border-radius: 6px; background: rgba(168, 85, 247, 0.16); border: 1px solid rgba(168, 85, 247, 0.35); color: #c084fc; font-weight: 700;" title="Lipid (Y)">🟣 Y: ${valY}%</span>
+              <span style="padding: 2px 8px; border-radius: 6px; background: rgba(239, 68, 68, 0.16); border: 1px solid rgba(239, 68, 68, 0.35); color: #fca5a5; font-weight: 700;">❤️ Máu: ${hpCur}/${hpMax} (${hpPct}%)</span>
+              <span style="padding: 2px 8px; border-radius: 6px; background: rgba(245, 158, 11, 0.16); border: 1px solid rgba(245, 158, 11, 0.35); color: #fde68a; font-weight: 700;">🍖 No: ${huCur}/${huMax} (${huPct}%)</span>
+              <span style="padding: 2px 8px; border-radius: 6px; background: rgba(59, 130, 246, 0.16); border: 1px solid rgba(59, 130, 246, 0.35); color: #93c5fd; font-weight: 700;">💧 Nước: ${thCur}/${thMax} (${thPct}%)</span>
+            </div>
+            <div style="display: flex; gap: 6px; align-items: center; margin-top: 6px; font-size: 0.75rem; flex-wrap: wrap;">
+              <span style="color: #94a3b8; font-weight: 700;">Đột biến Active:</span>
+              ${mutBadgesHtml}
             </div>
           `;
         }
 
         if (status) {
-
           if (data.online) {
-
-            status.textContent = '🟢 Đang Trực Tuyến';
-
+            status.textContent = '🟢 Đang Trực Tuyến (In-Game)';
             status.style.background = 'rgba(0, 240, 118, 0.15)';
-
             status.style.color = '#00f076';
-
             status.style.border = '1px solid rgba(0, 240, 118, 0.3)';
-
           } else {
-
-            status.textContent = '⚪ Ngoại Tuyến (Offline)';
-
+            status.textContent = '⚪ Ngoại Tuyến (Safe Logged)';
             status.style.background = 'rgba(148, 163, 184, 0.15)';
-
             status.style.color = '#94a3b8';
-
             status.style.border = '1px solid rgba(148, 163, 184, 0.3)';
-
           }
-
         }
-
       } else {
-
         banner.style.display = 'none';
-
       }
-
     } catch (e) {
-
       console.warn("Lỗi tải thông tin khủng long đang chơi:", e);
-
     }
-
   },
 
-
-
-    updateSlotsBadge() {
+  updateSlotsBadge() {
     const slotBadge = document.getElementById('garage-slots-badge');
     if (slotBadge) {
-      slotBadge.textContent = `${(this.dinos || []).length} / ${this.slotsTotal || 5} Khủng Long`;
+      const count = (this.dinos || []).length;
+      const maxSlots = Math.max(this.slotsTotal || 5, count);
+      slotBadge.textContent = `${count} / ${maxSlots} Khủng Long`;
     }
   },
 
@@ -305,7 +231,7 @@ const Garage = {
         return;
       }
       this.silentRefresh();
-    }, 4000);
+    }, 5000);
   },
 
   stopAutoRefresh() {
@@ -320,8 +246,8 @@ const Garage = {
     this.isRefreshing = true;
 
     const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
-    const garageUrl = user 
-      ? `/api/server/garage?steam_id=${user.steamId}&_t=${Date.now()}` 
+    const garageUrl = user
+      ? `/api/server/garage?steam_id=${user.steamId}&_t=${Date.now()}`
       : `/api/server/garage?_t=${Date.now()}`;
 
     try {
@@ -331,14 +257,12 @@ const Garage = {
       const data = await res.json();
       if (data && Array.isArray(data.dinos)) {
         const deletedList = this.getDeletedDinos();
-        const newDinos = data.dinos.filter(d => !deletedList.includes(String(d.id)));
+        const newDinos = data.dinos.filter(d => d.source === 'islepilot' || !deletedList.includes(String(d.id)));
 
-        const currentIds = (this.dinos || []).map(d => String(d.id)).sort().join(',');
-        const newIds = newDinos.map(d => String(d.id)).sort().join(',');
-
-        if (currentIds !== newIds) {
+        const sig = (arr) => arr.map(d => `${d.id}:${d.name || ''}:${d.growth_percent}:${d.health}:${d.hunger}:${d.thirst}`).join('|');
+        if (sig(this.dinos || []) !== sig(newDinos)) {
           this.dinos = newDinos;
-          this.slotsTotal = data.slots_total || 5;
+          this.slotsTotal = Math.max(data.slots_total || 5, newDinos.length);
           this.updateSlotsBadge();
           this.displayDinos(this.dinos, this.currentMode);
         }
@@ -352,154 +276,75 @@ const Garage = {
 
   async render() {
     this.startAutoRefresh();
-
     this.renderActiveDino();
 
     const container = document.getElementById('garage-container');
-
     if (!container) return;
 
-
-
     const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
-
-    const garageUrl = user 
-      ? `/api/server/garage?steam_id=${user.steamId}&_t=${Date.now()}` 
+    const garageUrl = user
+      ? `/api/server/garage?steam_id=${user.steamId}&_t=${Date.now()}`
       : `/api/server/garage?_t=${Date.now()}`;
 
     let data = null;
-
     try {
-
       const res = await fetch(garageUrl);
-
       data = await res.json();
-
     } catch (e) {
-
       console.warn("Không thể tải Gara:", e);
-
     }
-
-    if (data && data.deleted_ids && Array.isArray(data.deleted_ids)) {
-      const localList = this.getDeletedDinos();
-      const merged = Array.from(new Set([...localList, ...data.deleted_ids.map(String)]));
-      try {
-        localStorage.setItem('deleted_garage_dinos', JSON.stringify(merged));
-      } catch (e) {}
-    }
-
-    // Tự động đồng bộ 2 chiều các ID đã xóa lên server
-    const currentDeleted = this.getDeletedDinos();
-    if (currentDeleted.length > 0 && user && user.steamId) {
-      fetch('/api/server/garage/sync-deleted', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ deleted_ids: currentDeleted, steam_id: user.steamId })
-      }).catch(() => {});
-    }
-
-
 
     if (!data || !data.dinos || data.dinos.length === 0) {
-
       container.innerHTML = `
-
         <div class="card" style="grid-column: 1/-1; text-align: center; padding: 40px;">
-
           <p style="font-size: 1.05rem; margin-bottom: 16px;">
-
-            ${user ? 'Bạn chưa cất khủng long nào trong Gara của server 3MGAMING.' : 'Hãy đăng nhập Steam để xem và quản lý khủng long trong Gara của bạn!'}
-
+            ${user ? 'Bạn chưa cất khủng long nào trong Gara IslePilot của server 3MGAMING.' : 'Hãy đăng nhập Steam để xem và quản lý khủng long trong Gara của bạn!'}
           </p>
-
-          ${!user ? '<a href="/api/player/steam/login?redirect=%2F" class="btn-primary" style="display: inline-flex;">🎮 Đăng Nhập Steam Ngay</a>' : ''}
-
+          ${!user ? '<a href="/api/player/steam/login?redirect=%2F%23garage" class="btn-primary" style="display: inline-flex;">🎮 Đăng Nhập Steam Ngay</a>' : ''}
         </div>
-
       `;
-
       const slotBadge = document.getElementById('garage-slots-badge');
-
-      if (slotBadge) slotBadge.textContent = `0 / 5 Khủng Long`;
-
+      if (slotBadge) slotBadge.textContent = `0 / ${data && data.slots_total ? data.slots_total : 5} Khủng Long`;
       return;
-
     }
-
-
 
     const deletedList = this.getDeletedDinos();
-    this.dinos = (data.dinos || []).filter(d => !deletedList.includes(String(d.id)));
+    // Khủng long trả về trực tiếp từ IslePilot API luôn được hiển thị đúng 100% theo https://3mgaming.islepilot.eu/garage
+    data.dinos.forEach(d => {
+      if (d.source === 'islepilot') {
+        this.removeDeletedDino(d.id);
+      }
+    });
+    this.dinos = (data.dinos || []).filter(d => d.source === 'islepilot' || !deletedList.includes(String(d.id)));
+    this.slotsTotal = Math.max(data.slots_total || 5, this.dinos.length);
 
-    this.slotsTotal = data.slots_total || 5;
-
-
-
-    // Cập nhật slot badge
-
-    const slotBadge = document.getElementById('garage-slots-badge');
-
-    if (slotBadge) {
-
-      slotBadge.textContent = `${this.dinos.length} / ${this.slotsTotal} Khủng Long`;
-
-    }
-
-
-
+    this.updateSlotsBadge();
     this.displayDinos(this.dinos, this.currentMode);
-
   },
-
-
 
   formatStoredTime(timeStr) {
-
     if (!timeStr) return 'Gần đây';
-
     if (timeStr.includes('/') || (timeStr.includes('-') && !timeStr.includes('T'))) {
-
       return timeStr;
-
     }
-
     try {
-
       const d = new Date(timeStr);
-
       if (!isNaN(d.getTime())) {
-
         const pad = (n) => String(n).padStart(2, '0');
-
         const hours = pad(d.getHours());
-
         const mins = pad(d.getMinutes());
-
         const secs = pad(d.getSeconds());
-
         const day = pad(d.getDate());
-
         const month = pad(d.getMonth() + 1);
-
         const year = d.getFullYear();
-
         return `${hours}:${mins}:${secs} - ${day}/${month}/${year}`;
-
       }
-
     } catch (e) {}
-
     return timeStr;
-
   },
 
-
-
   renderDinoCard(dino) {
-
     const isCarno = this.isCarnivore(dino.species);
-
     const slots = dino.mutationSlots || {};
     const activeMut = (slots.active && slots.active.length > 0) ? slots.active : (dino.mutations || []);
     const parentMut = slots.parent || [];
@@ -511,290 +356,161 @@ const Garage = {
     const validElderA = elderAMut.filter(isVal);
     const validElderB = elderBMut.filter(isVal);
     const totalMutations = validActive.length + validParent.length + validElderA.length + validElderB.length;
-    const validMutations = validActive;
 
+    const hpPct = dino.health !== undefined ? dino.health : 100;
+    const huPct = dino.hunger !== undefined ? dino.hunger : 100;
+    const thPct = dino.thirst !== undefined ? dino.thirst : 100;
+    const stPct = dino.stamina !== undefined ? dino.stamina : 100;
 
+    const activeMutPills = validActive.length > 0
+      ? validActive.map(m => {
+          const vnName = (this.MUTATION_DICT[m] && this.MUTATION_DICT[m].name) ? this.MUTATION_DICT[m].name : m;
+          return `<span style="padding: 2px 6px; border-radius: 5px; background: rgba(16, 185, 129, 0.14); border: 1px solid rgba(16, 185, 129, 0.35); color: #34d399; font-size: 0.72rem; font-weight: 600;" title="${m}">${vnName}</span>`;
+        }).join('')
+      : `<span style="color: var(--text-muted); font-size: 0.73rem;">Chưa kích hoạt đột biến</span>`;
+
+    const safeName = (dino.name || dino.species || '').replace(/'/g, "\\'");
 
     return `
-
       <div class="dino-card">
-
         <div class="dino-card-banner">
-
           <img src="${this.getDinoImageUrl(dino.species)}" alt="${dino.species}" class="dino-img-render" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-
           <span style="display:none; font-size: 52px;">${this.getDinoIcon(dino.species)}</span>
-
           <span class="growth-badge">${dino.stage || 'Adult'} (${dino.growth_percent}%)</span>
-
           ${dino.is_prime_elder ? '<span class="growth-badge" style="right: auto; left: 10px; background: rgba(245, 158, 11, 0.25); border-color: #f59e0b; color: #fbbf24;">👑 Prime Elder</span>' : ''}
           <span class="growth-badge" style="right: auto; left: ${dino.is_prime_elder ? '135px' : '10px'}; background: rgba(16, 185, 129, 0.25); border-color: #10b981; color: #34d399;">🧬 ${totalMutations}/16 Đột biến</span>
-
         </div>
 
         <div class="dino-card-body">
-
           <div class="dino-name" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px;">
-
             <div>
-
               ${dino.name ? `<span style="color: var(--accent); font-weight: 800;">${dino.name}</span> <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">(${dino.species})</span>` : dino.species}
-
             </div>
-
             <span class="diet-badge ${isCarno ? 'diet-carnivore' : 'diet-herbivore'}">
-
               ${isCarno ? '🍖 Ăn Thịt' : '🌿 Ăn Cỏ'}
-
             </span>
-
           </div>
-
-
 
           <div class="dino-info" style="margin-top: 6px;">
-
             <span>Giới tính: <b>${dino.gender}</b></span>
-
             <span>Tăng trưởng: <b style="color: var(--accent);">${dino.growth_percent}%</b></span>
-
           </div>
-
-
 
           <div class="dino-stat-row">
-
             <div class="stat-bar-container">
-
-              <span style="width: 55px; color: var(--text-muted);">Máu</span>
-
-              <div class="stat-bar"><div class="stat-fill" style="width: ${dino.health}%; background: #ef4444;"></div></div>
-
-              <span style="font-weight: 700; color: #fca5a5; font-size: 0.78rem; white-space: nowrap; min-width: 95px; text-align: right;">
-
-                ${(dino.current_hp !== undefined ? dino.current_hp : Math.round((dino.health || 100) * 50)).toLocaleString()} / ${(dino.max_hp || 5000).toLocaleString()} HP
-
+              <span style="width: 58px; color: var(--text-muted);">Máu</span>
+              <div class="stat-bar"><div class="stat-fill" style="width: ${hpPct}%; background: #ef4444;"></div></div>
+              <span style="font-weight: 700; color: #fca5a5; font-size: 0.78rem; white-space: nowrap; min-width: 85px; text-align: right;">
+                ${hpPct}% (${(dino.current_hp || 0).toLocaleString()} HP)
               </span>
-
             </div>
 
             <div class="stat-bar-container">
-
-              <span style="width: 55px; color: var(--text-muted);">Thức ăn</span>
-
-              <div class="stat-bar"><div class="stat-fill" style="width: ${dino.hunger}%; background: #f59e0b;"></div></div>
-
-              <span style="font-weight: 700; color: #fde68a; font-size: 0.78rem; white-space: nowrap; min-width: 95px; text-align: right;">
-
-                ${(dino.current_hunger !== undefined ? dino.current_hunger : Math.round((dino.hunger || 100) * 30)).toLocaleString()} / ${(dino.max_hunger || 3000).toLocaleString()}
-
+              <span style="width: 58px; color: var(--text-muted);">Thức ăn</span>
+              <div class="stat-bar"><div class="stat-fill" style="width: ${huPct}%; background: #f59e0b;"></div></div>
+              <span style="font-weight: 700; color: #fde68a; font-size: 0.78rem; white-space: nowrap; min-width: 85px; text-align: right;">
+                ${huPct}%
               </span>
-
             </div>
 
             <div class="stat-bar-container">
-
-              <span style="width: 55px; color: var(--text-muted);">Nước</span>
-
-              <div class="stat-bar"><div class="stat-fill" style="width: ${dino.thirst}%; background: #3b82f6;"></div></div>
-
-              <span style="font-weight: 700; color: #93c5fd; font-size: 0.78rem; white-space: nowrap; min-width: 95px; text-align: right;">
-                ${(dino.current_thirst !== undefined ? dino.current_thirst : Math.round((dino.thirst || 100) * 10)).toLocaleString()} / ${(dino.max_thirst || 1000).toLocaleString()}
+              <span style="width: 58px; color: var(--text-muted);">Nước</span>
+              <div class="stat-bar"><div class="stat-fill" style="width: ${thPct}%; background: #3b82f6;"></div></div>
+              <span style="font-weight: 700; color: #93c5fd; font-size: 0.78rem; white-space: nowrap; min-width: 85px; text-align: right;">
+                ${thPct}%
               </span>
             </div>
+
             <div class="stat-bar-container">
-              <span style="width: 55px; color: var(--text-muted);">Thể lực</span>
-              <div class="stat-bar"><div class="stat-fill" style="width: ${dino.stamina !== undefined ? dino.stamina : 100}%; background: #10b981;"></div></div>
-              <span style="font-weight: 700; color: #6ee7b7; font-size: 0.78rem; white-space: nowrap; min-width: 95px; text-align: right;">
-                ${Math.round(dino.stamina !== undefined ? dino.stamina : 100)}%
+              <span style="width: 58px; color: var(--text-muted);">Thể lực</span>
+              <div class="stat-bar"><div class="stat-fill" style="width: ${stPct}%; background: #10b981;"></div></div>
+              <span style="font-weight: 700; color: #6ee7b7; font-size: 0.78rem; white-space: nowrap; min-width: 85px; text-align: right;">
+                ${stPct}%
               </span>
             </div>
-            <div class="stat-bar-container" style="margin-top: 4px; padding-top: 6px; border-top: 1px dashed rgba(255,255,255,0.08); justify-content: space-between;">
-              <span style="color: var(--text-muted); font-size: 0.76rem;">Dinh dưỡng:</span>
-              <div style="display: flex; gap: 6px; align-items: center; font-size: 0.75rem; font-weight: 700;">
-                <span style="padding: 2px 6px; border-radius: 6px; background: rgba(245, 158, 11, 0.16); border: 1px solid rgba(245, 158, 11, 0.35); color: #fbbf24;" title="Carbohydrate (A)">🔶 A: ${Math.round((dino.nutrients && dino.nutrients.carb !== undefined) ? dino.nutrients.carb : (dino.nutrientsCarb !== undefined ? dino.nutrientsCarb : 100))}%</span>
-                <span style="padding: 2px 6px; border-radius: 6px; background: rgba(59, 130, 246, 0.16); border: 1px solid rgba(59, 130, 246, 0.35); color: #60a5fa;" title="Protein (B)">🔷 B: ${Math.round((dino.nutrients && dino.nutrients.protein !== undefined) ? dino.nutrients.protein : (dino.nutrientsProtein !== undefined ? dino.nutrientsProtein : 100))}%</span>
-                <span style="padding: 2px 6px; border-radius: 6px; background: rgba(168, 85, 247, 0.16); border: 1px solid rgba(168, 85, 247, 0.35); color: #c084fc;" title="Lipid (Y)">🟣 Y: ${Math.round((dino.nutrients && dino.nutrients.lipid !== undefined) ? dino.nutrients.lipid : (dino.nutrientsLipid !== undefined ? dino.nutrientsLipid : 100))}%</span>
-              </div>
+
+            <div style="margin-top: 6px; padding-top: 6px; border-top: 1px dashed rgba(255,255,255,0.08); display: flex; flex-wrap: wrap; gap: 4px; align-items: center;">
+              <span style="color: var(--text-muted); font-size: 0.74rem; margin-right: 2px;">Đột biến:</span>
+              ${activeMutPills}
             </div>
           </div>
-
-
-
-
-
-
 
           <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 14px;">
-
-            Cất lúc: <b style="color: #e5e7eb;">${this.formatStoredTime(dino.stored_at || dino.parked_at)}</b>
-
+            Cất lúc: <b style="color: #e5e7eb;">${this.formatStoredTime(dino.parked_at || dino.stored_at)}</b>
           </div>
 
-
-
           <div class="dino-actions">
-
             <button class="btn-spawn" data-id="${dino.id}" onclick="Garage.actionSpawn('${dino.id}', '${dino.species}', this)">
-
               ⚡ Rút Dino
-
             </button>
-
-            <button class="btn-store" onclick="Garage.actionRename('${dino.id}', '${dino.name || dino.species}')">
-
+            <button class="btn-store" onclick="Garage.actionRename('${dino.id}', '${safeName}')">
               ✏️ Đổi Tên
-
             </button>
-
-            <button class="btn-delete" onclick="Garage.actionDelete('${dino.id}', '${dino.name || dino.species}')" title="Xóa vĩnh viễn khủng long khỏi Gara">
-
+            <button class="btn-delete" onclick="Garage.actionDelete('${dino.id}', '${safeName}')" title="Bán / Xóa khủng long khỏi Gara IslePilot">
               🗑️ Xóa Dino
-
             </button>
-
           </div>
 
           <button type="button" class="btn-mutations-view" onclick="Garage.showMutationsModal('${dino.id}')" title="Xem chi tiết toàn bộ 16 ô đột biến gen (Active, Parent, Elder A, Elder B)">
-
-            🔀 Đột biến (${totalMutations}/16)
-
+            🔀 Chi Tiết Đột Biến (${totalMutations}/16)
           </button>
-
-
         </div>
-
       </div>
-
     `;
-
   },
 
-
-
   displayDinos(list, mode = 'all') {
-
     const container = document.getElementById('garage-container');
-
     if (!container) return;
 
-
-
     if (!list || list.length === 0) {
-
-      container.innerHTML = '<div class="card" style="grid-column: 1/-1; text-align: center; padding: 40px;"><p style="color: var(--text-muted);">Không tìm thấy khủng long phù hợp.</p></div>';
-
+      container.innerHTML = '<div class="card" style="grid-column: 1/-1; text-align: center; padding: 40px;"><p style="color: var(--text-muted);">Không tìm thấy khủng long phù hợp trong Gara.</p></div>';
       return;
-
     }
 
-
-
     const carnivores = list.filter(d => this.isCarnivore(d.species));
-
     const herbivores = list.filter(d => !this.isCarnivore(d.species));
-
-
 
     let html = '';
 
-
-
     if (mode === 'carnivore') {
-
       if (carnivores.length === 0) {
-
         container.innerHTML = '<div class="card" style="grid-column: 1/-1; text-align: center; padding: 40px;"><p style="color: var(--text-muted);">Không có khủng long ăn thịt nào trong Gara.</p></div>';
-
         return;
-
       }
-
       html += `<div class="garage-group-header">🍖 Khủng Long Ăn Thịt (${carnivores.length})</div>`;
-
       html += carnivores.map(d => this.renderDinoCard(d)).join('');
-
     } else if (mode === 'herbivore') {
-
       if (herbivores.length === 0) {
-
         container.innerHTML = '<div class="card" style="grid-column: 1/-1; text-align: center; padding: 40px;"><p style="color: var(--text-muted);">Không có khủng long ăn cỏ nào trong Gara.</p></div>';
-
         return;
-
       }
-
       html += `<div class="garage-group-header">🌿 Khủng Long Ăn Cỏ (${herbivores.length})</div>`;
-
       html += herbivores.map(d => this.renderDinoCard(d)).join('');
-
     } else {
-
-      // Chế độ 'all': Sắp xếp theo nhóm ăn cỏ và ăn thịt riêng biệt, rõ ràng
-
       if (herbivores.length > 0) {
-
         html += `<div class="garage-group-header">🌿 Khủng Long Ăn Cỏ (${herbivores.length})</div>`;
-
         html += herbivores.map(d => this.renderDinoCard(d)).join('');
-
       }
-
       if (carnivores.length > 0) {
-
         html += `<div class="garage-group-header">🍖 Khủng Long Ăn Thịt (${carnivores.length})</div>`;
-
         html += carnivores.map(d => this.renderDinoCard(d)).join('');
-
       }
-
     }
-
-
 
     container.innerHTML = html;
-
   },
-
-
 
   filter(type, btnElement) {
-
     this.currentMode = type;
-
     const filterContainer = document.getElementById('garage-filter-buttons');
-
     if (filterContainer) {
-
       filterContainer.querySelectorAll('.map-filter-btn').forEach(btn => btn.classList.remove('active'));
-
     }
-
     if (btnElement) {
-
       btnElement.classList.add('active');
-
     }
-
     this.displayDinos(this.dinos, type);
-
-  },
-
-
-
-  async syncActiveNutrientsToGame(silent = true) {
-    const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
-    const steamId = user ? user.steamId : '76561199259679997';
-    const nutr = this.activeDinoNutrients || { carb: 100, protein: 100, lipid: 100 };
-    try {
-      await fetch('/api/server/garage/update-nutrients', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ steam_id: steamId, carb: nutr.carb, protein: nutr.protein, lipid: nutr.lipid })
-      });
-    } catch (e) {
-      // silent background sync
-    }
   },
 
   async actionSpawn(id, species, btnElement = null) {
@@ -814,43 +530,40 @@ const Garage = {
     }
 
     if (window.App && window.App.showToast) {
-      window.App.showToast("⏳ Đang gửi lệnh lấy khủng long ra game...", "info");
+      window.App.showToast("⏳ Đang gửi lệnh rút khủng long tới IslePilot...", "info");
     }
 
     try {
       const targetDino = (this.dinos || []).find(d => String(d.id) === String(id)) || {};
-      const cardNutr = targetDino.nutrients || targetDino.nutrition || null;
+      const activeMuts = ((targetDino.mutationSlots && targetDino.mutationSlots.active) || targetDino.mutations || [])
+        .filter(m => m && m !== 'None' && String(m).trim() !== '');
+
       const res = await fetch('/api/server/garage/spawn', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dino_id: id, species: species, steam_id: steamId, nutrients: cardNutr })
+        body: JSON.stringify({
+          dino_id: id,
+          species: species,
+          steam_id: steamId,
+          mutations: activeMuts,
+          nutrients: targetDino.nutrients || null
+        })
       });
       const data = await res.json();
 
       if (data.success || data.ok) {
         if (window.App && window.App.showToast) {
-          window.App.showToast(data.message || "🎉 Lấy khủng long thành công! Đang tải vào game...", "success");
+          window.App.showToast(data.message || "🎉 Rút khủng long thành công! Đang tải vào game...", "success");
         }
 
-        // Cập nhật giao diện ngay lập tức (Optimistic UI) mà KHÔNG CẦN double click hay reload trang!
         this.dinos = (this.dinos || []).filter(d => String(d.id) !== String(id));
         this.updateSlotsBadge();
         this.displayDinos(this.dinos, this.currentMode);
 
-        // Cập nhật ngay banner active dino
-        this.activeDinoNutrients = cardNutr || { carb: 100, protein: 100, lipid: 100 };
-        this.renderActiveDino();
-
-        // Tự động kích hoạt các đợt bơm dưỡng chất A-B-Y vào game sau khi spawn
-        setTimeout(() => this.syncActiveNutrientsToGame(true), 3500);
-        setTimeout(() => this.syncActiveNutrientsToGame(true), 8000);
-        setTimeout(() => this.syncActiveNutrientsToGame(true), 15000);
-        setTimeout(() => this.syncActiveNutrientsToGame(true), 25000);
-
-        // Đồng bộ ngầm lại sau 1s để đảm bảo khớp dữ liệu với server
-        setTimeout(() => this.silentRefresh(), 1000);
+        setTimeout(() => this.renderActiveDino(), 1200);
+        setTimeout(() => this.silentRefresh(), 2000);
       } else {
-        const errMsg = data.message || "Rút khủng long thất bại! Vui lòng thử lại.";
+        const errMsg = data.message || data.error || "Rút khủng long thất bại! Vui lòng kiểm tra trạng thái nhân vật trong game.";
         if (window.App && window.App.showToast) {
           window.App.showToast(`⚠️ ${errMsg}`, "error");
         } else {
@@ -875,372 +588,208 @@ const Garage = {
     }
   },
 
-
-
-  storeCountdownTimer: null,
-
-  isStoring: false,
-
-
-
   cancelStore() {
-
     if (this.storeCountdownTimer) {
-
       clearInterval(this.storeCountdownTimer);
-
       this.storeCountdownTimer = null;
-
     }
-
     this.isStoring = false;
-
     const btnStore = document.getElementById('garage-btn-store') || document.querySelector('.btn-garage-store');
-
     const btnCancel = document.getElementById('garage-btn-cancel-store');
-
     const btnSlay = document.getElementById('garage-btn-slay');
-
-
 
     if (btnStore) {
-
       btnStore.textContent = "📥 Cất Vào Gara";
-
       btnStore.disabled = false;
-
       btnStore.style.background = "";
-
     }
-
     if (btnCancel) btnCancel.style.display = "none";
-
     if (btnSlay) btnSlay.style.display = "inline-block";
-
-    App.showToast("Đã hủy cất dino");
-
+    if (window.App && window.App.showToast) {
+      window.App.showToast("Đã hủy thao tác cất khủng long vào Gara.", "info");
+    }
   },
 
-
-
   async actionStore() {
-
     if (this.isStoring) return;
 
-
-
     const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
-
     const steamId = user ? user.steamId : '76561199259679997';
 
-
-
     const btnStore = document.getElementById('garage-btn-store') || document.querySelector('.btn-garage-store');
-
     const btnCancel = document.getElementById('garage-btn-cancel-store');
-
     const btnSlay = document.getElementById('garage-btn-slay');
 
-
-
     try {
-
       if (btnStore) {
-
         btnStore.textContent = "⏳ Đang kiểm tra...";
-
         btnStore.disabled = true;
-
       }
 
-
-
-      // Lấy chỉ số A-B-Y hiện tại của dino đang chơi
       const curNutr = this.activeDinoNutrients || { carb: 100, protein: 100, lipid: 100 };
 
-      // Bước 1: Gửi step: "start" lên server để xác nhận trạng thái trực tuyến và truyền dinh dưỡng A-B-Y
       const resStart = await fetch('/api/server/garage/store', {
-
         method: 'POST',
-
         headers: { 'Content-Type': 'application/json' },
-
         body: JSON.stringify({ steam_id: steamId, step: 'start', nutrients: curNutr })
-
       });
-
       const dataStart = await resStart.json();
 
-
-
       if (!dataStart.ok && !dataStart.success) {
-
         if (btnStore) {
-
           btnStore.textContent = "📥 Cất Vào Gara";
-
           btnStore.disabled = false;
-
         }
-
-        App.showToast("Thất bại");
-
+        if (window.App && window.App.showToast) {
+          window.App.showToast(`⚠️ ${dataStart.message || dataStart.error || 'Không thể cất khủng long lúc này!'}`, "error");
+        }
         return;
-
       }
-
-
-
-      // Bước 2: Bắt đầu đếm ngược 30 giây (đứng yên trong game)
 
       this.isStoring = true;
-
       let remaining = dataStart.delaySec || 30;
 
-
-
       if (btnCancel) btnCancel.style.display = "inline-block";
-
       if (btnSlay) btnSlay.style.display = "none";
 
-
-
       if (btnStore) {
-
         btnStore.textContent = `⏳ Cất sau ${remaining}s (Đứng yên)...`;
-
         btnStore.disabled = true;
-
         btnStore.style.background = "linear-gradient(135deg, #f59e0b, #d97706)";
-
       }
 
-
-
       await new Promise((resolve) => {
-
         this.storeCountdownTimer = setInterval(() => {
-
           remaining--;
-
           if (remaining > 0) {
-
             if (btnStore) {
-
               btnStore.textContent = `⏳ Cất sau ${remaining}s (Đứng yên)...`;
-
             }
-
           } else {
-
             clearInterval(this.storeCountdownTimer);
-
             this.storeCountdownTimer = null;
-
             resolve();
-
           }
-
         }, 1000);
-
       });
-
-
-
-      // Nếu người chơi bấm Hủy trong lúc đếm ngược 30s
 
       if (!this.isStoring) return;
 
-
-
       if (btnCancel) btnCancel.style.display = "none";
-
       if (btnStore) {
-
         btnStore.textContent = "⏳ Đang cất vào Gara...";
-
         btnStore.style.background = "";
-
       }
 
-
-
-      // Bước 3: Đã hết 30 giây an toàn -> Gọi API chính thức để cất dino vào Gara kèm A-B-Y
       const resFinalize = await fetch('/api/server/garage/store', {
-
         method: 'POST',
-
         headers: { 'Content-Type': 'application/json' },
-
         body: JSON.stringify({ steam_id: steamId, step: 'finalize', nutrients: curNutr })
-
       });
-
       const dataFinal = await resFinalize.json();
 
-
-
       this.isStoring = false;
-
       if (btnStore) {
-
         btnStore.textContent = "📥 Cất Vào Gara";
-
         btnStore.disabled = false;
-
       }
-
       if (btnSlay) btnSlay.style.display = "inline-block";
-
-
 
       if (dataFinal.ok || dataFinal.success) {
-
-        App.showToast("Thành công");
-
+        if (window.App && window.App.showToast) {
+          window.App.showToast(dataFinal.message || "✅ Đã cất khủng long vào Gara thành công!", "success");
+        }
         setTimeout(() => this.render(), 1200);
-
       } else {
-
-        App.showToast("Thất bại");
-
+        if (window.App && window.App.showToast) {
+          window.App.showToast(`⚠️ ${dataFinal.message || dataFinal.error || 'Cất khủng long thất bại!'}`, "error");
+        }
       }
-
     } catch (e) {
-
       this.isStoring = false;
-
       if (btnStore) {
-
         btnStore.textContent = "📥 Cất Vào Gara";
-
         btnStore.disabled = false;
-
         btnStore.style.background = "";
-
       }
-
       if (btnCancel) btnCancel.style.display = "none";
-
       if (btnSlay) btnSlay.style.display = "inline-block";
-
-      App.showToast("Thất bại");
-
+      if (window.App && window.App.showToast) {
+        window.App.showToast("⚠️ Lỗi kết nối khi cất khủng long vào Gara!", "error");
+      }
     }
-
   },
-
-
 
   async actionSlay() {
-
-    const confirmed = confirm("Thao tác này sẽ giết dino hiện tại của bạn trong game. Bạn chắc chứ?");
-
+    const confirmed = confirm("Thao tác này sẽ giết (Slay) khủng long hiện tại của bạn trong game. Bạn chắc chắn chứ?");
     if (!confirmed) return;
 
-
-
     const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
-
     const steamId = user ? user.steamId : '76561199259679997';
 
-
-
     try {
-
       const res = await fetch('/api/server/garage/slay', {
-
         method: 'POST',
-
         headers: { 'Content-Type': 'application/json' },
-
         body: JSON.stringify({ steam_id: steamId })
-
       });
-
       const data = await res.json();
-
       if (data.success || data.ok) {
-
-        App.showToast("Thành công");
-
+        if (window.App && window.App.showToast) {
+          window.App.showToast(data.message || "✅ Đã thực hiện Slay nhân vật thành công!", "success");
+        }
         setTimeout(() => this.render(), 1200);
-
       } else {
-
-        App.showToast("Thất bại");
-
+        if (window.App && window.App.showToast) {
+          window.App.showToast(`⚠️ ${data.message || 'Slay thất bại!'}`, "error");
+        }
       }
-
     } catch (e) {
-
-      App.showToast("Thất bại");
-
+      if (window.App && window.App.showToast) {
+        window.App.showToast("⚠️ Lỗi kết nối khi gửi lệnh Slay!", "error");
+      }
     }
-
   },
 
-
-
   async actionRename(id, currentName) {
-
-    const newName = prompt(`Nhập tên mới cho khủng long (hiện tại: ${currentName}):`, currentName !== 'Tyrannosaurus' ? currentName : '');
-
+    const newName = prompt(`Nhập tên gợi nhớ cho khủng long (hiện tại: ${currentName}):`, currentName);
     if (!newName || !newName.trim()) return;
 
-
-
     try {
-
       const res = await fetch('/api/server/garage/rename', {
-
         method: 'POST',
-
         headers: { 'Content-Type': 'application/json' },
-
         body: JSON.stringify({ dino_id: id, name: newName.trim() })
-
       });
-
       const data = await res.json();
-
       if (data.success) {
-
-        App.showToast("Thành công");
-
+        if (window.App && window.App.showToast) {
+          window.App.showToast(data.message || "✅ Đổi tên khủng long thành công!", "success");
+        }
         this.render();
-
       } else {
-
-        App.showToast("Thất bại");
-
+        if (window.App && window.App.showToast) {
+          window.App.showToast("⚠️ Không thể đổi tên khủng long!", "error");
+        }
       }
-
     } catch (e) {
-
-      App.showToast("Thất bại");
-
+      if (window.App && window.App.showToast) {
+        window.App.showToast("⚠️ Lỗi kết nối khi đổi tên khủng long!", "error");
+      }
     }
-
   },
 
   async actionDelete(id, name) {
     const displayName = name || "khủng long này";
-    const confirmed = confirm(`⚠️ CẢNH BÁO XÓA KHỦNG LONG:\n\nBạn có chắc chắn muốn XÓA VĨNH VIỄN ${displayName} khỏi Gara không?\n\nThao tác này sẽ loại bỏ vĩnh viễn khủng long khỏi Gara và KHÔNG THỂ HOÀN TÁC!`);
+    const confirmed = confirm(`⚠️ XÁC NHẬN XÓA / BÁN KHỦNG LONG:\n\nBạn có chắc chắn muốn XÓA VĨNH VIỄN ${displayName} khỏi Gara IslePilot không?\n\nThao tác này không thể hoàn tác!`);
     if (!confirmed) return;
 
     const user = JSON.parse(localStorage.getItem("steam_user") || "null");
     const steamId = user ? user.steamId : "";
 
-    // Ghi nhận xóa vĩnh viễn ngay lập tức trên LocalStorage & loại bỏ khỏi màn hình
-    this.addDeletedDino(id);
-    this.dinos = (this.dinos || []).filter(d => String(d.id) !== String(id));
-    const slotBadge = document.getElementById('garage-slots-badge');
-    if (slotBadge) {
-      slotBadge.textContent = `${this.dinos.length} / ${this.slotsTotal} Khủng Long`;
+    if (window.App && window.App.showToast) {
+      window.App.showToast("⏳ Đang gửi yêu cầu xóa khủng long tới IslePilot...", "info");
     }
-    this.displayDinos(this.dinos, this.currentMode);
-    App.showToast("⏳ Đang xử lý xóa vĩnh viễn khủng long khỏi server...");
 
     try {
       const res = await fetch("/api/server/garage/delete", {
@@ -1250,16 +799,25 @@ const Garage = {
       });
       const data = await res.json();
       if (data.ok || data.success) {
-        App.showToast("✅ Đã xóa vĩnh viễn khủng long khỏi Gara thành công!");
+        this.addDeletedDino(id);
+        this.dinos = (this.dinos || []).filter(d => String(d.id) !== String(id));
+        this.updateSlotsBadge();
+        this.displayDinos(this.dinos, this.currentMode);
+        if (window.App && window.App.showToast) {
+          window.App.showToast(data.message || "✅ Đã xóa khủng long khỏi Gara thành công!", "success");
+        }
       } else {
-        App.showToast("✅ Đã loại bỏ khủng long khỏi Gara thành công!");
+        if (window.App && window.App.showToast) {
+          window.App.showToast(`⚠️ ${data.message || data.error || 'Không thể xóa khủng long lúc này!'}`, "error");
+        }
       }
     } catch (e) {
       console.error("Lỗi gửi yêu cầu xóa dino:", e);
-      App.showToast("✅ Đã loại bỏ khủng long khỏi Gara!");
+      if (window.App && window.App.showToast) {
+        window.App.showToast("⚠️ Lỗi kết nối khi xóa khủng long khỏi Gara!", "error");
+      }
     }
   },
-
 
   MUTATION_DICT: {
     "Hemomania": { name: "Cuồng Huyết", icon: "🩸", desc: "Tăng mạnh lực cắn và tốc độ khi tấn công mục tiêu đang bị chảy máu." },
@@ -1296,7 +854,9 @@ const Garage = {
   showMutationsModal(dinoId) {
     const dino = (this.dinos || []).find(d => String(d.id) === String(dinoId));
     if (!dino) {
-      App.showToast("⚠️ Không tìm thấy thông tin khủng long!");
+      if (window.App && window.App.showToast) {
+        window.App.showToast("⚠️ Không tìm thấy thông tin khủng long!", "error");
+      }
       return;
     }
 
@@ -1362,7 +922,6 @@ const Garage = {
         <span style="font-size: 0.78rem; color: #94a3b8;">Đồng bộ 100% từ máy chủ game IslePilot</span>
       </div>
 
-      <!-- 1. ACTIVE MUTATIONS (4 SLOTS) -->
       <div class="mut-group-section">
         <div class="mut-group-title" style="color: #10b981;">
           <span>⚡ Đột Biến Đang Kích Hoạt (Active Mutations)</span>
@@ -1373,7 +932,6 @@ const Garage = {
         </div>
       </div>
 
-      <!-- 2. PARENT MUTATIONS (4 SLOTS) -->
       <div class="mut-group-section">
         <div class="mut-group-title" style="color: #c084fc;">
           <span>🧬 Đột Biến Di Truyền Bố Mẹ (Parent Mutations)</span>
@@ -1384,7 +942,6 @@ const Garage = {
         </div>
       </div>
 
-      <!-- 3. ELDER A MUTATIONS (4 SLOTS) -->
       <div class="mut-group-section">
         <div class="mut-group-title" style="color: #fbbf24;">
           <span>👑 Đột Biến Trưởng Lão A (Elder A Mutations)</span>
@@ -1395,7 +952,6 @@ const Garage = {
         </div>
       </div>
 
-      <!-- 4. ELDER B MUTATIONS (4 SLOTS) -->
       <div class="mut-group-section">
         <div class="mut-group-title" style="color: #f59e0b;">
           <span>👑 Đột Biến Trưởng Lão B (Elder B Mutations)</span>
@@ -1415,6 +971,4 @@ const Garage = {
     const modal = document.getElementById("dino-mutations-modal");
     if (modal) modal.classList.remove("active");
   }
-
 };
-
