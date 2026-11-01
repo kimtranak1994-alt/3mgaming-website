@@ -2626,6 +2626,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
                 raw_hp = safe_float(player_info.get("health"), 0.0)
                 max_hp = safe_float(player_info.get("maxHealth"), 0.0)
+                if raw_hp <= 0 and max_hp > 0:
+                    raw_hp = max_hp
                 hp_pct = round((raw_hp / max_hp) * 100, 1) if max_hp > 0 else 100.0
 
                 raw_hu = safe_float(player_info.get("hunger"), 0.0)
@@ -4666,6 +4668,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
         raw_h = safe_float(player_info.get("health"), 0.0)
         max_h = safe_float(player_info.get("maxHealth"), 0.0)
+        if raw_h <= 0 and max_h > 0:
+            raw_h = max_h
         h_ratio = (raw_h / max_h) if max_h > 0 else 1.0
         h_ratio = max(0.01, min(1.0, h_ratio))
 
@@ -5078,9 +5082,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 cleaned_k.append("None")
             full_slots[k] = cleaned_k
 
-        has_extended_mutations = any(
+        has_any_mutations = any(
             m != "None"
-            for slot_group in ["parent", "elderA", "elderB"]
+            for slot_group in ["active", "parent", "elderA", "elderB"]
             for m in full_slots[slot_group]
         )
 
@@ -5096,10 +5100,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
         def restore_worker():
             # Nếu là khủng long chuẩn từ IslePilot Garage (target_gd != None):
-            # Lệnh POST /players/{steamId}/garage/{id}/restore của IslePilot ĐÃ TỰ ĐỘNG khôi phục nguyên bản 100%:
-            # Species, Gender, Growth, Health, Hunger, Thirst, Stamina, isPrimeElder và Active Mutations từ save file!
-            # Chúng ta chỉ gửi bổ sung 12 ô đột biến mở rộng (Parent/ElderA/ElderB) hoặc scale IndoRex nếu có.
-            if target_gd is not None and not has_extended_mutations and "indo" not in str(dino_spec).lower():
+            # Lệnh POST /players/{steamId}/garage/{id}/restore với body={} đã khôi phục nguyên bản 100% chỉ số từ save file!
+            # Chúng ta đồng bộ bổ trợ 16 ô đột biến (active/parent/elderA/elderB) và scale IndoRex sau khi nhân vật spawn.
+            if target_gd is not None and not has_any_mutations and "indo" not in str(dino_spec).lower():
                 print(f"[Garage Restore Worker] IslePilot native restore đã khôi phục 100% nguyên bản {dino_spec} cho {sid}.")
                 return
 
@@ -5119,9 +5122,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     })
                     time.sleep(0.35)
 
-                if has_extended_mutations:
+                if has_any_mutations:
                     self.fetch_islepilot("/commands", method="POST", body_data=body_muts)
-                print(f"[Garage Restore Worker] Đã đồng bộ mở rộng ({dino_spec}) cho {sid}.")
+                print(f"[Garage Restore Worker] Đã đồng bộ 16 ô đột biến & scale ({dino_spec}) cho {sid}.")
             except Exception as e:
                 print(f"[Garage Restore Worker Error] {e}")
 
@@ -5215,22 +5218,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                         target_gd = gd
                         break
 
-            # Chuẩn bị danh sách active mutations đúng chuẩn OpenAPI: {"mutations": ["a", "b", "c"]}
-            restore_body = {}
-            raw_muts = payload.get("mutations")
-            if not raw_muts and target_gd:
-                m_slots = target_gd.get("mutationSlots")
-                if isinstance(m_slots, dict) and isinstance(m_slots.get("active"), list):
-                    raw_muts = m_slots["active"]
-                elif isinstance(target_gd.get("mutations"), list):
-                    raw_muts = target_gd["mutations"]
-            if isinstance(raw_muts, list):
-                clean_muts = [str(m).strip() for m in raw_muts if m and str(m).strip() and str(m).strip() != "None"]
-                if clean_muts:
-                    restore_body["mutations"] = clean_muts
-
-            # 2. Gọi lệnh restore chính thức của IslePilot API
-            res = self.fetch_islepilot(f"/players/{steam_id}/garage/{dino_id}/restore", method="POST", body_data=restore_body)
+            # 2. Gọi lệnh restore chính thức của IslePilot API với body_data={} (không truyền "mutations" để tránh lỗi "Picking mutations is off on this server")
+            res = self.fetch_islepilot(f"/players/{steam_id}/garage/{dino_id}/restore", method="POST", body_data={})
 
             if res and isinstance(res, dict) and (res.get("ok") is True or "commandId" in res):
                 dino_spec, dino_growth = self.restore_dino_full_state_worker(

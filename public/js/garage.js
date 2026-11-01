@@ -377,8 +377,8 @@ const Garage = {
           <img src="${this.getDinoImageUrl(dino.species)}" alt="${dino.species}" class="dino-img-render" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
           <span style="display:none; font-size: 52px;">${this.getDinoIcon(dino.species)}</span>
           <span class="growth-badge">${dino.stage || 'Adult'} (${dino.growth_percent}%)</span>
-          ${dino.is_prime_elder ? '<span class="growth-badge" style="right: auto; left: 10px; background: rgba(245, 158, 11, 0.25); border-color: #f59e0b; color: #fbbf24;">👑 Prime Elder</span>' : ''}
-          <span class="growth-badge" style="right: auto; left: ${dino.is_prime_elder ? '135px' : '10px'}; background: rgba(16, 185, 129, 0.25); border-color: #10b981; color: #34d399;">🧬 ${totalMutations}/16 Đột biến</span>
+          <span class="growth-badge" style="right: auto; left: 10px; background: rgba(16, 185, 129, 0.25); border-color: #10b981; color: #34d399;">🧬 ${totalMutations}/16 Đột biến</span>
+          ${dino.is_prime_elder ? '<span class="growth-badge" style="top: auto; bottom: 10px; right: auto; left: 10px; background: rgba(245, 158, 11, 0.28); border-color: #f59e0b; color: #fbbf24;">👑 Prime Elder</span>' : ''}
         </div>
 
         <div class="dino-card-body">
@@ -535,8 +535,6 @@ const Garage = {
 
     try {
       const targetDino = (this.dinos || []).find(d => String(d.id) === String(id)) || {};
-      const activeMuts = ((targetDino.mutationSlots && targetDino.mutationSlots.active) || targetDino.mutations || [])
-        .filter(m => m && m !== 'None' && String(m).trim() !== '');
 
       const res = await fetch('/api/server/garage/spawn', {
         method: 'POST',
@@ -545,7 +543,6 @@ const Garage = {
           dino_id: id,
           species: species,
           steam_id: steamId,
-          mutations: activeMuts,
           nutrients: targetDino.nutrients || null
         })
       });
