@@ -81,21 +81,37 @@ const DinoInfo = {
     this.startAutoRefresh();
   },
 
-  async fetchData() {
+  _lastRenderSig: null,
+
+  async fetchData(forceRender = false) {
     if (this.isLoading) return;
     this.isLoading = true;
 
     const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
-    const steamParam = (user && user.steamId) ? `?steam_id=${user.steamId}` : '';
+    const steamParam = (user && user.steamId) ? `?steam_id=${encodeURIComponent(user.steamId)}&` : '?';
 
     try {
-      const res = await fetch(`/api/player/dino-info${steamParam}&_t=${Date.now()}`);
+      const res = await fetch(`/api/player/dino-info${steamParam}_t=${Date.now()}`, { cache: 'no-store' });
       if (res.ok) {
-        this.data = await res.json();
+        const newData = await res.json();
+        const newSig = JSON.stringify(newData);
+        const container = document.getElementById('view-dino-info');
+        const isStuckSpinner = container && container.innerHTML.includes('?ang t?i h? s?');
+        this.data = newData;
+        if (forceRender || isStuckSpinner || newSig !== this._lastRenderSig) {
+          this._lastRenderSig = newSig;
+          this.renderUI();
+        }
+      } else if (!this.data) {
+        this.data = { logged_in: !!(user && user.steamId), steam_id: user ? user.steamId : '', name: user ? user.name : 'Ng??i ch?i', has_active_dino: false, garage_count: 0 };
         this.renderUI();
       }
     } catch (e) {
-      console.error("[DinoInfo] Lỗi tải dữ liệu:", e);
+      console.error("[DinoInfo] L?i t?i d? li?u:", e);
+      if (!this.data) {
+        this.data = { logged_in: !!(user && user.steamId), steam_id: user ? user.steamId : '', name: user ? user.name : 'Ng??i ch?i', has_active_dino: false, garage_count: 0 };
+        this.renderUI();
+      }
     } finally {
       this.isLoading = false;
     }
@@ -431,12 +447,31 @@ const DinoInfo = {
         </div>
 
         <!-- 4 PARENT MUTATIONS -->
-        <div>
+        <div style="margin-bottom: 20px;">
           <div style="font-size: 0.82rem; font-weight: 800; color: #818cf8; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
-            <span>🧬</span> Gen Di Truyền Bố Mẹ (Parent Mutations):
+            <span>??</span> Gen Di Truy?n B? M? (Parent Mutations):
           </div>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
             ${this.renderMutationCards(parentMuts, '#6366f1')}
+          </div>
+        </div>
+
+        <!-- 4 ELDER A & 4 ELDER B MUTATIONS -->
+        <div style="margin-bottom: 20px;">
+          <div style="font-size: 0.82rem; font-weight: 800; color: #fbbf24; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+            <span>??</span> Gen C? ??i Nh?nh A (Elder A Mutations):
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+            ${this.renderMutationCards(elderAMuts, '#f59e0b')}
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size: 0.82rem; font-weight: 800; color: #f472b6; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+            <span>??</span> Gen C? ??i Nh?nh B (Elder B Mutations):
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+            ${this.renderMutationCards(elderBMuts, '#ec4899')}
           </div>
         </div>
       </div>
