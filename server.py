@@ -4978,6 +4978,12 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                         or {}
                     )
                     species_snap = snapshots_map.get(f"{active_steam_id}_{d_spec}") or {}
+                    if not existing_snap:
+                        latest_snap = snapshots_map.get(f"{active_steam_id}_latest_garage_dino") or snapshots_map.get(f"{active_steam_id}_last_parked") or {}
+                        if latest_snap and latest_snap.get("species") == d_spec:
+                            existing_snap = latest_snap
+                            save_garage_dino_snapshot(f"{active_steam_id}_{d_id}", existing_snap)
+                            save_garage_dino_snapshot(d_id, existing_snap)
 
                     # Lưu dự phòng 100% mutationSlots vào bộ nhớ để không bao giờ bị mất khi rút
                     d_m_slots = d.get("mutationSlots") or existing_snap.get("mutationSlots") or species_snap.get("mutationSlots")
@@ -5704,47 +5710,58 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             if res and isinstance(res, dict):
                 if res.get("ok") or res.get("success") or "commandId" in res:
                     def bind_snapshot_to_new_garage_item():
-                        for wait_s in [0.6, 1.5, 3.0]:
+                        target_new = None
+                        gar_list = []
+                        for wait_s in [0.5, 1.2, 2.0, 3.5, 5.0]:
                             time.sleep(wait_s)
                             try:
                                 fresh_garage = self.fetch_islepilot(f"/players/{steam_id}/garage", bypass_cache=True) or {}
                                 gar_list = fresh_garage.get("garage", [])
                                 if not gar_list:
                                     continue
-                                target_new = None
                                 for gd in gar_list:
                                     if str(gd.get("id")) not in pre_ids:
                                         target_new = gd
                                         break
-                                if not target_new:
-                                    target_new = gar_list[-1]
-                                d_id = target_new.get("id")
-                                if d_id:
-                                    p_muts = target_new.get("mutationSlots") or pre_snap.get("mutationSlots") or load_garage_saved_mutations().get(f"{steam_id}_last_parked")
-                                    if p_muts:
-                                        save_garage_saved_mutation(f"{steam_id}_{d_id}", p_muts)
-                                        save_garage_saved_mutation(str(d_id), p_muts)
-
-                                    merged_snap = dict(pre_snap)
-                                    merged_snap.update({
-                                        "id": d_id,
-                                        "species": target_new.get("species") or pre_snap.get("species"),
-                                        "gender": target_new.get("gender") or pre_snap.get("gender"),
-                                        "growth": safe_float(target_new.get("growth") if target_new.get("growth") is not None else pre_snap.get("growth"), 1.0),
-                                        "health": safe_float(target_new.get("health") if target_new.get("health") is not None else pre_snap.get("health"), 1.0),
-                                        "hunger": safe_float(target_new.get("hunger") if target_new.get("hunger") is not None else pre_snap.get("hunger"), 1.0),
-                                        "thirst": safe_float(target_new.get("thirst") if target_new.get("thirst") is not None else pre_snap.get("thirst"), 1.0),
-                                        "stamina": safe_float(target_new.get("stamina") if target_new.get("stamina") is not None else pre_snap.get("stamina"), 1.0),
-                                        "mutationSlots": p_muts,
-                                        "isPrimeElder": bool(target_new.get("isPrimeElder") if target_new.get("isPrimeElder") is not None else pre_snap.get("isPrimeElder", False)),
-                                        "nutrients": pre_snap.get("nutrients") or {"carb": 100.0, "protein": 100.0, "lipid": 100.0}
-                                    })
-                                    save_garage_dino_snapshot(f"{steam_id}_{d_id}", merged_snap)
-                                    save_garage_dino_snapshot(str(d_id), merged_snap)
-                                    if merged_snap.get("species"):
-                                        save_garage_dino_snapshot(f"{steam_id}_{merged_snap['species']}", merged_snap)
+                                if target_new:
+                                    break
                             except Exception as e:
-                                print(f"[Garage Store Finalize Snap Error] {e}")
+                                print(f"[Garage Store Bind Poll Error] {e}")
+
+                        if not target_new and gar_list:
+                            sorted_gar = sorted(gar_list, key=lambda x: str(x.get("parkedAt") or x.get("storedAt") or ""), reverse=True)
+                            target_new = sorted_gar[0]
+
+                        if target_new:
+                            d_id = target_new.get("id")
+                            if d_id:
+                                p_muts = target_new.get("mutationSlots") or pre_snap.get("mutationSlots") or load_garage_saved_mutations().get(f"{steam_id}_last_parked")
+                                if p_muts:
+                                    save_garage_saved_mutation(f"{steam_id}_{d_id}", p_muts)
+                                    save_garage_saved_mutation(str(d_id), p_muts)
+
+                                nutr_preserved = pre_snap.get("nutrients") or (load_garage_dino_snapshots().get(f"{steam_id}_last_nutrients") or {}).get("nutrients") or {"carb": 100.0, "protein": 100.0, "lipid": 100.0}
+
+                                merged_snap = dict(pre_snap)
+                                merged_snap.update({
+                                    "id": d_id,
+                                    "species": target_new.get("species") or pre_snap.get("species"),
+                                    "gender": target_new.get("gender") or pre_snap.get("gender"),
+                                    "growth": safe_float(target_new.get("growth") if target_new.get("growth") is not None else pre_snap.get("growth"), 1.0),
+                                    "health": safe_float(target_new.get("health") if target_new.get("health") is not None else pre_snap.get("health"), 1.0),
+                                    "hunger": safe_float(target_new.get("hunger") if target_new.get("hunger") is not None else pre_snap.get("hunger"), 1.0),
+                                    "thirst": safe_float(target_new.get("thirst") if target_new.get("thirst") is not None else pre_snap.get("thirst"), 1.0),
+                                    "stamina": safe_float(target_new.get("stamina") if target_new.get("stamina") is not None else pre_snap.get("stamina"), 1.0),
+                                    "mutationSlots": p_muts,
+                                    "isPrimeElder": bool(target_new.get("isPrimeElder") if target_new.get("isPrimeElder") is not None else pre_snap.get("isPrimeElder", False)),
+                                    "nutrients": nutr_preserved
+                                })
+                                save_garage_dino_snapshot(f"{steam_id}_{d_id}", merged_snap)
+                                save_garage_dino_snapshot(str(d_id), merged_snap)
+                                save_garage_dino_snapshot(f"{steam_id}_latest_garage_dino", merged_snap)
+                                if merged_snap.get("species"):
+                                    save_garage_dino_snapshot(f"{steam_id}_{merged_snap['species']}", merged_snap)
+                                print(f"[Garage Store Bind] Đã bảo toàn 100% dữ liệu dino {d_id} ({merged_snap.get('species')}, A-B-Y={nutr_preserved})")
 
                     threading.Thread(target=bind_snapshot_to_new_garage_item, daemon=True).start()
 

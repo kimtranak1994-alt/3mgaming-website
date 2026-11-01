@@ -236,27 +236,10 @@ const Garage = {
           const valY = Math.round(nutr.lipid !== undefined ? nutr.lipid : 100);
           nutrBox.innerHTML = `
             <div style="display: flex; gap: 8px; align-items: center; margin-top: 8px; font-size: 0.78rem; flex-wrap: wrap;">
-              <span style="color: #94a3b8; font-weight: 700;">Dinh dưỡng A-B-Y:</span>
-              <div style="display: flex; align-items: center; gap: 3px; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); padding: 2px 6px; border-radius: 6px;">
-                <span style="color: #fbbf24; font-weight: 700;">🔶 A:</span>
-                <input id="active-nutr-val-a" type="number" min="0" max="100" value="${valA}" style="width: 44px; background: rgba(0,0,0,0.5); border: 1px solid rgba(245, 158, 11, 0.5); color: #fbbf24; font-weight: 700; border-radius: 4px; padding: 1px 3px; text-align: center; font-size: 0.78rem;" onchange="Garage.onActiveNutrChange()">%
-              </div>
-              <div style="display: flex; align-items: center; gap: 3px; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.4); padding: 2px 6px; border-radius: 6px;">
-                <span style="color: #60a5fa; font-weight: 700;">🔷 B:</span>
-                <input id="active-nutr-val-b" type="number" min="0" max="100" value="${valB}" style="width: 44px; background: rgba(0,0,0,0.5); border: 1px solid rgba(59, 130, 246, 0.5); color: #60a5fa; font-weight: 700; border-radius: 4px; padding: 1px 3px; text-align: center; font-size: 0.78rem;" onchange="Garage.onActiveNutrChange()">%
-              </div>
-              <div style="display: flex; align-items: center; gap: 3px; background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.4); padding: 2px 6px; border-radius: 6px;">
-                <span style="color: #c084fc; font-weight: 700;">🟣 Y:</span>
-                <input id="active-nutr-val-y" type="number" min="0" max="100" value="${valY}" style="width: 44px; background: rgba(0,0,0,0.5); border: 1px solid rgba(168, 85, 247, 0.5); color: #c084fc; font-weight: 700; border-radius: 4px; padding: 1px 3px; text-align: center; font-size: 0.78rem;" onchange="Garage.onActiveNutrChange()">%
-              </div>
-              <div style="display: flex; gap: 4px;">
-                <button type="button" class="btn-secondary" style="padding: 2px 6px; font-size: 0.7rem; border-radius: 4px;" onclick="Garage.setActiveNutrPreset(100, 100, 100)" title="Nạp 100% cả 3 chất">⚡ 100%</button>
-                <button type="button" class="btn-secondary" style="padding: 2px 6px; font-size: 0.7rem; border-radius: 4px;" onclick="Garage.setActiveNutrPreset(50, 50, 50)" title="Cân bằng 50%">⚖️ 50%</button>
-                <button type="button" class="btn-secondary" style="padding: 2px 6px; font-size: 0.7rem; border-radius: 4px;" onclick="Garage.setActiveNutrPreset(0, 0, 0)" title="0% Trống">⚪ 0%</button>
-              </div>
-              <button type="button" class="btn-primary" style="padding: 3px 10px; font-size: 0.74rem; font-weight: 800; background: linear-gradient(135deg, #f59e0b, #d97706); border: 1px solid #fbbf24; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 4px;" onclick="Garage.syncActiveNutrientsToGame()" title="Gửi lệnh nạp dưỡng chất A-B-Y ngay lập tức vào nhân vật trong game">
-                ⚡ Nạp A-B-Y Vào Game
-              </button>
+              <span style="color: #94a3b8; font-weight: 700;">Dinh dưỡng sinh tồn:</span>
+              <span style="padding: 2px 8px; border-radius: 6px; background: rgba(245, 158, 11, 0.16); border: 1px solid rgba(245, 158, 11, 0.35); color: #fbbf24; font-weight: 700;" title="Carbohydrate (A)">🔶 A: ${valA}%</span>
+              <span style="padding: 2px 8px; border-radius: 6px; background: rgba(59, 130, 246, 0.16); border: 1px solid rgba(59, 130, 246, 0.35); color: #60a5fa; font-weight: 700;" title="Protein (B)">🔷 B: ${valB}%</span>
+              <span style="padding: 2px 8px; border-radius: 6px; background: rgba(168, 85, 247, 0.16); border: 1px solid rgba(168, 85, 247, 0.35); color: #c084fc; font-weight: 700;" title="Lipid (Y)">🟣 Y: ${valY}%</span>
             </div>
           `;
         }
@@ -627,10 +610,7 @@ const Garage = {
               </span>
             </div>
             <div class="stat-bar-container" style="margin-top: 4px; padding-top: 6px; border-top: 1px dashed rgba(255,255,255,0.08); justify-content: space-between;">
-              <div style="display: flex; align-items: center; gap: 4px;">
-                <span style="color: var(--text-muted); font-size: 0.76rem;">Dinh dưỡng:</span>
-                <button type="button" class="btn-secondary" style="padding: 1px 5px; font-size: 0.68rem; border-radius: 4px; border-color: rgba(255,255,255,0.2);" onclick="Garage.promptEditNutrients('${dino.id}', ${Math.round((dino.nutrients && dino.nutrients.carb !== undefined) ? dino.nutrients.carb : 100)}, ${Math.round((dino.nutrients && dino.nutrients.protein !== undefined) ? dino.nutrients.protein : 100)}, ${Math.round((dino.nutrients && dino.nutrients.lipid !== undefined) ? dino.nutrients.lipid : 100)})" title="Chỉnh sửa chỉ số A-B-Y">✏️ Sửa</button>
-              </div>
+              <span style="color: var(--text-muted); font-size: 0.76rem;">Dinh dưỡng:</span>
               <div style="display: flex; gap: 6px; align-items: center; font-size: 0.75rem; font-weight: 700;">
                 <span style="padding: 2px 6px; border-radius: 6px; background: rgba(245, 158, 11, 0.16); border: 1px solid rgba(245, 158, 11, 0.35); color: #fbbf24;" title="Carbohydrate (A)">🔶 A: ${Math.round((dino.nutrients && dino.nutrients.carb !== undefined) ? dino.nutrients.carb : (dino.nutrientsCarb !== undefined ? dino.nutrientsCarb : 100))}%</span>
                 <span style="padding: 2px 6px; border-radius: 6px; background: rgba(59, 130, 246, 0.16); border: 1px solid rgba(59, 130, 246, 0.35); color: #60a5fa;" title="Protein (B)">🔷 B: ${Math.round((dino.nutrients && dino.nutrients.protein !== undefined) ? dino.nutrients.protein : (dino.nutrientsProtein !== undefined ? dino.nutrientsProtein : 100))}%</span>
@@ -802,98 +782,18 @@ const Garage = {
 
 
 
-  onActiveNutrChange() {
-    const inA = document.getElementById('active-nutr-val-a');
-    const inB = document.getElementById('active-nutr-val-b');
-    const inY = document.getElementById('active-nutr-val-y');
-    const nutr = {
-      carb: inA ? Math.max(0, Math.min(100, parseFloat(inA.value || 0))) : 100,
-      protein: inB ? Math.max(0, Math.min(100, parseFloat(inB.value || 0))) : 100,
-      lipid: inY ? Math.max(0, Math.min(100, parseFloat(inY.value || 0))) : 100
-    };
-    this.activeDinoNutrients = nutr;
+  async syncActiveNutrientsToGame(silent = true) {
     const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
     const steamId = user ? user.steamId : '76561199259679997';
-    fetch('/api/server/garage/update-nutrients', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ steam_id: steamId, carb: nutr.carb, protein: nutr.protein, lipid: nutr.lipid })
-    }).catch(() => {});
-  },
-
-  async syncActiveNutrientsToGame(silent = false) {
-    const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
-    const steamId = user ? user.steamId : '76561199259679997';
-    const inA = document.getElementById('active-nutr-val-a');
-    const inB = document.getElementById('active-nutr-val-b');
-    const inY = document.getElementById('active-nutr-val-y');
-    const nutr = this.activeDinoNutrients || {
-      carb: inA ? Math.max(0, Math.min(100, parseFloat(inA.value || 100))) : 100,
-      protein: inB ? Math.max(0, Math.min(100, parseFloat(inB.value || 100))) : 100,
-      lipid: inY ? Math.max(0, Math.min(100, parseFloat(inY.value || 100))) : 100
-    };
+    const nutr = this.activeDinoNutrients || { carb: 100, protein: 100, lipid: 100 };
     try {
-      const res = await fetch('/api/server/garage/update-nutrients', {
+      await fetch('/api/server/garage/update-nutrients', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ steam_id: steamId, carb: nutr.carb, protein: nutr.protein, lipid: nutr.lipid })
       });
-      const data = await res.json();
-      if ((data.ok || data.success) && !silent) {
-        if (window.App && window.App.showToast) {
-          window.App.showToast('⚡ Đã đồng bộ dinh dưỡng (A: ' + Math.round(nutr.carb) + '%, B: ' + Math.round(nutr.protein) + '%, Y: ' + Math.round(nutr.lipid) + '%) trực tiếp vào game!', 'success');
-        }
-      }
     } catch (e) {
-      if (!silent && window.App && window.App.showToast) {
-        window.App.showToast('⚠️ Lỗi kết nối khi đồng bộ dinh dưỡng vào game.', 'error');
-      }
-    }
-  },
-
-  setActiveNutrPreset(a, b, y) {
-    const inA = document.getElementById('active-nutr-val-a');
-    const inB = document.getElementById('active-nutr-val-b');
-    const inY = document.getElementById('active-nutr-val-y');
-    if (inA) inA.value = a;
-    if (inB) inB.value = b;
-    if (inY) inY.value = y;
-    this.onActiveNutrChange();
-    if (window.App && window.App.showToast) {
-      window.App.showToast(`✨ Đã đặt chỉ số A: ${a}%, B: ${b}%, Y: ${y}%`, 'info');
-    }
-  },
-
-  async promptEditNutrients(dinoId, currentA = 100, currentB = 100, currentY = 100) {
-    const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
-    const steamId = user ? user.steamId : '76561199259679997';
-    const input = prompt(`Nhập 3 chỉ số dinh dưỡng A, B, Y (từ 0 - 100, cách nhau bởi dấu phẩy):\nVí dụ: 100, 100, 100 hoặc 50, 75, 100`, `${currentA}, ${currentB}, ${currentY}`);
-    if (!input) return;
-    const parts = input.split(',').map(s => parseFloat(s.trim()));
-    if (parts.length < 3 || parts.some(isNaN)) {
-      alert("⚠️ Định dạng không hợp lệ! Vui lòng nhập 3 số cách nhau bởi dấu phẩy.");
-      return;
-    }
-    const [a, b, y] = parts.map(v => Math.max(0, Math.min(100, v)));
-    try {
-      const res = await fetch('/api/server/garage/update-nutrients', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ steam_id: steamId, dino_id: dinoId, carb: a, protein: b, lipid: y })
-      });
-      const data = await res.json();
-      if (data.ok || data.success) {
-        if (window.App && window.App.showToast) {
-          window.App.showToast(`🎉 Đã cập nhật A: ${a}%, B: ${b}%, Y: ${y}% cho khủng long!`, 'success');
-        }
-        const d = (this.dinos || []).find(item => String(item.id) === String(dinoId));
-        if (d) {
-          d.nutrients = { carb: a, protein: b, lipid: y };
-          this.displayDinos(this.dinos, this.currentMode);
-        }
-      }
-    } catch (e) {
-      alert("Lỗi khi cập nhật chỉ số A-B-Y.");
+      // silent background sync
     }
   },
 
@@ -1055,16 +955,8 @@ const Garage = {
 
 
 
-      // Lấy chỉ số A-B-Y hiện tại đang hiển thị
-      const inA = document.getElementById('active-nutr-val-a');
-      const inB = document.getElementById('active-nutr-val-b');
-      const inY = document.getElementById('active-nutr-val-y');
-      const curNutr = {
-        carb: inA ? Math.max(0, Math.min(100, parseFloat(inA.value ?? inA.textContent ?? 100))) : 100,
-        protein: inB ? Math.max(0, Math.min(100, parseFloat(inB.value ?? inB.textContent ?? 100))) : 100,
-        lipid: inY ? Math.max(0, Math.min(100, parseFloat(inY.value ?? inY.textContent ?? 100))) : 100
-      };
-      this.activeDinoNutrients = curNutr;
+      // Lấy chỉ số A-B-Y hiện tại của dino đang chơi
+      const curNutr = this.activeDinoNutrients || { carb: 100, protein: 100, lipid: 100 };
 
       // Bước 1: Gửi step: "start" lên server để xác nhận trạng thái trực tuyến và truyền dinh dưỡng A-B-Y
       const resStart = await fetch('/api/server/garage/store', {
