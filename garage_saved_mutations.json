@@ -2234,5 +2234,551 @@
       "Truculency",
       "Cellular Regeneration"
     ]
+  },
+  "76561198670217946_cmvwev8ye6m6rmr0168a5fj86": {
+    "active": [
+      "Cellular Regeneration",
+      "Multichambered Lungs",
+      "None",
+      "None"
+    ],
+    "parent": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderA": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "cmvwev8ye6m6rmr0168a5fj86": {
+    "active": [
+      "Cellular Regeneration",
+      "Multichambered Lungs",
+      "None",
+      "None"
+    ],
+    "parent": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderA": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "76561198670217946_Quetzalcoatlus": {
+    "active": [
+      "Cellular Regeneration",
+      "Multichambered Lungs",
+      "None",
+      "None"
+    ],
+    "parent": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderA": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "76561198670217946_cmvwdliv36igan801vakdzicy": {
+    "active": [
+      "Congenital Hypoalgesia",
+      "Osteosclerosis",
+      "Epidermal Fibrosis",
+      "Cellular Regeneration"
+    ],
+    "parent": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderA": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "cmvwdliv36igan801vakdzicy": {
+    "active": [
+      "Congenital Hypoalgesia",
+      "Osteosclerosis",
+      "Epidermal Fibrosis",
+      "Cellular Regeneration"
+    ],
+    "parent": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderA": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "76561198670217946_Anky": {
+    "active": [
+      "Multichambered Lungs",
+      "Tactile Endurance",
+      "Photosynthetic Regeneration",
+      "Photosynthetic Tissue"
+    ],
+    "parent": [
+      "Cellular Regeneration",
+      "Epidermal Fibrosis",
+      "Osteosclerosis",
+      "Congenital Hypoalgesia"
+    ],
+    "elderA": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "76561198670217946_cmvwc8x9x6akpmi01j1ar4o4u": {
+    "active": [
+      "Enlarged meniscus",
+      "Wader",
+      "Sustained Hydration",
+      "Xerocole Adaptation"
+    ],
+    "parent": [
+      "Hypervigilance",
+      "Gastronomic Regeneration",
+      "Hydrodynamic",
+      "Increased Inspiratory Capacity"
+    ],
+    "elderA": [
+      "Multichambered Lungs",
+      "Tactile Endurance",
+      "Photosynthetic Regeneration",
+      "Photosynthetic Tissue"
+    ],
+    "elderB": [
+      "Cellular Regeneration",
+      "Epidermal Fibrosis",
+      "Osteosclerosis",
+      "Congenital Hypoalgesia"
+    ]
+  },
+  "cmvwc8x9x6akpmi01j1ar4o4u": {
+    "active": [
+      "Enlarged meniscus",
+      "Wader",
+      "Sustained Hydration",
+      "Xerocole Adaptation"
+    ],
+    "parent": [
+      "Hypervigilance",
+      "Gastronomic Regeneration",
+      "Hydrodynamic",
+      "Increased Inspiratory Capacity"
+    ],
+    "elderA": [
+      "Multichambered Lungs",
+      "Tactile Endurance",
+      "Photosynthetic Regeneration",
+      "Photosynthetic Tissue"
+    ],
+    "elderB": [
+      "Cellular Regeneration",
+      "Epidermal Fibrosis",
+      "Osteosclerosis",
+      "Congenital Hypoalgesia"
+    ]
+  },
+  "76561198670217946_cmvw36hzl4wwbte0154p9rcc8": {
+    "active": [
+      "Photosynthetic Tissue",
+      "Enlarged meniscus",
+      "Increased Inspiratory Capacity",
+      "Hydrodynamic"
+    ],
+    "parent": [
+      "Photosynthetic Regeneration",
+      "Gastronomic Regeneration",
+      "Multichambered Lungs",
+      "Tactile Endurance"
+    ],
+    "elderA": [
+      "Congenital Hypoalgesia",
+      "Epidermal Fibrosis",
+      "Osteosclerosis",
+      "Cellular Regeneration"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "cmvw36hzl4wwbte0154p9rcc8": {
+    "active": [
+      "Photosynthetic Tissue",
+      "Enlarged meniscus",
+      "Increased Inspiratory Capacity",
+      "Hydrodynamic"
+    ],
+    "parent": [
+      "Photosynthetic Regeneration",
+      "Gastronomic Regeneration",
+      "Multichambered Lungs",
+      "Tactile Endurance"
+    ],
+    "elderA": [
+      "Congenital Hypoalgesia",
+      "Epidermal Fibrosis",
+      "Osteosclerosis",
+      "Cellular Regeneration"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "76561198670217946_cmvv3zyff5h96mn014k685b9o": {
+    "active": [
+      "Congenital Hypoalgesia",
+      "Epidermal Fibrosis",
+      "Osteosclerosis",
+      "Cellular Regeneration"
+    ],
+    "parent": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderA": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "cmvv3zyff5h96mn014k685b9o": {
+    "active": [
+      "Congenital Hypoalgesia",
+      "Epidermal Fibrosis",
+      "Osteosclerosis",
+      "Cellular Regeneration"
+    ],
+    "parent": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderA": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "76561198670217946_cmvt861dx4cc6pe015jr05j6q": {
+    "active": [
+      "Multichambered Lungs",
+      "Tactile Endurance",
+      "Photosynthetic Regeneration",
+      "Photosynthetic Tissue"
+    ],
+    "parent": [
+      "Congenital Hypoalgesia",
+      "Epidermal Fibrosis",
+      "Cellular Regeneration",
+      "Osteosclerosis"
+    ],
+    "elderA": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "cmvt861dx4cc6pe015jr05j6q": {
+    "active": [
+      "Multichambered Lungs",
+      "Tactile Endurance",
+      "Photosynthetic Regeneration",
+      "Photosynthetic Tissue"
+    ],
+    "parent": [
+      "Congenital Hypoalgesia",
+      "Epidermal Fibrosis",
+      "Cellular Regeneration",
+      "Osteosclerosis"
+    ],
+    "elderA": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "76561198670217946_cmvsawjb30za8ql01diekd3qs": {
+    "active": [
+      "Cellular Regeneration",
+      "Osteosclerosis",
+      "Epidermal Fibrosis",
+      "Photosynthetic Tissue"
+    ],
+    "parent": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderA": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "cmvsawjb30za8ql01diekd3qs": {
+    "active": [
+      "Cellular Regeneration",
+      "Osteosclerosis",
+      "Epidermal Fibrosis",
+      "Photosynthetic Tissue"
+    ],
+    "parent": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderA": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "76561198670217946_Puerta": {
+    "active": [
+      "Cellular Regeneration",
+      "Osteosclerosis",
+      "Epidermal Fibrosis",
+      "Photosynthetic Tissue"
+    ],
+    "parent": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderA": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "76561198670217946_cmvqnvebt3ncekg01p125w9l6": {
+    "active": [
+      "Multichambered Lungs",
+      "Gastronomic Regeneration",
+      "Hydrodynamic",
+      "Photosynthetic Tissue"
+    ],
+    "parent": [
+      "Congenital Hypoalgesia",
+      "Epidermal Fibrosis",
+      "Cellular Regeneration",
+      "Osteosclerosis"
+    ],
+    "elderA": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "cmvqnvebt3ncekg01p125w9l6": {
+    "active": [
+      "Multichambered Lungs",
+      "Gastronomic Regeneration",
+      "Hydrodynamic",
+      "Photosynthetic Tissue"
+    ],
+    "parent": [
+      "Congenital Hypoalgesia",
+      "Epidermal Fibrosis",
+      "Cellular Regeneration",
+      "Osteosclerosis"
+    ],
+    "elderA": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "76561198670217946_cmvp18e8333ibpe014l4g5c2g": {
+    "active": [
+      "Multichambered Lungs",
+      "Tactile Endurance",
+      "Photosynthetic Regeneration",
+      "Photosynthetic Tissue"
+    ],
+    "parent": [
+      "Cellular Regeneration",
+      "Epidermal Fibrosis",
+      "Osteosclerosis",
+      "Congenital Hypoalgesia"
+    ],
+    "elderA": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
+  },
+  "cmvp18e8333ibpe014l4g5c2g": {
+    "active": [
+      "Multichambered Lungs",
+      "Tactile Endurance",
+      "Photosynthetic Regeneration",
+      "Photosynthetic Tissue"
+    ],
+    "parent": [
+      "Cellular Regeneration",
+      "Epidermal Fibrosis",
+      "Osteosclerosis",
+      "Congenital Hypoalgesia"
+    ],
+    "elderA": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ],
+    "elderB": [
+      "None",
+      "None",
+      "None",
+      "None"
+    ]
   }
 }

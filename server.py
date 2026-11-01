@@ -2640,6 +2640,22 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     or {"carb": 100.0, "protein": 100.0, "lipid": 100.0}
                 )
 
+                if online and last_nutr:
+                    c_sync = safe_float(last_nutr.get("carb"), 100.0)
+                    p_sync = safe_float(last_nutr.get("protein"), 100.0)
+                    l_sync = safe_float(last_nutr.get("lipid"), 100.0)
+                    def async_reinforce_active(s_id=steam_id, cv=c_sync, pv=p_sync, lv=l_sync):
+                        try:
+                            self.fetch_islepilot("/commands", method="POST", body_data={
+                                "action": "setnutrition",
+                                "steamId": s_id,
+                                "carb": cv, "protein": pv, "lipid": lv,
+                                "a": cv, "b": pv, "y": lv
+                            })
+                        except Exception:
+                            pass
+                    threading.Thread(target=async_reinforce_active, daemon=True).start()
+
                 self.send_json_response({
 
                     "logged_in": is_logged_in,
@@ -5330,46 +5346,48 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "bleed": saved_bleed
             }
 
-        def apply_pass(include_growth_and_prime=True, pass_name="Pass 1"):
+        def apply_pass(include_growth=False, pass_name="Pass 1"):
             try:
-                if include_growth_and_prime:
-                    # 1. Đặt Growth chính xác
+                # 1. Chỉ gọi setgrowth nếu khủng long KHÔNG PHẢI từ IslePilot garage (vd quà gift)
+                # Vì IslePilot native restore đã bảo toàn Growth nguyên bản từ save file; gọi setgrowth sẽ làm Evrima xóa sạch dạ dày & A-B-Y!
+                if include_growth and not target_gd:
                     self.fetch_islepilot("/commands", method="POST", body_data={
                         "action": "setgrowth",
                         "steamId": sid,
                         "growth": dino_growth,
                         "frozen": False
                     })
-                    time.sleep(0.45)
+                    time.sleep(0.35)
 
-                    # 2. Nếu là Prime Elder, áp dụng Prime TRƯỚC khi setstats và setnutrition
-                    if is_prime:
-                        self.fetch_islepilot("/commands", method="POST", body_data={
-                            "action": "setprime",
-                            "steamId": sid,
-                            "eligible": True,
-                            "conditions": 10,
-                            "isElder": True,
-                            "stacks": 10
-                        })
-                        time.sleep(0.45)
+                # 2. Khôi phục Prime Elder nếu có
+                if is_prime:
+                    self.fetch_islepilot("/commands", method="POST", body_data={
+                        "action": "setprime",
+                        "steamId": sid,
+                        "eligible": True,
+                        "conditions": 10,
+                        "isElder": True,
+                        "stacks": 10
+                    })
+                    time.sleep(0.35)
 
-                    # 3. Đặt Scale chuẩn (IndoRex 0.5x, còn lại 1.0x)
+                # 3. Đặt Scale chuẩn (IndoRex 0.5x, còn lại 1.0x)
+                if "indo" in str(dino_spec).lower():
                     self.fetch_islepilot("/commands", method="POST", body_data={
                         "action": "scale",
                         "steamId": sid,
                         "scale": target_scale
                     })
-                    time.sleep(0.45)
+                    time.sleep(0.35)
 
                 # 4. Khôi phục đầy đủ 16 ô Đột biến gen (Active, Parent, Elder A, Elder B)
                 self.fetch_islepilot("/commands", method="POST", body_data=body_muts)
-                time.sleep(0.45)
+                time.sleep(0.35)
 
                 # 5. Khôi phục chính xác Máu, Thức ăn, Nước, Bleed theo đúng chỉ số lúc cất
                 stat_payload = compute_exact_stat_payload()
                 self.fetch_islepilot("/commands", method="POST", body_data=stat_payload)
-                time.sleep(0.45)
+                time.sleep(0.35)
 
                 # 6. Khôi phục Thể lực (Stamina)
                 self.fetch_islepilot("/commands", method="POST", body_data={
@@ -5377,7 +5395,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     "steamId": sid,
                     "stamina": st_val
                 })
-                time.sleep(0.45)
+                time.sleep(0.35)
 
                 # 7. Khôi phục Dinh dưỡng A - B - Y (Carb, Protein, Lipid) SAU CÙNG để không bị lệnh nào khác reset!
                 self.fetch_islepilot("/commands", method="POST", body_data=nutr_payload)
@@ -5387,9 +5405,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
         def restore_worker():
             print(f"[Garage Restore Worker] Bắt đầu theo dõi nhân vật {sid} ({dino_spec}) để nạp trọn vẹn A-B-Y ({carb_val}/{prot_val}/{lipid_val})...")
-            # Chờ người chơi online thực sự (tối đa 120 giây)
+            # Chờ người chơi online thực sự (tối đa 150 giây)
             player_spawned = False
-            for check_idx in range(40):
+            for check_idx in range(60):
                 time.sleep(2.5)
                 lp = self.fetch_islepilot(f"/players/{sid}", bypass_cache=True) or {}
                 if lp.get("online") and lp.get("species"):
@@ -5397,16 +5415,16 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     print(f"[Garage Restore Worker] Đã phát hiện {sid} đang online ({lp.get('species')}) ở giây thứ {check_idx * 2.5:.1f}s!")
                     break
 
-            time.sleep(1.5)
-            # Lần 1: Khôi phục toàn diện ngay khi khủng long vừa spawn vào game
-            apply_pass(include_growth_and_prime=True, pass_name="Pass 1 - Spawn")
+            time.sleep(1.2)
+            # Lần 1: Khôi phục toàn diện ngay khi khủng long vừa spawn vào game (KHÔNG gọi setgrowth tránh reset dạ dày)
+            apply_pass(include_growth=False, pass_name="Pass 1 - Spawn")
 
-            # Lần 2 (sau 3.0s): Bổ trợ Máu, Nước, No, Đột biến và Dinh dưỡng (không gọi lại setgrowth để tránh reset dạ dày)
-            time.sleep(3.0)
-            apply_pass(include_growth_and_prime=False, pass_name="Pass 2 - Stats & Nutrients")
+            # Lần 2 (sau 2.5s): Bổ trợ Máu, Nước, No, Đột biến và Dinh dưỡng
+            time.sleep(2.5)
+            apply_pass(include_growth=False, pass_name="Pass 2 - Stats & Nutrients")
 
-            # Lần 3 & 4 & 5 & 6: Bơm dinh dưỡng A-B-Y liên tục để chống lại việc Evrima engine reset dạ dày
-            for repeat_idx, delay_s in enumerate([2.0, 4.0, 6.0, 10.0, 15.0], start=1):
+            # Lần 3, 4, 5, 6, 7: Bơm dinh dưỡng A-B-Y liên tục để chống lại việc Evrima engine reset dạ dày
+            for repeat_idx, delay_s in enumerate([1.5, 3.5, 6.0, 10.0, 16.0, 25.0], start=1):
                 time.sleep(delay_s)
                 res_nutr = self.fetch_islepilot("/commands", method="POST", body_data=nutr_payload)
                 print(f"[Garage Restore Nutrients Pulse #{repeat_idx}] Đã gửi setnutrition cho {sid}: {res_nutr}")

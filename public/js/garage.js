@@ -821,6 +821,36 @@ const Garage = {
     }).catch(() => {});
   },
 
+  async syncActiveNutrientsToGame(silent = false) {
+    const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
+    const steamId = user ? user.steamId : '76561199259679997';
+    const inA = document.getElementById('active-nutr-val-a');
+    const inB = document.getElementById('active-nutr-val-b');
+    const inY = document.getElementById('active-nutr-val-y');
+    const nutr = this.activeDinoNutrients || {
+      carb: inA ? Math.max(0, Math.min(100, parseFloat(inA.value || 100))) : 100,
+      protein: inB ? Math.max(0, Math.min(100, parseFloat(inB.value || 100))) : 100,
+      lipid: inY ? Math.max(0, Math.min(100, parseFloat(inY.value || 100))) : 100
+    };
+    try {
+      const res = await fetch('/api/server/garage/update-nutrients', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ steam_id: steamId, carb: nutr.carb, protein: nutr.protein, lipid: nutr.lipid })
+      });
+      const data = await res.json();
+      if ((data.ok || data.success) && !silent) {
+        if (window.App && window.App.showToast) {
+          window.App.showToast('⚡ Đã đồng bộ dinh dưỡng (A: ' + Math.round(nutr.carb) + '%, B: ' + Math.round(nutr.protein) + '%, Y: ' + Math.round(nutr.lipid) + '%) trực tiếp vào game!', 'success');
+        }
+      }
+    } catch (e) {
+      if (!silent && window.App && window.App.showToast) {
+        window.App.showToast('⚠️ Lỗi kết nối khi đồng bộ dinh dưỡng vào game.', 'error');
+      }
+    }
+  },
+
   setActiveNutrPreset(a, b, y) {
     const inA = document.getElementById('active-nutr-val-a');
     const inB = document.getElementById('active-nutr-val-b');
