@@ -48,6 +48,25 @@ const BossHunt = {
     </span>`;
   },
 
+  _lastRenderSig: null,
+
+  _computeSignature(resp) {
+    if (!resp) return '';
+    const hunt = resp.ai_hunt || resp.boss || {};
+    const isAdmin = !!(resp.is_admin || window.isUserAdmin);
+    return JSON.stringify({
+      isAdmin,
+      season_id: hunt.season_id || '',
+      is_settled: !!hunt.is_settled,
+      total_ai_kills: hunt.total_ai_kills || 0,
+      reward_xu: hunt.reward_xu || 1000,
+      leaderboard: hunt.leaderboard || [],
+      prey_summary: hunt.prey_summary || {},
+      reward_history_len: (hunt.reward_history || []).length,
+      last_winner: hunt.last_winner || null
+    });
+  },
+
   async render() {
     const container = document.getElementById('view-boss');
     if (!container) return;
@@ -56,30 +75,39 @@ const BossHunt = {
       container.innerHTML = `
         <div style="text-align: center; padding: 60px 20px;">
           <div class="spinner" style="margin: 0 auto 16px;"></div>
-          <p style="color: #94a3b8; font-size: 1.05rem;">Đang kết nối sự kiện Săn AI từ máy chủ...</p>
+          <p style="color: #94a3b8; font-size: 1.05rem;">?ang ??ng b? ng?m d? li?u S?n AI t? m?y ch?...</p>
         </div>
       `;
-    } else {
+    } else if (!document.getElementById('ai-hunt-countdown')) {
       this.renderUI();
     }
 
-    await this.fetchData();
+    await this.fetchData(false);
     this.startAutoRefresh();
   },
 
-  async fetchData() {
+  async fetchData(forceRender = false) {
     const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
     const steamParam = (user && user.steamId) ? `&steam_id=${user.steamId}` : '';
     const adminParam = (user && user.steamId) ? `&admin_steam_id=${user.steamId}` : '';
 
     try {
-      const res = await fetch(`/api/ai-hunt?_t=${Date.now()}${steamParam}${adminParam}`);
+      const res = await fetch(`/api/ai-hunt?_t=${Date.now()}${steamParam}${adminParam}`, { cache: 'no-store' });
       if (res.ok) {
-        this.data = await res.json();
-        this.renderUI();
+        const newData = await res.json();
+        const newSig = this._computeSignature(newData);
+        const hasMountedUI = !!document.getElementById('ai-hunt-countdown');
+        this.data = newData;
+
+        if (forceRender || !hasMountedUI || newSig !== this._lastRenderSig) {
+          this._lastRenderSig = newSig;
+          this.renderUI();
+        } else {
+          this.updateCountdown();
+        }
       }
     } catch (e) {
-      console.error("[AIHunt] Lỗi nạp dữ liệu:", e);
+      // C?p nh?t ?n li?n t?c, kh?ng l?m gi?n ?o?n giao di?n
     }
   },
 
@@ -89,7 +117,12 @@ const BossHunt = {
       const curTab = document.body.getAttribute('data-current-tab');
       const isBossTab = curTab === 'boss' || curTab === 'ai-hunt' || window.location.hash === '#boss';
       if (isBossTab) {
-        this.fetchData();
+        this.fetchData(false);
+      } else {
+        this._bgTick = (this._bgTick || 0) + 1;
+        if (this._bgTick % 4 === 0) {
+          this.fetchData(false);
+        }
       }
     }, 3500);
 
@@ -325,10 +358,11 @@ const BossHunt = {
                 Tự động ghi nhận số lượng khủng long AI bị cắn chết trên toàn server. Khi hết 1 ngày, hệ thống sẽ tự động trao 1.000 Xu cho Top 1!
               </p>
             </div>
-            <div style="display: flex; gap: 8px;">
-              <button class="btn-primary" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; font-weight: 700; border-radius: 8px; font-size: 0.85rem;" onclick="BossHunt.fetchData()">
-                🔄 Làm Mới
-              </button>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35); color: #10b981; display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; font-weight: 700; border-radius: 20px; font-size: 0.8rem;">
+                <span style="width: 7px; height: 7px; border-radius: 50%; background: #10b981; animation: pulse 1.5s infinite;"></span>
+                T? ??ng C?p Nh?t Ng?m 24/7
+              </span>
             </div>
           </div>
         </div>
@@ -538,7 +572,7 @@ const BossHunt = {
       if (resData.ok) {
         if (window.App && App.showToast) App.showToast(resData.message || "✅ Đã trao thưởng thành công!");
         else alert(resData.message || "✅ Đã trao thưởng thành công!");
-        await this.fetchData();
+        await this.fetchData(true);
       } else {
         alert("❌ " + (resData.error || "Lỗi trao thưởng!"));
       }
@@ -569,7 +603,7 @@ const BossHunt = {
       if (resData.ok) {
         if (window.App && App.showToast) App.showToast(resData.message || "🎯 Đã bắt đầu ngày săn mới!");
         else alert(resData.message || "🎯 Đã bắt đầu ngày săn mới!");
-        await this.fetchData();
+        await this.fetchData(true);
       } else {
         alert("❌ " + (resData.error || "Lỗi khởi tạo!"));
       }
@@ -608,3 +642,14 @@ const BossHunt = {
 
 window.BossHunt = BossHunt;
 window.AIHunt = BossHunt;
+
+// Kh?i ch?y ??ng b? ng?m t? ??ng ngay khi t?i trang
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    BossHunt.fetchData(false);
+    BossHunt.startAutoRefresh();
+  });
+} else {
+  BossHunt.fetchData(false);
+  BossHunt.startAutoRefresh();
+}

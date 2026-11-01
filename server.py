@@ -176,11 +176,10 @@ DELETED_GARAGE_FILE = os.path.join(os.path.dirname(__file__), "deleted_garage_di
 def load_deleted_dinos():
     base_dir = os.path.dirname(os.path.abspath(__file__))
     primary_file = os.path.join(base_dir, "deleted_garage_dinos.json")
-    sub_file = os.path.join(base_dir, "3mgaming-website", "deleted_garage_dinos.json")
     backup_file = os.path.join(base_dir, ".persistent_deleted_garage_dinos.json")
 
     result = {}
-    for fpath in [backup_file, sub_file, primary_file]:
+    for fpath in [backup_file, primary_file]:
         if os.path.exists(fpath):
             try:
                 with open(fpath, "r", encoding="utf-8") as f:
@@ -205,10 +204,9 @@ def save_deleted_dino(dino_id, steam_id=""):
     }
     base_dir = os.path.dirname(os.path.abspath(__file__))
     primary_file = os.path.join(base_dir, "deleted_garage_dinos.json")
-    sub_file = os.path.join(base_dir, "3mgaming-website", "deleted_garage_dinos.json")
     backup_file = os.path.join(base_dir, ".persistent_deleted_garage_dinos.json")
 
-    for fpath in [primary_file, sub_file, backup_file]:
+    for fpath in [primary_file, backup_file]:
         try:
             os.makedirs(os.path.dirname(fpath), exist_ok=True)
             with open(fpath, "w", encoding="utf-8") as f:
@@ -226,7 +224,6 @@ def remove_from_deleted_dinos(dino_id):
         base_dir = os.path.dirname(os.path.abspath(__file__))
         for fpath in [
             os.path.join(base_dir, "deleted_garage_dinos.json"),
-            os.path.join(base_dir, "3mgaming-website", "deleted_garage_dinos.json"),
             os.path.join(base_dir, ".persistent_deleted_garage_dinos.json")
         ]:
             try:
@@ -256,11 +253,10 @@ def save_garage_saved_mutation(key, mutation_slots):
         return
     base_dir = os.path.dirname(os.path.abspath(__file__))
     primary_file = os.path.join(base_dir, "garage_saved_mutations.json")
-    sub_file = os.path.join(base_dir, "3mgaming-website", "garage_saved_mutations.json")
     backup_file = os.path.join(base_dir, ".persistent_garage_saved_mutations.json")
     data = load_garage_saved_mutations()
     data[str(key)] = mutation_slots
-    for fpath in [primary_file, sub_file, backup_file]:
+    for fpath in [primary_file, backup_file]:
         try:
             os.makedirs(os.path.dirname(fpath), exist_ok=True)
             with open(fpath, "w", encoding="utf-8") as f:
@@ -287,7 +283,6 @@ def save_garage_dino_snapshot(key, snapshot_data):
         return
     base_dir = os.path.dirname(os.path.abspath(__file__))
     primary_file = os.path.join(base_dir, "garage_dino_snapshots.json")
-    sub_file = os.path.join(base_dir, "3mgaming-website", "garage_dino_snapshots.json")
     backup_file = os.path.join(base_dir, ".persistent_garage_dino_snapshots.json")
     data = load_garage_dino_snapshots()
     k_str = str(key)
@@ -319,7 +314,7 @@ def save_garage_dino_snapshot(key, snapshot_data):
             snap_copy["nutrients"] = {"carb": 100.0, "protein": 100.0, "lipid": 100.0}
         data[k_str] = snap_copy
 
-    for fpath in [primary_file, sub_file, backup_file]:
+    for fpath in [primary_file, backup_file]:
         try:
             os.makedirs(os.path.dirname(fpath), exist_ok=True)
             with open(fpath, "w", encoding="utf-8") as f:
@@ -343,7 +338,7 @@ def load_user_gift_dinos():
 def save_user_gift_dinos(data):
     base_dir = os.path.dirname(os.path.abspath(__file__))
     fpath1 = os.path.join(base_dir, "user_gift_dinos.json")
-    fpath2 = os.path.join(base_dir, "3mgaming-website", "user_gift_dinos.json")
+    fpath2 = os.path.join(base_dir, ".persistent_user_gift_dinos.json")
     for fpath in [fpath1, fpath2]:
         try:
             if os.path.exists(os.path.dirname(fpath)):
@@ -389,9 +384,8 @@ CLAIMED_QUESTS_FILE = os.path.join(os.path.dirname(__file__), "claimed_quests.js
 def _get_claimed_quests_paths():
     base_dir = os.path.dirname(os.path.abspath(__file__))
     primary_file = os.path.join(base_dir, "claimed_quests.json")
-    sub_file = os.path.join(base_dir, "3mgaming-website", "claimed_quests.json")
     backup_file = os.path.join(base_dir, ".persistent_claimed_quests.json")
-    return [backup_file, primary_file, sub_file]
+    return [backup_file, primary_file]
 
 def load_claimed_quests():
     paths = _get_claimed_quests_paths()
@@ -432,9 +426,8 @@ CLAIMED_STARTER_FILE = os.path.join(os.path.dirname(__file__), "claimed_starter.
 def _get_claimed_starter_paths():
     base_dir = os.path.dirname(os.path.abspath(__file__))
     primary_file = os.path.join(base_dir, "claimed_starter.json")
-    sub_file = os.path.join(base_dir, "3mgaming-website", "claimed_starter.json")
     backup_file = os.path.join(base_dir, ".persistent_claimed_starter.json")
-    return [backup_file, primary_file, sub_file]
+    return [backup_file, primary_file]
 
 def load_claimed_starter():
     paths = _get_claimed_starter_paths()
@@ -3113,7 +3106,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
     def _save_arena_db(self, data):
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        for db_path in [os.path.join(base_dir, "arena_matches.json"), os.path.join(base_dir, "3mgaming-website", "arena_matches.json")]:
+        for db_path in [os.path.join(base_dir, "arena_matches.json"), os.path.join(base_dir, ".persistent_arena_matches.json")]:
             try:
                 os.makedirs(os.path.dirname(db_path), exist_ok=True)
                 with open(db_path, "w", encoding="utf-8") as f:
@@ -3137,7 +3130,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
     def _update_cached_player_balance(self, steam_id, balance):
         steam_id = str(steam_id).strip()
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        for cpath in [os.path.join(base_dir, "player_wallet_cache.json"), os.path.join(base_dir, "3mgaming-website", "player_wallet_cache.json")]:
+        for cpath in [os.path.join(base_dir, "player_wallet_cache.json"), os.path.join(base_dir, ".persistent_player_wallet_cache.json")]:
             try:
                 cache_data = {}
                 if os.path.exists(cpath):
@@ -3204,7 +3197,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         # 3. Dự phòng: Nếu IslePilot tạm thời lỗi/429/offline, ghi nhận vào admin_wallet_adjustments.json
         print(f"[Arena Currency Fallback] IslePilot chưa nhận, ghi nhận {amount:+d} Xu vào admin_wallet_adjustments.json cho Steam {steam_id}")
         try:
-            for adj_file in [os.path.join(base_dir, "admin_wallet_adjustments.json"), os.path.join(base_dir, "3mgaming-website", "admin_wallet_adjustments.json")]:
+            for adj_file in [os.path.join(base_dir, "admin_wallet_adjustments.json"), os.path.join(base_dir, ".persistent_admin_wallet_adjustments.json")]:
                 try:
                     adjs = {}
                     if os.path.exists(adj_file):
@@ -3265,7 +3258,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             return 0
         now = time.time()
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        for d in [base_dir, os.path.join(base_dir, "3mgaming-website")]:
+        for d in [base_dir]:
             fpath = os.path.join(d, "carcass_cooldowns.json")
             if os.path.exists(fpath):
                 try:
@@ -3286,7 +3279,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             return
         now = time.time()
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        for d in [base_dir, os.path.join(base_dir, "3mgaming-website")]:
+        for d in [base_dir]:
             fpath = os.path.join(d, "carcass_cooldowns.json")
             try:
                 data = {}
@@ -4097,7 +4090,13 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         tz_vn = datetime.timezone(datetime.timedelta(hours=7))
         return datetime.datetime.now(tz_vn)
 
+    _ai_hunt_memory_db = None
+    _ai_hunt_initial_scan_done = False
+
     def _get_ai_hunt_db(self):
+        if isinstance(DinoRequestHandler._ai_hunt_memory_db, dict):
+            return DinoRequestHandler._ai_hunt_memory_db
+
         base_dir = os.path.dirname(os.path.abspath(__file__))
         primary_file = os.path.join(base_dir, "ai_hunt_state.json")
         backup_file = os.path.join(base_dir, ".persistent_ai_hunt_state.json")
@@ -4108,12 +4107,12 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
         defaults = {
             "active": True,
-            "title": "🏹 SỰ KIỆN SĂN KHỦNG LONG AI TOÀN SERVER",
-            "description": "Sự kiện diễn ra theo ngày (tự động reset lúc 00:00 mỗi ngày theo giờ VN). Người chơi săn được nhiều AI nhất sẽ được hệ thống TỰ ĐỘNG trao thưởng 1.000 Xu!",
+            "title": "?? S? KI?N S?N KH?NG LONG AI TO?N SERVER",
+            "description": "S? ki?n di?n ra theo ng?y (t? ??ng reset l?c 00:00 m?i ng?y theo gi? VN). Ng??i ch?i s?n ???c nhi?u AI nh?t s? ???c h? th?ng T? ??NG trao th??ng 1.000 Xu!",
             "reward_xu": 1000,
             "duration_seconds": 86400,
             "season_date": today_date_str,
-            "season_id": f"Mùa 1 (Ngày {now_vn.strftime('%d/%m')})",
+            "season_id": f"M?a 1 (Ng?y {now_vn.strftime('%d/%m')})",
             "started_at": day_start_vn.isoformat(),
             "expires_at": day_end_vn.isoformat(),
             "time_remaining_seconds": max(0, int((day_end_vn - now_vn).total_seconds())),
@@ -4138,27 +4137,27 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                             for k, v in defaults.items():
                                 if k not in data or data[k] is None:
                                     data[k] = v
+                            DinoRequestHandler._ai_hunt_memory_db = data
                             return data
                 except Exception:
                     pass
+        DinoRequestHandler._ai_hunt_memory_db = defaults
         return defaults
 
     def _save_ai_hunt_db(self, data):
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        primary_file = os.path.join(base_dir, "ai_hunt_state.json")
-        sub_file = os.path.join(base_dir, "3mgaming-website", "ai_hunt_state.json")
         backup_file = os.path.join(base_dir, ".persistent_ai_hunt_state.json")
 
         data_to_save = dict(data)
         data_to_save.pop("time_remaining_seconds", None)
+        DinoRequestHandler._ai_hunt_memory_db = data
 
-        for fpath in [primary_file, sub_file, backup_file]:
-            try:
-                os.makedirs(os.path.dirname(fpath), exist_ok=True)
-                with open(fpath, "w", encoding="utf-8") as f:
-                    json.dump(data_to_save, f, ensure_ascii=False, indent=2)
-            except Exception:
-                pass
+        try:
+            os.makedirs(os.path.dirname(backup_file), exist_ok=True)
+            with open(backup_file, "w", encoding="utf-8") as f:
+                json.dump(data_to_save, f, ensure_ascii=False, indent=2)
+        except Exception:
+            pass
 
     def _auto_check_ai_hunt_status(self, db):
         if not db or not db.get("active"):
@@ -4294,7 +4293,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             if DinoRequestHandler._combat_log_cached_data and (now_ts - DinoRequestHandler._combat_log_cache_time < 3.0):
                 hits = DinoRequestHandler._combat_log_cached_data.get("hits", [])
             else:
-                remote_data = self.fetch_islepilot("/combat-log?limit=500")
+                scan_limit = 2000 if not getattr(DinoRequestHandler, "_ai_hunt_initial_scan_done", False) else 500
+                DinoRequestHandler._ai_hunt_initial_scan_done = True
+                remote_data = self.fetch_islepilot(f"/combat-log?limit={scan_limit}")
                 if isinstance(remote_data, dict):
                     DinoRequestHandler._combat_log_cached_data = remote_data
                     DinoRequestHandler._combat_log_cache_time = now_ts
@@ -4397,7 +4398,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
                 prey_summary[vic_species] = prey_summary.get(vic_species, 0) + 1
 
-        if new_kills > 0 or not db.get("leaderboard"):
+        if new_kills > 0 or "leaderboard" not in db:
             has_changes = True
             db["processed_kill_ids"] = list(processed_ids)[-1000:]
             db["prey_summary"] = prey_summary

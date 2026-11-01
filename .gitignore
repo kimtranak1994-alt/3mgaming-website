@@ -8,7 +8,11 @@ arena_matches.json
 player_wallet_cache.json
 admin_wallet_adjustments.json
 claimed_quests.json
+claimed_starter.json
+carcass_cooldowns.json
 referrals.json
 deleted_garage_dinos.json
+garage_dino_snapshots.json
+garage_saved_mutations.json
 user_gift_dinos.json
 scratch_*.json
