@@ -577,45 +577,22 @@ def build_blueprint_skin_payload(species, sex, palette, variation=0, pattern=0, 
     bp_class = f"BP_{clean_sp}_C"
     pal = palette or {}
 
-    body_hex = str(pal.get("body", "#4a543b")).upper()
-    markings_hex = str(pal.get("markings", "#2b3221")).upper()
-    is_hac_bang = body_hex in ["#06080E", "#080B12", "#05070C"] and markings_hex in ["#00D9FF", "#00E5FF", "#00FFFF", "#D1FAFF"]
-
-    if is_hac_bang:
-        return {
-            "class": bp_class,
-            "female": str(sex).lower() == "female",
-            "variation": int(variation or 0),
-            "pattern": int(pattern if pattern is not None else 1),
-            "theme": int(theme or 0),
-            "body": [0.003, 0.005, 0.010, 1.0],
-            "underbelly": [0.003, 0.005, 0.010, 1.0],
-            "flank": [0.003, 0.005, 0.010, 1.0],
-            "markings": [0.0, 0.88, 1.0, 1.0],
-            "detail1": [0.85, 0.98, 1.0, 1.0],
-            "eyes": [0.0, 1.0, 1.0, 1.0],
-            "male_display": [0.0, 0.95, 1.0, 1.0],
-            "teeth": [0.93, 0.97, 1.0, 1.0],
-            "mouth": [0.02, 0.08, 0.14, 1.0],
-            "claws": [0.003, 0.005, 0.010, 1.0]
-        }
-
     return {
         "class": bp_class,
         "female": str(sex).lower() == "female",
         "variation": int(variation or 0),
         "pattern": int(pattern or 0),
         "theme": int(theme or 0),
-        "body": hex_to_float_rgba(pal.get("body", "#06080E")),
-        "markings": hex_to_float_rgba(pal.get("markings", "#00D9FF")),
-        "flank": hex_to_float_rgba(pal.get("flank", "#00D9FF")),
-        "underbelly": hex_to_float_rgba(pal.get("underbelly", "#06080E")),
-        "detail1": hex_to_float_rgba(pal.get("detail", pal.get("detail1", "#00E0FF"))),
-        "eyes": hex_to_float_rgba(pal.get("eyes", "#00FFFF")),
-        "male_display": hex_to_float_rgba(pal.get("display", pal.get("male_display", "#00F2FF"))),
+        "body": hex_to_float_rgba(pal.get("body", "#4A543B")),
+        "markings": hex_to_float_rgba(pal.get("markings", "#2B3221")),
+        "flank": hex_to_float_rgba(pal.get("flank", "#647050")),
+        "underbelly": hex_to_float_rgba(pal.get("underbelly", "#C4BAA1")),
+        "detail1": hex_to_float_rgba(pal.get("detail", pal.get("detail1", "#1F1512"))),
+        "eyes": hex_to_float_rgba(pal.get("eyes", "#E08F24")),
+        "male_display": hex_to_float_rgba(pal.get("display", pal.get("male_display", "#A83C24"))),
         "teeth": hex_to_float_rgba(pal.get("teeth", "#EEF8FF")),
-        "mouth": hex_to_float_rgba(pal.get("mouth", "#0A2233")),
-        "claws": hex_to_float_rgba(pal.get("claws", "#00D9FF"))
+        "mouth": hex_to_float_rgba(pal.get("mouth", "#4A1515")),
+        "claws": hex_to_float_rgba(pal.get("claws", "#1F1512"))
     }
 
 class DinoRequestHandler(SimpleHTTPRequestHandler):
@@ -5885,44 +5862,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
     # --- 8 Tính Năng Server IslePilot Mới ---
 
-    def get_exclusive_universal_skin(self):
-        return {
-            "id": "skin_hac_bang_doc_quyen",
-            "name": "👑 Màu Độc Quyền - Hắc Băng Lôi Điện (Phiên bản giới hạn)",
-            "species": "Tất cả các loài",
-            "allSpecies": True,
-            "universal": True,
-            "bought": True,
-            "usesLeft": None,
-            "maxUses": None,
-            "price": 0,
-            "pattern": 1,
-            "variation": 0,
-            "theme": 0,
-            "badge": "👑 Độc Quyền Server • Mọi Dino",
-            "themeColor": "#00D9FF",
-            "imageUrl": "/assets/images/skin_hac_bang_doc_quyen.jpg",
-            "image": "/assets/images/skin_hac_bang_doc_quyen.jpg",
-            "colors": ["#06080E", "#06080E", "#06080E", "#00E5FF", "#00F2FF", "#00FFFF"],
-            "palette": {
-                "body": "#06080E",
-                "underbelly": "#06080E",
-                "flank": "#06080E",
-                "markings": "#00E5FF",
-                "detail": "#E6FBFF",
-                "detail1": "#E6FBFF",
-                "display": "#00F2FF",
-                "male_display": "#00F2FF",
-                "eyes": "#00FFFF",
-                "claws": "#06080E",
-                "teeth": "#EEF8FF",
-                "mouth": "#0A2233"
-            },
-            "code": "Triceratops10006080EFF06080EFF06080EFF00E5FFFF00F2FFFF00FFFFFF",
-            "skinCode": "Triceratops10006080EFF06080EFF06080EFF00E5FFFF00F2FFFF00FFFFFF",
-            "modDownloadUrl": "/assets/mods/Mod_Skin_Hac_Bang_Loi_Dien_Triceratops.zip",
-            "description": "Phiên bản giới hạn: Độc đáo • Cá tính • Khác biệt. Phối màu Đen Huyền (nền chủ đạo), Xanh Ngọc Lôi Điện (tạo điểm nhấn hoa văn tia sét), Bạch Băng (tăng độ sắc nét viền sáng) và Xám Đen (tạo chiều sâu). Tương thích tự động 100% cho TẤT CẢ khủng long trong server!"
-        }
+
 
     def enrich_skin_data(self, s):
         if not isinstance(s, dict):
@@ -5932,17 +5872,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         name_lower = name.lower()
         species = s.get("species") or "Tyrannosaurus"
 
-        if skin_id == "skin_hac_bang_doc_quyen" or any(k in name_lower for k in ["hắc băng", "hac bang", "độc quyền", "doc quyen", "lôi điện"]):
-            excl = self.get_exclusive_universal_skin()
-            for k, v in excl.items():
-                if k not in s or s[k] is None:
-                    s[k] = v
-            s["palette"] = excl["palette"]
-            s["allSpecies"] = True
-            s["universal"] = True
-            s["imageUrl"] = excl["imageUrl"]
-            s["image"] = excl["image"]
-            return s
+
 
         if any(k in name_lower for k in ["hồng", "hong", "pink", "nam tính", "nam tinh"]):
             s["palette"] = {
@@ -6004,9 +5934,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 pass
 
         existing_ids = {s.get("id") for s in custom_list}
-        excl = self.get_exclusive_universal_skin()
-        all_skins = [s for s in skins if s.get("id") not in existing_ids and s.get("id") != excl.get("id")]
-        final_skins = [excl] + [s for s in custom_list if s.get("id") != excl.get("id")] + all_skins
+        all_skins = [s for s in skins if s.get("id") not in existing_ids]
+        final_skins = list(custom_list) + all_skins
         self.send_json_response({"skins": final_skins})
 
     def handle_shop_dinos(self):
@@ -10001,8 +9930,6 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             raw_skins = remote.get("skins", [])
             skins = [self.enrich_skin_data(s) for s in raw_skins]
 
-        excl = self.get_exclusive_universal_skin()
-        skins = [excl] + [s for s in skins if s.get("id") != excl.get("id")]
         self.send_json_response({"skins": skins})
 
     def handle_referral(self):
@@ -10416,11 +10343,13 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 self.send_json_response({"success": False, "message": "Thiếu mã Skin cần mua!"}, 400)
                 return
 
-            if skin_id == "skin_hac_bang_doc_quyen" or skin_id.startswith("custom_"):
+
+
+            if skin_id.startswith("custom_"):
                 self.send_json_response({
                     "success": True,
                     "ok": True,
-                    "message": "🎉 Đã nhận Skin Độc Quyền Server (Hắc Băng Lôi Điện - Dùng cho mọi Dino) vào Kho Skin!"
+                    "message": "🎉 Đã nhận Skin Tùy Chọn Admin vào Kho Skin!"
                 })
                 return
 
@@ -10744,7 +10673,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             steam_id = str(payload.get("steam_id") or payload.get("targetSteamId") or self.get_active_steam_id() or "").strip()
             skin_id = str(payload.get("skin_id") or payload.get("skinId") or "").strip()
             requested_species = str(payload.get("species") or "").strip()
-            is_universal = bool(payload.get("allSpecies") or payload.get("universal") or skin_id == "skin_hac_bang_doc_quyen")
+            is_universal = bool(payload.get("allSpecies") or payload.get("universal"))
 
             # 1. Tự động phát hiện loài khủng long (species) & giới tính (female) mà người chơi đang chơi trong Server
             live_species = None
@@ -10774,10 +10703,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
             # 2. Nếu có skin_id (từ Kho Skin hoặc Shop Skin): kiểm tra xem có phải Skin Độc Quyền / Custom hay Skin IslePilot gốc
             matched_custom_skin = None
-            if skin_id == "skin_hac_bang_doc_quyen":
-                matched_custom_skin = self.get_exclusive_universal_skin()
-                is_universal = True
-            elif skin_id and os.path.exists("admin_custom_skins.json"):
+            if skin_id and os.path.exists("admin_custom_skins.json"):
                 try:
                     with open("admin_custom_skins.json", "r", encoding="utf-8") as f:
                         for cs in json.load(f):
@@ -10878,35 +10804,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             is_dark_body_arr = isinstance(body_val, (list, tuple)) and len(body_val) >= 3 and float(body_val[0]) < 0.08 and float(body_val[1]) < 0.08 and float(body_val[2]) < 0.12
             is_cyan_mark_arr = isinstance(markings_val, (list, tuple)) and len(markings_val) >= 3 and float(markings_val[1]) > 0.60 and float(markings_val[2]) > 0.85
 
-            is_hac_bang_apply = (
-                is_universal or
-                skin_id == "skin_hac_bang_doc_quyen" or
-                (top_body in ["#06080E", "#080B12", "#05070C"] and top_mark in ["#00D9FF", "#00E5FF", "#00FFFF"]) or
-                (isinstance(body_val, str) and body_val.upper() in ["#06080E", "#080B12", "#05070C"] and
-                 isinstance(markings_val, str) and markings_val.upper() in ["#00D9FF", "#00E5FF", "#00FFFF"]) or
-                (is_dark_body_arr and is_cyan_mark_arr)
-            )
-
-            if is_hac_bang_apply:
-                sanitized_bp = {
-                    "class": bp_class,
-                    "female": female,
-                    "variation": int(raw_bp.get("variation", 0) or 0),
-                    "pattern": pat_int,
-                    "theme": int(raw_bp.get("theme", 0) or 0),
-                    "body": [0.003, 0.005, 0.010, 1.0],
-                    "underbelly": [0.003, 0.005, 0.010, 1.0],
-                    "flank": [0.003, 0.005, 0.010, 1.0],
-                    "markings": [0.0, 0.88, 1.0, 1.0],
-                    "detail1": [0.85, 0.98, 1.0, 1.0],
-                    "eyes": [0.0, 1.0, 1.0, 1.0],
-                    "male_display": [0.0, 0.95, 1.0, 1.0],
-                    "teeth": [0.93, 0.97, 1.0, 1.0],
-                    "mouth": [0.02, 0.08, 0.14, 1.0],
-                    "claws": [0.003, 0.005, 0.010, 1.0]
-                }
-            else:
-                sanitized_bp = {
+            sanitized_bp = {
                     "class": bp_class,
                     "female": female,
                     "variation": int(raw_bp.get("variation", 0) or 0),

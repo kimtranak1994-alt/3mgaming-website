@@ -12,8 +12,8 @@ const Studio = {
   variation: 0,
   theme: 0,
   growth: 1.0,
-  isExclusiveHacBang: true,
-  designName: '👑 Màu Độc Quyền - Hắc Băng Lôi Điện',
+  isExclusiveHacBang: false,
+  designName: 'Skin Mới',
 
   // Steam Auth & Active Dino State
   steamUser: null,
@@ -77,7 +77,7 @@ const Studio = {
     pink:  { bg: '#1c0817', light: '#ec4899', ground: '#3b1232' }
   },
 
-  // Color layers (Mặc định: Màu Độc Quyền - Hắc Băng Lôi Điện)
+  // Color layers (Mặc định)
   palette: {
     body: '#06080E',
     markings: '#00D9FF',
@@ -728,12 +728,12 @@ const Studio = {
       claws: '#06080E'
     };
     const nameInput = document.getElementById('design-name');
-    if (nameInput) nameInput.value = '👑 Màu Độc Quyền - Hắc Băng Lôi Điện';
+    if (nameInput) nameInput.value = 'Skin Mới';
     this.renderPatternChips();
     this.renderChannels();
     this.updateMaterialTexture();
     this.updateSkinCodeDisplay();
-    this.showToast(`👑 Đã nạp Màu Độc Quyền (Hắc Băng Lôi Điện) chuẩn 100% lên ${this.species}!`, 'success');
+    this.showToast(`Đã nạp bảng màu lên ${this.species}!`, 'success');
   },
 
   async applyExclusivePresetInGame() {

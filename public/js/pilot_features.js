@@ -362,10 +362,6 @@ const SkinShop = {
 
     const name = (item.name || '').toLowerCase();
 
-    if (item.id === 'skin_hac_bang_doc_quyen' || name.includes('hắc băng') || name.includes('hac bang') || name.includes('độc quyền')) {
-      return '/assets/images/skin_hac_bang_doc_quyen.jpg';
-    }
-
     if (name.includes('hồng') || name.includes('hong') || name.includes('pink') || name.includes('nam tính')) {
 
       return '/assets/images/tyrannosaurus_hong_nam_tinh.png';
@@ -702,11 +698,7 @@ const SkinShop = {
 
               </button>
 
-              ${(item.id === 'skin_hac_bang_doc_quyen' || (item.name || '').includes('Hăc Băng') || (item.name || '').includes('hac bang')) ? `
-                <a href="/assets/mods/Mod_Skin_Hac_Bang_Loi_Dien_Triceratops.zip" download class="btn-secondary" style="flex: 1; padding: 8px 10px; font-size: 0.78rem; display: flex; align-items: center; justify-content: center; gap: 4px; border-color: #38bdf8; color: #38bdf8; text-decoration: none; font-weight: 700;" title="Tải file mod riêng chuẩn 100% không qua IslePilot">
-                  📦 Tải Mod (.zip)
-                </a>
-              ` : ''}
+
               ${(item.allSpecies || item.universal) ? `
                 <button class="btn-primary" style="flex: 1.25; padding: 8px 10px; font-size: 0.8rem; background: linear-gradient(135deg, #00d9ff, #0284c7); border: 1px solid #38bdf8; color: #041019; font-weight: 800; cursor: pointer;" onclick="GarageSkins.applySkin('${item.id}', '${item.name}')">
                   ⚡ Áp Dụng Ngay (Mọi Dino)
@@ -783,31 +775,7 @@ const SkinShop = {
       || (window.GarageSkins && GarageSkins.skins ? GarageSkins.skins.find(s => s.id === skinId) : null)
       || this.skins[0];
 
-    if (!item && skinId === 'skin_hac_bang_doc_quyen') {
-      item = {
-        id: 'skin_hac_bang_doc_quyen',
-        name: '👑 Màu Độc Quyền - Hắc Băng Lôi Điện',
-        species: 'Triceratops',
-        allSpecies: true,
-        universal: true,
-        pattern: 1,
-        skinCode: 'Triceratops10006080EFF06080EFF06080EFF00E5FFFF00F2FFFF00FFFFFF',
-        code: 'Triceratops10006080EFF06080EFF06080EFF00E5FFFF00F2FFFF00FFFFFF',
-        palette: {
-          body: '#06080E',
-          markings: '#00E5FF',
-          underbelly: '#06080E',
-          flank: '#06080E',
-          detail: '#E6FBFF',
-          display: '#00F2FF',
-          male_display: '#00F2FF',
-          eyes: '#00FFFF',
-          claws: '#06080E',
-          teeth: '#EEF8FF',
-          mouth: '#0A2233'
-        }
-      };
-    }
+
 
     if (window.SkinEditor) {
       SkinEditor._pendingSkin = item;
@@ -819,9 +787,7 @@ const SkinShop = {
       if (window.SkinEditor) {
         if (item && SkinEditor.loadSkinObject) {
           SkinEditor.loadSkinObject(item);
-        } else if (skinId === 'skin_hac_bang_doc_quyen' && SkinEditor.loadExclusiveHacBang) {
-          SkinEditor.loadExclusiveHacBang();
-        }
+        
       }
     }, 150);
   },
@@ -1428,14 +1394,14 @@ const SkinEditor = {
     if (!this.isAutoRotating) {
       this.toggleAutoRotate(true);
     }
-    App.showToast(`👑 Đã nạp Màu Độc Quyền Hắc Băng Lôi Điện cho ${this.species} (Hỗ trợ mọi loài Dino)!`);
+    App.showToast(`Đã nạp bảng màu cho ${this.species}!`);
   },
 
   loadSkinObject(item) {
 
     if (!item) return;
 
-    const isUniv = Boolean(item.allSpecies || item.universal || item.id === 'skin_hac_bang_doc_quyen' || (item.species || '').toLowerCase().includes('tất cả'));
+    const isUniv = Boolean(item.allSpecies || item.universal || (item.species || '').toLowerCase().includes('tất cả'));
     this._isUniversalSkin = isUniv;
 
     if (isUniv) {
@@ -1491,7 +1457,7 @@ const SkinEditor = {
       const p = this._pendingSkin;
       this._pendingSkin = null;
       this._userInteractedSpecies = true;
-      const isUniv = Boolean(p.allSpecies || p.universal || p.id === 'skin_hac_bang_doc_quyen' || (p.species || '').toLowerCase().includes('tất cả'));
+      const isUniv = Boolean(p.allSpecies || p.universal || (p.species || '').toLowerCase().includes('tất cả'));
       this._isUniversalSkin = isUniv;
       if (isUniv) {
         if (!this.species || this.species.toLowerCase().includes('tất cả') || this.species === 'All' || this.species === 'Tyrannosaurus') {
