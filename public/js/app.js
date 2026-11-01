@@ -85,6 +85,8 @@ const App = {
     } else if (tabId === 'starter') {
       if (window.StarterGift && typeof window.StarterGift.render === 'function') {
         window.StarterGift.render();
+      } else if (typeof StarterGift !== 'undefined' && typeof StarterGift.render === 'function') {
+        StarterGift.render();
       }
     } else if (tabId === 'skinshop') {
       SkinShop.render();

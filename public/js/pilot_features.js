@@ -787,7 +787,7 @@ const SkinShop = {
       if (window.SkinEditor) {
         if (item && SkinEditor.loadSkinObject) {
           SkinEditor.loadSkinObject(item);
-        
+        }
       }
     }, 150);
   },
