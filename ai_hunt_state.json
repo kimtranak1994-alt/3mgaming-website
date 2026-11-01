@@ -10,7 +10,7 @@
   "auto_reward_enabled": true,
   "ended_at": null,
   "is_settled": false,
-  "total_ai_kills": 421,
+  "total_ai_kills": 422,
   "hunters": {
     "76561198647188052": {
       "steam_id": "76561198647188052",
@@ -132,16 +132,17 @@
     "76561199575258338": {
       "steam_id": "76561199575258338",
       "name": "fatman",
-      "species": "Giganotosaurus",
-      "kills": 5,
+      "species": "Troodon",
+      "kills": 6,
       "prey_breakdown": {
         "Deer": 1,
         "Boar": 2,
         "Dryosaurus": 1,
-        "Gallimimus": 1
+        "Gallimimus": 1,
+        "Seaturtle": 1
       },
-      "last_kill_at": "2026-11-01T12:53:41.562Z",
-      "last_prey": "Gallimimus"
+      "last_kill_at": "2026-11-01T13:20:14.641Z",
+      "last_prey": "Seaturtle"
     },
     "76561199483156684": {
       "steam_id": "76561199483156684",
@@ -395,6 +396,24 @@
     },
     {
       "rank": 10,
+      "steam_id": "76561199575258338",
+      "name": "fatman",
+      "species": "Troodon",
+      "kills": 6,
+      "prey_breakdown": {
+        "Deer": 1,
+        "Boar": 2,
+        "Dryosaurus": 1,
+        "Gallimimus": 1,
+        "Seaturtle": 1
+      },
+      "last_kill_at": "2026-11-01T13:20:14.641Z",
+      "last_prey": "Seaturtle",
+      "is_top1": false,
+      "reward_xu": 0
+    },
+    {
+      "rank": 11,
       "steam_id": "76561198684564795",
       "name": "LengKeng",
       "species": "IndoRex",
@@ -405,23 +424,6 @@
       },
       "last_kill_at": "2026-11-01T10:15:38.231Z",
       "last_prey": "Deer",
-      "is_top1": false,
-      "reward_xu": 0
-    },
-    {
-      "rank": 11,
-      "steam_id": "76561199575258338",
-      "name": "fatman",
-      "species": "Giganotosaurus",
-      "kills": 5,
-      "prey_breakdown": {
-        "Deer": 1,
-        "Boar": 2,
-        "Dryosaurus": 1,
-        "Gallimimus": 1
-      },
-      "last_kill_at": "2026-11-01T12:53:41.562Z",
-      "last_prey": "Gallimimus",
       "is_top1": false,
       "reward_xu": 0
     },
@@ -501,7 +503,7 @@
   ],
   "prey_summary": {
     "Dryosaurus": 49,
-    "Seaturtle": 8,
+    "Seaturtle": 9,
     "Crab": 1,
     "Boar": 91,
     "Compsognathus": 35,
@@ -589,8 +591,8 @@
     "7256340",
     "7237255",
     "7271506",
-    "7243685",
     "7251296",
+    "7243685",
     "7269925",
     "7131985",
     "7246279",
@@ -913,6 +915,7 @@
     "7241389",
     "7234655",
     "7271617",
+    "7310152",
     "7177719",
     "7223146",
     "7270095",
