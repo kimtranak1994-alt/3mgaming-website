@@ -292,11 +292,13 @@ def save_garage_dino_snapshot(key, snapshot_data):
         merged = dict(existing)
         for fk, fv in snapshot_data.items():
             if fv is not None:
-                if fk == "nutrients" and isinstance(fv, dict) and isinstance(existing.get("nutrients"), dict):
-                    n_merged = dict(existing["nutrients"])
+                if fk == "nutrients" and isinstance(fv, dict):
+                    n_merged = dict(existing.get("nutrients") or {})
                     for nk, nv in fv.items():
-                        if nv is not None and safe_float(nv, 0) > 0:
-                            n_merged[nk] = safe_float(nv, 100.0)
+                        if nv is not None:
+                            val_f = safe_float(nv, -1.0)
+                            if val_f >= 0:
+                                n_merged[nk] = max(0.0, min(100.0, val_f))
                     merged["nutrients"] = n_merged
                 elif fk == "mutationSlots" and isinstance(fv, dict):
                     has_any = any(any(m and m != "None" for m in (fv.get(slot) or [])) for slot in ["active", "parent", "elderA", "elderB"])
@@ -584,18 +586,18 @@ def build_blueprint_skin_payload(species, sex, palette, variation=0, pattern=0, 
             "class": bp_class,
             "female": str(sex).lower() == "female",
             "variation": int(variation or 0),
-            "pattern": int(pattern or 1),
+            "pattern": int(pattern if pattern is not None else 1),
             "theme": int(theme or 0),
             "body": [0.003, 0.005, 0.010, 1.0],
             "underbelly": [0.003, 0.005, 0.010, 1.0],
-            "flank": [0.0, 0.85, 1.0, 1.0],
-            "markings": [0.82, 0.98, 1.0, 1.0],
-            "detail1": [0.0, 0.88, 1.0, 1.0],
+            "flank": [0.003, 0.005, 0.010, 1.0],
+            "markings": [0.0, 0.88, 1.0, 1.0],
+            "detail1": [0.85, 0.98, 1.0, 1.0],
             "eyes": [0.0, 1.0, 1.0, 1.0],
             "male_display": [0.0, 0.95, 1.0, 1.0],
             "teeth": [0.93, 0.97, 1.0, 1.0],
             "mouth": [0.02, 0.08, 0.14, 1.0],
-            "claws": [0.0, 0.85, 1.0, 1.0]
+            "claws": [0.003, 0.005, 0.010, 1.0]
         }
 
     return {
@@ -1189,6 +1191,12 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         elif self.path == "/api/server/garage/spawn":
 
             self.handle_garage_spawn()
+
+            return
+
+        elif self.path in ["/api/server/garage/update-nutrients", "/api/server/garage/sync-nutrients", "/api/server/garage/sync-active-nutrients"]:
+
+            self.handle_garage_update_nutrients()
 
             return
 
@@ -5175,7 +5183,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             "deleted_ids": list(deleted_dinos.keys())
         })
 
-    def restore_dino_full_state_worker(self, steam_id, dino_id, target_gd=None, fallback_species=None):
+    def restore_dino_full_state_worker(self, steam_id, dino_id, target_gd=None, fallback_species=None, client_nutrients=None):
         """Khôi phục 100% nguyên vẹn tất cả dữ liệu khủng long (Size, Máu, Đói, Nước, Thể lực, Dinh dưỡng A-B-Y, Prime Elder và 16 ô Đột biến) sau khi rút từ Gara."""
         sid = str(steam_id).strip()
         did = str(dino_id).strip()
@@ -5253,12 +5261,21 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 cleaned_k.append("None")
             full_slots[k] = cleaned_k
 
-        nutrients = snap_data.get("nutrients") or {}
-        carb_val = safe_float(nutrients.get("carb") if nutrients.get("carb") is not None else nutrients.get("a"), 100.0)
-        prot_val = safe_float(nutrients.get("protein") if nutrients.get("protein") is not None else nutrients.get("b"), 100.0)
-        lipid_val = safe_float(nutrients.get("lipid") if nutrients.get("lipid") is not None else nutrients.get("y"), 100.0)
-        if carb_val <= 0 and prot_val <= 0 and lipid_val <= 0:
-            carb_val, prot_val, lipid_val = 100.0, 100.0, 100.0
+        nutr_src = (
+            (client_nutrients if isinstance(client_nutrients, dict) and any(safe_float(client_nutrients.get(k), -1) >= 0 for k in ["carb", "protein", "lipid", "a", "b", "y"]) else None)
+            or snap_data.get("nutrients")
+            or (target_gd.get("nutrients") if target_gd and isinstance(target_gd.get("nutrients"), dict) else None)
+            or (load_garage_dino_snapshots().get(f"{sid}_{did}") or {}).get("nutrients")
+            or (load_garage_dino_snapshots().get(did) or {}).get("nutrients")
+            or (load_garage_dino_snapshots().get(f"{sid}_last_nutrients") or {}).get("nutrients")
+            or {}
+        )
+        carb_val = safe_float(nutr_src.get("carb") if nutr_src.get("carb") is not None else nutr_src.get("a"), 100.0)
+        prot_val = safe_float(nutr_src.get("protein") if nutr_src.get("protein") is not None else nutr_src.get("b"), 100.0)
+        lipid_val = safe_float(nutr_src.get("lipid") if nutr_src.get("lipid") is not None else nutr_src.get("y"), 100.0)
+        carb_val = max(0.0, min(100.0, carb_val))
+        prot_val = max(0.0, min(100.0, prot_val))
+        lipid_val = max(0.0, min(100.0, lipid_val))
 
         target_scale = 0.5 if "indo" in str(dino_spec).lower() else 1.0
         st_val = dino_stamina * 1000.0 if dino_stamina <= 1.0 else (dino_stamina * 10.0 if dino_stamina <= 100.0 else dino_stamina)
@@ -5278,7 +5295,10 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             "steamId": sid,
             "carb": carb_val,
             "protein": prot_val,
-            "lipid": lipid_val
+            "lipid": lipid_val,
+            "a": carb_val,
+            "b": prot_val,
+            "y": lipid_val
         }
 
         def compute_exact_stat_payload():
@@ -5366,31 +5386,32 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 print(f"[Garage Restore {pass_name} Error] {e}")
 
         def restore_worker():
-            # Chờ tối thiểu 3.0s rồi kiểm tra xem nhân vật đã spawn hoàn tất vào map chưa
-            time.sleep(3.0)
-            for _ in range(5):
+            print(f"[Garage Restore Worker] Bắt đầu theo dõi nhân vật {sid} ({dino_spec}) để nạp trọn vẹn A-B-Y ({carb_val}/{prot_val}/{lipid_val})...")
+            # Chờ người chơi online thực sự (tối đa 120 giây)
+            player_spawned = False
+            for check_idx in range(40):
+                time.sleep(2.5)
                 lp = self.fetch_islepilot(f"/players/{sid}", bypass_cache=True) or {}
                 if lp.get("online") and lp.get("species"):
+                    player_spawned = True
+                    print(f"[Garage Restore Worker] Đã phát hiện {sid} đang online ({lp.get('species')}) ở giây thứ {check_idx * 2.5:.1f}s!")
                     break
-                time.sleep(1.0)
-            time.sleep(0.8)
 
+            time.sleep(1.5)
             # Lần 1: Khôi phục toàn diện ngay khi khủng long vừa spawn vào game
-            apply_pass(include_growth_and_prime=True, pass_name="Pass 1")
+            apply_pass(include_growth_and_prime=True, pass_name="Pass 1 - Spawn")
 
-            # Lần 2 (sau 3.0s): Bổ trợ toàn diện phòng trường hợp client load map chậm
+            # Lần 2 (sau 3.0s): Bổ trợ Máu, Nước, No, Đột biến và Dinh dưỡng (không gọi lại setgrowth để tránh reset dạ dày)
             time.sleep(3.0)
-            apply_pass(include_growth_and_prime=True, pass_name="Pass 2")
+            apply_pass(include_growth_and_prime=False, pass_name="Pass 2 - Stats & Nutrients")
 
-            # Lần 3 (sau 3.5s): Khóa chặt Đột biến, Máu/Đói/Nước và Dinh dưỡng A-B-Y (không gọi lại setgrowth/setprime để tránh reset dạ dày)
-            time.sleep(3.5)
-            apply_pass(include_growth_and_prime=False, pass_name="Pass 3 Final Lock")
+            # Lần 3 & 4 & 5 & 6: Bơm dinh dưỡng A-B-Y liên tục để chống lại việc Evrima engine reset dạ dày
+            for repeat_idx, delay_s in enumerate([2.0, 4.0, 6.0, 10.0, 15.0], start=1):
+                time.sleep(delay_s)
+                res_nutr = self.fetch_islepilot("/commands", method="POST", body_data=nutr_payload)
+                print(f"[Garage Restore Nutrients Pulse #{repeat_idx}] Đã gửi setnutrition cho {sid}: {res_nutr}")
 
-            # Lần 4 & 5: Tái kích hoạt riêng rẽ Dinh Dưỡng A - B - Y để đảm bảo dạ dày The Isle Evrima giữ trọn 100%
-            time.sleep(2.0)
-            self.fetch_islepilot("/commands", method="POST", body_data=nutr_payload)
-            time.sleep(3.0)
-            self.fetch_islepilot("/commands", method="POST", body_data=nutr_payload)
+            print(f"[Garage Restore Worker] Hoàn tất toàn bộ tiến trình khôi phục khủng long cho {sid}!")
 
         threading.Thread(target=restore_worker, daemon=True).start()
         return dino_spec, dino_growth
@@ -5469,11 +5490,21 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             res = self.fetch_islepilot(f"/players/{steam_id}/garage/{dino_id}/restore", method="POST", body_data={})
 
             if res and (res.get("ok") is True or "commandId" in res):
+                client_nutr = payload.get("nutrients")
+                if client_nutr and isinstance(client_nutr, dict):
+                    c_s = max(0.0, min(100.0, safe_float(client_nutr.get("carb", client_nutr.get("a", 100)), 100.0)))
+                    p_s = max(0.0, min(100.0, safe_float(client_nutr.get("protein", client_nutr.get("b", 100)), 100.0)))
+                    l_s = max(0.0, min(100.0, safe_float(client_nutr.get("lipid", client_nutr.get("y", 100)), 100.0)))
+                    save_garage_dino_snapshot(f"{steam_id}_{dino_id}", {"nutrients": {"carb": c_s, "protein": p_s, "lipid": l_s}})
+                    save_garage_dino_snapshot(str(dino_id), {"nutrients": {"carb": c_s, "protein": p_s, "lipid": l_s}})
+                    save_garage_dino_snapshot(f"{steam_id}_last_nutrients", {"nutrients": {"carb": c_s, "protein": p_s, "lipid": l_s}})
+
                 dino_spec, dino_growth = self.restore_dino_full_state_worker(
                     steam_id=steam_id,
                     dino_id=dino_id,
                     target_gd=target_gd,
-                    fallback_species=species
+                    fallback_species=species,
+                    client_nutrients=client_nutr
                 )
                 self.send_json_response({
                     "success": True,
@@ -5493,6 +5524,38 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         except Exception as e:
             print(f"[Handle Garage Spawn Error] {e}")
             self.send_json_response({"success": False, "ok": False, "message": f"Lỗi hệ thống: {e}"}, 500)
+
+    def handle_garage_update_nutrients(self):
+        try:
+            length = int(self.headers.get("Content-Length", 0))
+            payload = json.loads(self.rfile.read(length).decode("utf-8")) if length > 0 else {}
+            steam_id = str(payload.get("steam_id") or self.get_active_steam_id()).strip()
+            dino_id = str(payload.get("dino_id") or payload.get("id") or "").strip()
+            carb = max(0.0, min(100.0, safe_float(payload.get("carb", payload.get("a", 100)), 100.0)))
+            protein = max(0.0, min(100.0, safe_float(payload.get("protein", payload.get("b", 100)), 100.0)))
+            lipid = max(0.0, min(100.0, safe_float(payload.get("lipid", payload.get("y", 100)), 100.0)))
+
+            nutr_data = {"carb": carb, "protein": protein, "lipid": lipid}
+            if dino_id:
+                save_garage_dino_snapshot(f"{steam_id}_{dino_id}", {"nutrients": nutr_data})
+                save_garage_dino_snapshot(str(dino_id), {"nutrients": nutr_data})
+            save_garage_dino_snapshot(f"{steam_id}_last_nutrients", {"nutrients": nutr_data})
+
+            # Dong bo sang IslePilot lenh setnutrition
+            self.fetch_islepilot("/commands", method="POST", body_data={
+                "action": "setnutrition",
+                "steamId": steam_id,
+                "carb": carb,
+                "protein": protein,
+                "lipid": lipid,
+                "a": carb,
+                "b": protein,
+                "y": lipid
+            })
+
+            self.send_json_response({"ok": True, "success": True, "nutrients": nutr_data, "message": "Đã cập nhật chỉ số A-B-Y thành công!"})
+        except Exception as e:
+            self.send_json_response({"ok": False, "success": False, "error": str(e)}, 500)
 
     def handle_garage_delete(self):
         try:
@@ -5805,25 +5868,25 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             "themeColor": "#00D9FF",
             "imageUrl": "/assets/images/skin_hac_bang_doc_quyen.jpg",
             "image": "/assets/images/skin_hac_bang_doc_quyen.jpg",
-            "colors": ["#06080E", "#00D9FF", "#FFFFFF", "#06080E"],
+            "colors": ["#06080E", "#06080E", "#06080E", "#00E5FF", "#00F2FF", "#00FFFF"],
             "palette": {
                 "body": "#06080E",
-                "markings": "#00D9FF",
                 "underbelly": "#06080E",
                 "flank": "#06080E",
-                "detail": "#D1FAFF",
-                "detail1": "#00FFFF",
-                "display": "#00FFFF",
-                "male_display": "#00FFFF",
+                "markings": "#00E5FF",
+                "detail": "#E6FBFF",
+                "detail1": "#E6FBFF",
+                "display": "#00F2FF",
+                "male_display": "#00F2FF",
                 "eyes": "#00FFFF",
-                "claws": "#00D9FF",
+                "claws": "#06080E",
                 "teeth": "#EEF8FF",
                 "mouth": "#0A2233"
             },
-            "code": "Triceratops10006080EFF06080EFF06080EFF00D9FFFF00FFFFFF00FFFFFF",
-            "skinCode": "Triceratops10006080EFF06080EFF06080EFF00D9FFFF00FFFFFF00FFFFFF",
+            "code": "Triceratops10006080EFF06080EFF06080EFF00E5FFFF00F2FFFF00FFFFFF",
+            "skinCode": "Triceratops10006080EFF06080EFF06080EFF00E5FFFF00F2FFFF00FFFFFF",
             "modDownloadUrl": "/assets/mods/Mod_Skin_Hac_Bang_Loi_Dien_Triceratops.zip",
-            "description": "Phiên bản giới hạn: Độc đáo • Cá tính • Khác biệt. Phối màu Đen Huyền (nền chủ đạo), Xanh Ngọc (tạo điểm nhấn), Trắng Băng (tăng độ sắc nét) và Xám Xanh (tạo chiều sâu). Tương thích tự động 100% cho TẤT CẢ khủng long trong server!"
+            "description": "Phiên bản giới hạn: Độc đáo • Cá tính • Khác biệt. Phối màu Đen Huyền (nền chủ đạo), Xanh Ngọc Lôi Điện (tạo điểm nhấn hoa văn tia sét), Bạch Băng (tăng độ sắc nét viền sáng) và Xám Đen (tạo chiều sâu). Tương thích tự động 100% cho TẤT CẢ khủng long trong server!"
         }
 
     def enrich_skin_data(self, s):
@@ -5906,8 +5969,10 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 pass
 
         existing_ids = {s.get("id") for s in custom_list}
-        skins = custom_list + [s for s in skins if s.get("id") not in existing_ids]
-        self.send_json_response({"skins": skins})
+        excl = self.get_exclusive_universal_skin()
+        all_skins = [s for s in skins if s.get("id") not in existing_ids and s.get("id") != excl.get("id")]
+        final_skins = [excl] + [s for s in custom_list if s.get("id") != excl.get("id")] + all_skins
+        self.send_json_response({"skins": final_skins})
 
     def handle_shop_dinos(self):
 
@@ -9901,6 +9966,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             raw_skins = remote.get("skins", [])
             skins = [self.enrich_skin_data(s) for s in raw_skins]
 
+        excl = self.get_exclusive_universal_skin()
+        skins = [excl] + [s for s in skins if s.get("id") != excl.get("id")]
         self.send_json_response({"skins": skins})
 
     def handle_referral(self):
@@ -10795,13 +10862,13 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     "body": [0.003, 0.005, 0.010, 1.0],
                     "underbelly": [0.003, 0.005, 0.010, 1.0],
                     "flank": [0.003, 0.005, 0.010, 1.0],
-                    "markings": [0.0, 0.85, 1.0, 1.0],
-                    "detail1": [0.82, 0.98, 1.0, 1.0],
+                    "markings": [0.0, 0.88, 1.0, 1.0],
+                    "detail1": [0.85, 0.98, 1.0, 1.0],
                     "eyes": [0.0, 1.0, 1.0, 1.0],
                     "male_display": [0.0, 0.95, 1.0, 1.0],
                     "teeth": [0.93, 0.97, 1.0, 1.0],
                     "mouth": [0.02, 0.08, 0.14, 1.0],
-                    "claws": [0.0, 0.85, 1.0, 1.0]
+                    "claws": [0.003, 0.005, 0.010, 1.0]
                 }
             else:
                 sanitized_bp = {

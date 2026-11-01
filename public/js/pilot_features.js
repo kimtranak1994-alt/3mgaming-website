@@ -787,20 +787,22 @@ const SkinShop = {
       item = {
         id: 'skin_hac_bang_doc_quyen',
         name: '👑 Màu Độc Quyền - Hắc Băng Lôi Điện',
-        species: 'Diabloceratops',
+        species: 'Triceratops',
         allSpecies: true,
         universal: true,
         pattern: 1,
+        skinCode: 'Triceratops10006080EFF06080EFF06080EFF00E5FFFF00F2FFFF00FFFFFF',
+        code: 'Triceratops10006080EFF06080EFF06080EFF00E5FFFF00F2FFFF00FFFFFF',
         palette: {
           body: '#06080E',
-          markings: '#00D9FF',
-          underbelly: '#EEF8FF',
-          flank: '#00E5FF',
-          detail: '#6889A6',
-          display: '#00FFFF',
-          male_display: '#00FFFF',
+          markings: '#00E5FF',
+          underbelly: '#06080E',
+          flank: '#06080E',
+          detail: '#E6FBFF',
+          display: '#00F2FF',
+          male_display: '#00F2FF',
           eyes: '#00FFFF',
-          claws: '#00D9FF',
+          claws: '#06080E',
           teeth: '#EEF8FF',
           mouth: '#0A2233'
         }
@@ -1407,13 +1409,14 @@ const SkinEditor = {
     this.theme = 0;
     this.palette = {
       body: '#06080E',
-      markings: '#00D9FF',
-      underbelly: '#EEF8FF',
-      flank: '#00E5FF',
-      detail: '#6889A6',
-      display: '#00FFFF',
+      markings: '#00E5FF',
+      underbelly: '#06080E',
+      flank: '#06080E',
+      detail: '#E6FBFF',
+      display: '#00F2FF',
+      male_display: '#00F2FF',
       eyes: '#00FFFF',
-      claws: '#00D9FF',
+      claws: '#06080E',
       teeth: '#EEF8FF',
       mouth: '#0A2233'
     };

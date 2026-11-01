@@ -717,15 +717,15 @@ const Studio = {
     this.theme = 0;
     this.palette = {
       body: '#06080E',
-      markings: '#00D9FF',
-      underbelly: '#EEF8FF',
-      flank: '#00E5FF',
-      detail: '#6889A6',
-      male_display: '#00FFFF',
+      markings: '#00E5FF',
+      underbelly: '#06080E',
+      flank: '#06080E',
+      detail: '#E6FBFF',
+      male_display: '#00F2FF',
       eyes: '#00FFFF',
       teeth: '#EEF8FF',
       mouth: '#0A2233',
-      claws: '#00D9FF'
+      claws: '#06080E'
     };
     const nameInput = document.getElementById('design-name');
     if (nameInput) nameInput.value = '👑 Màu Độc Quyền - Hắc Băng Lôi Điện';
@@ -1246,7 +1246,7 @@ const Studio = {
     const p = this.palette;
     const num = `${this.pattern}${this.variation}${this.theme}`;
     if (this.isExclusiveHacBang) {
-      return `${this.species}${num}06080EFF06080EFF00D9FFFFD1FAFFFF00F2FFFF00FFFFFF`;
+      return `${this.species}${num}06080EFF06080EFF06080EFF00E5FFFF00F2FFFF00FFFFFF`;
     }
     const cleanHex = (h) => (h || '#5A6B48').replace('#', '').toUpperCase().padEnd(6, '0').slice(0, 6) + 'FF';
     const hexes = [
@@ -1273,16 +1273,16 @@ const Studio = {
         variation: this.variation,
         pattern: this.pattern,
         theme: this.theme,
-        body: [0.003, 0.005, 0.01, 1.0],
-        underbelly: [0.003, 0.005, 0.01, 1.0],
-        flank: [0.0, 0.85, 1.0, 1.0],
-        markings: [0.82, 0.98, 1.0, 1.0],
-        detail1: [0.0, 0.88, 1.0, 1.0],
+        body: [0.003, 0.005, 0.010, 1.0],
+        underbelly: [0.003, 0.005, 0.010, 1.0],
+        flank: [0.003, 0.005, 0.010, 1.0],
+        markings: [0.0, 0.88, 1.0, 1.0],
+        detail1: [0.85, 0.98, 1.0, 1.0],
         male_display: [0.0, 0.95, 1.0, 1.0],
         eyes: [0.0, 1.0, 1.0, 1.0],
         teeth: [0.93, 0.97, 1.0, 1.0],
         mouth: [0.02, 0.08, 0.14, 1.0],
-        claws: [0.0, 0.85, 1.0, 1.0]
+        claws: [0.003, 0.005, 0.010, 1.0]
       };
     }
 
