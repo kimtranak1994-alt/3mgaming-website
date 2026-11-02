@@ -422,6 +422,8 @@ def save_claimed_quests(data):
 
 
 CLAIMED_STARTER_FILE = os.path.join(os.path.dirname(__file__), "claimed_starter.json")
+_starter_claim_lock = threading.RLock()
+_claimed_starter_cache = None
 
 def _get_claimed_starter_paths():
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -430,33 +432,44 @@ def _get_claimed_starter_paths():
     return [backup_file, primary_file]
 
 def load_claimed_starter():
-    paths = _get_claimed_starter_paths()
-    merged = {}
-    for fpath in paths:
-        if os.path.exists(fpath):
-            try:
-                with open(fpath, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                    if isinstance(data, dict):
-                        for sid, val in data.items():
-                            sid_str = str(sid).strip()
-                            if sid_str not in merged:
-                                merged[sid_str] = val
-                            elif isinstance(val, dict) and isinstance(merged[sid_str], dict):
-                                merged[sid_str].update(val)
-            except Exception:
-                pass
-    return merged
+    global _claimed_starter_cache
+    with _starter_claim_lock:
+        paths = _get_claimed_starter_paths()
+        merged = {}
+        for fpath in paths:
+            if os.path.exists(fpath):
+                try:
+                    with open(fpath, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                        if isinstance(data, dict):
+                            for sid, val in data.items():
+                                sid_str = str(sid).strip()
+                                if sid_str not in merged:
+                                    merged[sid_str] = val
+                                elif isinstance(val, dict) and isinstance(merged[sid_str], dict):
+                                    merged[sid_str].update(val)
+                except Exception:
+                    pass
+        if isinstance(_claimed_starter_cache, dict):
+            for sid, val in _claimed_starter_cache.items():
+                if sid not in merged:
+                    merged[sid] = val
+        _claimed_starter_cache = dict(merged)
+        return dict(merged)
 
 def save_claimed_starter(data):
-    paths = _get_claimed_starter_paths()
-    for fpath in paths:
-        try:
-            os.makedirs(os.path.dirname(fpath), exist_ok=True)
-            with open(fpath, "w", encoding="utf-8") as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
-        except Exception as e:
-            print(f"Error saving claimed_starter to {fpath}: {e}")
+    global _claimed_starter_cache
+    with _starter_claim_lock:
+        if isinstance(data, dict):
+            _claimed_starter_cache = dict(data)
+        paths = _get_claimed_starter_paths()
+        for fpath in paths:
+            try:
+                os.makedirs(os.path.dirname(fpath), exist_ok=True)
+                with open(fpath, "w", encoding="utf-8") as f:
+                    json.dump(data, f, ensure_ascii=False, indent=2)
+            except Exception as e:
+                print(f"Error saving claimed_starter to {fpath}: {e}")
 
 def _is_quest_claimed(steam_id, quest_id, period_key, progress_id, claimed_db):
     sid = str(steam_id).strip()
@@ -10037,10 +10050,6 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             sid_str = str(steam_id).strip() if steam_id else ""
             is_claimed = sid_str in claimed_db if sid_str else False
             claim_info = claimed_db.get(sid_str, {}) if is_claimed else None
-            is_admin, _ = self.is_admin_request()
-            admin_steam_ids = [str(s) for s in config.get("ADMIN_STEAM_IDS", [])]
-            if is_claimed and (is_admin or sid_str in admin_steam_ids):
-                is_claimed = False
             
             playtime_hours = 0.0
             is_newbie = True
@@ -10107,54 +10116,77 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 return
             
             sid_str = str(steam_id).strip()
-            claimed_db = load_claimed_starter()
-            is_admin, _ = self.is_admin_request()
-            admin_steam_ids = [str(s) for s in config.get("ADMIN_STEAM_IDS", [])]
-            if sid_str in claimed_db and not (is_admin or sid_str in admin_steam_ids):
-                self.send_json_response({"ok": False, "error": "Bạn đã nhận gói Quà Tân Thủ này rồi!"}, 400)
-                return
-            
-            starter_config = config.get("STARTER_GIFT", {})
-            bundle_coins = starter_config.get("coins", 3000)
-            bundle_growth = starter_config.get("dino_growth", 0.76)
-            max_playtime = starter_config.get("max_playtime_hours", 3)
-            
-            player_info = self.fetch_islepilot(f"/players/{sid_str}")
-            player_name = sid_str
-            if isinstance(player_info, dict):
-                player_name = player_info.get("name", sid_str)
-                total_play_sec = player_info.get("totalPlaySec", 0) or 0
-                if total_play_sec >= max_playtime * 3600:
-                    playtime_hours = round(total_play_sec / 3600.0, 1)
+            with _starter_claim_lock:
+                claimed_db = load_claimed_starter()
+                # Kiểm tra chặt chẽ: Mỗi tài khoản chỉ được nhận 1 lần duy nhất, tuyệt đối không bypass
+                if sid_str in claimed_db:
                     self.send_json_response({
                         "ok": False,
-                        "error": f"Gói quà tân thủ chỉ dành cho người chơi dưới {max_playtime} giờ chơi (tài khoản của bạn đã đạt {playtime_hours}h)!"
+                        "error": "Bạn đã nhận gói Quà Tân Thủ này rồi (mỗi tài khoản chỉ được nhận 1 lần duy nhất)!"
                     }, 400)
                     return
-            
-            chosen_species = payload.get("species") or "Ceratosaurus"
-            chosen_gender = payload.get("gender") or "Male"
-            raw_mutations = payload.get("mutations") or []
-            if not isinstance(raw_mutations, list) or len(raw_mutations) == 0:
-                raw_mutations = [
-                    "Multichambered Lungs",
-                    "Hypermetabolic Inanition",
-                    "Congenital Hypoalgesia",
-                    "Photosynthetic Tissue"
-                ]
-            
-            # Đảm bảo đủ 4 đột biến
-            chosen_mutations = [str(m).strip() for m in raw_mutations if str(m).strip()][:4]
-            while len(chosen_mutations) < 4:
-                chosen_mutations.append("None")
-            
-            # Chuẩn hóa cấu trúc mutationSlots: CHỈ ĐÚNG 4 ĐỘT BIẾN Ở ACTIVE, CÒN PARENT/ELDER ĐỀU LÀ NONE
-            mut_slots = {
-                "active": list(chosen_mutations),
-                "parent": ["None", "None", "None", "None"],
-                "elderA": ["None", "None", "None", "None"],
-                "elderB": ["None", "None", "None", "None"]
-            }
+                
+                starter_config = config.get("STARTER_GIFT", {})
+                bundle_coins = starter_config.get("coins", 3000)
+                bundle_growth = starter_config.get("dino_growth", 0.76)
+                max_playtime = starter_config.get("max_playtime_hours", 3)
+                
+                player_info = self.fetch_islepilot(f"/players/{sid_str}")
+                player_name = sid_str
+                if isinstance(player_info, dict):
+                    player_name = player_info.get("name", sid_str)
+                    total_play_sec = player_info.get("totalPlaySec", 0) or 0
+                    if total_play_sec >= max_playtime * 3600:
+                        playtime_hours = round(total_play_sec / 3600.0, 1)
+                        self.send_json_response({
+                            "ok": False,
+                            "error": f"Gói quà tân thủ chỉ dành cho người chơi dưới {max_playtime} giờ chơi (tài khoản của bạn đã đạt {playtime_hours}h)!"
+                        }, 400)
+                        return
+                else:
+                    self.send_json_response({
+                        "ok": False,
+                        "error": "Không thể xác minh thời gian chơi từ máy chủ. Vui lòng thử lại sau giây lát!"
+                    }, 400)
+                    return
+                
+                chosen_species = payload.get("species") or "Ceratosaurus"
+                chosen_gender = payload.get("gender") or "Male"
+                raw_mutations = payload.get("mutations") or []
+                if not isinstance(raw_mutations, list) or len(raw_mutations) == 0:
+                    raw_mutations = [
+                        "Multichambered Lungs",
+                        "Hypermetabolic Inanition",
+                        "Congenital Hypoalgesia",
+                        "Photosynthetic Tissue"
+                    ]
+                
+                # Đảm bảo đủ 4 đột biến
+                chosen_mutations = [str(m).strip() for m in raw_mutations if str(m).strip()][:4]
+                while len(chosen_mutations) < 4:
+                    chosen_mutations.append("None")
+                
+                # Chuẩn hóa cấu trúc mutationSlots: CHỈ ĐÚNG 4 ĐỘT BIẾN Ở ACTIVE, CÒN PARENT/ELDER ĐỀU LÀ NONE
+                mut_slots = {
+                    "active": list(chosen_mutations),
+                    "parent": ["None", "None", "None", "None"],
+                    "elderA": ["None", "None", "None", "None"],
+                    "elderB": ["None", "None", "None", "None"]
+                }
+                
+                # Khóa claim ngay lập tức trong lock để loại bỏ triệt để nguy cơ double-claim
+                now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
+                dino_id = f"gift_starter_{sid_str}_{int(time.time())}"
+                claimed_db[sid_str] = {
+                    "claimed_at": now_iso,
+                    "coins": bundle_coins,
+                    "species": chosen_species,
+                    "gender": chosen_gender,
+                    "mutations": chosen_mutations,
+                    "dino_id": dino_id,
+                    "player_name": player_name
+                }
+                save_claimed_starter(claimed_db)
             
             try:
                 self.fetch_islepilot(f"/players/{sid_str}/claim", method="POST", body_data={"bundleId": "starter_pack_3mgaming"})
@@ -10177,7 +10209,6 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             if sid_str not in gifts:
                 gifts[sid_str] = []
             
-            dino_id = f"gift_starter_{sid_str}_{int(time.time())}"
             dino_entry = {
                 "id": dino_id,
                 "name": f"Tân Thủ Prime: {chosen_species}",
@@ -10188,7 +10219,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "weight_label": f"Tân Thủ Prime {int(bundle_growth * 100)}%",
                 "mutations": chosen_mutations,
                 "mutationSlots": mut_slots,
-                "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
+                "created_at": now_iso
             }
             gifts[sid_str].append(dino_entry)
             save_user_gift_dinos(gifts)
@@ -10196,19 +10227,6 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             # Đồng bộ vào garage_saved_mutations để khi unpark tự động setmutations
             save_garage_saved_mutation(dino_id, mut_slots)
             save_garage_saved_mutation(f"{sid_str}_{dino_id}", mut_slots)
-            
-            # Lưu lịch sử đã nhận
-            now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
-            claimed_db[sid_str] = {
-                "claimed_at": now_iso,
-                "coins": bundle_coins,
-                "species": chosen_species,
-                "gender": chosen_gender,
-                "mutations": chosen_mutations,
-                "dino_id": dino_id,
-                "player_name": player_name
-            }
-            save_claimed_starter(claimed_db)
             
             mut_str = ", ".join([m for m in chosen_mutations if m != "None"])
             print(f"[Starter Gift Claim] Người chơi {player_name} ({sid_str}) đã nhận Quà Tân Thủ: +{bundle_coins} Xu, {chosen_species} & 4 Đột biến [{mut_str}]")

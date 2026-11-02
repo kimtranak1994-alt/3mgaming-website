@@ -6370,9 +6370,28 @@ const StarterGift = {
   },
 
   async claim() {
+    if (this.isClaiming) return;
     const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
     if (!user || !user.steamId) {
       window.location.href = '/api/player/steam/login?redirect=%2F%23starter';
+      return;
+    }
+
+    if (this.bundle && this.bundle.claimed) {
+      if (typeof Swal !== 'undefined') {
+        Swal.fire('Thông Báo', 'Bạn đã nhận gói Quà Tân Thủ này rồi (mỗi tài khoản chỉ được nhận 1 lần duy nhất)!', 'info');
+      } else {
+        alert('Bạn đã nhận gói Quà Tân Thủ này rồi (mỗi tài khoản chỉ được nhận 1 lần duy nhất)!');
+      }
+      return;
+    }
+
+    if (this.bundle && this.bundle.eligible === false) {
+      if (typeof Swal !== 'undefined') {
+        Swal.fire('Thông Báo', `Gói quà tân thủ chỉ dành cho người chơi dưới ${this.bundle.max_playtime_hours || 3} giờ chơi!`, 'warning');
+      } else {
+        alert(`Gói quà tân thủ chỉ dành cho người chơi dưới ${this.bundle.max_playtime_hours || 3} giờ chơi!`);
+      }
       return;
     }
 
@@ -6445,7 +6464,14 @@ const StarterGift = {
           App.refreshBalance();
         }
 
-        // Cập nhật lại view
+        if (this.bundle) {
+          this.bundle.claimed = true;
+          this.bundle.claimed_at = new Date().toISOString();
+          this.bundle.claimed_species = this.selectedSpecies;
+          this.bundle.claimed_mutations = finalMuts;
+        }
+
+        // Cập nhật lại view ngay lập tức để chuyển sang giao diện đã nhận
         await this.render();
       } else {
         const errMsg = data.error || data.message || "Nhận quà thất bại. Vui lòng thử lại!";
@@ -6454,11 +6480,20 @@ const StarterGift = {
         } else {
           alert('Lỗi: ' + errMsg);
         }
-        this.isClaiming = false;
-        if (btn) {
-          btn.disabled = false;
-          const coins = (this.bundle && this.bundle.coins) || 3000;
-          btn.innerHTML = `<i class="fas fa-gift" style="margin-right: 8px;"></i> Nhận Quà Tân Thủ (${coins.toLocaleString()} Xu + ${this.selectedSpecies})`;
+
+        if (errMsg.includes('đã nhận')) {
+          if (this.bundle) this.bundle.claimed = true;
+          await this.render();
+        } else if (errMsg.includes('giờ chơi')) {
+          if (this.bundle) this.bundle.eligible = false;
+          await this.render();
+        } else {
+          this.isClaiming = false;
+          if (btn) {
+            btn.disabled = false;
+            const coins = (this.bundle && this.bundle.coins) || 3000;
+            btn.innerHTML = `<i class="fas fa-gift" style="margin-right: 8px;"></i> Nhận Quà Tân Thủ (${coins.toLocaleString()} Xu + ${this.selectedSpecies})`;
+          }
         }
       }
     } catch (e) {
