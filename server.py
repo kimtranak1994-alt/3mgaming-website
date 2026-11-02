@@ -3849,6 +3849,10 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 self.send_json_response({"ok": False, "error": "Mức cược tối thiểu là 10 Xu!"}, status=400)
                 return
 
+            if bet_amount > 5000:
+                self.send_json_response({"ok": False, "error": "Mức cược tối đa cho đấu sĩ là 5.000 Xu!"}, status=400)
+                return
+
             current_balance = self._get_player_xu_balance(steam_id)
             if current_balance < bet_amount:
                 self.send_json_response({"ok": False, "error": f"Số dư không đủ! Bạn có {current_balance} Xu, cần {bet_amount} Xu."}, status=400)
@@ -3856,16 +3860,24 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
             # Lấy thông tin khủng long active của creator
             creator_name = f"Player_{str(steam_id)[-4:]}"
-            creator_species = "Tyrannosaurus"
-            creator_growth = 100
+            creator_species = None
+            creator_growth = 0
             try:
                 p_info = self.fetch_islepilot(f"/players/{steam_id}")
                 if isinstance(p_info, dict):
                     creator_name = p_info.get("name") or creator_name
-                    creator_species = p_info.get("species") or creator_species
-                    creator_growth = round(float(p_info.get("growth", 1.0)) * 100)
+                    creator_species = p_info.get("species")
+                    creator_growth = round(float(p_info.get("growth", 0.0)) * 100)
             except Exception:
                 pass
+
+            if not creator_species:
+                self.send_json_response({"ok": False, "error": "Bạn hiện chưa có khủng long nào đang chơi trong game để đăng ký PK!"}, status=400)
+                return
+
+            if creator_growth < 75:
+                self.send_json_response({"ok": False, "error": f"Khủng long của bạn mới đạt {creator_growth}% tăng trưởng. Yêu cầu khủng long từ 75% trở lên mới được đăng ký tạo kèo PK!"}, status=400)
+                return
 
             # Không trừ Xu trước khi tạo kèo, Xu sẽ được cộng/trừ khi trận đấu kết thúc
 
@@ -3937,16 +3949,24 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
             # Lấy thông tin dino của opponent
             opp_name = f"Player_{str(steam_id)[-4:]}"
-            opp_species = "Tyrannosaurus"
-            opp_growth = 100
+            opp_species = None
+            opp_growth = 0
             try:
                 p_info = self.fetch_islepilot(f"/players/{steam_id}")
                 if isinstance(p_info, dict):
                     opp_name = p_info.get("name") or opp_name
-                    opp_species = p_info.get("species") or opp_species
-                    opp_growth = round(float(p_info.get("growth", 1.0)) * 100)
+                    opp_species = p_info.get("species")
+                    opp_growth = round(float(p_info.get("growth", 0.0)) * 100)
             except Exception:
                 pass
+
+            if not opp_species:
+                self.send_json_response({"ok": False, "error": "Bạn hiện chưa có khủng long nào đang chơi trong game để nhận kèo PK!"}, status=400)
+                return
+
+            if opp_growth < 75:
+                self.send_json_response({"ok": False, "error": f"Khủng long của bạn mới đạt {opp_growth}% tăng trưởng. Yêu cầu khủng long từ 75% trở lên mới được nhận kèo PK!"}, status=400)
+                return
 
             # Kiểm tra người tạo kèo cũng còn đủ số dư cược
             creator_sid = target_match.get("creator", {}).get("steamId")
@@ -4077,6 +4097,10 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
             if amount < 5:
                 self.send_json_response({"ok": False, "error": "Mức cược khán giả tối thiểu là 5 Xu!"}, status=400)
+                return
+
+            if amount > 5000:
+                self.send_json_response({"ok": False, "error": "Khán giả đặt cược tối đa là 5.000 Xu!"}, status=400)
                 return
 
             current_balance = self._get_player_xu_balance(steam_id)

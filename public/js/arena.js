@@ -753,7 +753,8 @@ const Arena = {
               🥊 1. Thể Thức Tạo Kèo & Nhận Kèo
             </h3>
             <ul style="padding-left: 18px; font-size: 0.88rem; color: var(--text-muted);">
-              <li>Người chơi có thể tạo bất kỳ kèo 1v1 nào với mức cược tối thiểu <strong>10 Xu</strong>.</li>
+              <li>Chỉ những khủng long đạt độ tăng trưởng từ <strong>75% trở lên</strong> mới được phép tạo kèo hoặc nhận kèo thách đấu PK.</li>
+              <li>Mức cược cho đấu sĩ tối thiểu <strong>10 Xu</strong> và tối đa <strong>5.000 Xu</strong>.</li>
               <li>Hệ thống kiểm tra số dư ví nhưng <strong>không trừ Xu trước</strong>. Xu chỉ được cộng/trừ khi trận chiến kết thúc.</li>
               <li>Người nhận kèo phải có đủ số Xu bằng với mức cược của người tạo.</li>
               <li>Khi cả 2 đã vào trận, trận đấu chính thức bắt đầu và nút <strong>🚀 Dịch chuyển vào Đấu Trường</strong> sẽ hiện ngay lập tức!</li>
@@ -765,7 +766,7 @@ const Arena = {
               🎯 2. Đặt Cược Khán Giả (Spectator)
             </h3>
             <ul style="padding-left: 18px; font-size: 0.88rem; color: var(--text-muted);">
-              <li>Khán giả có thể cược cho Đấu Sĩ A hoặc Đấu Sĩ B (tối thiểu <strong>5 Xu</strong>).</li>
+              <li>Khán giả có thể cược cho Đấu Sĩ A hoặc Đấu Sĩ B (tối thiểu <strong>5 Xu</strong>, tối đa <strong>5.000 Xu</strong>).</li>
               <li><strong>Giới hạn 1 lần cược:</strong> Mỗi người chơi chỉ được đặt cược <strong>1 lần duy nhất</strong> trong suốt trận đấu. Sau khi đã cược, hệ thống sẽ khóa không cho đặt cược thêm nữa.</li>
               <li>Đấu sĩ trực tiếp tham gia trận đấu không được đặt cược khán giả vào trận của mình.</li>
               <li>Số tiền thắng cược của khán giả: Tỷ lệ thưởng chuẩn <strong>1:1</strong> (ví dụ cược 2,000 Xu thì khi thắng nhận lại đúng 2,000 Xu gốc + 2,000 Xu tiền lãi = 4,000 Xu tổng nhận về).</li>
@@ -848,16 +849,16 @@ const Arena = {
                 <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-main); margin-bottom: 6px;">
                   Mức cược (Xu):
                 </label>
-                <input type="number" id="create-match-bet" min="10" step="10" value="50" required
+                <input type="number" id="create-match-bet" min="10" max="5000" step="10" value="50" required
                   style="width: 100%; padding: 10px 14px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 8px; color: #fbbf24; font-size: 0.95rem; font-weight: 700; outline: none;" />
               </div>
             </div>
 
             <!-- Nút chọn nhanh mức cược -->
-            <div style="display: flex; gap: 6px; margin-bottom: 16px;">
-              ${[20, 50, 100, 200, 500].map(val => `
+            <div style="display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap;">
+              ${[50, 100, 500, 1000, 2000, 5000].map(val => `
                 <button type="button" onclick="document.getElementById('create-match-bet').value=${val}" class="btn-secondary" style="padding: 4px 10px; font-size: 0.78rem; border-radius: 6px; cursor: pointer;">
-                  ${val} Xu
+                  ${val.toLocaleString()} Xu
                 </button>
               `).join('')}
             </div>
@@ -870,10 +871,11 @@ const Arena = {
                 style="width: 100%; padding: 10px 14px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 8px; color: #fff; font-size: 0.88rem; outline: none;" />
             </div>
 
-            <!-- Thông báo số dư -->
+            <!-- Thông báo số dư và điều kiện -->
             <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 10px 14px; font-size: 0.82rem; color: #fbbf24; margin-bottom: 20px;">
               🪙 Số dư hiện tại của bạn: <strong>${Number(this.myBalance).toLocaleString()} Xu</strong>.<br />
-              💡 <b>Lưu ý:</b> Hệ thống không trừ trước. Khi trận chiến kết thúc, người thắng sẽ được cộng (+Xu) và người thua sẽ tự động bị trừ (-Xu) trong ví!
+              🦖 <b>Quy định PK:</b> Khủng long của bạn phải đạt từ <b>75% tăng trưởng trở lên</b> mới được đăng ký. Cược tối đa <b>5.000 Xu</b>.<br />
+              💡 Hệ thống không trừ Xu trước. Khi kết thúc trận, người thắng nhận (+Xu) và người thua bị trừ (-Xu) trong ví!
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 10px;">
@@ -900,6 +902,10 @@ const Arena = {
 
     if (betAmount < 10) {
       alert('Mức cược tối thiểu là 10 Xu!');
+      return;
+    }
+    if (betAmount > 5000) {
+      alert('Mức cược tối đa cho đấu sĩ là 5.000 Xu!');
       return;
     }
     const userObj = JSON.parse(localStorage.getItem('steam_user') || 'null');
@@ -1265,13 +1271,13 @@ const Arena = {
               <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-main); margin-bottom: 6px;">
                 Số Xu muốn cược:
               </label>
-              <input type="number" id="spectator-bet-amount" min="5" step="5" value="20" required
+              <input type="number" id="spectator-bet-amount" min="5" max="5000" step="5" value="20" required
                 style="width: 100%; padding: 10px 14px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 8px; color: #fbbf24; font-size: 1rem; font-weight: 700; outline: none;" />
             </div>
 
             <!-- Nút chọn nhanh mức cược -->
             <div style="display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap;">
-              ${[20, 50, 100, 500, 1000, 2000].map(val => `
+              ${[50, 100, 500, 1000, 2000, 5000].map(val => `
                 <button type="button" onclick="document.getElementById('spectator-bet-amount').value=${val}" class="btn-secondary" style="padding: 4px 10px; font-size: 0.78rem; border-radius: 6px; cursor: pointer;">
                   ${val.toLocaleString()} Xu
                 </button>
@@ -1305,6 +1311,10 @@ const Arena = {
 
     if (amount < 5) {
       alert('Mức cược tối thiểu là 5 Xu!');
+      return;
+    }
+    if (amount > 5000) {
+      alert('Khán giả chỉ được cược tối đa 5.000 Xu!');
       return;
     }
     if (this.myBalance < amount) {
