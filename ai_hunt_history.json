@@ -120,5 +120,29 @@
     "total_participants": 26,
     "total_ai_kills": 564,
     "auto_settled": true
+  },
+  {
+    "season_id": "Mùa 1 (Ngày 29/10)",
+    "settled_at": "2026-10-30T00:00:04.302186",
+    "winner_steam_id": "76561199483156684",
+    "winner_name": "Thich Du Thư",
+    "species": "Carnotaurus",
+    "kills": 343,
+    "prey_breakdown": {
+      "Chicken": 76,
+      "Deer": 66,
+      "Dryosaurus": 18,
+      "Boar": 90,
+      "Rabbit": 14,
+      "Psittacosaurus_Plains": 19,
+      "Psittacosaurus_Coastal": 7,
+      "Compsognathus": 48,
+      "Seaturtle": 4,
+      "Bullfrog": 1
+    },
+    "reward_xu": 1000,
+    "total_participants": 26,
+    "total_ai_kills": 564,
+    "auto_settled": true
   }
 ]

@@ -2605,6 +2605,7 @@ const AdminPanel = {
       const data = await res.json();
       if (data.success || data.ok) {
         this.showNotification(data.message || `🚀 Đã dịch chuyển [${targetName}] tới ${locationName} thành công! (0 Xu)`, true);
+        alert(`🚀 ĐÃ GỬI LỆNH DỊCH CHUYỂN [${targetName}] TỚI [${locationName}] THÀNH CÔNG (0 XU)!\n\n⚠️ LƯU Ý QUAN TRỌNG: Hãy nhắc người chơi [${targetName}] THẢ PHÍM W-A-S-D và BẤM PHÍM H (Ngồi xuống / Nghỉ) trong game trong 5-8 giây để máy chủ kéo khủng long tới vị trí mới!`);
         if (window.App && typeof App.refreshBalance === 'function') {
           App.refreshBalance();
         }

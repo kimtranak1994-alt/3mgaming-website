@@ -4726,7 +4726,7 @@ const Teleport = {
 
     const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
     const steamId = user ? user.steamId : '76561199175571899';
-    const adminPasscode = localStorage.getItem('admin_passcode') || 'admin3m';
+    const adminPasscode = isAdminUser ? (localStorage.getItem('admin_passcode') || '') : '';
 
     if (window.App && window.App.showToast) {
       App.showToast(`🚀 Đang gửi lệnh dịch chuyển tới ${locationName}...`);
@@ -4734,28 +4734,32 @@ const Teleport = {
 
     try {
       const headers = { 'Content-Type': 'application/json' };
-      if (isAdminUser) {
+      const reqPayload = {
+        locationId: locationId,
+        steam_id: steamId
+      };
+      if (isAdminUser && adminPasscode) {
         headers['X-Admin-Passcode'] = adminPasscode;
         headers['X-Admin-Steam-Id'] = steamId;
+        reqPayload.admin_steam_id = steamId;
+        reqPayload.passcode = adminPasscode;
       }
 
       const res = await fetch('/api/server/teleport', {
         method: 'POST',
         headers: headers,
-        body: JSON.stringify({
-          locationId: locationId,
-          steam_id: steamId,
-          admin_steam_id: steamId,
-          passcode: adminPasscode
-        })
+        body: JSON.stringify(reqPayload)
       });
 
       const data = await res.json();
 
       if (data.success || data.ok) {
-        const succMsg = data.message || `🚀 Đã gửi lệnh dịch chuyển tới ${locationName} thành công! Hãy đứng yên 3-5s trong game.`;
+        const succMsg = data.message || `🚀 Đã gửi lệnh dịch chuyển tới ${locationName} thành công!`;
         if (window.App && window.App.showToast) App.showToast(succMsg);
         else alert(succMsg);
+
+        // Hiển thị Popup cảnh báo hành động bắt buộc trong game
+        alert(`🚀 LỆNH DỊCH CHUYỂN ĐÃ GỬI THÀNH CÔNG TỚI [${locationName}]!\n\n⚠️ LƯU Ý BẮT BUỘC TRONG GAME:\n1. THẢ TAY KHỎI BÀN PHÍM (KHÔNG bấm W-A-S-D)\n2. BẤM PHÍM H (Ngồi xuống / Nằm nghỉ)\n3. Đợi khoảng 5 - 8 giây để máy chủ kéo khủng long tới vị trí mới!`);
 
         if (!isAdminUser && (data.cooldown_seconds || 60) > 0) {
           this.startCooldown(data.cooldown_seconds || 60);

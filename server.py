@@ -3486,8 +3486,12 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
     def _translate_pilot_error(self, err_msg):
         err_str = str(err_msg).lower()
+        if "cooldown" in err_str:
+            m = re.search(r'(\d+)\s*s', err_str)
+            sec_txt = f"{m.group(1)} giây" if m else "vài giây"
+            return f"⏳ Dịch chuyển đang trong thời gian chờ máy chủ IslePilot! Vui lòng đợi {sec_txt} rồi thử lại."
         if "not online" in err_str or "offline" in err_str or "player_offline" in err_str:
-            return "Khủng long của bạn chưa online trong server! Hãy vào game và đứng yên trước khi bấm dịch chuyển."
+            return "Khủng long của bạn chưa online trong server! IslePilot yêu cầu nhân vật phải đang ở trong game và đứng yên trước khi bấm dịch chuyển."
         if "combat" in err_str:
             return "Khủng long đang trong trạng thái combat (giao tranh)! Vui lòng đợi 30 giây hết combat rồi thử lại."
         if "location" in err_str:
@@ -6134,11 +6138,13 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 admin_pass = config.get("ADMIN_PASSCODE", "admin3m")
                 active_sid = str(self.get_active_steam_id() or "")
 
-                if (is_adm or 
-                    (steam_id in admin_sids) or 
-                    (active_sid in admin_sids) or 
-                    (req_admin_sid in admin_sids) or 
-                    (req_passcode == admin_pass)):
+                # Chỉ xác nhận Admin nếu:
+                # 1. Phiên xác thực admin hợp lệ (is_adm)
+                # 2. Hoặc steam_id / active_sid là Admin
+                # 3. Hoặc req_admin_sid nằm trong danh sách Admin VÀ có passcode khớp
+                if is_adm or (steam_id in admin_sids) or (active_sid in admin_sids):
+                    is_admin = True
+                elif req_admin_sid in admin_sids and req_passcode and req_passcode == admin_pass:
                     is_admin = True
             except Exception:
                 pass
@@ -6164,13 +6170,13 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             # 2. KIỂM TRA TRẠNG THÁI KHỦNG LONG TRONG GAME
             p_info = None
             try:
-                p_info = self.fetch_islepilot(f"/players/{steam_id}")
+                p_info = self.fetch_islepilot(f"/players/{steam_id}", bypass_cache=True)
                 if isinstance(p_info, dict):
                     if p_info.get("online") is False:
                         self.send_json_response({
                             "success": False,
                             "ok": False,
-                            "message": "⚠️ Khủng long chưa online trong server! Vui lòng vào game trước khi bấm dịch chuyển."
+                            "message": "⚠️ Khủng long chưa online trong server! IslePilot yêu cầu nhân vật phải đang ở trong game và đứng yên (hoặc ngồi nghỉ H) trước khi bấm dịch chuyển."
                         }, 400)
                         return
 
@@ -6178,7 +6184,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                         self.send_json_response({
                             "success": False,
                             "ok": False,
-                            "message": "⚠️ Khủng long chưa được spawn vào thế giới game! Vui lòng vào game bấm Spawn trước khi dịch chuyển."
+                            "message": "⚠️ Khủng long chưa được spawn vào thế giới game! Vui lòng vào game bấm Spawn khủng long trước khi dịch chuyển."
                         }, 400)
                         return
 
@@ -6198,26 +6204,19 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                             "message": "⚠️ Khủng long đang trong giao tranh (combat)! Vui lòng đợi 30s sau khi hết combat rồi thử lại."
                         }, 400)
                         return
-
-                    pos = p_info.get("position")
-                    if not pos or not isinstance(pos, dict) or pos.get("x") is None:
-                        self.send_json_response({
-                            "success": False,
-                            "ok": False,
-                            "message": "⚠️ Khủng long vừa mới spawn hoặc đang tải vào map! Vui lòng vào game di chuyển (bấm W-A-S-D) ít nhất 3-5 giây để máy chủ nhận diện vị trí trước khi dịch chuyển."
-                        }, 400)
-                        return
             except Exception as ex_check:
                 print(f"[Teleport Pre-Check Warning] {ex_check}")
 
-            # 3. LẤY CHI PHÍ CỦA ĐỊA ĐIỂM ĐỂ XỬ LÝ MIỄN PHÍ CHO ADMIN
+            # 3. LẤY CHI PHÍ CỦA ĐỊA ĐIỂM
             loc_cost = 0
+            loc_name = "Điểm đến"
             try:
                 remote_locs = self.fetch_islepilot("/teleport/locations")
                 loc_list = remote_locs.get("locations", []) if isinstance(remote_locs, dict) else []
                 for l in loc_list:
                     if str(l.get("id")) == str(location_id):
                         loc_cost = int(l.get("cost", 0))
+                        loc_name = l.get("name", loc_name)
                         break
             except Exception:
                 pass
@@ -6225,6 +6224,15 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             curr_bal = 0
             if isinstance(p_info, dict):
                 curr_bal = p_info.get("wallet", {}).get("balance", 0)
+
+            # Nếu là người chơi thường mà không đủ Xu
+            if not is_admin and loc_cost > 0 and curr_bal < loc_cost:
+                self.send_json_response({
+                    "success": False,
+                    "ok": False,
+                    "message": f"⚠️ Số dư không đủ! Bạn có {curr_bal:,} Xu, cần {loc_cost:,} Xu để dịch chuyển tới {loc_name}."
+                }, 400)
+                return
 
             topup_needed = 0
             if is_admin and loc_cost > 0:
@@ -6243,17 +6251,20 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             ok, msg = self._is_teleport_success(res)
 
             if ok:
-                # Nếu là Admin: Hoàn lại khoản tiền bị trừ để Admin KHÔNG MẤT XU NÀO (0 Xu)
+                # Nếu là Admin: Hoàn lại khoản tiền bị trừ sau 6 giây trong background thread để tránh xung đột với lệnh dịch chuyển đang đợi xử lý của IslePilot
                 if is_admin and loc_cost > 0:
-                    try:
-                        refund_amount = loc_cost - topup_needed
-                        if refund_amount > 0:
-                            self.fetch_islepilot(f"/players/{steam_id}/currency", method="POST", body_data={
-                                "amount": refund_amount,
-                                "reason": "Admin hoàn tiền dịch chuyển miễn phí (0 Xu)"
-                            })
-                    except Exception as e_rf:
-                        print(f"[Admin Teleport Refund Error] {e_rf}")
+                    refund_amount = loc_cost - topup_needed
+                    if refund_amount > 0:
+                        def _do_admin_delayed_refund(s_id, r_amt):
+                            try:
+                                time.sleep(6.0)
+                                self.fetch_islepilot(f"/players/{s_id}/currency", method="POST", body_data={
+                                    "amount": r_amt,
+                                    "reason": "Admin hoàn tiền dịch chuyển miễn phí (0 Xu)"
+                                })
+                            except Exception as e_rf:
+                                print(f"[Admin Delayed Refund Error] {e_rf}")
+                        threading.Thread(target=_do_admin_delayed_refund, args=(steam_id, refund_amount), daemon=True).start()
 
                 if not is_admin:
                     # KÍCH HOẠT HỒI CHIÊU 60 GIÂY CHO NGƯỜI CHƠI THƯỜNG
@@ -6262,10 +6273,16 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 else:
                     cooldown_secs = 0
 
+                succ_msg = (
+                    f"🚀 [ADMIN MIỄN PHÍ 0 XU] Đã gửi lệnh dịch chuyển tới {loc_name} thành công!\n⚠️ LƯU Ý QUAN TRỌNG: Hãy THẢ PHÍM W-A-S-D và BẤM PHÍM H (Ngồi xuống / Nghỉ) trong game trong 5-8 giây để máy chủ đồng bộ vị trí!"
+                    if is_admin else
+                    f"🚀 Đã gửi lệnh dịch chuyển tới {loc_name} thành công!\n⚠️ LƯU Ý QUAN TRỌNG: Hãy THẢ PHÍM W-A-S-D và BẤM PHÍM H (Ngồi xuống / Nghỉ) trong game trong 5-8 giây để máy chủ đồng bộ vị trí!"
+                )
+
                 self.send_json_response({
                     "success": True,
                     "ok": True,
-                    "message": "🚀 [ADMIN MIỄN PHÍ 0 XU] Đã gửi lệnh dịch chuyển thành công! Hãy đứng yên trong game 3-5s để máy chủ chuyển vị trí." if is_admin else "🚀 Đã gửi lệnh dịch chuyển thành công! Hãy đứng yên trong game 3-5s để máy chủ chuyển vị trí.",
+                    "message": succ_msg,
                     "cooldown_seconds": cooldown_secs,
                     "is_admin": is_admin,
                     "free": is_admin or loc_cost == 0
@@ -6284,6 +6301,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
         except Exception as e:
             self.send_json_response({"success": False, "ok": False, "message": f"Lỗi hệ thống: {e}"}, 500)
+
 
     def handle_friend_code_create(self):
 
