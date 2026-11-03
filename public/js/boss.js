@@ -8,6 +8,64 @@ const BossHunt = {
   data: null,
   pollTimer: null,
   countdownTimer: null,
+  DEFAULT_REWARD_HISTORY: [
+    {
+      season_id: 'Mùa 5 (Ngày 02/11)',
+      season_date: '2026-11-02',
+      settled_at: '2026-11-03T00:00:01.031066+07:00',
+      winner_steam_id: '76561198749916921',
+      winner_name: 'DAVID_JOKER',
+      species: 'Giganotosaurus',
+      kills: 47,
+      reward_xu: 1000,
+      auto_settled: true
+    },
+    {
+      season_id: 'Mùa 4 (Ngày 01/11)',
+      season_date: '2026-11-01',
+      settled_at: '2026-11-02T00:00:03.813409+07:00',
+      winner_steam_id: '76561198670217946',
+      winner_name: 'Monter Ăn Chay',
+      species: 'Dilophosaurus',
+      kills: 212,
+      reward_xu: 1000,
+      auto_settled: true
+    },
+    {
+      season_id: 'Mùa 3 (Ngày 31/10)',
+      season_date: '2026-10-31',
+      settled_at: '2026-11-01T00:00:00.067903+07:00',
+      winner_steam_id: '76561199319764814',
+      winner_name: 'Máy Đẻ',
+      species: 'Triceratops',
+      kills: 24,
+      reward_xu: 1000,
+      auto_settled: true
+    },
+    {
+      season_id: 'Mùa 2 (Ngày 30/10)',
+      season_date: '2026-10-30',
+      settled_at: '2026-10-31T00:00:04.089998+07:00',
+      winner_steam_id: '76561198647188052',
+      winner_name: 'minh redbull',
+      species: 'Quetzalcoatlus',
+      kills: 175,
+      reward_xu: 1000,
+      auto_settled: true
+    },
+    {
+      season_id: 'Mùa 1 (Ngày 29/10)',
+      season_date: '2026-10-29',
+      settled_at: '2026-10-30T00:00:04.302186+07:00',
+      winner_steam_id: '76561199483156684',
+      winner_name: 'Thich Du Thư',
+      species: 'Carnotaurus',
+      kills: 343,
+      reward_xu: 1000,
+      auto_settled: true
+    }
+  ],
+
 
   // Nhận diện thông minh tất cả loài AI / Động vật / Khủng long trên đảo
   getSpeciesInfo(rawSpecies) {
@@ -183,7 +241,7 @@ const BossHunt = {
     const rewardXu = hunt.reward_xu || 1000;
     const totalAiKills = hunt.total_ai_kills || 0;
     const preySummary = hunt.prey_summary || {};
-    const rewardHistory = hunt.reward_history || [];
+    const rewardHistory = (hunt.reward_history && hunt.reward_history.length > 0) ? hunt.reward_history : (this.DEFAULT_REWARD_HISTORY || []);
     const seasonId = hunt.season_id || 'Mùa hôm nay';
 
     let statusBadge = '';

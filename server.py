@@ -4305,13 +4305,142 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
     _ai_hunt_memory_db = None
     _ai_hunt_initial_scan_done = False
 
+    DEFAULT_AI_HUNT_REWARD_HISTORY = [
+        {
+            "season_id": "Mùa 5 (Ngày 02/11)",
+            "season_date": "2026-11-02",
+            "settled_at": "2026-11-03T00:00:01.031066+07:00",
+            "winner_steam_id": "76561198749916921",
+            "winner_name": "DAVID_JOKER",
+            "species": "Giganotosaurus",
+            "kills": 47,
+            "prey_breakdown": {
+                "Tyrannosaurus": 11,
+                "Triceratops": 7,
+                "Rabbit": 2,
+                "Boar": 5,
+                "Dryosaurus": 2,
+                "Bullfrog": 4,
+                "Deer": 9,
+                "Seaturtle": 1,
+                "Compsognathus": 1,
+                "Chicken": 5
+            },
+            "reward_xu": 1000,
+            "total_participants": 24,
+            "total_ai_kills": 208,
+            "auto_settled": True
+        },
+        {
+            "season_id": "Mùa 4 (Ngày 01/11)",
+            "season_date": "2026-11-01",
+            "settled_at": "2026-11-02T00:00:03.813409+07:00",
+            "winner_steam_id": "76561198670217946",
+            "winner_name": "Monter Ăn Chay",
+            "species": "Dilophosaurus",
+            "kills": 212,
+            "prey_breakdown": {
+                "Deer": 52,
+                "Boar": 31,
+                "Psittacosaurus_Plains": 6,
+                "Rabbit": 36,
+                "Chicken": 12,
+                "Bullfrog": 10,
+                "Tyrannosaurus": 3,
+                "Goat": 3,
+                "Dryosaurus": 22,
+                "Compsognathus": 37
+            },
+            "reward_xu": 1000,
+            "total_participants": 18,
+            "total_ai_kills": 476,
+            "auto_settled": True
+        },
+        {
+            "season_id": "Mùa 3 (Ngày 31/10)",
+            "season_date": "2026-10-31",
+            "settled_at": "2026-11-01T00:00:00.067903+07:00",
+            "winner_steam_id": "76561199319764814",
+            "winner_name": "Máy Đẻ",
+            "species": "Triceratops",
+            "kills": 24,
+            "prey_breakdown": {
+                "Deer": 9,
+                "Psittacosaurus_Plains": 5,
+                "Psittacosaurus_Coastal": 2,
+                "Crab": 1,
+                "Dryosaurus": 4,
+                "Seaturtle": 1,
+                "Boar": 2
+            },
+            "reward_xu": 1000,
+            "total_participants": 22,
+            "total_ai_kills": 139,
+            "auto_settled": True
+        },
+        {
+            "season_id": "Mùa 2 (Ngày 30/10)",
+            "season_date": "2026-10-30",
+            "settled_at": "2026-10-31T00:00:04.089998+07:00",
+            "winner_steam_id": "76561198647188052",
+            "winner_name": "minh redbull",
+            "species": "Quetzalcoatlus",
+            "kills": 175,
+            "prey_breakdown": {
+                "Seaturtle": 1,
+                "Chicken": 18,
+                "Deer": 54,
+                "Boar": 60,
+                "Psittacosaurus_Plains": 6,
+                "Dryosaurus": 11,
+                "Rabbit": 10,
+                "Psittacosaurus_Coastal": 2,
+                "Compsognathus": 12,
+                "Bullfrog": 1
+            },
+            "reward_xu": 1000,
+            "total_participants": 23,
+            "total_ai_kills": 418,
+            "auto_settled": True
+        },
+        {
+            "season_id": "Mùa 1 (Ngày 29/10)",
+            "season_date": "2026-10-29",
+            "settled_at": "2026-10-30T00:00:04.302186+07:00",
+            "winner_steam_id": "76561199483156684",
+            "winner_name": "Thich Du Thư",
+            "species": "Carnotaurus",
+            "kills": 343,
+            "prey_breakdown": {
+                "Chicken": 76,
+                "Deer": 66,
+                "Dryosaurus": 18,
+                "Boar": 90,
+                "Rabbit": 14,
+                "Psittacosaurus_Plains": 19,
+                "Psittacosaurus_Coastal": 7,
+                "Compsognathus": 48,
+                "Seaturtle": 4,
+                "Bullfrog": 1
+            },
+            "reward_xu": 1000,
+            "total_participants": 26,
+            "total_ai_kills": 564,
+            "auto_settled": True
+        }
+    ]
+
     def _get_ai_hunt_db(self):
         if isinstance(DinoRequestHandler._ai_hunt_memory_db, dict):
+            mem_hist = DinoRequestHandler._ai_hunt_memory_db.get("reward_history") or []
+            if not mem_hist:
+                DinoRequestHandler._ai_hunt_memory_db["reward_history"] = list(DinoRequestHandler.DEFAULT_AI_HUNT_REWARD_HISTORY)
             return DinoRequestHandler._ai_hunt_memory_db
 
         base_dir = os.path.dirname(os.path.abspath(__file__))
         primary_file = os.path.join(base_dir, "ai_hunt_state.json")
         backup_file = os.path.join(base_dir, ".persistent_ai_hunt_state.json")
+        history_file = os.path.join(base_dir, "ai_hunt_history.json")
         now_vn = self._get_vn_now()
         today_date_str = now_vn.strftime("%Y-%m-%d")
         day_start_vn = now_vn.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -4319,12 +4448,12 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
         defaults = {
             "active": True,
-            "title": "?? S? KI?N S?N KH?NG LONG AI TO?N SERVER",
-            "description": "S? ki?n di?n ra theo ng?y (t? ??ng reset l?c 00:00 m?i ng?y theo gi? VN). Ng??i ch?i s?n ???c nhi?u AI nh?t s? ???c h? th?ng T? ??NG trao th??ng 1.000 Xu!",
+            "title": "🏹 SỰ KIỆN SĂN KHỦNG LONG AI TOÀN SERVER",
+            "description": "Sự kiện diễn ra theo ngày (tự động reset lúc 00:00 mỗi ngày theo giờ VN). Người chơi săn được nhiều AI nhất sẽ được hệ thống TỰ ĐỘNG trao thưởng 1.000 Xu!",
             "reward_xu": 1000,
             "duration_seconds": 86400,
             "season_date": today_date_str,
-            "season_id": f"M?a 1 (Ng?y {now_vn.strftime('%d/%m')})",
+            "season_id": f"Mùa {len(DinoRequestHandler.DEFAULT_AI_HUNT_REWARD_HISTORY) + 1} (Ngày {now_vn.strftime('%d/%m')})",
             "started_at": day_start_vn.isoformat(),
             "expires_at": day_end_vn.isoformat(),
             "time_remaining_seconds": max(0, int((day_end_vn - now_vn).total_seconds())),
@@ -4336,10 +4465,22 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             "leaderboard": [],
             "prey_summary": {},
             "processed_kill_ids": [],
-            "reward_history": [],
+            "reward_history": list(DinoRequestHandler.DEFAULT_AI_HUNT_REWARD_HISTORY),
             "top_hunter": None,
-            "last_winner": None
+            "last_winner": DinoRequestHandler.DEFAULT_AI_HUNT_REWARD_HISTORY[0] if DinoRequestHandler.DEFAULT_AI_HUNT_REWARD_HISTORY else None
         }
+
+        # Nạp lịch sử trao thưởng từ ai_hunt_history.json nếu có
+        file_history = None
+        if os.path.exists(history_file):
+            try:
+                with open(history_file, "r", encoding="utf-8") as f:
+                    fh = json.load(f)
+                    if isinstance(fh, list) and len(fh) > 0:
+                        file_history = fh
+            except Exception:
+                pass
+
         for fpath in [backup_file, primary_file]:
             if os.path.exists(fpath):
                 try:
@@ -4349,27 +4490,58 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                             for k, v in defaults.items():
                                 if k not in data or data[k] is None:
                                     data[k] = v
+
+                            existing_hist = data.get("reward_history") or file_history or []
+                            existing_dates = set(h.get("season_date") for h in existing_hist if isinstance(h, dict) and h.get("season_date"))
+                            merged_hist = list(existing_hist)
+                            for def_h in DinoRequestHandler.DEFAULT_AI_HUNT_REWARD_HISTORY:
+                                if def_h.get("season_date") not in existing_dates:
+                                    merged_hist.append(def_h)
+                                    existing_dates.add(def_h.get("season_date"))
+                            merged_hist.sort(key=lambda x: str(x.get("season_date", "")), reverse=True)
+                            seen_seasons = set()
+                            deduped_hist = []
+                            for h in merged_hist:
+                                k = h.get("season_date") or h.get("season_id")
+                                if k not in seen_seasons:
+                                    seen_seasons.add(k)
+                                    deduped_hist.append(h)
+                            data["reward_history"] = deduped_hist
+                            if not data.get("last_winner") and merged_hist:
+                                data["last_winner"] = merged_hist[0]
+
                             DinoRequestHandler._ai_hunt_memory_db = data
                             return data
                 except Exception:
                     pass
+
         DinoRequestHandler._ai_hunt_memory_db = defaults
         return defaults
 
     def _save_ai_hunt_db(self, data):
         base_dir = os.path.dirname(os.path.abspath(__file__))
         backup_file = os.path.join(base_dir, ".persistent_ai_hunt_state.json")
+        primary_file = os.path.join(base_dir, "ai_hunt_state.json")
+        history_file = os.path.join(base_dir, "ai_hunt_history.json")
 
         data_to_save = dict(data)
         data_to_save.pop("time_remaining_seconds", None)
         DinoRequestHandler._ai_hunt_memory_db = data
 
-        try:
-            os.makedirs(os.path.dirname(backup_file), exist_ok=True)
-            with open(backup_file, "w", encoding="utf-8") as f:
-                json.dump(data_to_save, f, ensure_ascii=False, indent=2)
-        except Exception:
-            pass
+        for fpath in [backup_file, primary_file]:
+            try:
+                os.makedirs(os.path.dirname(fpath), exist_ok=True)
+                with open(fpath, "w", encoding="utf-8") as f:
+                    json.dump(data_to_save, f, ensure_ascii=False, indent=2)
+            except Exception:
+                pass
+
+        if "reward_history" in data_to_save and isinstance(data_to_save["reward_history"], list):
+            try:
+                with open(history_file, "w", encoding="utf-8") as f:
+                    json.dump(data_to_save["reward_history"], f, ensure_ascii=False, indent=2)
+            except Exception:
+                pass
 
     def _auto_check_ai_hunt_status(self, db):
         if not db or not db.get("active"):
