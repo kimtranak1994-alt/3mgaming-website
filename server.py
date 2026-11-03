@@ -2976,6 +2976,28 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
             entries = remote_data["entries"]
 
+            # Lấy danh sách Steam ID và tên người chơi bị loại trừ khỏi Bảng Xếp Hạng
+            excluded_sids = set(str(s).strip() for s in config.get("LEADERBOARD_EXCLUDED_STEAM_IDS", [
+                "76561199483156684"
+            ]))
+            excluded_names = [n.lower().strip() for n in config.get("LEADERBOARD_EXCLUDED_NAMES", [
+                "thich du thu", "thích du thư"
+            ])]
+
+            def is_excluded_player(sid, name):
+                sid_str = str(sid or "").strip()
+                if sid_str and sid_str in excluded_sids:
+                    return True
+                name_raw = str(name or "").lower().strip()
+                import unicodedata
+                nfkd = unicodedata.normalize('NFKD', name_raw)
+                name_clean = ''.join([c for c in nfkd if not unicodedata.combining(c)]).replace('đ', 'd').strip()
+                for ex in excluded_names:
+                    ex_clean = ''.join([c for c in unicodedata.normalize('NFKD', ex.lower()) if not unicodedata.combining(c)]).replace('đ', 'd').strip()
+                    if ex_clean and (ex_clean in name_clean or ex_clean in name_raw):
+                        return True
+                return False
+
             # Lấy danh sách live players để biết ai đang online
             remote_live = self.fetch_islepilot("/players?limit=250") or {}
             live_players = remote_live.get("players", [])
@@ -2992,6 +3014,12 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             for item in entries:
                 sid = str(item.get("steamId", "")).strip()
                 live_p = live_map.pop(sid, None)
+                p_name = (live_p.get("name") if live_p else None) or item.get("name") or f"Player_{sid[-4:]}"
+
+                # LOẠI BỎ NGƯỜI CHƠI BỊ KHOANH ĐỎ / ẨN KHỎI BẢNG XẾP HẠNG
+                if is_excluded_player(sid, p_name):
+                    continue
+
                 is_online = bool(live_p and live_p.get("online") is not False)
                 kills = item.get("kills", 0)
                 deaths = item.get("deaths", 0)
@@ -3002,7 +3030,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     "rank": len(formatted) + 1,
                     "steamId": sid,
                     "steam_id": sid,
-                    "name": (live_p.get("name") if live_p else None) or item.get("name") or f"Player_{sid[-4:]}",
+                    "name": p_name,
                     "favorite_dino": (live_p.get("species") if live_p else "Đa dạng (The Isle)"),
                     "species": (live_p.get("species") if live_p else "Đa dạng (The Isle)"),
                     "online": is_online,
@@ -3018,11 +3046,14 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             # 1. Thêm cả những người chơi đang online nhưng chưa có trong leaderboard
             if is_admin_mode:
                 for sid, live_p in live_map.items():
+                    p_name = live_p.get("name") or f"Player_{sid[-4:]}"
+                    if is_excluded_player(sid, p_name):
+                        continue
                     formatted.append({
                         "rank": len(formatted) + 1,
                         "steamId": sid,
                         "steam_id": sid,
-                        "name": live_p.get("name") or f"Player_{sid[-4:]}",
+                        "name": p_name,
                         "favorite_dino": live_p.get("species", "Chưa chọn"),
                         "species": live_p.get("species", "Chưa chọn"),
                         "online": True,

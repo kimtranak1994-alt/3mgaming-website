@@ -297,5 +297,12 @@
       "Photosynthetic Tissue"
     ],
     "is_prime": true
-  }
+  },
+  "LEADERBOARD_EXCLUDED_STEAM_IDS": [
+    "76561199483156684"
+  ],
+  "LEADERBOARD_EXCLUDED_NAMES": [
+    "thich du thu",
+    "thích du thư"
+  ]
 }

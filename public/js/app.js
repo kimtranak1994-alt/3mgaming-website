@@ -390,11 +390,23 @@ const App = {
   },
 
   async refreshLeaderboard() {
-    const board = await IslePilot.fetchLeaderboard();
+    let board = await IslePilot.fetchLeaderboard();
     if (!board || board.length === 0) return;
+
+    // Lọc bỏ người chơi bị loại trừ khỏi Bảng Xếp Hạng
+    const excludedIds = ['76561199483156684'];
+    const excludedNames = ['thich du thu', 'thích du thư'];
+    board = board.filter(item => {
+      const sid = String(item.steamId || item.steam_id || '').trim();
+      const name = String(item.name || '').toLowerCase().trim();
+      if (excludedIds.includes(sid)) return false;
+      if (excludedNames.some(ex => name.includes(ex))) return false;
+      return true;
+    });
 
     // Sắp xếp thứ tự từ người có Kill nhiều nhất đến người ít hơn
     board.sort((a, b) => b.kills - a.kills || a.deaths - b.deaths);
+    board.forEach((item, idx) => { item.rank = idx + 1; });
 
     // Render Top 3 lên bục Podium trang chủ (kiểu Dino4VN)
     const p1 = board[0];
@@ -429,9 +441,25 @@ const App = {
     const isAdminView = window.realAdminVerified && !isGuest;
     const mode = isAdminView ? 'admin' : 'guest';
     const adminParam = (isAdminView && adminSid) ? `&admin_steam_id=${adminSid}` : '';
-    const board = await IslePilot.fetchLeaderboard(mode + adminParam);
+    let board = await IslePilot.fetchLeaderboard(mode + adminParam);
     const tbody = document.getElementById('bxh-table-body');
     if (!tbody || !board) return;
+
+    // Lọc bỏ người chơi bị loại trừ khỏi Bảng Xếp Hạng
+    const excludedIds = ['76561199483156684'];
+    const excludedNames = ['thich du thu', 'thích du thư'];
+    board = board.filter(item => {
+      const sid = String(item.steamId || item.steam_id || '').trim();
+      const name = String(item.name || '').toLowerCase().trim();
+      if (excludedIds.includes(sid)) return false;
+      if (excludedNames.some(ex => name.includes(ex))) return false;
+      return true;
+    });
+
+    // Đánh lại số thứ tự Hạng (Rank) từ 1..N
+    board.forEach((item, idx) => {
+      item.rank = idx + 1;
+    });
 
     if (isAdminView) {
       // CHẾ ĐỘ QUẢN TRỊ VIÊN:
