@@ -143,6 +143,9 @@ const AdminPanel = {
             <button class="admin-tab-btn" data-subtab="bans" onclick="AdminPanel.switchSubTab('bans')">
               🚫 Danh Sách Cấm (Bans) & Whitelist
             </button>
+            <button class="admin-tab-btn" data-subtab="teleport" onclick="AdminPanel.switchSubTab('teleport')">
+              🚀 Dịch Chuyển Admin
+            </button>
           </div>
         </div>
 
@@ -355,6 +358,16 @@ const AdminPanel = {
             </div>
           </div>
 
+          <!-- SUBTAB 7: DỊCH CHUYỂN ADMIN TOÀN SERVER (100% MIỄN PHÍ - 0S HỒI CHIÊU) -->
+          <div id="admin-sec-teleport" class="admin-sec-content" style="display: none;">
+            <div id="admin-teleport-mount">
+              <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+                <div class="spinner" style="margin: 0 auto 12px;"></div>
+                Đang tải dữ liệu dịch chuyển Admin...
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     `;
@@ -468,6 +481,8 @@ const AdminPanel = {
     } else if (tab === 'bans') {
       this.renderBansList();
       this.renderWhitelist();
+    } else if (tab === 'teleport') {
+      this.renderAdminTeleport();
     }
   },
 
@@ -2347,6 +2362,258 @@ const AdminPanel = {
     const u = JSON.parse(localStorage.getItem('steam_user') || 'null');
     const adminSid = (u && u.steamId) ? u.steamId : '76561199175571899';
     await this.executeCommand('bring', steamId, { adminSteamId: adminSid });
+  },
+
+  adminTeleportTargetMode: 'self', // 'self' | 'online' | 'manual'
+  adminTeleportManualSid: '',
+  adminTeleportSelectedSid: '',
+  activeAdminTeleportTargetSid: '',
+  activeAdminTeleportTargetName: '',
+
+  async renderAdminTeleport() {
+    const mount = document.getElementById('admin-teleport-mount');
+    if (!mount) return;
+
+    if (!this.teleportLocations || this.teleportLocations.length === 0) {
+      await this.loadTeleportLocations();
+    }
+    if (!this.players || this.players.length === 0) {
+      await this.loadPlayers();
+    }
+
+    const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
+    const adminSid = (user && user.steamId) ? user.steamId : '76561199175571899';
+    const adminName = (user && user.personaname) ? user.personaname : 'Admin';
+
+    let currentTargetSid = adminSid;
+    let currentTargetName = `Chính tôi (Admin - ${adminName})`;
+    let targetDino = '';
+    let isOnline = true;
+
+    if (this.adminTeleportTargetMode === 'self') {
+      currentTargetSid = adminSid;
+      currentTargetName = `👑 Admin (${adminName})`;
+      const foundMe = (this.players || []).find(p => String(p.steamId) === String(adminSid));
+      if (foundMe) {
+        targetDino = `${foundMe.species || 'Khủng long'} (${Math.round((foundMe.growth || 0) * 100)}%)`;
+        isOnline = !!foundMe.online;
+      }
+    } else if (this.adminTeleportTargetMode === 'online') {
+      const onlineListNow = (this.players || []).filter(p => p.online);
+      currentTargetSid = this.adminTeleportSelectedSid || (onlineListNow[0]?.steamId) || adminSid;
+      const found = (this.players || []).find(p => String(p.steamId) === String(currentTargetSid));
+      if (found) {
+        currentTargetName = found.name || currentTargetSid;
+        targetDino = `${found.species || 'Chưa rõ'} (${Math.round((found.growth || 0) * 100)}%)`;
+        isOnline = !!found.online;
+      }
+    } else if (this.adminTeleportTargetMode === 'manual') {
+      currentTargetSid = (this.adminTeleportManualSid || '').trim();
+      currentTargetName = currentTargetSid ? `Steam ID: ${currentTargetSid}` : 'Chưa nhập Steam ID';
+      const found = (this.players || []).find(p => String(p.steamId) === String(currentTargetSid));
+      if (found) {
+        currentTargetName = `${found.name} (${currentTargetSid})`;
+        targetDino = `${found.species || 'Chưa rõ'} (${Math.round((found.growth || 0) * 100)}%)`;
+        isOnline = !!found.online;
+      }
+    }
+
+    this.activeAdminTeleportTargetSid = currentTargetSid;
+    this.activeAdminTeleportTargetName = currentTargetName;
+
+    const onlineList = (this.players || []).filter(p => p.online);
+
+    mount.innerHTML = `
+      <div class="card" style="margin-bottom: 24px; background: linear-gradient(135deg, rgba(255, 42, 133, 0.18) 0%, rgba(0, 242, 254, 0.14) 100%); border: 1px solid rgba(255, 42, 133, 0.35); border-radius: 14px; padding: 22px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <div style="font-size: 2.2rem; background: rgba(255, 42, 133, 0.2); width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; border-radius: 12px; border: 1px solid rgba(255, 42, 133, 0.4);">🚀</div>
+            <div>
+              <h2 style="font-size: 1.35rem; font-weight: 800; color: #fff; margin-bottom: 4px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                TRUNG TÂM DỊCH CHUYỂN ADMIN
+                <span class="badge" style="background: rgba(16, 185, 129, 0.25); color: #10b981; border: 1px solid #10b981; font-size: 0.75rem; padding: 4px 10px; border-radius: 20px;">MIỄN PHÍ 0 XU</span>
+                <span class="badge" style="background: rgba(0, 242, 254, 0.25); color: #00f2fe; border: 1px solid #00f2fe; font-size: 0.75rem; padding: 4px 10px; border-radius: 20px;">0S HỒI CHIÊU</span>
+              </h2>
+              <p style="color: var(--text-muted); font-size: 0.88rem; margin: 0;">
+                Quản trị viên có đặc quyền dịch chuyển bản thân hoặc dịch chuyển bất kỳ người chơi nào trên toàn máy chủ tới mọi địa điểm hoàn toàn <strong>Miễn phí (0 Xu)</strong> và <strong>không giới hạn thời gian chờ</strong>.
+              </p>
+            </div>
+          </div>
+          <button class="btn-secondary" onclick="AdminPanel.loadTeleportLocations().then(() => AdminPanel.renderAdminTeleport())" style="padding: 10px 18px;">
+            <span>🔄</span> Tải lại điểm đến
+          </button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom: 24px; padding: 20px; border: 1px solid rgba(255, 255, 255, 0.1);">
+        <div class="card-header" style="padding: 0 0 14px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.08); margin-bottom: 16px;">
+          <h3 class="card-title" style="font-size: 1.1rem; color: #fff; display: flex; align-items: center; gap: 8px;">
+            <span>🎯</span> CHỌN MỤC TIÊU DỊCH CHUYỂN
+          </h3>
+        </div>
+
+        <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
+          <button class="btn-secondary ${this.adminTeleportTargetMode === 'self' ? 'active' : ''}" 
+            style="${this.adminTeleportTargetMode === 'self' ? 'background: rgba(255, 42, 133, 0.3); border-color: #ff2a85; color: #fff; font-weight: 700;' : ''}"
+            onclick="AdminPanel.setAdminTeleportTargetMode('self')">
+            👑 Chính tôi (Admin)
+          </button>
+          <button class="btn-secondary ${this.adminTeleportTargetMode === 'online' ? 'active' : ''}" 
+            style="${this.adminTeleportTargetMode === 'online' ? 'background: rgba(255, 42, 133, 0.3); border-color: #ff2a85; color: #fff; font-weight: 700;' : ''}"
+            onclick="AdminPanel.setAdminTeleportTargetMode('online')">
+            👥 Người chơi Online (${onlineList.length})
+          </button>
+          <button class="btn-secondary ${this.adminTeleportTargetMode === 'manual' ? 'active' : ''}" 
+            style="${this.adminTeleportTargetMode === 'manual' ? 'background: rgba(255, 42, 133, 0.3); border-color: #ff2a85; color: #fff; font-weight: 700;' : ''}"
+            onclick="AdminPanel.setAdminTeleportTargetMode('manual')">
+            ✏️ Nhập Steam ID thủ công
+          </button>
+        </div>
+
+        ${this.adminTeleportTargetMode === 'online' ? `
+          <div style="margin-bottom: 16px;">
+            <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 6px;">Chọn người chơi đang Online trên máy chủ:</label>
+            <select class="admin-search-input" style="width: 100%; padding: 10px 14px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff;"
+              onchange="AdminPanel.onAdminTeleportPlayerSelect(this.value)">
+              ${onlineList.length === 0 ? '<option value="">Không có người chơi nào đang online</option>' : ''}
+              ${onlineList.map(p => `
+                <option value="${p.steamId}" ${String(p.steamId) === String(currentTargetSid) ? 'selected' : ''}>
+                  🟢 ${p.name || 'Người chơi'} - ${p.species || 'Dino'} (${Math.round((p.growth || 0) * 100)}%) - Steam: ${p.steamId}
+                </option>
+              `).join('')}
+            </select>
+          </div>
+        ` : ''}
+
+        ${this.adminTeleportTargetMode === 'manual' ? `
+          <div style="margin-bottom: 16px;">
+            <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 6px;">Nhập Steam ID 64 của mục tiêu:</label>
+            <div style="display: flex; gap: 10px;">
+              <input type="text" class="admin-search-input" style="flex: 1; padding: 10px 14px;" 
+                placeholder="Ví dụ: 76561199175571899" 
+                value="${this.adminTeleportManualSid || ''}"
+                oninput="AdminPanel.onAdminTeleportManualInput(this.value)">
+            </div>
+          </div>
+        ` : ''}
+
+        <div style="background: rgba(0,0,0,0.3); border: 1px dashed rgba(255, 42, 133, 0.4); border-radius: 10px; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <div style="width: 42px; height: 42px; border-radius: 50%; background: rgba(255, 42, 133, 0.15); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; border: 1px solid rgba(255, 42, 133, 0.3);">
+              ${this.adminTeleportTargetMode === 'self' ? '👑' : '🦖'}
+            </div>
+            <div>
+              <div style="font-weight: 700; color: #fff; font-size: 1rem;">
+                Mục tiêu: <span style="color: #00f2fe;">${currentTargetName}</span>
+              </div>
+              <div style="font-size: 0.82rem; color: #94a3b8;">
+                Steam ID: <span style="font-family: monospace; color: #fbbf24;">${currentTargetSid || 'Chưa xác định'}</span> 
+                ${targetDino ? ` • Loài: <span style="color: #cbd5e1;">${targetDino}</span>` : ''}
+              </div>
+            </div>
+          </div>
+          <div>
+            <span class="badge" style="background: ${isOnline ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'}; color: ${isOnline ? '#10b981' : '#ef4444'}; border: 1px solid ${isOnline ? '#10b981' : '#ef4444'}; padding: 4px 12px; border-radius: 12px; font-size: 0.8rem; font-weight: 700;">
+              ${isOnline ? '🟢 ĐANG ONLINE' : '⚫ OFFLINE'}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="padding: 20px;">
+        <div class="card-header" style="padding: 0 0 14px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.08); margin-bottom: 20px;">
+          <h3 class="card-title" style="font-size: 1.1rem; color: #fff; display: flex; align-items: center; gap: 8px;">
+            <span>📍</span> DANH SÁCH TỌA ĐỘ / ĐIỂM ĐẾN KHẢ DỤNG (${this.teleportLocations.length})
+          </h3>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+          ${this.teleportLocations.map(loc => `
+            <div class="teleport-loc-card" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.2s ease;">
+              <div style="margin-bottom: 16px;">
+                <div class="teleport-loc-header" style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                  <div class="teleport-loc-icon" style="font-size: 1.3rem;">📍</div>
+                  <h3 class="teleport-loc-name" style="margin: 0; font-size: 1.1rem; font-weight: 700; color: #fff;" title="${loc.name}">${loc.name}</h3>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; font-weight: 700; font-size: 0.8rem; padding: 3px 10px; border-radius: 12px;">
+                    🎁 Miễn phí (0 Xu)
+                  </span>
+                  ${loc.cost ? `<span style="font-size: 0.78rem; color: #64748b; text-decoration: line-through;">Gốc: ${loc.cost} Xu</span>` : ''}
+                </div>
+              </div>
+              <button type="button" class="btn-primary" style="width: 100%; justify-content: center; padding: 10px 14px; font-size: 0.9rem;"
+                onclick="AdminPanel.executeAdminTeleport('${loc.id}', '${loc.name.replace(/'/g, "\'")}')">
+                🚀 Dịch Chuyển Ngay
+              </button>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  },
+
+  setAdminTeleportTargetMode(mode) {
+    this.adminTeleportTargetMode = mode;
+    this.renderAdminTeleport();
+  },
+
+  onAdminTeleportPlayerSelect(steamId) {
+    this.adminTeleportSelectedSid = steamId;
+    this.renderAdminTeleport();
+  },
+
+  onAdminTeleportManualInput(val) {
+    this.adminTeleportManualSid = val.trim();
+    this.renderAdminTeleport();
+  },
+
+  async executeAdminTeleport(locationId, locationName) {
+    const targetSid = this.activeAdminTeleportTargetSid;
+    const targetName = this.activeAdminTeleportTargetName || targetSid;
+
+    if (!targetSid) {
+      this.showNotification('Vui lòng chọn mục tiêu dịch chuyển!', false);
+      return;
+    }
+
+    if (!confirm(`🚀 Xác nhận dịch chuyển [${targetName}] tới điểm đến [${locationName}] hoàn toàn Miễn Phí (0 Xu)?`)) {
+      return;
+    }
+
+    const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
+    const adminSid = (user && user.steamId) ? user.steamId : '76561199175571899';
+    const adminPasscode = localStorage.getItem('admin_passcode') || 'admin3m';
+
+    try {
+      this.showNotification(`⏳ Đang dịch chuyển [${targetName}] tới ${locationName}...`, true);
+      const res = await fetch('/api/server/teleport', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-Passcode': adminPasscode,
+          'X-Admin-Steam-Id': adminSid
+        },
+        body: JSON.stringify({
+          locationId: locationId,
+          steam_id: targetSid,
+          admin_steam_id: adminSid,
+          passcode: adminPasscode
+        })
+      });
+
+      const data = await res.json();
+      if (data.success || data.ok) {
+        this.showNotification(data.message || `🚀 Đã dịch chuyển [${targetName}] tới ${locationName} thành công! (0 Xu)`, true);
+        if (window.App && typeof App.refreshBalance === 'function') {
+          App.refreshBalance();
+        }
+      } else {
+        this.showNotification(data.error || data.message || 'Lỗi dịch chuyển!', false);
+      }
+    } catch (e) {
+      this.showNotification(`Lỗi kết nối: ${e.message}`, false);
+    }
   },
 
   async modTeleportHub(steamId) {

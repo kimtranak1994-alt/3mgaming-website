@@ -4544,18 +4544,21 @@ const Referral = {
 // 5. DỊCH CHUYỂN (ISLEPILOT REAL TELEPORT API)
 
 const Teleport = {
-
   locations: [],
-
   balance: 8090,
-
   activeCode: null,
-
   timerInterval: null,
-
   cooldownInterval: null,
+  isAdmin: false,
+
+  checkIsAdmin() {
+    return !!(this.isAdmin || window.realAdminVerified || window.isUserAdmin || (localStorage.getItem('admin_authenticated') === '1'));
+  },
 
   getCooldownRemaining() {
+    if (this.checkIsAdmin()) {
+      return 0;
+    }
     const until = parseInt(localStorage.getItem('teleport_cooldown_until') || '0', 10);
     const now = Date.now();
     if (until > now) {
@@ -4565,6 +4568,11 @@ const Teleport = {
   },
 
   startCooldown(seconds = 60) {
+    if (this.checkIsAdmin() || seconds <= 0) {
+      localStorage.removeItem('teleport_cooldown_until');
+      this.updateCooldownUI();
+      return;
+    }
     const until = Date.now() + (seconds * 1000);
     localStorage.setItem('teleport_cooldown_until', until);
     this.updateCooldownUI();
@@ -4578,6 +4586,18 @@ const Teleport = {
 
     const banner = document.getElementById('teleport-cooldown-banner');
     const timerText = document.getElementById('teleport-cooldown-timer-text');
+
+    if (this.checkIsAdmin()) {
+      if (banner) banner.style.display = 'none';
+      const buttons = document.querySelectorAll('.teleport-btn-action');
+      buttons.forEach(btn => {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+        btn.innerHTML = `🚀 Dịch chuyển (0 Xu)`;
+      });
+      return;
+    }
 
     const tick = () => {
       const remaining = this.getCooldownRemaining();
@@ -4619,172 +4639,147 @@ const Teleport = {
     this.cooldownInterval = setInterval(tick, 1000);
   },
 
-
-
   async render() {
-
     const container = document.getElementById('teleport-locations-container');
-
     const balanceEl = document.getElementById('teleport-balance-val');
 
-
-
     try {
-
       const res = await fetch('/api/server/teleport/locations');
-
       const data = await res.json();
-
       this.locations = data.locations || [];
-
-      if (typeof data.balance === 'number') {
-
-        this.balance = data.balance;
-
-        if (balanceEl) balanceEl.textContent = `$ ${data.balance.toLocaleString('en-US')}`;
-
+      if (data.is_admin) {
+        this.isAdmin = true;
       }
-
+      if (typeof data.balance === 'number') {
+        this.balance = data.balance;
+        if (balanceEl) balanceEl.textContent = `${data.balance.toLocaleString('en-US')} Xu`;
+      }
     } catch (e) {
-
       console.warn('Lỗi tải locations:', e);
-
     }
-
-
 
     if (!container) return;
 
-
-
     if (this.locations.length === 0) {
-
       container.innerHTML = '<div style="text-align: center; padding: 30px; color: #94a3b8; grid-column: 1/-1;">Hiện không có điểm đến nào khả dụng trên máy chủ.</div>';
-
       return;
-
     }
 
+    const isAdminUser = this.checkIsAdmin();
 
+    let adminBannerHtml = '';
+    if (isAdminUser) {
+      adminBannerHtml = `
+        <div style="grid-column: 1 / -1; margin-bottom: 20px; background: linear-gradient(135deg, rgba(255, 42, 133, 0.18) 0%, rgba(0, 242, 254, 0.15) 100%); border: 1px solid rgba(255, 42, 133, 0.4); border-radius: 12px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; box-shadow: 0 4px 20px rgba(255, 42, 133, 0.15);">
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <span style="font-size: 1.8rem;">👑</span>
+            <div>
+              <div style="font-weight: 800; color: #fff; font-size: 1.05rem; letter-spacing: 0.5px;">ĐẶC QUYỀN ADMIN: DỊCH CHUYỂN MIỄN PHÍ 100% (0 XU - 0S HỒI CHIÊU)</div>
+              <div style="color: #cbd5e1; font-size: 0.85rem;">Bạn đang đăng nhập với tư cách Quản trị viên. Toàn bộ điểm đến có giá <span style="color: #10b981; font-weight: 700;">0 Xu</span> và <span style="color: #00f2fe; font-weight: 700;">không có thời gian chờ (0s)</span>.</div>
+            </div>
+          </div>
+          <span class="badge" style="background: rgba(16, 185, 129, 0.25); color: #10b981; border: 1px solid #10b981; font-weight: 700; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem;">ADMIN: 0 XU</span>
+        </div>
+      `;
+    }
 
-    container.innerHTML = this.locations.map(loc => {
-
-      const isFree = !loc.cost || loc.cost === 0;
-
-      const tagText = isFree ? 'Miễn phí' : `${loc.cost.toLocaleString('en-US')} Xu`;
-
-
+    const cardsHtml = this.locations.map(loc => {
+      const isFree = isAdminUser || !loc.cost || loc.cost === 0;
+      const tagText = isAdminUser ? 'Miễn phí (Admin 0 Xu)' : (isFree ? 'Miễn phí' : `${loc.cost.toLocaleString('en-US')} Xu`);
 
       return `
-
         <div class="teleport-loc-card">
-
           <div>
-
             <div class="teleport-loc-header">
-
               <div class="teleport-loc-icon">
-
                 📍
-
               </div>
-
               <h3 class="teleport-loc-name" title="${loc.name}">${loc.name}</h3>
-
             </div>
-
             <div class="teleport-loc-tag">
-
               <span>🔗</span> <span>${tagText}</span>
-
             </div>
-
           </div>
-
           <button type="button" class="teleport-btn-action" onclick="Teleport.actionTeleport('${loc.id}', '${loc.name}')">
-
-            Dịch chuyển
-
+            ${isAdminUser ? '🚀 Dịch chuyển (0 Xu)' : 'Dịch chuyển'}
           </button>
-
         </div>
-
       `;
-
     }).join('');
 
+    container.innerHTML = adminBannerHtml + cardsHtml;
     this.updateCooldownUI();
-
   },
 
-
-
   async actionTeleport(locationId, locationName) {
+    const isAdminUser = this.checkIsAdmin();
 
-    const remaining = this.getCooldownRemaining();
-    if (remaining > 0) {
-      const msg = `⏳ Dịch chuyển đang hồi chiêu! Vui lòng đợi ${remaining} giây nữa.`;
-      if (window.App && window.App.showToast) App.showToast(msg);
-      else alert(msg);
-      return;
+    if (!isAdminUser) {
+      const remaining = this.getCooldownRemaining();
+      if (remaining > 0) {
+        const msg = `⏳ Dịch chuyển đang hồi chiêu! Vui lòng đợi ${remaining} giây nữa.`;
+        if (window.App && window.App.showToast) App.showToast(msg);
+        else alert(msg);
+        return;
+      }
     }
 
     const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
-
     const steamId = user ? user.steamId : '76561199175571899';
+    const adminPasscode = localStorage.getItem('admin_passcode') || 'admin3m';
 
     if (window.App && window.App.showToast) {
       App.showToast(`🚀 Đang gửi lệnh dịch chuyển tới ${locationName}...`);
     }
 
     try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (isAdminUser) {
+        headers['X-Admin-Passcode'] = adminPasscode;
+        headers['X-Admin-Steam-Id'] = steamId;
+      }
 
       const res = await fetch('/api/server/teleport', {
-
         method: 'POST',
-
-        headers: { 'Content-Type': 'application/json' },
-
-        body: JSON.stringify({ locationId, steam_id: steamId })
-
+        headers: headers,
+        body: JSON.stringify({
+          locationId: locationId,
+          steam_id: steamId,
+          admin_steam_id: steamId,
+          passcode: adminPasscode
+        })
       });
 
       const data = await res.json();
 
       if (data.success || data.ok) {
-
         const succMsg = data.message || `🚀 Đã gửi lệnh dịch chuyển tới ${locationName} thành công! Hãy đứng yên 3-5s trong game.`;
         if (window.App && window.App.showToast) App.showToast(succMsg);
         else alert(succMsg);
 
-        // BẮT ĐẦU BỘ ĐẾM 60S HỒI CHIÊU
-        this.startCooldown(data.cooldown_seconds || 60);
+        if (!isAdminUser && (data.cooldown_seconds || 60) > 0) {
+          this.startCooldown(data.cooldown_seconds || 60);
+        } else {
+          this.startCooldown(0);
+        }
 
         if (window.App && typeof App.refreshBalance === 'function') {
           setTimeout(() => App.refreshBalance(), 1000);
         }
-
       } else {
-
         const errMsg = data.error || data.message || "Thất bại";
         if (window.App && window.App.showToast) App.showToast(errMsg);
         else alert(errMsg);
 
-        if (data.cooldown_remaining) {
+        if (!isAdminUser && data.cooldown_remaining) {
           this.startCooldown(data.cooldown_remaining);
         }
-
       }
-
     } catch (e) {
-
-      App.showToast(`Lỗi kết nối: ${e.message}`);
-
+      if (window.App && window.App.showToast) App.showToast(`Lỗi kết nối: ${e.message}`);
+      else alert(`Lỗi kết nối: ${e.message}`);
     }
-
   },
-
-
 
   onCodeInput(val) {
 

@@ -851,7 +851,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
         # 15. Teleport Locations (Live từ IslePilot)
 
-        elif self.path == "/api/server/teleport/locations":
+        elif self.path.startswith("/api/server/teleport/locations"):
 
             self.handle_teleport_locations()
 
@@ -1245,7 +1245,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             self.handle_ai_hunt_post()
             return
 
-        elif self.path == "/api/server/teleport":
+        elif self.path.startswith("/api/server/teleport"):
 
             self.handle_teleport()
 
@@ -6065,85 +6065,104 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         self.send_json_response({"dinos": []})
 
     def handle_teleport_locations(self):
-
         # Trả về 100% địa điểm dịch chuyển thực tế từ IslePilot API của server
-
         remote = self.fetch_islepilot("/teleport/locations")
-
         locations = remote.get("locations", []) if isinstance(remote, dict) else []
-
         
-
         # Lấy số dư ví (wallet balance) thực tế từ tài khoản người chơi
-
         steam_id = self.get_active_steam_id()
-
         player_info = self.fetch_islepilot(f"/players/{steam_id}")
-
         balance = 8090
-
         if isinstance(player_info, dict):
-
             wallet = player_info.get("wallet", {})
-
             if isinstance(wallet, dict) and "balance" in wallet:
-
                 balance = wallet.get("balance", 0)
 
+        # Kiểm tra quyền Admin (Admin được miễn phí 0 Xu)
+        is_admin = False
+        try:
+            is_adm, _ = self.is_admin_request()
+            admin_sids = [str(sid) for sid in config.get("ADMIN_STEAM_IDS", [
+                "76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684", "76561199319732549"
+            ])]
+            if is_adm or (steam_id and str(steam_id) in admin_sids):
+                is_admin = True
+        except Exception:
+            pass
+
+        # Sao chép danh sách để tránh thay đổi cache trong bộ nhớ
+        resp_locations = [dict(loc) for loc in locations]
+        if is_admin:
+            for loc in resp_locations:
+                loc["original_cost"] = loc.get("cost", 0)
+                loc["cost"] = 0
+                loc["is_admin_free"] = True
+
         self.send_json_response({
-
-            "locations": locations,
-
+            "locations": resp_locations,
             "balance": balance,
-
-            "steam_id": steam_id
-
+            "steam_id": steam_id,
+            "is_admin": is_admin
         })
 
     def handle_teleport(self):
-
         try:
-
             length = int(self.headers.get("Content-Length", 0))
-
             payload = json.loads(self.rfile.read(length).decode("utf-8")) if length > 0 else {}
-
             location_id = payload.get("locationId") or payload.get("location_id")
-
             steam_id = payload.get("steam_id") or self.get_active_steam_id()
 
             if not location_id:
-
                 self.send_json_response({"success": False, "ok": False, "message": "Vui lòng chọn địa điểm dịch chuyển!"}, 400)
-
                 return
 
             if not steam_id:
-
                 self.send_json_response({"success": False, "ok": False, "message": "Vui lòng đăng nhập Steam trước khi dịch chuyển!"}, 401)
-
                 return
 
             steam_id = str(steam_id).strip()
 
-            # 1. KIỂM TRA BỘ ĐẾM HỒI CHIÊU 60 GIÂY
+            # KIỂM TRA QUYỀN ADMIN (Admin được miễn phí 0 Xu & không hồi chiêu)
+            is_admin = False
+            try:
+                is_adm, _ = self.is_admin_request()
+                admin_sids = [str(sid) for sid in config.get("ADMIN_STEAM_IDS", [
+                    "76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684", "76561199319732549"
+                ])]
+                req_admin_sid = str(payload.get("admin_steam_id") or self.headers.get("X-Admin-Steam-Id") or "")
+                req_passcode = str(payload.get("passcode") or self.headers.get("X-Admin-Passcode") or "")
+                admin_pass = config.get("ADMIN_PASSCODE", "admin3m")
+                active_sid = str(self.get_active_steam_id() or "")
+
+                if (is_adm or 
+                    (steam_id in admin_sids) or 
+                    (active_sid in admin_sids) or 
+                    (req_admin_sid in admin_sids) or 
+                    (req_passcode == admin_pass)):
+                    is_admin = True
+            except Exception:
+                pass
+
+            # 1. KIỂM TRA BỘ ĐẾM HỒI CHIÊU (ADMIN ĐƯỢC MIỄN HỒI CHIÊU 0 GIÂY)
             if not hasattr(DinoRequestHandler, "_teleport_cooldowns"):
                 DinoRequestHandler._teleport_cooldowns = {}
 
             now = time.time()
-            cooldown_until = DinoRequestHandler._teleport_cooldowns.get(steam_id, 0)
-            if now < cooldown_until:
-                remaining = int(math.ceil(cooldown_until - now))
-                self.send_json_response({
-                    "success": False,
-                    "ok": False,
-                    "message": f"⏳ Dịch chuyển đang trong thời gian hồi chiêu! Vui lòng đợi {remaining} giây nữa.",
-                    "error": f"⏳ Dịch chuyển đang trong thời gian hồi chiêu! Vui lòng đợi {remaining} giây nữa.",
-                    "cooldown_remaining": remaining
-                }, 429)
-                return
+            if not is_admin:
+                cooldown_until = DinoRequestHandler._teleport_cooldowns.get(steam_id, 0)
+                if now < cooldown_until:
+                    remaining = int(math.ceil(cooldown_until - now))
+                    self.send_json_response({
+                        "success": False,
+                        "ok": False,
+                        "message": f"⏳ Dịch chuyển đang trong thời gian hồi chiêu! Vui lòng đợi {remaining} giây nữa.",
+                        "error": f"⏳ Dịch chuyển đang trong thời gian hồi chiêu! Vui lòng đợi {remaining} giây nữa.",
+                        "cooldown_remaining": remaining
+                    }, 429)
+                    return
 
-            # 2. KIỂM TRA TRẠNG THÁI KHỦNG LONG TRONG GAME ĐỂ TRÁNH LỖI TRỪ XU KHI MỚI SPAWN
+            # 2. KIỂM TRA TRẠNG THÁI KHỦNG LONG TRONG GAME
+            p_info = None
             try:
                 p_info = self.fetch_islepilot(f"/players/{steam_id}")
                 if isinstance(p_info, dict):
@@ -6151,7 +6170,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                         self.send_json_response({
                             "success": False,
                             "ok": False,
-                            "message": "⚠️ Khủng long của bạn chưa online trong server! Vui lòng vào game trước khi bấm dịch chuyển."
+                            "message": "⚠️ Khủng long chưa online trong server! Vui lòng vào game trước khi bấm dịch chuyển."
                         }, 400)
                         return
 
@@ -6159,7 +6178,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                         self.send_json_response({
                             "success": False,
                             "ok": False,
-                            "message": "⚠️ Bạn chưa chọn khủng long spawn vào thế giới game! Vui lòng vào game bấm Spawn trước khi dịch chuyển."
+                            "message": "⚠️ Khủng long chưa được spawn vào thế giới game! Vui lòng vào game bấm Spawn trước khi dịch chuyển."
                         }, 400)
                         return
 
@@ -6191,23 +6210,79 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             except Exception as ex_check:
                 print(f"[Teleport Pre-Check Warning] {ex_check}")
 
-            # 3. GỬI LỆNH DỊCH CHUYỂN TỚI ISLEPILOT
+            # 3. LẤY CHI PHÍ CỦA ĐỊA ĐIỂM ĐỂ XỬ LÝ MIỄN PHÍ CHO ADMIN
+            loc_cost = 0
+            try:
+                remote_locs = self.fetch_islepilot("/teleport/locations")
+                loc_list = remote_locs.get("locations", []) if isinstance(remote_locs, dict) else []
+                for l in loc_list:
+                    if str(l.get("id")) == str(location_id):
+                        loc_cost = int(l.get("cost", 0))
+                        break
+            except Exception:
+                pass
+
+            curr_bal = 0
+            if isinstance(p_info, dict):
+                curr_bal = p_info.get("wallet", {}).get("balance", 0)
+
+            topup_needed = 0
+            if is_admin and loc_cost > 0:
+                if curr_bal < loc_cost:
+                    topup_needed = loc_cost - curr_bal
+                    try:
+                        self.fetch_islepilot(f"/players/{steam_id}/currency", method="POST", body_data={
+                            "amount": topup_needed,
+                            "reason": "Admin temporary balance for free teleport"
+                        })
+                    except Exception as e_top:
+                        print(f"[Admin Temp Topup Error] {e_top}")
+
+            # 4. GỬI LỆNH DỊCH CHUYỂN TỚI ISLEPILOT
             res = self.fetch_islepilot(f"/players/{steam_id}/teleport", method="POST", body_data={"locationId": location_id})
             ok, msg = self._is_teleport_success(res)
+
             if ok:
-                # KÍCH HOẠT HỒI CHIÊU 60 GIÂY
-                DinoRequestHandler._teleport_cooldowns[steam_id] = time.time() + 60.0
+                # Nếu là Admin: Hoàn lại khoản tiền bị trừ để Admin KHÔNG MẤT XU NÀO (0 Xu)
+                if is_admin and loc_cost > 0:
+                    try:
+                        refund_amount = loc_cost - topup_needed
+                        if refund_amount > 0:
+                            self.fetch_islepilot(f"/players/{steam_id}/currency", method="POST", body_data={
+                                "amount": refund_amount,
+                                "reason": "Admin hoàn tiền dịch chuyển miễn phí (0 Xu)"
+                            })
+                    except Exception as e_rf:
+                        print(f"[Admin Teleport Refund Error] {e_rf}")
+
+                if not is_admin:
+                    # KÍCH HOẠT HỒI CHIÊU 60 GIÂY CHO NGƯỜI CHƠI THƯỜNG
+                    DinoRequestHandler._teleport_cooldowns[steam_id] = time.time() + 60.0
+                    cooldown_secs = 60
+                else:
+                    cooldown_secs = 0
+
                 self.send_json_response({
                     "success": True,
                     "ok": True,
-                    "message": "🚀 Đã gửi lệnh dịch chuyển thành công! Hãy đứng yên trong game 3-5s để máy chủ chuyển vị trí.",
-                    "cooldown_seconds": 60
+                    "message": "🚀 [ADMIN MIỄN PHÍ 0 XU] Đã gửi lệnh dịch chuyển thành công! Hãy đứng yên trong game 3-5s để máy chủ chuyển vị trí." if is_admin else "🚀 Đã gửi lệnh dịch chuyển thành công! Hãy đứng yên trong game 3-5s để máy chủ chuyển vị trí.",
+                    "cooldown_seconds": cooldown_secs,
+                    "is_admin": is_admin,
+                    "free": is_admin or loc_cost == 0
                 })
                 return
-            self.send_json_response({"success": False, "ok": False, "message": msg, "error": msg}, 400)
+            else:
+                if is_admin and topup_needed > 0:
+                    try:
+                        self.fetch_islepilot(f"/players/{steam_id}/currency", method="POST", body_data={
+                            "amount": -topup_needed,
+                            "reason": "Revert admin temporary balance on failed teleport"
+                        })
+                    except Exception:
+                        pass
+                self.send_json_response({"success": False, "ok": False, "message": msg, "error": msg}, 400)
 
         except Exception as e:
-
             self.send_json_response({"success": False, "ok": False, "message": f"Lỗi hệ thống: {e}"}, 500)
 
     def handle_friend_code_create(self):
