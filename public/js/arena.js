@@ -43,7 +43,7 @@ const Arena = {
 
   isAdmin() {
     if (window.realAdminVerified) return true;
-    const adminIds = ['76561199175571899', '76561199196418178', '76561199062270730', '76561199483156684'];
+    const adminIds = ['76561199175571899', '76561199196418178', '76561199062270730', '76561199483156684', '76561199319732549', '76561198749916921'];
     const mySid = String(this.mySteamId || '').trim();
     if (adminIds.includes(mySid)) return true;
     try {
