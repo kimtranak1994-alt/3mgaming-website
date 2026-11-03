@@ -4205,6 +4205,32 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                             "error": "Khủng long của bạn chưa online trong server! Vui lòng vào game trước khi bấm dịch chuyển."
                         }, status=400)
                         return
+                    hp = p_info.get("health")
+                    max_hp = p_info.get("maxHealth")
+                    if hp is not None and max_hp is not None:
+                        try:
+                            curr_h = float(hp)
+                            max_h = float(max_hp)
+                            if max_h > 0 and curr_h < (max_h * 0.995):
+                                pct = round((curr_h / max_h) * 100, 1)
+                                self.send_json_response({
+                                    "ok": False,
+                                    "error": f"⚠️ Khủng long đang bị thương ({int(curr_h):,}/{int(max_h):,} HP - {pct}%)! Bạn phải đầy 100% máu mới được vào Đấu Trường."
+                                }, status=400)
+                                return
+                        except Exception:
+                            pass
+                    bleed = p_info.get("bleed")
+                    if bleed is not None:
+                        try:
+                            if float(bleed) > 0.01:
+                                self.send_json_response({
+                                    "ok": False,
+                                    "error": "⚠️ Khủng long đang bị chảy máu! Vui lòng nằm nghỉ cầm máu trước khi vào Đấu Trường."
+                                }, status=400)
+                                return
+                        except Exception:
+                            pass
                     if p_info.get("inCombat") is True:
                         self.send_json_response({
                             "ok": False,
@@ -6102,11 +6128,48 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 loc["cost"] = 0
                 loc["is_admin_free"] = True
 
+        dino_status = {
+            "online": player_info.get("online") if isinstance(player_info, dict) else False,
+            "species": player_info.get("species") if isinstance(player_info, dict) else None,
+            "health": player_info.get("health") if isinstance(player_info, dict) else None,
+            "maxHealth": player_info.get("maxHealth") if isinstance(player_info, dict) else None,
+            "bleed": player_info.get("bleed") if isinstance(player_info, dict) else None,
+            "inCombat": player_info.get("inCombat") if isinstance(player_info, dict) else False,
+            "brokenLegs": player_info.get("brokenLegs") if isinstance(player_info, dict) else False,
+            "can_teleport": True,
+            "reason": ""
+        }
+        if not is_admin and isinstance(player_info, dict):
+            hp = player_info.get("health")
+            max_hp = player_info.get("maxHealth")
+            bleed = player_info.get("bleed")
+            if hp is not None and max_hp is not None:
+                try:
+                    curr_h = float(hp)
+                    m_hp = float(max_hp)
+                    if m_hp > 0 and curr_h < (m_hp * 0.995):
+                        dino_status["can_teleport"] = False
+                        pct = round((curr_h / m_hp) * 100, 1)
+                        dino_status["reason"] = f"Khủng long đang bị thương ({int(curr_h):,}/{int(m_hp):,} HP - {pct}%). Cần hồi đầy 100% máu mới được dịch chuyển."
+                except Exception:
+                    pass
+            if bleed is not None:
+                try:
+                    if float(bleed) > 0.01:
+                        dino_status["can_teleport"] = False
+                        dino_status["reason"] = "Khủng long đang bị chảy máu (Bleed). Cần nằm nghỉ cầm máu trước khi dịch chuyển."
+                except Exception:
+                    pass
+            if player_info.get("inCombat") is True:
+                dino_status["can_teleport"] = False
+                dino_status["reason"] = "Khủng long đang trong giao tranh (Combat)."
+
         self.send_json_response({
             "locations": resp_locations,
             "balance": balance,
             "steam_id": steam_id,
-            "is_admin": is_admin
+            "is_admin": is_admin,
+            "dino_status": dino_status
         })
 
     def handle_teleport(self):
@@ -6197,13 +6260,57 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                         }, 400)
                         return
 
-                    if p_info.get("inCombat") is True:
-                        self.send_json_response({
-                            "success": False,
-                            "ok": False,
-                            "message": "⚠️ Khủng long đang trong giao tranh (combat)! Vui lòng đợi 30s sau khi hết combat rồi thử lại."
-                        }, 400)
-                        return
+                    # QUY ĐỊNH: CHỈ NHỮNG DINO KHÔNG BỊ THƯƠNG HOẶC CHẢY MÁU MỚI ĐƯỢC DỊCH CHUYỂN
+                    if not is_admin:
+                        # 1. Kiểm tra bị thương (Khủng long phải đạt 100% máu)
+                        max_hp = p_info.get("maxHealth")
+                        if hp is not None and max_hp is not None:
+                            try:
+                                curr_h = float(hp)
+                                max_h = float(max_hp)
+                                if max_h > 0 and curr_h < (max_h * 0.995):
+                                    pct = round((curr_h / max_h) * 100, 1)
+                                    self.send_json_response({
+                                        "success": False,
+                                        "ok": False,
+                                        "message": f"⚠️ Khủng long đang bị thương (Máu: {int(curr_h):,}/{int(max_h):,} HP - {pct}%)! Quy định server: Chỉ những khủng long lành lặn đạt 100% máu mới được phép dịch chuyển. Vui lòng nghỉ ngơi hồi phục đầy máu trước khi thử lại."
+                                    }, 400)
+                                    return
+                            except Exception as ex_hp:
+                                print(f"[Teleport HP Check Error] {ex_hp}")
+
+                        # 2. Kiểm tra chảy máu (Bleed)
+                        bleed = p_info.get("bleed")
+                        if bleed is not None:
+                            try:
+                                bleed_val = float(bleed)
+                                if bleed_val > 0.01:
+                                    self.send_json_response({
+                                        "success": False,
+                                        "ok": False,
+                                        "message": f"⚠️ Khủng long đang bị chảy máu (Bleed: {round(bleed_val, 1)})! Hệ thống nghiêm cấm dịch chuyển khi đang chảy máu để tránh lạm dụng trốn giao tranh. Vui lòng nằm nghỉ (bấm H) cầm máu hoàn toàn trước khi thử lại."
+                                    }, 400)
+                                    return
+                            except Exception as ex_bl:
+                                print(f"[Teleport Bleed Check Error] {ex_bl}")
+
+                        # 3. Kiểm tra gãy chân
+                        if p_info.get("brokenLegs") is True:
+                            self.send_json_response({
+                                "success": False,
+                                "ok": False,
+                                "message": "⚠️ Khủng long đang bị gãy chân do chấn thương! Vui lòng nằm nghỉ để xương lành lặn hoàn toàn trước khi dịch chuyển."
+                            }, 400)
+                            return
+
+                        # 4. Kiểm tra giao tranh (Combat)
+                        if p_info.get("inCombat") is True:
+                            self.send_json_response({
+                                "success": False,
+                                "ok": False,
+                                "message": "⚠️ Khủng long đang trong trạng thái giao tranh (combat)! Vui lòng đợi 30 giây sau khi kết thúc combat và hồi đầy máu rồi thử lại."
+                            }, 400)
+                            return
             except Exception as ex_check:
                 print(f"[Teleport Pre-Check Warning] {ex_check}")
 
@@ -6358,6 +6465,45 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 self.send_json_response({"ok": False, "message": "Vui lòng nhập mã bạn bè!"}, 400)
 
                 return
+
+            # Kiểm tra trạng thái khủng long trước khi redeem bạn bè (Không bị thương, không chảy máu)
+            p_info = self.fetch_islepilot(f"/players/{steam_id}", bypass_cache=True)
+            if isinstance(p_info, dict):
+                hp = p_info.get("health")
+                max_hp = p_info.get("maxHealth")
+                if hp is not None and max_hp is not None:
+                    try:
+                        curr_h = float(hp)
+                        max_h = float(max_hp)
+                        if max_h > 0 and curr_h < (max_h * 0.995):
+                            pct = round((curr_h / max_h) * 100, 1)
+                            self.send_json_response({
+                                "ok": False,
+                                "success": False,
+                                "message": f"⚠️ Khủng long đang bị thương (Máu: {int(curr_h):,}/{int(max_h):,} HP - {pct}%)! Chỉ khủng long đạt 100% máu mới được phép dịch chuyển bạn bè."
+                            }, 400)
+                            return
+                    except Exception:
+                        pass
+                bleed = p_info.get("bleed")
+                if bleed is not None:
+                    try:
+                        if float(bleed) > 0.01:
+                            self.send_json_response({
+                                "ok": False,
+                                "success": False,
+                                "message": "⚠️ Khủng long đang bị chảy máu! Vui lòng nằm nghỉ cầm máu trước khi dịch chuyển bạn bè."
+                            }, 400)
+                            return
+                    except Exception:
+                        pass
+                if p_info.get("inCombat") is True:
+                    self.send_json_response({
+                        "ok": False,
+                        "success": False,
+                        "message": "⚠️ Khủng long đang trong giao tranh (combat)! Vui lòng đợi 30s sau combat rồi thử lại."
+                    }, 400)
+                    return
 
             # Gọi trực tiếp IslePilot API để thực thi dịch chuyển bạn bè trực tiếp trong game
 

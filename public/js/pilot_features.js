@@ -4644,11 +4644,16 @@ const Teleport = {
     const balanceEl = document.getElementById('teleport-balance-val');
 
     try {
-      const res = await fetch('/api/server/teleport/locations');
+      const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
+      const steamIdParam = user && user.steamId ? `?steam_id=${user.steamId}` : '';
+      const res = await fetch(`/api/server/teleport/locations${steamIdParam}`);
       const data = await res.json();
       this.locations = data.locations || [];
       if (data.is_admin) {
         this.isAdmin = true;
+      }
+      if (data.dino_status) {
+        this.dinoStatus = data.dino_status;
       }
       if (typeof data.balance === 'number') {
         this.balance = data.balance;
@@ -4707,7 +4712,20 @@ const Teleport = {
       `;
     }).join('');
 
-    container.innerHTML = adminBannerHtml + cardsHtml;
+    let healthBannerHtml = '';
+    if (!isAdminUser && this.dinoStatus && !this.dinoStatus.can_teleport) {
+      healthBannerHtml = `
+        <div style="grid-column: 1 / -1; margin-bottom: 20px; background: rgba(239, 68, 68, 0.16); border: 1px solid rgba(239, 68, 68, 0.5); border-radius: 12px; padding: 14px 20px; display: flex; align-items: center; gap: 14px;">
+          <span style="font-size: 1.8rem;">🩸</span>
+          <div>
+            <div style="font-weight: 800; color: #f87171; font-size: 1.02rem;">KHỦNG LONG ĐANG BỊ THƯƠNG HOẶC CHẢY MÁU!</div>
+            <div style="color: #fecaca; font-size: 0.88rem; margin-top: 2px;">${this.dinoStatus.reason}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    container.innerHTML = adminBannerHtml + healthBannerHtml + cardsHtml;
     this.updateCooldownUI();
   },
 
@@ -4715,6 +4733,13 @@ const Teleport = {
     const isAdminUser = this.checkIsAdmin();
 
     if (!isAdminUser) {
+      if (this.dinoStatus && !this.dinoStatus.can_teleport) {
+        const msg = `⚠️ ${this.dinoStatus.reason}`;
+        if (window.App && window.App.showToast) App.showToast(msg);
+        else alert(msg);
+        return;
+      }
+
       const remaining = this.getCooldownRemaining();
       if (remaining > 0) {
         const msg = `⏳ Dịch chuyển đang hồi chiêu! Vui lòng đợi ${remaining} giây nữa.`;
