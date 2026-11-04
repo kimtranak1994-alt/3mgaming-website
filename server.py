@@ -1420,6 +1420,10 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
             return
 
+        elif self.path in ["/api/player/growth/lock", "/api/player/growth-lock", "/api/player/growth/toggle"]:
+            self.handle_player_growth_lock()
+            return
+
         elif self.path in ["/api/server/claims/claim", "/api/server/starter/claim"]:
             self.handle_claim_starter()
             return
@@ -2443,6 +2447,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 ttl = 3.5  # Cache 3.5s cho combat / killfeed
             elif clean_key == "/teleport/locations":
                 ttl = 60.0
+            elif clean_key == "/growth-overrides":
+                ttl = 5.0
             else:
                 ttl = 3.0
 
@@ -2857,14 +2863,24 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             })
             return
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
             f_player = executor.submit(self.fetch_islepilot, f"/players/{steam_id}")
             f_warnings = executor.submit(self.fetch_islepilot, f"/players/{steam_id}/warnings")
             f_garage = executor.submit(self.fetch_islepilot, f"/players/{steam_id}/garage")
+            f_growth = executor.submit(self.fetch_islepilot, "/growth-overrides")
 
             player_data = f_player.result() or {}
             warnings_data = f_warnings.result() or {}
             garage_data = f_garage.result() or {}
+            growth_data = f_growth.result() or {}
+
+        growth_overrides_list = growth_data.get("overrides", []) if isinstance(growth_data, dict) else []
+        growth_state = "resumed"
+        for ov in growth_overrides_list:
+            if isinstance(ov, dict) and str(ov.get("steamId", "")).strip() == str(steam_id).strip():
+                growth_state = str(ov.get("state", "resumed")).strip().lower()
+                break
+        is_growth_frozen = (growth_state == "frozen")
 
         if not isinstance(player_data, dict):
             player_data = {}
@@ -2958,6 +2974,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "gender_text": "C?i (Female ?)" if player_data.get("female") else "??c (Male ?)",
                 "growth": growth,
                 "growth_percent": growth_pct,
+                "is_growth_frozen": is_growth_frozen,
+                "growth_state": growth_state,
                 "stage": stage,
                 "is_prime_elder": is_prime_elder,
                 "prime_eligible": prime_eligible,
@@ -10669,6 +10687,54 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         except Exception as e:
             print(f"[Handle Claims Error] {e}")
             self.send_json_response({"ok": False, "error": str(e)}, 500)
+
+    def handle_player_growth_lock(self):
+        try:
+            length = int(self.headers.get("Content-Length", 0))
+            payload = json.loads(self.rfile.read(length).decode("utf-8")) if length > 0 else {}
+            
+            steam_id = payload.get("steam_id") or self.get_active_steam_id()
+            if not steam_id:
+                self.send_json_response({"ok": False, "error": "Vui lòng đăng nhập Steam trước khi điều chỉnh tăng trưởng!"}, 401)
+                return
+
+            sid_str = str(steam_id).strip()
+            action_type = str(payload.get("action", "")).strip().lower()
+            frozen_val = payload.get("frozen")
+            if frozen_val is not None:
+                target_frozen = bool(frozen_val)
+            else:
+                target_frozen = action_type in ["freeze", "lock", "stop", "true", "1"]
+
+            # Kiểm tra xem người chơi có khủng long đang sống không
+            p_info = self.fetch_islepilot(f"/players/{sid_str}")
+            if not isinstance(p_info, dict) or not p_info.get("species"):
+                self.send_json_response({"ok": False, "error": "Bạn hiện chưa có khủng long đang chơi trong game để điều chỉnh tăng trưởng!"}, 400)
+                return
+
+            # Gửi lệnh setgrowth (frozen: True / False) tới IslePilot Commands API
+            res = self.fetch_islepilot("/commands", method="POST", body_data={
+                "action": "setgrowth",
+                "steamId": sid_str,
+                "frozen": target_frozen
+            })
+
+            # Xóa cache
+            if hasattr(DinoRequestHandler, "_islepilot_cache"):
+                DinoRequestHandler._islepilot_cache.pop(f"/players/{sid_str}", None)
+                DinoRequestHandler._islepilot_cache.pop("/growth-overrides", None)
+
+            msg = "Đã khóa tăng trưởng khủng long thành công! (Tiến trình lớn đã được đóng băng trong game)" if target_frozen else "Đã mở khóa tăng trưởng thành công! (Khủng long sẽ tiếp tục lớn lên bình thường)"
+            self.send_json_response({
+                "ok": True,
+                "success": True,
+                "frozen": target_frozen,
+                "state": "frozen" if target_frozen else "resumed",
+                "message": msg
+            })
+        except Exception as e:
+            print(f"[Growth Lock Error] {e}")
+            self.send_json_response({"ok": False, "error": f"Lỗi máy chủ khi điều chỉnh tăng trưởng: {e}"}, 500)
 
     def handle_claim_starter(self):
         try:

@@ -174,6 +174,7 @@ const DinoInfo = {
 
     // Position Coordinates
     const pos = dino.position || {};
+    const is_frozen = Boolean(dino.is_growth_frozen || data.is_growth_frozen || (dino.growth_state === 'frozen'));
     const posStr = (pos.x !== null && pos.x !== undefined) ? `X: ${pos.x}, Y: ${pos.y}, Z: ${pos.z}` : 'Đang cập nhật...';
 
     // Mutation Slots
@@ -392,30 +393,37 @@ const DinoInfo = {
 
       </div>
 
-      <!-- GPS POSITION BAR -->
-      <div class="card" style="padding: 18px 24px; margin-bottom: 24px; background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 14px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+      <!-- BẢNG ĐIỀU KHIỂN KHÓA & TIẾP TỤC TĂNG TRƯỞNG DINO -->
+      <div class="card" style="padding: 20px 24px; margin-bottom: 24px; background: rgba(15, 23, 42, 0.9); border: 1px solid ${is_frozen ? 'rgba(56, 189, 248, 0.5)' : 'rgba(16, 185, 129, 0.4)'}; border-radius: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.35);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
           <div style="display: flex; align-items: center; gap: 14px;">
-            <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); display: flex; align-items: center; justify-content: center; font-size: 1.4rem;">
-              🧭
+            <div style="width: 48px; height: 48px; border-radius: 12px; background: ${is_frozen ? 'rgba(56, 189, 248, 0.15)' : 'rgba(16, 185, 129, 0.15)'}; border: 1px solid ${is_frozen ? 'rgba(56, 189, 248, 0.35)' : 'rgba(16, 185, 129, 0.35)'}; display: flex; align-items: center; justify-content: center; font-size: 1.55rem;">
+              ${is_frozen ? '❄️' : '🌱'}
             </div>
             <div>
-              <div style="font-size: 0.78rem; font-weight: 800; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.5px;">TỌA ĐỘ VỊ TRÍ GPS (LIVE COORDINATES)</div>
-              <div style="font-size: 1.15rem; font-weight: 800; color: #fff; font-family: monospace; letter-spacing: 0.5px;">
-                ${pos.x !== null ? `X: <b style="color: #38bdf8;">${pos.x}</b> &nbsp;&bull;&nbsp; Y: <b style="color: #38bdf8;">${pos.y}</b> &nbsp;&bull;&nbsp; Z (Độ cao): <b style="color: #38bdf8;">${pos.z}</b> &nbsp;&bull;&nbsp; Góc quay: <b style="color: #fbbf24;">${pos.yaw}°</b>` : 'Đang ở sảnh hoặc chưa định vị'}
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <div style="font-size: 0.78rem; font-weight: 800; color: ${is_frozen ? '#38bdf8' : '#34d399'}; text-transform: uppercase; letter-spacing: 0.5px;">
+                  TRẠNG THÁI TĂNG TRƯỞNG DINO (GROWTH CONTROL)
+                </div>
+                <span style="font-size: 0.75rem; font-weight: 800; padding: 2px 8px; border-radius: 6px; background: ${is_frozen ? 'rgba(56, 189, 248, 0.2)' : 'rgba(16, 185, 129, 0.2)'}; color: ${is_frozen ? '#38bdf8' : '#34d399'}; border: 1px solid ${is_frozen ? '#38bdf8' : '#10b981'};">
+                  ${is_frozen ? '❄️ ĐÃ ĐÓNG BĂNG TĂNG TRƯỞNG' : '🌱 ĐANG TĂNG TRƯỞNG BÌNH THƯỜNG'}
+                </span>
+              </div>
+              <div style="font-size: 0.98rem; font-weight: 700; color: #fff; margin-top: 4px;">
+                ${is_frozen 
+                  ? 'Tiến trình lớn của khủng long đang bị <span style="color: #38bdf8; font-weight: 800;">KHÓA (ĐÓNG BĂNG)</span> trong game.' 
+                  : 'Khủng long đang <span style="color: #34d399; font-weight: 800;">TĂNG TRƯỞNG</span> và tiếp nhận dinh dưỡng bình thường trong game.'}
               </div>
             </div>
           </div>
 
-          <div style="display: flex; align-items: center; gap: 10px;">
-            ${pos.x !== null ? `
-              <button onclick="DinoInfo.copyText('${posStr}', 'Tọa độ GPS')" class="btn-secondary" style="padding: 8px 14px; font-size: 0.84rem; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px;">
-                📋 Sao Chép Tọa Độ
-              </button>
-            ` : ''}
-            <a href="#map" class="btn-primary" style="padding: 8px 16px; font-size: 0.84rem; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
-              🗺️ Mở Bản Đồ Gateway
-            </a>
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <button onclick="DinoInfo.setGrowthLock(true)" class="btn-secondary" style="padding: 10px 18px; font-size: 0.88rem; font-weight: 800; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.2s; ${is_frozen ? 'background: rgba(56, 189, 248, 0.25); border: 1px solid #38bdf8; color: #38bdf8;' : 'border: 1px solid rgba(255,255,255,0.2);'}">
+              <span>❄️</span> Khóa Tăng Trưởng
+            </button>
+            <button onclick="DinoInfo.setGrowthLock(false)" class="btn-primary" style="padding: 10px 18px; font-size: 0.88rem; font-weight: 800; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.2s; ${!is_frozen ? 'background: linear-gradient(135deg, #059669, #10b981); border: 1px solid #34d399;' : ''}">
+              <span>🌱</span> Tiếp Tục Tăng Trưởng
+            </button>
           </div>
         </div>
       </div>
@@ -640,6 +648,54 @@ const DinoInfo = {
         </div>
       </div>
     `;
+  },
+
+  showToast(msg, type = 'info') {
+    if (window.App && typeof App.showToast === 'function') {
+      App.showToast(msg, type);
+    } else {
+      alert(msg);
+    }
+  },
+
+  async setGrowthLock(frozen) {
+    const actionText = frozen ? 'khóa (đóng băng)' : 'tiếp tục (mở khóa)';
+    if (!confirm('Bạn có chắc chắn muốn ' + actionText + ' tăng trưởng cho khủng long này trong game không?')) {
+      return;
+    }
+
+    try {
+      const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
+      const steamId = (user && (user.steamId || user.steam_id)) || (this.data && this.data.steam_id) || '';
+
+      const res = await fetch('/api/player/growth/lock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          steam_id: steamId,
+          frozen: frozen,
+          action: frozen ? 'freeze' : 'resume'
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        this.showToast(data.message || (frozen ? 'Đã khóa tăng trưởng thành công!' : 'Đã mở khóa tăng trưởng thành công!'), 'success');
+        if (this.data && this.data.dino) {
+          this.data.dino.is_growth_frozen = frozen;
+          this.data.dino.growth_state = frozen ? 'frozen' : 'resumed';
+          this.data.is_growth_frozen = frozen;
+          this.data.growth_state = frozen ? 'frozen' : 'resumed';
+          this.renderUI();
+        }
+        setTimeout(() => this.fetchData(true), 1000);
+      } else {
+        this.showToast(data.error || data.message || 'Thao tác điều chỉnh tăng trưởng thất bại!', 'error');
+      }
+    } catch (e) {
+      console.error('[GrowthLock Error]', e);
+      this.showToast('Lỗi kết nối máy chủ khi gửi lệnh tăng trưởng!', 'error');
+    }
   }
 };
 
