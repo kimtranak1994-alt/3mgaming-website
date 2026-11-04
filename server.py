@@ -1445,9 +1445,24 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 elif action == "setgrowth":
                     g_val = float(params.get("growth", 1.0))
                     if g_val > 1.0: g_val = g_val / 100.0
-                    cmd_body["growth"] = g_val
-                    cmd_body["frozen"] = bool(params.get("frozen", False))
-                    res = self.fetch_islepilot("/commands", method="POST", body_data=cmd_body)
+                    g_val = max(0.01, min(1.0, g_val))
+                    # 1. IslePilot set growth chuẩn xác nhất qua action setstats
+                    res = self.fetch_islepilot("/commands", method="POST", body_data={
+                        "action": "setstats",
+                        "steamId": str(target_steam_id),
+                        "growth": g_val
+                    })
+                    # 2. Xử lý setgrowth (frozen & growth)
+                    frozen_val = bool(params.get("frozen", False))
+                    self.fetch_islepilot("/commands", method="POST", body_data={
+                        "action": "setgrowth",
+                        "steamId": str(target_steam_id),
+                        "growth": g_val,
+                        "frozen": frozen_val
+                    })
+                    if hasattr(DinoRequestHandler, "_islepilot_cache"):
+                        DinoRequestHandler._islepilot_cache.pop(f"/players/{target_steam_id}", None)
+
                     if res and (res.get("ok") is True or "commandId" in res):
                         self.send_json_response({"ok": True, "result": res})
                     else:
@@ -1486,13 +1501,17 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     if "growth" in params:
                         g_val = float(params.get("growth", 1.0))
                         if g_val > 1.0: g_val = g_val / 100.0
+                        g_val = max(0.01, min(1.0, g_val))
+                        # QUAN TRỌNG: Gán growth trực tiếp vào cmd_body của action setstats!
+                        cmd_body["growth"] = g_val
+                        # Đảm bảo bỏ đóng băng tăng trưởng nếu có frozen: False
                         self.fetch_islepilot("/commands", method="POST", body_data={
                             "action": "setgrowth",
                             "steamId": str(target_steam_id),
                             "growth": g_val,
-                            "frozen": False
+                            "frozen": bool(params.get("frozen", False))
                         })
-                        time.sleep(0.1)
+                        time.sleep(0.05)
 
                     # 2. Stamina nếu có truyền
                     if "stamina" in params:
@@ -1501,7 +1520,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                             "steamId": str(target_steam_id),
                             "stamina": float(params.get("stamina", 1000.0))
                         })
-                        time.sleep(0.1)
+                        time.sleep(0.05)
 
                     # 3. Nutrition nếu có truyền
                     if any(k in params for k in ["carb", "protein", "lipid", "fat", "carbohydrate", "nutrA", "nutrB", "nutrY"]):
@@ -1515,15 +1534,21 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                             "protein": p_val,
                             "lipid": l_val
                         })
-                        time.sleep(0.1)
+                        time.sleep(0.05)
 
-                    cmd_body["health"] = float(params.get("health", 100))
-                    cmd_body["hunger"] = float(params.get("hunger", 100))
-                    cmd_body["thirst"] = float(params.get("thirst", 100))
+                    if "health" in params:
+                        cmd_body["health"] = float(params.get("health", 100))
+                    if "hunger" in params:
+                        cmd_body["hunger"] = float(params.get("hunger", 100))
+                    if "thirst" in params:
+                        cmd_body["thirst"] = float(params.get("thirst", 100))
                     if "bleed" in params:
                         cmd_body["bleed"] = float(params.get("bleed", 0))
 
                     res = self.fetch_islepilot("/commands", method="POST", body_data=cmd_body)
+                    if hasattr(DinoRequestHandler, "_islepilot_cache"):
+                        DinoRequestHandler._islepilot_cache.pop(f"/players/{target_steam_id}", None)
+
                     if res and (res.get("ok") is True or "commandId" in res):
                         self.send_json_response({"ok": True, "result": res})
                     else:

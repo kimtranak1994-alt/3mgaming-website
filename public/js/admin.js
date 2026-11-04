@@ -1625,7 +1625,10 @@ const AdminPanel = {
                     </div>
                     <div class="mod-field-box">
                       <label>Growth % (0 - 100%)</label>
-                      <input type="number" id="mod-val-growth" value="${growthVal}">
+                      <div style="display: flex; gap: 6px;">
+                        <input type="number" id="mod-val-growth" value="${growthVal}" min="1" max="100" style="flex: 1;">
+                        <button type="button" class="btn-secondary" style="padding: 4px 10px; font-size: 0.75rem; background: linear-gradient(135deg, #ff2a85, #d91b6e); color: #fff; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap; font-weight: 700;" onclick="AdminPanel.modSetOnlyGrowth('${p.steamId}')" title="Chỉ đổi Growth % ngay lập tức">Set %</button>
+                      </div>
                     </div>
                   </div>
 
@@ -2210,13 +2213,33 @@ const AdminPanel = {
     });
   },
 
+  async modSetOnlyGrowth(steamId) {
+    let rawGrowth = parseFloat(document.getElementById('mod-val-growth')?.value || 100);
+    if (isNaN(rawGrowth)) rawGrowth = 100;
+    const growth = rawGrowth > 1.0 ? (rawGrowth / 100) : rawGrowth;
+    const growthPercent = Math.round(growth * 100);
+
+    const gbVal = document.getElementById('mod-bar-val-growth');
+    const gbFill = document.getElementById('mod-bar-fill-growth');
+    if (gbVal) gbVal.textContent = `${growthPercent}%`;
+    if (gbFill) gbFill.style.width = `${Math.min(100, growthPercent)}%`;
+
+    const ok = await this.executeCommand('setgrowth', steamId, { growth, frozen: false });
+    if (ok) {
+      this.showNotification(`Đã set Growth ${growthPercent}% thành công!`, true);
+      setTimeout(() => this.openPlayerModerationModal(steamId, true), 1500);
+    }
+  },
+
   async modApplyStats(steamId) {
     const health = parseFloat(document.getElementById('mod-val-health')?.value || 100);
     const hunger = parseFloat(document.getElementById('mod-val-hunger')?.value || 100);
     const thirst = parseFloat(document.getElementById('mod-val-thirst')?.value || 100);
     const stamina = parseFloat(document.getElementById('mod-val-stamina')?.value || 1000);
     const bleed = parseFloat(document.getElementById('mod-val-bleed')?.value || 0);
-    const growth = parseFloat(document.getElementById('mod-val-growth')?.value || 100) / 100;
+    let rawGrowth = parseFloat(document.getElementById('mod-val-growth')?.value || 100);
+    if (isNaN(rawGrowth)) rawGrowth = 100;
+    const growth = rawGrowth > 1.0 ? (rawGrowth / 100) : rawGrowth;
 
     const carb = parseFloat(document.getElementById('mod-val-nutr-a')?.value || 100);
     const prot = parseFloat(document.getElementById('mod-val-nutr-b')?.value || 100);
@@ -2266,7 +2289,7 @@ const AdminPanel = {
       lipid: fat
     });
     if (ok) {
-      setTimeout(() => this.openPlayerModerationModal(steamId, true), 8000);
+      setTimeout(() => this.openPlayerModerationModal(steamId, true), 1500);
     }
   },
 
@@ -2340,7 +2363,7 @@ const AdminPanel = {
       maxThirst: curT
     });
     if (ok) {
-      setTimeout(() => this.openPlayerModerationModal(steamId, true), 8000);
+      setTimeout(() => this.openPlayerModerationModal(steamId, true), 1500);
     }
   },
 
