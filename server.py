@@ -471,39 +471,118 @@ def save_claimed_starter(data):
             except Exception as e:
                 print(f"Error saving claimed_starter to {fpath}: {e}")
 
-def _is_quest_claimed(steam_id, quest_id, period_key, progress_id, claimed_db):
+def _sync_claims_from_islepilot_wallet(steam_id, claimed_db=None):
+    """
+    Kéo lịch sử giao dịch từ IslePilot Cloud Wallet để đồng bộ và khôi phục
+    toàn bộ trạng thái nhận thưởng nhiệm vụ của người chơi ngay cả khi máy chủ
+    vừa restart hoặc deploy lại bản mới (bảo vệ tuyệt đối khỏi lỗi nhận trùng thưởng).
+    """
+    sid = str(steam_id).strip()
+    if not sid:
+        return {}
+    if claimed_db is None:
+        claimed_db = load_claimed_quests()
+
+    if sid not in claimed_db or not isinstance(claimed_db.get(sid), dict):
+        if not isinstance(claimed_db.get(sid), dict):
+            old_list = claimed_db.get(sid, []) if isinstance(claimed_db.get(sid), list) else []
+            claimed_db[sid] = {}
+            for old_id in old_list:
+                claimed_db[sid][str(old_id)] = {"quest_id": str(old_id), "period_key": "", "claimed_at": None}
+
+    api_key = config.get("ISLEPILOT_API_KEY", "").strip()
+    server_id = config.get("SERVER_ID", "cmv3zzfix02g3pj01yay0hw4g")
+    if not api_key:
+        return claimed_db.get(sid, {})
+
+    try:
+        url = f"https://islepilot.eu/api/v1/players/{sid}/wallet?serverId={server_id}"
+        req = urllib.request.Request(url, headers={
+            "Authorization": f"Bearer {api_key}",
+            "x-api-key": api_key,
+            "User-Agent": "3MGAMING-Server/2.0"
+        })
+        with urllib.request.urlopen(req, timeout=4.0) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            txs = data.get("transactions", [])
+            has_new = False
+            for t in txs:
+                reason = str(t.get("reason") or "").strip()
+                if "thưởng hoàn thành nhiệm vụ:" in reason.lower():
+                    m = re.search(r"thưởng hoàn thành nhiệm vụ:\s*(.*?)(?:\s*\(([^)]+)\))?$", reason, re.IGNORECASE)
+                    if m:
+                        qname = m.group(1).strip()
+                        pkey = m.group(2).strip() if m.group(2) else ""
+                        amt = t.get("amount", 0)
+                        created_at = t.get("createdAt") or None
+                        ckey = f"tx_{qname.lower()}_{pkey}" if pkey else f"tx_{qname.lower()}"
+                        if ckey not in claimed_db[sid]:
+                            claimed_db[sid][ckey] = {
+                                "quest_id": ckey,
+                                "quest_name": qname,
+                                "period_key": pkey,
+                                "amount": amt,
+                                "claimed_at": created_at,
+                                "from_wallet_history": True
+                            }
+                            has_new = True
+            if has_new:
+                save_claimed_quests(claimed_db)
+    except Exception:
+        pass
+
+    return claimed_db.get(sid, {})
+
+def _is_quest_claimed(steam_id, quest_id, period_key, progress_id, claimed_db, quest_name=None):
     sid = str(steam_id).strip()
     qid = str(quest_id).strip()
     pkey = str(period_key or "").strip()
     pid = str(progress_id or "").strip()
+    qname = str(quest_name or "").strip().lower()
 
-    user_claims = claimed_db.get(sid)
-    if not user_claims:
-        return False, None
-
-    # 1. Trường hợp lưu kiểu Dict (Mới, chuẩn xác theo ngày/tuần)
-    if isinstance(user_claims, dict):
+    def _check_dict(claims):
+        if not isinstance(claims, dict):
+            return False, None
         if pkey:
             claim_key = f"{qid}_{pkey}"
-            if claim_key in user_claims:
-                rec = user_claims[claim_key]
+            if claim_key in claims:
+                rec = claims[claim_key]
                 return True, rec.get("claimed_at") if isinstance(rec, dict) else str(rec)
-        if pid and pid in user_claims:
-            rec = user_claims[pid]
+        if pid and pid in claims:
+            rec = claims[pid]
             return True, rec.get("claimed_at") if isinstance(rec, dict) else str(rec)
         if pkey:
-            for k, rec in user_claims.items():
+            for k, rec in claims.items():
                 if isinstance(rec, dict) and str(rec.get("quest_id")) == qid and str(rec.get("period_key")) == pkey:
                     return True, rec.get("claimed_at")
+                if qname and isinstance(rec, dict) and str(rec.get("quest_name", "")).strip().lower() == qname and str(rec.get("period_key")) == pkey:
+                    return True, rec.get("claimed_at")
+        if qname:
+            for k, rec in claims.items():
+                if isinstance(rec, dict) and str(rec.get("quest_name", "")).strip().lower() == qname:
+                    if not pkey or str(rec.get("period_key")) == pkey:
+                        return True, rec.get("claimed_at")
+        return False, None
 
-    # 2. Trường hợp tương thích ngược dữ liệu List cũ
-    elif isinstance(user_claims, list):
-        if pkey and f"{qid}_{pkey}" in user_claims:
-            return True, None
-        if pid and pid in user_claims:
-            return True, None
-        if qid in user_claims:
-            return True, None
+    user_claims = claimed_db.get(sid)
+    if user_claims:
+        if isinstance(user_claims, dict):
+            found, at = _check_dict(user_claims)
+            if found:
+                return True, at
+        elif isinstance(user_claims, list):
+            if pkey and f"{qid}_{pkey}" in user_claims:
+                return True, None
+            if pid and pid in user_claims:
+                return True, None
+            if qid in user_claims:
+                return True, None
+
+    # Đồng bộ từ ví IslePilot trên đám mây để tránh lỗi mất file khi deploy / update web
+    synced = _sync_claims_from_islepilot_wallet(sid, claimed_db)
+    found, at = _check_dict(synced)
+    if found:
+        return True, at
 
     return False, None
 
@@ -640,7 +719,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             return True, "passcode"
 
         admin_steam_ids = [str(sid) for sid in config.get("ADMIN_STEAM_IDS", [
-            "76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684", "76561199319732549", "76561198749916921"
+            "76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684", "76561198749916921"
         ])]
         admin_discord_ids = [str(did) for did in config.get("ADMIN_DISCORD_IDS", [
             "749270027605114922"
@@ -940,7 +1019,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             q_params = urllib.parse.parse_qs(query)
             target_sid = str(q_params.get("steam_id", [None])[0] or q_params.get("admin_steam_id", [None])[0] or active_steam_id or "").strip()
 
-            map_admin_sids = [str(sid).strip() for sid in config.get("MAP_ONLY_ADMIN_STEAM_IDS", ["76561199319732549"])]
+            map_admin_sids = [str(sid).strip() for sid in config.get("MAP_ONLY_ADMIN_STEAM_IDS", [])]
             is_map_admin = is_admin or (target_sid in map_admin_sids)
 
             self.send_response(200)
@@ -1391,7 +1470,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
             if not is_admin:
                 admin_steam_ids = [str(sid) for sid in config.get("ADMIN_STEAM_IDS", [
-                    "76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684", "76561199319732549", "76561198749916921"
+                    "76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684", "76561198749916921"
                 ])]
                 req_admin_sid = str(payload.get("admin_steam_id") or self.headers.get("X-Admin-Steam-Id") or "")
                 req_passcode = str(payload.get("passcode") or self.headers.get("X-Admin-Passcode") or "")
@@ -2993,7 +3072,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         active_sid = str(target_steam_id or cookie_sid or "").strip()
 
         is_admin, _ = self.is_admin_request()
-        map_admin_sids = [str(sid).strip() for sid in config.get("MAP_ONLY_ADMIN_STEAM_IDS", ["76561199319732549"])]
+        map_admin_sids = [str(sid).strip() for sid in config.get("MAP_ONLY_ADMIN_STEAM_IDS", [])]
         is_map_admin = is_admin or (active_sid in map_admin_sids)
 
         # CHỈ khi đang ở chế độ Quản trị (mode=admin) VÀ có quyền Admin/MapAdmin mới trả về toàn bộ người chơi
@@ -6156,7 +6235,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         try:
             is_adm, _ = self.is_admin_request()
             admin_sids = [str(sid) for sid in config.get("ADMIN_STEAM_IDS", [
-                "76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684", "76561199319732549", "76561198749916921"
+                "76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684", "76561198749916921"
             ])]
             if is_adm or (steam_id and str(steam_id) in admin_sids):
                 is_admin = True
@@ -6237,7 +6316,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             try:
                 is_adm, _ = self.is_admin_request()
                 admin_sids = [str(sid) for sid in config.get("ADMIN_STEAM_IDS", [
-                    "76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684", "76561199319732549", "76561198749916921"
+                    "76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684", "76561198749916921"
                 ])]
                 req_admin_sid = str(payload.get("admin_steam_id") or self.headers.get("X-Admin-Steam-Id") or "")
                 req_passcode = str(payload.get("passcode") or self.headers.get("X-Admin-Passcode") or "")
@@ -6801,7 +6880,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
                 ref_code = found
 
-            elif steam_id in ["76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684", "76561199319732549", "76561198749916921"]:
+            elif steam_id in ["76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684", "76561198749916921"]:
 
                 ref_code = "JCD9JR"
 
@@ -7148,7 +7227,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
                 ref_code = found
 
-            elif steam_id in ["76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684", "76561199319732549", "76561198749916921"]:
+            elif steam_id in ["76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684", "76561198749916921"]:
 
                 ref_code = "JCD9JR"
 
@@ -7874,7 +7953,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
                 ref_code = found
 
-            elif steam_id in ["76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684", "76561199319732549", "76561198749916921"]:
+            elif steam_id in ["76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684", "76561198749916921"]:
 
                 ref_code = "JCD9JR"
 
@@ -8221,7 +8300,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
                 ref_code = found
 
-            elif steam_id in ["76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684", "76561199319732549", "76561198749916921"]:
+            elif steam_id in ["76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684", "76561198749916921"]:
 
                 ref_code = "JCD9JR"
 
@@ -8488,9 +8567,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     self.send_json_response({"ok": False, "message": "Bạn chưa hoàn thành tiến độ nhiệm vụ này trong game!"}, 400)
                     return
 
-            # 2. Kiểm tra bộ nhớ cache khóa theo chu kỳ ngày / tuần
+            # 2. Kiểm tra bộ nhớ cache khóa theo chu kỳ ngày / tuần (và đồng bộ ví IslePilot)
             claimed_db = load_claimed_quests()
-            is_claimed, _ = _is_quest_claimed(steam_id, quest_id, period_key, progress_id, claimed_db)
+            is_claimed, _ = _is_quest_claimed(steam_id, quest_id, period_key, progress_id, claimed_db, quest_name=quest_name)
             if is_claimed:
                 time_unit = "ngày hôm nay" if period == "daily" else "tuần này"
                 self.send_json_response({
@@ -8577,7 +8656,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
                 ref_code = found
 
-            elif steam_id in ["76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684", "76561199319732549", "76561198749916921"]:
+            elif steam_id in ["76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684", "76561198749916921"]:
 
                 ref_code = "JCD9JR"
 
@@ -8924,7 +9003,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
                 ref_code = found
 
-            elif steam_id in ["76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684", "76561199319732549", "76561198749916921"]:
+            elif steam_id in ["76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684", "76561198749916921"]:
 
                 ref_code = "JCD9JR"
 
@@ -9650,7 +9729,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
                 ref_code = found
 
-            elif steam_id in ["76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684", "76561199319732549", "76561198749916921"]:
+            elif steam_id in ["76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684", "76561198749916921"]:
 
                 ref_code = "JCD9JR"
 
@@ -9997,7 +10076,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
                 ref_code = found
 
-            elif steam_id in ["76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684", "76561199319732549", "76561198749916921"]:
+            elif steam_id in ["76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684", "76561198749916921"]:
 
                 ref_code = "JCD9JR"
 
@@ -10195,11 +10274,12 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 if not period_key:
                     period_key = week_vn if period == "weekly" else today_vn
 
+                quest_name = str(q.get("name") or "").strip()
                 if is_guest:
                     # Khách chưa đăng nhập: hiển thị trạng thái chưa nhận để người chơi xem danh sách nhiệm vụ
                     q["claimedAt"] = None
                 else:
-                    is_claimed, claimed_at = _is_quest_claimed(target_steam_id, q_id, period_key, prog_id, claimed_db)
+                    is_claimed, claimed_at = _is_quest_claimed(target_steam_id, q_id, period_key, prog_id, claimed_db, quest_name=quest_name)
                     if is_claimed and not q.get("claimedAt"):
                         q["claimedAt"] = claimed_at or datetime.datetime.now(datetime.timezone.utc).isoformat()
 
@@ -10271,9 +10351,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     self.send_json_response({"ok": False, "message": "Bạn chưa hoàn thành tiến độ nhiệm vụ này trong game!"}, 400)
                     return
 
-            # 2. Kiểm tra bộ nhớ cache khóa theo chu kỳ ngày / tuần
+            # 2. Kiểm tra bộ nhớ cache khóa theo chu kỳ ngày / tuần (và đồng bộ ví IslePilot)
             claimed_db = load_claimed_quests()
-            is_claimed, _ = _is_quest_claimed(steam_id, quest_id, period_key, progress_id, claimed_db)
+            is_claimed, _ = _is_quest_claimed(steam_id, quest_id, period_key, progress_id, claimed_db, quest_name=quest_name)
             if is_claimed:
                 time_unit = "ngày hôm nay" if period == "daily" else "tuần này"
                 self.send_json_response({
@@ -10352,7 +10432,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
                 ref_code = found
 
-            elif steam_id in ["76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684", "76561199319732549", "76561198749916921"]:
+            elif steam_id in ["76561199175571899", "76561199196418178", "76561199062270730", "76561199483156684", "76561198749916921"]:
 
                 ref_code = "JCD9JR"
 
@@ -10604,6 +10684,27 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             with _starter_claim_lock:
                 claimed_db = load_claimed_starter()
                 # Kiểm tra chặt chẽ: Mỗi tài khoản chỉ được nhận 1 lần duy nhất, tuyệt đối không bypass
+                if sid_str not in claimed_db:
+                    try:
+                        api_key = config.get("ISLEPILOT_API_KEY", "").strip()
+                        server_id = config.get("SERVER_ID", "cmv3zzfix02g3pj01yay0hw4g")
+                        if api_key:
+                            url = f"https://islepilot.eu/api/v1/players/{sid_str}/wallet?serverId={server_id}"
+                            req = urllib.request.Request(url, headers={"Authorization": f"Bearer {api_key}", "x-api-key": api_key, "User-Agent": "3MGAMING-Server/2.0"})
+                            with urllib.request.urlopen(req, timeout=4.0) as resp:
+                                w_data = json.loads(resp.read().decode("utf-8"))
+                                for t in w_data.get("transactions", []):
+                                    r_str = str(t.get("reason") or "").lower()
+                                    if "tân thủ" in r_str or "starter" in r_str:
+                                        claimed_db[sid_str] = {
+                                            "claimed_at": t.get("createdAt") or datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                                            "from_wallet_history": True
+                                        }
+                                        save_claimed_starter(claimed_db)
+                                        break
+                    except Exception:
+                        pass
+
                 if sid_str in claimed_db:
                     self.send_json_response({
                         "ok": False,

@@ -1,0 +1,44 @@
+{
+  "76561199175571899": {
+    "tx_đăng nhập tuần_2026-11-04": {
+      "quest_id": "tx_đăng nhập tuần_2026-11-04",
+      "quest_name": "đăng nhập tuần",
+      "period_key": "2026-11-04",
+      "amount": 1000,
+      "claimed_at": null,
+      "from_wallet_history": true
+    },
+    "tx_thợ săn bất bại_2026-10-29": {
+      "quest_id": "tx_thợ săn bất bại_2026-10-29",
+      "quest_name": "thợ săn bất bại",
+      "period_key": "2026-10-29",
+      "amount": 300,
+      "claimed_at": null,
+      "from_wallet_history": true
+    },
+    "tx_đăng nhập tuần_2026-W45": {
+      "quest_id": "tx_đăng nhập tuần_2026-W45",
+      "quest_name": "đăng nhập tuần",
+      "period_key": "2026-W45",
+      "amount": 1000,
+      "claimed_at": null,
+      "from_wallet_history": true
+    },
+    "tx_đăng nhập hàng ngày_2026-11-03": {
+      "quest_id": "tx_đăng nhập hàng ngày_2026-11-03",
+      "quest_name": "đăng nhập hàng ngày",
+      "period_key": "2026-11-03",
+      "amount": 50,
+      "claimed_at": null,
+      "from_wallet_history": true
+    },
+    "tx_hoạt động hàng ngày_2026-11-03": {
+      "quest_id": "tx_hoạt động hàng ngày_2026-11-03",
+      "quest_name": "hoạt động hàng ngày",
+      "period_key": "2026-11-03",
+      "amount": 400,
+      "claimed_at": null,
+      "from_wallet_history": true
+    }
+  }
+}
