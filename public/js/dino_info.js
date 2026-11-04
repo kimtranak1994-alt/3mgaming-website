@@ -174,7 +174,7 @@ const DinoInfo = {
 
     // Position Coordinates
     const pos = dino.position || {};
-    const is_frozen = Boolean(dino.is_growth_frozen || data.is_growth_frozen || (dino.growth_state === 'frozen'));
+    const is_frozen = Boolean(dino.is_growth_frozen || (this.data && this.data.is_growth_frozen) || (dino.growth_state === 'frozen'));
     const posStr = (pos.x !== null && pos.x !== undefined) ? `X: ${pos.x}, Y: ${pos.y}, Z: ${pos.z}` : 'Đang cập nhật...';
 
     // Mutation Slots
