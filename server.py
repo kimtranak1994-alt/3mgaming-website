@@ -646,8 +646,12 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             "749270027605114922"
         ])]
 
-        # 0. Kiểm tra admin_steam_id hoặc header X-Admin-Steam-Id
+        # 0. Chặn tuyệt đối các ID bị thu hồi quyền Admin
+        blocked_admin_ids = {"1550441639296892938"}
+
         admin_sid = q_params.get("admin_steam_id", [None])[0] or self.headers.get("X-Admin-Steam-Id")
+        if admin_sid and str(admin_sid) in blocked_admin_ids:
+            return False, None
         if admin_sid and str(admin_sid) in admin_steam_ids:
             return True, f"admin_steam:{admin_sid}"
 
@@ -664,6 +668,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
         if actual_steam_id:
             actual_steam_id = str(actual_steam_id)
+            if actual_steam_id in blocked_admin_ids:
+                return False, None
             if actual_steam_id in admin_steam_ids:
                 return True, f"steam:{actual_steam_id}"
             
@@ -673,6 +679,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 if player_info and isinstance(player_info, dict):
                     discord_info = player_info.get("discord") or {}
                     discord_id = str(discord_info.get("id", ""))
+                    if discord_id and discord_id in blocked_admin_ids:
+                        return False, None
                     if discord_id and discord_id in admin_discord_ids:
                         return True, f"discord:{discord_id}"
             except Exception:
@@ -685,6 +693,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             if match_d:
                 discord_id_param = match_d.group(1)
 
+        if discord_id_param and str(discord_id_param) in blocked_admin_ids:
+            return False, None
         if discord_id_param and str(discord_id_param) in admin_discord_ids:
             return True, f"discord:{discord_id_param}"
 
@@ -960,9 +970,12 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
             live_map = {str(p.get("steamId")): p for p in live_players if p.get("steamId")}
 
+            excluded_admin_players = {"1550441639296892938"}
             merged = []
             for entry in lb_entries:
                 sid = str(entry.get("steamId", "")).strip()
+                if sid in excluded_admin_players:
+                    continue
                 live_p = live_map.pop(sid, None)
                 is_online = bool(live_p and live_p.get("online") is not False)
                 kills = entry.get("kills", 0)
@@ -994,6 +1007,11 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
             # Những người chơi đang online nhưng chưa có trong leaderboard
             for sid, live_p in live_map.items():
+                if sid in excluded_admin_players:
+                    continue
+                d_id = str((live_p.get("discord") or {}).get("id") or "")
+                if d_id in excluded_admin_players:
+                    continue
                 merged.append({
                     "steamId": sid,
                     "steam_id": sid,

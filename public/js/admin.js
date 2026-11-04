@@ -508,7 +508,8 @@ const AdminPanel = {
       if (res.ok) {
         const data = await res.json();
         let raw = data.players || [];
-        this.players = raw;
+        const excludedAdminSids = ['1550441639296892938'];
+        this.players = raw.filter(p => !excludedAdminSids.includes(String(p.steamId)) && !excludedAdminSids.includes(String(p.steam_id)));
         this.updateStatsCounters();
         this.renderPlayersList();
         this.renderVitalsTargetDropdown();
@@ -621,7 +622,10 @@ const AdminPanel = {
     const listEl = document.getElementById('admin-players-list');
     if (!listEl) return;
 
+    const excludedAdminSids = ['1550441639296892938'];
     let filtered = this.players.filter(p => {
+      const sid = String(p.steamId || p.steam_id || '');
+      if (excludedAdminSids.includes(sid)) return false;
       if (this.searchQuery) {
         const name = (p.name || '').toLowerCase();
         const sid = (p.steamId || '').toLowerCase();
