@@ -217,15 +217,17 @@ const Garage = {
     const maxSlots = Math.max(this.slotsTotal || 5, count);
 
     if (slotBadge) {
-      slotBadge.textContent = `${count} / ${maxSlots} Khủng Long`;
+      // Hiển thị dạng ngắn gọn "4/5" hoặc "4/15" theo yêu cầu, tránh chồng chéo chữ
+      slotBadge.textContent = count >= maxSlots ? `${count}/${maxSlots} (Đầy)` : `${count}/${maxSlots}`;
+      slotBadge.title = `Số lượng khủng long trong Gara: ${count}/${maxSlots}`;
       if (count >= maxSlots) {
         slotBadge.style.borderColor = '#ef4444';
         slotBadge.style.color = '#f87171';
-        slotBadge.style.background = 'rgba(239, 68, 68, 0.15)';
+        slotBadge.style.background = 'rgba(239, 68, 68, 0.18)';
       } else {
         slotBadge.style.borderColor = 'var(--accent)';
         slotBadge.style.color = 'var(--accent)';
-        slotBadge.style.background = '';
+        slotBadge.style.background = 'rgba(255, 42, 133, 0.15)';
       }
     }
 
@@ -233,19 +235,19 @@ const Garage = {
       const tier = this.garageTier || 1;
       tierBadge.style.display = 'inline-flex';
       if (tier === 3) {
-        tierBadge.textContent = '👑 Cấp 3 (15 Slot VIP)';
+        tierBadge.textContent = '👑 Cấp 3 VIP';
         tierBadge.style.background = 'linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.35))';
         tierBadge.style.borderColor = '#f59e0b';
         tierBadge.style.color = '#fbbf24';
       } else if (tier === 2) {
-        tierBadge.textContent = '⭐ Cấp 2 (10 Slot VIP)';
+        tierBadge.textContent = '⭐ Cấp 2 VIP';
         tierBadge.style.background = 'rgba(56, 189, 248, 0.2)';
         tierBadge.style.borderColor = '#38bdf8';
         tierBadge.style.color = '#38bdf8';
       } else {
-        tierBadge.textContent = '🛡️ Cấp 1 (5 Slot)';
+        tierBadge.textContent = '🛡️ Cấp 1';
         tierBadge.style.background = 'rgba(148, 163, 184, 0.15)';
-        tierBadge.style.borderColor = 'rgba(148, 163, 184, 0.35)';
+        tierBadge.style.borderColor = 'rgba(148, 163, 184, 0.4)';
         tierBadge.style.color = '#cbd5e1';
       }
     }
