@@ -212,10 +212,42 @@ const Garage = {
 
   updateSlotsBadge() {
     const slotBadge = document.getElementById('garage-slots-badge');
+    const tierBadge = document.getElementById('garage-tier-badge');
+    const count = (this.dinos || []).length;
+    const maxSlots = Math.max(this.slotsTotal || 5, count);
+
     if (slotBadge) {
-      const count = (this.dinos || []).length;
-      const maxSlots = Math.max(this.slotsTotal || 5, count);
       slotBadge.textContent = `${count} / ${maxSlots} Khủng Long`;
+      if (count >= maxSlots) {
+        slotBadge.style.borderColor = '#ef4444';
+        slotBadge.style.color = '#f87171';
+        slotBadge.style.background = 'rgba(239, 68, 68, 0.15)';
+      } else {
+        slotBadge.style.borderColor = 'var(--accent)';
+        slotBadge.style.color = 'var(--accent)';
+        slotBadge.style.background = '';
+      }
+    }
+
+    if (tierBadge) {
+      const tier = this.garageTier || 1;
+      tierBadge.style.display = 'inline-flex';
+      if (tier === 3) {
+        tierBadge.textContent = '👑 Cấp 3 (15 Slot VIP)';
+        tierBadge.style.background = 'linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.35))';
+        tierBadge.style.borderColor = '#f59e0b';
+        tierBadge.style.color = '#fbbf24';
+      } else if (tier === 2) {
+        tierBadge.textContent = '⭐ Cấp 2 (10 Slot VIP)';
+        tierBadge.style.background = 'rgba(56, 189, 248, 0.2)';
+        tierBadge.style.borderColor = '#38bdf8';
+        tierBadge.style.color = '#38bdf8';
+      } else {
+        tierBadge.textContent = '🛡️ Cấp 1 (5 Slot)';
+        tierBadge.style.background = 'rgba(148, 163, 184, 0.15)';
+        tierBadge.style.borderColor = 'rgba(148, 163, 184, 0.35)';
+        tierBadge.style.color = '#cbd5e1';
+      }
     }
   },
 
@@ -262,7 +294,9 @@ const Garage = {
         const sig = (arr) => arr.map(d => `${d.id}:${d.name || ''}:${d.growth_percent}:${d.health}:${d.hunger}:${d.thirst}`).join('|');
         if (sig(this.dinos || []) !== sig(newDinos)) {
           this.dinos = newDinos;
-          this.slotsTotal = Math.max(data.slots_total || 5, newDinos.length);
+          this.slotsTotal = Math.max(data.slots_total || data.max_slots || 5, newDinos.length);
+          this.garageTier = data.garage_tier || this.garageTier || 1;
+          this.garageTierName = data.garage_tier_name || this.garageTierName || 'Cấp 1 (Chuẩn 5 Slot)';
           this.updateSlotsBadge();
           this.displayDinos(this.dinos, this.currentMode);
         }
@@ -304,7 +338,10 @@ const Garage = {
         </div>
       `;
       const slotBadge = document.getElementById('garage-slots-badge');
-      if (slotBadge) slotBadge.textContent = `0 / ${data && data.slots_total ? data.slots_total : 5} Khủng Long`;
+      this.slotsTotal = Math.max(data.slots_total || data.max_slots || 5, 0);
+      this.garageTier = data.garage_tier || 1;
+      this.garageTierName = data.garage_tier_name || 'Cấp 1 (Chuẩn 5 Slot)';
+      this.updateSlotsBadge();
       return;
     }
 
@@ -316,7 +353,9 @@ const Garage = {
       }
     });
     this.dinos = (data.dinos || []).filter(d => d.source === 'islepilot' || !deletedList.includes(String(d.id)));
-    this.slotsTotal = Math.max(data.slots_total || 5, this.dinos.length);
+    this.slotsTotal = Math.max(data.slots_total || data.max_slots || 5, this.dinos.length);
+    this.garageTier = data.garage_tier || 1;
+    this.garageTierName = data.garage_tier_name || 'Cấp 1 (Chuẩn 5 Slot)';
 
     this.updateSlotsBadge();
     this.displayDinos(this.dinos, this.currentMode);
@@ -609,6 +648,17 @@ const Garage = {
 
   async actionStore() {
     if (this.isStoring) return;
+
+    const currentCount = (this.dinos || []).length;
+    if (currentCount >= this.slotsTotal) {
+      const tierName = this.garageTierName || ('Cấp ' + (this.garageTier || 1));
+      if (window.App && window.App.showToast) {
+        window.App.showToast(`⚠️ Gara của bạn (${tierName}) đã đạt giới hạn tối đa ${this.slotsTotal} slot (${currentCount}/${this.slotsTotal})! Vui lòng xóa bớt hoặc rút khủng long ra trước khi cất thêm.`, "error");
+      } else {
+        alert(`Gara của bạn đã đầy (${currentCount}/${this.slotsTotal} slot)!`);
+      }
+      return;
+    }
 
     const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
     const steamId = user ? user.steamId : '76561199259679997';

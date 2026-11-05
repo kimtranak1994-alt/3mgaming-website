@@ -173,6 +173,34 @@ def calc_dino_stats(species_name, growth, health_val, hunger_val, thirst_val, is
 CUSTOM_NAMES_FILE = os.path.join(os.path.dirname(__file__), "dino_names.json")
 DELETED_GARAGE_FILE = os.path.join(os.path.dirname(__file__), "deleted_garage_dinos.json")
 
+def get_player_garage_tier_and_slots(steam_id):
+    sid = str(steam_id or "").strip()
+    tier2_ids = set()
+    tier3_ids = set()
+
+    for s in config.get("GARAGE_TIER2_STEAM_IDS", []):
+        if str(s).strip():
+            tier2_ids.add(str(s).strip())
+    for s in config.get("GARAGE_TIER3_STEAM_IDS", []):
+        if str(s).strip():
+            tier3_ids.add(str(s).strip())
+
+    cfg_slots = config.get("GARAGE_SLOTS_CONFIG", {})
+    if isinstance(cfg_slots, dict):
+        for s in cfg_slots.get("tier2_steam_ids", []):
+            if str(s).strip():
+                tier2_ids.add(str(s).strip())
+        for s in cfg_slots.get("tier3_steam_ids", []):
+            if str(s).strip():
+                tier3_ids.add(str(s).strip())
+
+    if sid and sid in tier3_ids:
+        return 3, 15, "Cấp 3 (VIP 15 Slot)"
+    elif sid and sid in tier2_ids:
+        return 2, 10, "Cấp 2 (VIP 10 Slot)"
+    else:
+        return 1, int(config.get("MAX_GARAGE_SLOTS", 5)), "Cấp 1 (Chuẩn 5 Slot)"
+
 def load_deleted_dinos():
     base_dir = os.path.dirname(os.path.abspath(__file__))
     primary_file = os.path.join(base_dir, "deleted_garage_dinos.json")
@@ -1221,10 +1249,17 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             if not is_admin:
                 self.send_json_response({"ok": False, "error": "Unauthorized"}, status=403)
                 return
+            t2 = config.get("GARAGE_TIER2_STEAM_IDS", [])
+            t3 = config.get("GARAGE_TIER3_STEAM_IDS", [])
             self.send_json_response({
                 "ok": True,
                 "maxSlots": config.get("MAX_GARAGE_SLOTS", 5),
-                "parkSeconds": config.get("GARAGE_PARK_SECONDS", 30)
+                "parkSeconds": config.get("GARAGE_PARK_SECONDS", 30),
+                "tier1_slots": 5,
+                "tier2_slots": 10,
+                "tier3_slots": 15,
+                "tier2_steam_ids": t2,
+                "tier3_steam_ids": t3
             })
             return
 
@@ -2034,11 +2069,37 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     config["MAX_GARAGE_SLOTS"] = int(payload["maxSlots"])
                 if "parkSeconds" in payload:
                     config["GARAGE_PARK_SECONDS"] = int(payload["parkSeconds"])
+                if "tier2_steam_ids" in payload:
+                    raw2 = payload["tier2_steam_ids"]
+                    if isinstance(raw2, str):
+                        t2_arr = [s.strip() for s in re.split(r"[\s,;]+", raw2) if s.strip()]
+                    elif isinstance(raw2, list):
+                        t2_arr = [str(s).strip() for s in raw2 if str(s).strip()]
+                    else:
+                        t2_arr = []
+                    config["GARAGE_TIER2_STEAM_IDS"] = t2_arr
+                    config.setdefault("GARAGE_SLOTS_CONFIG", {})["tier2_steam_ids"] = t2_arr
+                if "tier3_steam_ids" in payload:
+                    raw3 = payload["tier3_steam_ids"]
+                    if isinstance(raw3, str):
+                        t3_arr = [s.strip() for s in re.split(r"[\s,;]+", raw3) if s.strip()]
+                    elif isinstance(raw3, list):
+                        t3_arr = [str(s).strip() for s in raw3 if str(s).strip()]
+                    else:
+                        t3_arr = []
+                    config["GARAGE_TIER3_STEAM_IDS"] = t3_arr
+                    config.setdefault("GARAGE_SLOTS_CONFIG", {})["tier3_steam_ids"] = t3_arr
+
                 save_config(config)
                 self.send_json_response({
                     "ok": True,
                     "maxSlots": config.get("MAX_GARAGE_SLOTS", 5),
-                    "parkSeconds": config.get("GARAGE_PARK_SECONDS", 30)
+                    "parkSeconds": config.get("GARAGE_PARK_SECONDS", 30),
+                    "tier1_slots": 5,
+                    "tier2_slots": 10,
+                    "tier3_slots": 15,
+                    "tier2_steam_ids": config.get("GARAGE_TIER2_STEAM_IDS", []),
+                    "tier3_steam_ids": config.get("GARAGE_TIER3_STEAM_IDS", [])
                 })
             except Exception as e:
                 self.send_json_response({"ok": False, "error": str(e)}, status=500)
@@ -2967,6 +3028,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             "last_seen_at": player_data.get("lastSeenAt"),
             "has_active_dino": has_active_dino,
             "garage_count": len(valid_garage_list),
+            "garage_tier": get_player_garage_tier_and_slots(steam_id)[0],
+            "garage_max_slots": get_player_garage_tier_and_slots(steam_id)[1],
+            "garage_tier_name": get_player_garage_tier_and_slots(steam_id)[2],
             "dino": {
                 "species": species,
                 "female": bool(player_data.get("female", False)),
@@ -5512,9 +5576,13 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 except Exception:
                     pass
 
-                total_slots = max(int(config.get("MAX_GARAGE_SLOTS", 5)), len(dinos))
+                tier_num, max_slots, tier_name = get_player_garage_tier_and_slots(active_steam_id)
+                total_slots = max(max_slots, len(dinos))
                 self.send_json_response({
                     "slots_total": total_slots,
+                    "max_slots": max_slots,
+                    "garage_tier": tier_num,
+                    "garage_tier_name": tier_name,
                     "park_seconds": config.get("GARAGE_PARK_SECONDS", 30),
                     "slots_used": len(dinos),
                     "dinos": dinos,
@@ -5573,8 +5641,12 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             except Exception:
                 pass
 
+        tier_num, max_slots, tier_name = get_player_garage_tier_and_slots(active_steam_id)
         self.send_json_response({
-            "slots_total": max(int(config.get("MAX_GARAGE_SLOTS", 5)), len(fallback_dinos)),
+            "slots_total": max(max_slots, len(fallback_dinos)),
+            "max_slots": max_slots,
+            "garage_tier": tier_num,
+            "garage_tier_name": tier_name,
             "park_seconds": config.get("GARAGE_PARK_SECONDS", 30),
             "slots_used": len(fallback_dinos),
             "dinos": fallback_dinos,
@@ -5923,6 +5995,20 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
             # 1. BƯỚC KHỞI ĐỘNG (step == "start"): Kiểm tra người chơi có online & có khủng long trong game hay không
             if step == "start":
+                # Kiểm tra số lượng slot tối đa theo phân cấp người chơi (Cấp 1: 5, Cấp 2: 10, Cấp 3: 15)
+                tier_num, max_slots, tier_name = get_player_garage_tier_and_slots(steam_id)
+                cur_garage = self.fetch_islepilot(f"/players/{steam_id}/garage", bypass_cache=True) or {}
+                cur_dinos = cur_garage.get("garage", []) if isinstance(cur_garage, dict) else []
+                deleted_map = load_deleted_dinos()
+                valid_cur = [d for d in cur_dinos if str(d.get("id")) not in deleted_map]
+                if len(valid_cur) >= max_slots:
+                    self.send_json_response({
+                        "success": False,
+                        "ok": False,
+                        "error": "GARAGE_FULL",
+                        "message": f"Gara của bạn ({tier_name}) đã đạt giới hạn tối đa {max_slots} slot ({len(valid_cur)}/{max_slots})! Vui lòng xóa bớt hoặc rút khủng long ra trước khi cất thêm."
+                    }, 400)
+                    return
                 player_info = self.fetch_islepilot(f"/players/{steam_id}", bypass_cache=True)
                 is_online = False
                 has_species = False
@@ -5969,8 +6055,21 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 return
 
             # 2. BƯỚC HOÀN TẤT (step == "finalize"): Chụp lại snapshot ngay giây cuối trước khi gọi lệnh park
-            pre_snap = self.capture_live_player_snapshot(steam_id, custom_nutrients=nutr_payload_in) or (load_garage_dino_snapshots().get(f"{steam_id}_last_parked") or {})
+            tier_num, max_slots, tier_name = get_player_garage_tier_and_slots(steam_id)
             pre_garage = self.fetch_islepilot(f"/players/{steam_id}/garage", bypass_cache=True) or {}
+            cur_dinos_fin = pre_garage.get("garage", []) if isinstance(pre_garage, dict) else []
+            deleted_map_fin = load_deleted_dinos()
+            valid_cur_fin = [d for d in cur_dinos_fin if str(d.get("id")) not in deleted_map_fin]
+            if len(valid_cur_fin) >= max_slots:
+                self.send_json_response({
+                    "success": False,
+                    "ok": False,
+                    "error": "GARAGE_FULL",
+                    "message": f"Gara của bạn ({tier_name}) đã đạt giới hạn tối đa {max_slots} slot ({len(valid_cur_fin)}/{max_slots})! Không thể cất thêm."
+                }, 400)
+                return
+
+            pre_snap = self.capture_live_player_snapshot(steam_id, custom_nutrients=nutr_payload_in) or (load_garage_dino_snapshots().get(f"{steam_id}_last_parked") or {})
             pre_ids = {str(gd.get("id")) for gd in (pre_garage.get("garage") or []) if gd.get("id")}
 
             res = self.fetch_islepilot(f"/players/{steam_id}/garage/park", method="POST", body_data={})

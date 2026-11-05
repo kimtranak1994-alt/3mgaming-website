@@ -191,9 +191,19 @@ const AdminPanel = {
                   Tùy chỉnh số lượng slot cất tối đa và thời gian đếm ngược an toàn khi người chơi bấm cất khủng long vào gara.
                 </p>
                 <div class="admin-form-group" style="margin-bottom: 16px;">
-                  <label class="admin-form-label">Số Lượng Slot Cất Gara Tối Đa (Max Slots):</label>
+                  <label class="admin-form-label">🛡️ Cấp 1: Slot Cất Gara Mặc Định (Tất cả người chơi):</label>
                   <input type="number" id="setting-garage-maxslots" class="admin-search-input" min="1" max="50" value="5">
-                  <small style="color: var(--text-muted); font-size: 0.78rem;">Mặc định: 5 slots. Áp dụng cho tất cả người chơi khi mở gara.</small>
+                  <small style="color: var(--text-muted); font-size: 0.78rem;">Mặc định: 5 slots. Tự động áp dụng cho toàn bộ thành viên khi không nằm trong Cấp 2 hoặc Cấp 3.</small>
+                </div>
+                <div class="admin-form-group" style="margin-bottom: 16px;">
+                  <label class="admin-form-label">⭐ Cấp 2: Danh Sách Steam ID (Được 10 Slot Gara):</label>
+                  <textarea id="setting-garage-tier2" class="admin-search-input" style="height: 75px; resize: vertical; font-family: monospace; font-size: 0.85rem;" placeholder="Nhập các Steam ID cách nhau bởi dấu phẩy hoặc xuống dòng (VD: 76561199..., 76561198...)"></textarea>
+                  <small style="color: #38bdf8; font-size: 0.78rem;">Những tài khoản Steam này sẽ tự động được cấp 10 slot cất khủng long vào Gara.</small>
+                </div>
+                <div class="admin-form-group" style="margin-bottom: 16px;">
+                  <label class="admin-form-label">👑 Cấp 3: Danh Sách Steam ID (Được 15 Slot Gara):</label>
+                  <textarea id="setting-garage-tier3" class="admin-search-input" style="height: 75px; resize: vertical; font-family: monospace; font-size: 0.85rem;" placeholder="Nhập các Steam ID cách nhau bởi dấu phẩy hoặc xuống dòng (VD: 76561199..., 76561198...)"></textarea>
+                  <small style="color: #fbbf24; font-size: 0.78rem;">Những tài khoản Steam này sẽ tự động được cấp tối đa 15 slot cất khủng long vào Gara.</small>
                 </div>
                 <div class="admin-form-group" style="margin-bottom: 20px;">
                   <label class="admin-form-label">Thời Gian Đếm Ngược Cất Gara An Toàn (Giây):</label>
@@ -559,10 +569,14 @@ const AdminPanel = {
         };
         const elSlots = document.getElementById('setting-garage-maxslots');
         const elSecs = document.getElementById('setting-garage-parkseconds');
+        const elT2 = document.getElementById('setting-garage-tier2');
+        const elT3 = document.getElementById('setting-garage-tier3');
         const statEl = document.getElementById('admin-stat-garage');
         if (elSlots) elSlots.value = this.garageSettings.maxSlots;
         if (elSecs) elSecs.value = this.garageSettings.parkSeconds;
-        if (statEl) statEl.textContent = `${this.garageSettings.maxSlots} slot / ${this.garageSettings.parkSeconds}s`;
+        if (elT2) elT2.value = (data.tier2_steam_ids || []).join('\n');
+        if (elT3) elT3.value = (data.tier3_steam_ids || []).join('\n');
+        if (statEl) statEl.textContent = `3 Cấp Slot (${(data.tier2_steam_ids || []).length} T2, ${(data.tier3_steam_ids || []).length} T3)`;
       }
     } catch (e) {}
   },
@@ -938,27 +952,40 @@ const AdminPanel = {
   async saveGarageSettings() {
     const elSlots = document.getElementById('setting-garage-maxslots');
     const elSecs = document.getElementById('setting-garage-parkseconds');
+    const elT2 = document.getElementById('setting-garage-tier2');
+    const elT3 = document.getElementById('setting-garage-tier3');
+
     const maxSlots = elSlots ? parseInt(elSlots.value) : 5;
     const parkSeconds = elSecs ? parseInt(elSecs.value) : 30;
+    const tier2_raw = elT2 ? elT2.value : '';
+    const tier3_raw = elT3 ? elT3.value : '';
+
+    const tier2_steam_ids = tier2_raw.split(/[\s,;]+/).map(s => s.trim()).filter(Boolean);
+    const tier3_steam_ids = tier3_raw.split(/[\s,;]+/).map(s => s.trim()).filter(Boolean);
 
     try {
       const res = await fetch('/api/admin/garage/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ maxSlots, parkSeconds })
+        body: JSON.stringify({
+          maxSlots,
+          parkSeconds,
+          tier2_steam_ids,
+          tier3_steam_ids
+        })
       });
       const data = await res.json();
       if (res.ok && data.ok) {
-        this.showNotification('Thành công', true);
+        this.showNotification('Đã lưu thành công cài đặt và phân cấp Gara 3 cấp độ!', true);
         this.garageSettings.maxSlots = maxSlots;
         this.garageSettings.parkSeconds = parkSeconds;
         const statEl = document.getElementById('admin-stat-garage');
-        if (statEl) statEl.textContent = `${maxSlots} slot / ${parkSeconds}s`;
+        if (statEl) statEl.textContent = `3 Cấp Slot (${tier2_steam_ids.length} T2, ${tier3_steam_ids.length} T3)`;
       } else {
-        this.showNotification('Thất bại', false);
+        this.showNotification(data.error || 'Lưu cài đặt Gara thất bại!', false);
       }
     } catch (e) {
-      this.showNotification('Thất bại', false);
+      this.showNotification('Lỗi kết nối máy chủ khi lưu cài đặt Gara!', false);
     }
   },
 
