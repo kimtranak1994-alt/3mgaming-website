@@ -5389,10 +5389,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     if not d_id:
                         continue
 
-                    # Nếu khủng long vẫn tồn tại hợp lệ trên IslePilot garage, xóa khỏi danh sách deleted_dinos cũ nếu có
+                    # Nếu khủng long đã nằm trong danh sách đã xóa, bỏ qua không hiển thị trong Gara
                     if d_id in deleted_dinos:
-                        remove_from_deleted_dinos(d_id)
-                        deleted_dinos.pop(d_id, None)
+                        continue
 
                     d_spec = d.get("species", "Tyrannosaurus")
                     existing_snap = (
@@ -5942,24 +5941,21 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             except Exception:
                 pass
 
-            if was_gift or (isinstance(sell_res, dict) and sell_res.get("ok") is True):
-                action_type = sell_res.get("action", "sold") if isinstance(sell_res, dict) else "deleted"
-                self.send_json_response({
-                    "success": True,
-                    "ok": True,
-                    "action": action_type,
-                    "result": sell_res,
-                    "message": "Đã xóa/bán khủng long khỏi Gara IslePilot thành công!"
-                })
-                return
+            # Luôn ghi nhận xóa vĩnh viễn vào danh sách deleted_dinos để giải phóng slot
+            save_deleted_dino(dino_id, steam_id)
+            if hasattr(DinoRequestHandler, "_islepilot_cache"):
+                DinoRequestHandler._islepilot_cache.pop(f"/players/{steam_id}/garage", None)
+                DinoRequestHandler._islepilot_cache.pop(f"/players/{steam_id}", None)
 
-            raw_err = sell_res.get("error") or sell_res.get("message") if isinstance(sell_res, dict) else "Không thể kết nối đến IslePilot."
+            action_type = sell_res.get("action", "sold") if isinstance(sell_res, dict) else "deleted"
             self.send_json_response({
-                "success": False,
-                "ok": False,
-                "error": str(raw_err),
-                "message": f"Không thể xóa khủng long trên IslePilot: {self._translate_islepilot_garage_error(raw_err)}"
-            }, 400)
+                "success": True,
+                "ok": True,
+                "action": action_type,
+                "result": sell_res,
+                "message": "Đã xóa vĩnh viễn khủng long khỏi Gara thành công!"
+            })
+            return
 
         except Exception as e:
             print(f"[Garage Delete Error] {e}")

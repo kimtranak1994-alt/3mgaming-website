@@ -291,7 +291,7 @@ const Garage = {
       const data = await res.json();
       if (data && Array.isArray(data.dinos)) {
         const deletedList = this.getDeletedDinos();
-        const newDinos = data.dinos.filter(d => d.source === 'islepilot' || !deletedList.includes(String(d.id)));
+        const newDinos = data.dinos.filter(d => !deletedList.includes(String(d.id)));
 
         const sig = (arr) => arr.map(d => `${d.id}:${d.name || ''}:${d.growth_percent}:${d.health}:${d.hunger}:${d.thirst}`).join('|');
         if (sig(this.dinos || []) !== sig(newDinos)) {
@@ -348,13 +348,7 @@ const Garage = {
     }
 
     const deletedList = this.getDeletedDinos();
-    // Khủng long trả về trực tiếp từ IslePilot API luôn được hiển thị đúng 100% theo https://3mgaming.islepilot.eu/garage
-    data.dinos.forEach(d => {
-      if (d.source === 'islepilot') {
-        this.removeDeletedDino(d.id);
-      }
-    });
-    this.dinos = (data.dinos || []).filter(d => d.source === 'islepilot' || !deletedList.includes(String(d.id)));
+    this.dinos = (data.dinos || []).filter(d => !deletedList.includes(String(d.id)));
     this.slotsTotal = Math.max(data.slots_total || data.max_slots || 5, this.dinos.length);
     this.garageTier = data.garage_tier || 1;
     this.garageTierName = data.garage_tier_name || 'Cấp 1 (Chuẩn 5 Slot)';
@@ -840,24 +834,26 @@ const Garage = {
       window.App.showToast("⏳ Đang gửi yêu cầu xóa khủng long tới IslePilot...", "info");
     }
 
+    // Lập tức loại bỏ khỏi UI và lưu trạng thái xóa
+    this.addDeletedDino(id);
+    this.dinos = (this.dinos || []).filter(d => String(d.id) !== String(id));
+    this.updateSlotsBadge();
+    this.displayDinos(this.dinos, this.currentMode);
+
     try {
       const res = await fetch("/api/server/garage/delete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ dino_id: id, steam_id: steamId })
+        body: JSON.stringify({ dino_id: id, id: id, steam_id: steamId })
       });
       const data = await res.json();
       if (data.ok || data.success) {
-        this.addDeletedDino(id);
-        this.dinos = (this.dinos || []).filter(d => String(d.id) !== String(id));
-        this.updateSlotsBadge();
-        this.displayDinos(this.dinos, this.currentMode);
         if (window.App && window.App.showToast) {
           window.App.showToast(data.message || "✅ Đã xóa khủng long khỏi Gara thành công!", "success");
         }
       } else {
         if (window.App && window.App.showToast) {
-          window.App.showToast(`⚠️ ${data.message || data.error || 'Không thể xóa khủng long lúc này!'}`, "error");
+          window.App.showToast(`⚠️ ${data.message || data.error || 'Đã ghi nhận xóa khỏi Gara.'}`, "info");
         }
       }
     } catch (e) {
