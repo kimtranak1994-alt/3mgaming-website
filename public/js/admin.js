@@ -574,9 +574,42 @@ const AdminPanel = {
         const statEl = document.getElementById('admin-stat-garage');
         if (elSlots) elSlots.value = this.garageSettings.maxSlots;
         if (elSecs) elSecs.value = this.garageSettings.parkSeconds;
-        if (elT2) elT2.value = (data.tier2_steam_ids || []).join('\n');
-        if (elT3) elT3.value = (data.tier3_steam_ids || []).join('\n');
-        if (statEl) statEl.textContent = `3 Cấp Slot (${(data.tier2_steam_ids || []).length} T2, ${(data.tier3_steam_ids || []).length} T3)`;
+
+        let t2 = data.tier2_steam_ids || [];
+        let t3 = data.tier3_steam_ids || [];
+
+        // Failsafe Vĩnh Cửu: Nếu server vừa restart/redeploy trả về rỗng mà Admin đã từng lưu trên máy:
+        if (t2.length === 0 && t3.length === 0) {
+          try {
+            const cachedT2 = JSON.parse(localStorage.getItem('3m_garage_tier2_ids') || '[]');
+            const cachedT3 = JSON.parse(localStorage.getItem('3m_garage_tier3_ids') || '[]');
+            if (cachedT2.length > 0 || cachedT3.length > 0) {
+              t2 = cachedT2;
+              t3 = cachedT3;
+              // Tự động đẩy đồng bộ ngược lên server để server lưu file vĩnh viễn
+              fetch('/api/admin/garage/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  maxSlots: this.garageSettings.maxSlots,
+                  parkSeconds: this.garageSettings.parkSeconds,
+                  tier2_steam_ids: t2,
+                  tier3_steam_ids: t3
+                })
+              }).catch(() => {});
+            }
+          } catch (e) {}
+        } else {
+          // Cập nhật lại cache localStorage của Admin
+          try {
+            localStorage.setItem('3m_garage_tier2_ids', JSON.stringify(t2));
+            localStorage.setItem('3m_garage_tier3_ids', JSON.stringify(t3));
+          } catch (e) {}
+        }
+
+        if (elT2) elT2.value = t2.join('\n');
+        if (elT3) elT3.value = t3.join('\n');
+        if (statEl) statEl.textContent = `3 Cấp Slot (${t2.length} T2, ${t3.length} T3)`;
       }
     } catch (e) {}
   },
@@ -976,7 +1009,11 @@ const AdminPanel = {
       });
       const data = await res.json();
       if (res.ok && data.ok) {
-        this.showNotification('Đã lưu thành công cài đặt và phân cấp Gara 3 cấp độ!', true);
+        try {
+          localStorage.setItem('3m_garage_tier2_ids', JSON.stringify(tier2_steam_ids));
+          localStorage.setItem('3m_garage_tier3_ids', JSON.stringify(tier3_steam_ids));
+        } catch (e) {}
+        this.showNotification('Đã lưu vĩnh viễn cài đặt và danh sách phân quyền Gara 3 cấp độ!', true);
         this.garageSettings.maxSlots = maxSlots;
         this.garageSettings.parkSeconds = parkSeconds;
         const statEl = document.getElementById('admin-stat-garage');

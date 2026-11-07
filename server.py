@@ -173,33 +173,173 @@ def calc_dino_stats(species_name, growth, health_val, hunger_val, thirst_val, is
 CUSTOM_NAMES_FILE = os.path.join(os.path.dirname(__file__), "dino_names.json")
 DELETED_GARAGE_FILE = os.path.join(os.path.dirname(__file__), "deleted_garage_dinos.json")
 
-def get_player_garage_tier_and_slots(steam_id):
-    sid = str(steam_id or "").strip()
+def load_garage_tier_settings():
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    primary_file = os.path.join(base_dir, "garage_tier_settings.json")
+    backup_file = os.path.join(base_dir, ".persistent_garage_tier_settings.json")
+    config_file = os.path.join(base_dir, "config.json")
+
     tier2_ids = set()
     tier3_ids = set()
+    max_slots = 5
+    park_seconds = 30
 
-    for s in config.get("GARAGE_TIER2_STEAM_IDS", []):
-        if str(s).strip():
-            tier2_ids.add(str(s).strip())
-    for s in config.get("GARAGE_TIER3_STEAM_IDS", []):
-        if str(s).strip():
-            tier3_ids.add(str(s).strip())
+    # 1. Đọc từ các file chuyên biệt persistent
+    for fpath in [backup_file, primary_file]:
+        if os.path.exists(fpath):
+            try:
+                with open(fpath, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    if isinstance(data, dict):
+                        for s in data.get("tier2_steam_ids", []):
+                            if str(s).strip():
+                                tier2_ids.add(str(s).strip())
+                        for s in data.get("tier3_steam_ids", []):
+                            if str(s).strip():
+                                tier3_ids.add(str(s).strip())
+                        if "maxSlots" in data:
+                            max_slots = int(data["maxSlots"])
+                        if "parkSeconds" in data:
+                            park_seconds = int(data["parkSeconds"])
+            except Exception:
+                pass
 
-    cfg_slots = config.get("GARAGE_SLOTS_CONFIG", {})
-    if isinstance(cfg_slots, dict):
-        for s in cfg_slots.get("tier2_steam_ids", []):
+    # 2. Đọc bổ sung từ config.json
+    if os.path.exists(config_file):
+        try:
+            with open(config_file, "r", encoding="utf-8") as f:
+                cfg_data = json.load(f)
+                if isinstance(cfg_data, dict):
+                    for s in cfg_data.get("GARAGE_TIER2_STEAM_IDS", []):
+                        if str(s).strip():
+                            tier2_ids.add(str(s).strip())
+                    for s in cfg_data.get("GARAGE_TIER3_STEAM_IDS", []):
+                        if str(s).strip():
+                            tier3_ids.add(str(s).strip())
+                    cfg_slots = cfg_data.get("GARAGE_SLOTS_CONFIG", {})
+                    if isinstance(cfg_slots, dict):
+                        for s in cfg_slots.get("tier2_steam_ids", []):
+                            if str(s).strip():
+                                tier2_ids.add(str(s).strip())
+                        for s in cfg_slots.get("tier3_steam_ids", []):
+                            if str(s).strip():
+                                tier3_ids.add(str(s).strip())
+        except Exception:
+            pass
+
+    # 3. Đọc từ biến toàn cục config nếu có
+    if "config" in globals() and isinstance(globals()["config"], dict):
+        cfg = globals()["config"]
+        for s in cfg.get("GARAGE_TIER2_STEAM_IDS", []):
             if str(s).strip():
                 tier2_ids.add(str(s).strip())
-        for s in cfg_slots.get("tier3_steam_ids", []):
+        for s in cfg.get("GARAGE_TIER3_STEAM_IDS", []):
             if str(s).strip():
                 tier3_ids.add(str(s).strip())
+        cfg_slots = cfg.get("GARAGE_SLOTS_CONFIG", {})
+        if isinstance(cfg_slots, dict):
+            for s in cfg_slots.get("tier2_steam_ids", []):
+                if str(s).strip():
+                    tier2_ids.add(str(s).strip())
+            for s in cfg_slots.get("tier3_steam_ids", []):
+                if str(s).strip():
+                    tier3_ids.add(str(s).strip())
+
+    return {
+        "maxSlots": max_slots,
+        "parkSeconds": park_seconds,
+        "tier1_slots": 5,
+        "tier2_slots": 10,
+        "tier3_slots": 15,
+        "tier2_steam_ids": sorted(list(tier2_ids)),
+        "tier3_steam_ids": sorted(list(tier3_ids))
+    }
+
+def save_garage_tier_settings(settings_dict):
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    primary_file = os.path.join(base_dir, "garage_tier_settings.json")
+    backup_file = os.path.join(base_dir, ".persistent_garage_tier_settings.json")
+    
+    t2_list = [str(s).strip() for s in settings_dict.get("tier2_steam_ids", []) if str(s).strip()]
+    t3_list = [str(s).strip() for s in settings_dict.get("tier3_steam_ids", []) if str(s).strip()]
+    max_slots = int(settings_dict.get("maxSlots", 5))
+    park_secs = int(settings_dict.get("parkSeconds", 30))
+
+    clean_data = {
+        "maxSlots": max_slots,
+        "parkSeconds": park_secs,
+        "tier1_slots": 5,
+        "tier2_slots": 10,
+        "tier3_slots": 15,
+        "tier2_steam_ids": t2_list,
+        "tier3_steam_ids": t3_list,
+        "updated_at": datetime.datetime.now().isoformat()
+    }
+
+    # Lưu vào cả primary và backup persistent files
+    for fpath in [primary_file, backup_file]:
+        try:
+            with open(fpath, "w", encoding="utf-8") as f:
+                json.dump(clean_data, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            print(f"[Garage Tier Save Error {fpath}] {e}")
+
+    # Đồng bộ vào config.json và in-memory config
+    if "config" in globals() and isinstance(globals()["config"], dict):
+        globals()["config"]["MAX_GARAGE_SLOTS"] = max_slots
+        globals()["config"]["GARAGE_PARK_SECONDS"] = park_secs
+        globals()["config"]["GARAGE_TIER2_STEAM_IDS"] = t2_list
+        globals()["config"]["GARAGE_TIER3_STEAM_IDS"] = t3_list
+        globals()["config"]["GARAGE_SLOTS_CONFIG"] = {
+            "tier1_slots": 5,
+            "tier2_slots": 10,
+            "tier3_slots": 15,
+            "tier2_steam_ids": t2_list,
+            "tier3_steam_ids": t3_list
+        }
+        save_config(globals()["config"])
+
+    # Đồng bộ sang các thư mục dự án liên quan nếu có
+    for other_base in [r"E:\AI", r"E:\AImgaming-website"]:
+        if os.path.exists(other_base) and os.path.abspath(other_base) != os.path.abspath(base_dir):
+            try:
+                for fname in ["garage_tier_settings.json", ".persistent_garage_tier_settings.json"]:
+                    dst = os.path.join(other_base, fname)
+                    with open(dst, "w", encoding="utf-8") as f:
+                        json.dump(clean_data, f, ensure_ascii=False, indent=2)
+                other_cfg = os.path.join(other_base, "config.json")
+                if os.path.exists(other_cfg):
+                    with open(other_cfg, "r", encoding="utf-8") as f:
+                        cdata = json.load(f)
+                    cdata["GARAGE_TIER2_STEAM_IDS"] = t2_list
+                    cdata["GARAGE_TIER3_STEAM_IDS"] = t3_list
+                    cdata["GARAGE_SLOTS_CONFIG"] = {
+                        "tier1_slots": 5,
+                        "tier2_slots": 10,
+                        "tier3_slots": 15,
+                        "tier2_steam_ids": t2_list,
+                        "tier3_steam_ids": t3_list
+                    }
+                    with open(other_cfg, "w", encoding="utf-8") as f:
+                        json.dump(cdata, f, ensure_ascii=False, indent=2)
+            except Exception:
+                pass
+
+    return clean_data
+
+def get_player_garage_tier_and_slots(steam_id):
+    sid = str(steam_id or "").strip()
+    tier_data = load_garage_tier_settings()
+    tier2_ids = set(str(s).strip() for s in tier_data.get("tier2_steam_ids", []))
+    tier3_ids = set(str(s).strip() for s in tier_data.get("tier3_steam_ids", []))
 
     if sid and sid in tier3_ids:
         return 3, 15, "Cấp 3 (VIP 15 Slot)"
     elif sid and sid in tier2_ids:
         return 2, 10, "Cấp 2 (VIP 10 Slot)"
     else:
-        return 1, int(config.get("MAX_GARAGE_SLOTS", 5)), "Cấp 1 (Chuẩn 5 Slot)"
+        max_t1 = int(tier_data.get("maxSlots") or config.get("MAX_GARAGE_SLOTS", 5))
+        return 1, max_t1, "Cấp 1 (Chuẩn 5 Slot)"
 
 def load_deleted_dinos():
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -1249,17 +1389,16 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             if not is_admin:
                 self.send_json_response({"ok": False, "error": "Unauthorized"}, status=403)
                 return
-            t2 = config.get("GARAGE_TIER2_STEAM_IDS", [])
-            t3 = config.get("GARAGE_TIER3_STEAM_IDS", [])
+            tier_data = load_garage_tier_settings()
             self.send_json_response({
                 "ok": True,
-                "maxSlots": config.get("MAX_GARAGE_SLOTS", 5),
-                "parkSeconds": config.get("GARAGE_PARK_SECONDS", 30),
+                "maxSlots": tier_data.get("maxSlots", 5),
+                "parkSeconds": tier_data.get("parkSeconds", 30),
                 "tier1_slots": 5,
                 "tier2_slots": 10,
                 "tier3_slots": 15,
-                "tier2_steam_ids": t2,
-                "tier3_steam_ids": t3
+                "tier2_steam_ids": tier_data.get("tier2_steam_ids", []),
+                "tier3_steam_ids": tier_data.get("tier3_steam_ids", [])
             })
             return
 
@@ -2065,10 +2204,11 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 length = int(self.headers.get("Content-Length", 0))
                 body = self.rfile.read(length).decode("utf-8")
                 payload = json.loads(body)
-                if "maxSlots" in payload:
-                    config["MAX_GARAGE_SLOTS"] = int(payload["maxSlots"])
-                if "parkSeconds" in payload:
-                    config["GARAGE_PARK_SECONDS"] = int(payload["parkSeconds"])
+                current_settings = load_garage_tier_settings()
+
+                max_slots = int(payload.get("maxSlots", current_settings.get("maxSlots", 5)))
+                park_seconds = int(payload.get("parkSeconds", current_settings.get("parkSeconds", 30)))
+
                 if "tier2_steam_ids" in payload:
                     raw2 = payload["tier2_steam_ids"]
                     if isinstance(raw2, str):
@@ -2077,8 +2217,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                         t2_arr = [str(s).strip() for s in raw2 if str(s).strip()]
                     else:
                         t2_arr = []
-                    config["GARAGE_TIER2_STEAM_IDS"] = t2_arr
-                    config.setdefault("GARAGE_SLOTS_CONFIG", {})["tier2_steam_ids"] = t2_arr
+                else:
+                    t2_arr = current_settings.get("tier2_steam_ids", [])
+
                 if "tier3_steam_ids" in payload:
                     raw3 = payload["tier3_steam_ids"]
                     if isinstance(raw3, str):
@@ -2087,19 +2228,25 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                         t3_arr = [str(s).strip() for s in raw3 if str(s).strip()]
                     else:
                         t3_arr = []
-                    config["GARAGE_TIER3_STEAM_IDS"] = t3_arr
-                    config.setdefault("GARAGE_SLOTS_CONFIG", {})["tier3_steam_ids"] = t3_arr
+                else:
+                    t3_arr = current_settings.get("tier3_steam_ids", [])
 
-                save_config(config)
+                saved = save_garage_tier_settings({
+                    "maxSlots": max_slots,
+                    "parkSeconds": park_seconds,
+                    "tier2_steam_ids": t2_arr,
+                    "tier3_steam_ids": t3_arr
+                })
+
                 self.send_json_response({
                     "ok": True,
-                    "maxSlots": config.get("MAX_GARAGE_SLOTS", 5),
-                    "parkSeconds": config.get("GARAGE_PARK_SECONDS", 30),
+                    "maxSlots": saved.get("maxSlots", 5),
+                    "parkSeconds": saved.get("parkSeconds", 30),
                     "tier1_slots": 5,
                     "tier2_slots": 10,
                     "tier3_slots": 15,
-                    "tier2_steam_ids": config.get("GARAGE_TIER2_STEAM_IDS", []),
-                    "tier3_steam_ids": config.get("GARAGE_TIER3_STEAM_IDS", [])
+                    "tier2_steam_ids": saved.get("tier2_steam_ids", []),
+                    "tier3_steam_ids": saved.get("tier3_steam_ids", [])
                 })
             except Exception as e:
                 self.send_json_response({"ok": False, "error": str(e)}, status=500)

@@ -1,0 +1,13 @@
+{
+  "maxSlots": 5,
+  "parkSeconds": 30,
+  "tier1_slots": 5,
+  "tier2_slots": 10,
+  "tier3_slots": 15,
+  "tier2_steam_ids": [
+    "76561198749916921"
+  ],
+  "tier3_steam_ids": [
+    "76561199175571899"
+  ]
+}

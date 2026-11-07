@@ -1,6 +1,9 @@
 import os
 import json
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CONFIG_FILE = os.path.join(BASE_DIR, "config.json")
+
 # Mặc định cấu hình server IslePilot của bạn
 DEFAULT_CONFIG = {
     "SERVER_ID": "cmv3zzfix02g3pj01yay0hw4g",
@@ -13,6 +16,15 @@ DEFAULT_CONFIG = {
     "MAX_SLOTS": 100,
     "MAX_GARAGE_SLOTS": 5,
     "GARAGE_PARK_SECONDS": 30,
+    "GARAGE_TIER2_STEAM_IDS": [],
+    "GARAGE_TIER3_STEAM_IDS": [],
+    "GARAGE_SLOTS_CONFIG": {
+        "tier1_slots": 5,
+        "tier2_slots": 10,
+        "tier3_slots": 15,
+        "tier2_steam_ids": [],
+        "tier3_steam_ids": []
+    },
     "DISCORD_URL": "https://discord.gg/f3R9mMAfms",
     "PORT": 8000,
     "HOST": "0.0.0.0",
@@ -21,8 +33,6 @@ DEFAULT_CONFIG = {
     "ADMIN_DISCORD_IDS": ["749270027605114922"],
     "ADMIN_PASSCODE": "admin3m"
 }
-
-CONFIG_FILE = "config.json"
 
 def load_config():
     config = DEFAULT_CONFIG.copy()
@@ -49,10 +59,10 @@ def load_config():
 
 def save_config(cfg):
     try:
+        os.makedirs(os.path.dirname(CONFIG_FILE), exist_ok=True)
         with open(CONFIG_FILE, "w", encoding="utf-8") as f:
             json.dump(cfg, f, ensure_ascii=False, indent=2)
         return True
     except Exception as e:
         print(f"[Config] Lỗi lưu {CONFIG_FILE}: {e}")
         return False
-

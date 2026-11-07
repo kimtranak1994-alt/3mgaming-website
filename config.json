@@ -304,13 +304,21 @@
     "thich du thu",
     "thích du thư"
   ],
-  "GARAGE_TIER2_STEAM_IDS": [],
-  "GARAGE_TIER3_STEAM_IDS": [],
+  "GARAGE_TIER2_STEAM_IDS": [
+    "76561198749916921"
+  ],
+  "GARAGE_TIER3_STEAM_IDS": [
+    "76561199175571899"
+  ],
   "GARAGE_SLOTS_CONFIG": {
     "tier1_slots": 5,
     "tier2_slots": 10,
     "tier3_slots": 15,
-    "tier2_steam_ids": [],
-    "tier3_steam_ids": []
+    "tier2_steam_ids": [
+      "76561198749916921"
+    ],
+    "tier3_steam_ids": [
+      "76561199175571899"
+    ]
   }
 }
