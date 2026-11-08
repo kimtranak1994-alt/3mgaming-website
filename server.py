@@ -3133,15 +3133,15 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         prime_eligible = bool(player_data.get("primeEligible"))
 
         if is_prime_elder:
-            stage = "Prime Elder (C? ??i T?i Th??ng)"
+            stage = "Prime Elder (Cổ Đại Tối Thượng)"
         elif growth < 0.35:
             stage = "Con non (Juvenile)"
         elif growth < 0.70:
-            stage = "C?n tr??ng th?nh (Subadult)"
+            stage = "Cận trưởng thành (Subadult)"
         elif growth >= 0.999:
-            stage = "Tr??ng th?nh ho?n to?n (Full Adult)"
+            stage = "Trưởng thành hoàn toàn (Full Adult)"
         else:
-            stage = "Tr??ng th?nh (Adult)"
+            stage = "Trưởng thành (Adult)"
 
         pos = player_data.get("position") or {}
         pos_formatted = {
@@ -3182,7 +3182,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "species": species,
                 "female": bool(player_data.get("female", False)),
                 "gender": "female" if player_data.get("female") else "male",
-                "gender_text": "C?i (Female ?)" if player_data.get("female") else "??c (Male ?)",
+                "gender_text": "Cái (Female ♀)" if player_data.get("female") else "Đực (Male ♂)",
                 "growth": growth,
                 "growth_percent": growth_pct,
                 "is_growth_frozen": is_growth_frozen,

@@ -215,41 +215,42 @@ const Garage = {
     const tierBadge = document.getElementById('garage-tier-badge');
     const count = (this.dinos || []).length;
     const maxSlots = Math.max(this.slotsTotal || 5, count);
+    const tier = this.garageTier || 1;
 
-    if (slotBadge) {
-      // Hiển thị dạng ngắn gọn "4/5" hoặc "4/15" theo yêu cầu, tránh chồng chéo chữ
-      slotBadge.textContent = count >= maxSlots ? `${count}/${maxSlots} (Đầy)` : `${count}/${maxSlots}`;
-      slotBadge.title = `Số lượng khủng long trong Gara: ${count}/${maxSlots}`;
-      if (count >= maxSlots) {
-        slotBadge.style.borderColor = '#ef4444';
-        slotBadge.style.color = '#f87171';
-        slotBadge.style.background = 'rgba(239, 68, 68, 0.18)';
-      } else {
-        slotBadge.style.borderColor = 'var(--accent)';
-        slotBadge.style.color = 'var(--accent)';
-        slotBadge.style.background = 'rgba(255, 42, 133, 0.15)';
-      }
+    let tierLabel = '🛡️ Cấp 1';
+    let bg = 'rgba(148, 163, 184, 0.15)';
+    let border = 'rgba(148, 163, 184, 0.4)';
+    let color = '#cbd5e1';
+
+    if (tier === 3) {
+      tierLabel = '👑 Cấp 3';
+      bg = 'linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.35))';
+      border = '#f59e0b';
+      color = '#fbbf24';
+    } else if (tier === 2) {
+      tierLabel = '⭐ Cấp 2';
+      bg = 'rgba(56, 189, 248, 0.2)';
+      border = '#38bdf8';
+      color = '#38bdf8';
     }
 
+    const slotText = count >= maxSlots ? `${count}/${maxSlots} (Đầy)` : `${count}/${maxSlots}`;
+
     if (tierBadge) {
-      const tier = this.garageTier || 1;
       tierBadge.style.display = 'inline-flex';
-      if (tier === 3) {
-        tierBadge.textContent = '👑 Cấp 3 VIP';
-        tierBadge.style.background = 'linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.35))';
-        tierBadge.style.borderColor = '#f59e0b';
-        tierBadge.style.color = '#fbbf24';
-      } else if (tier === 2) {
-        tierBadge.textContent = '⭐ Cấp 2 VIP';
-        tierBadge.style.background = 'rgba(56, 189, 248, 0.2)';
-        tierBadge.style.borderColor = '#38bdf8';
-        tierBadge.style.color = '#38bdf8';
-      } else {
-        tierBadge.textContent = '🛡️ Cấp 1';
-        tierBadge.style.background = 'rgba(148, 163, 184, 0.15)';
-        tierBadge.style.borderColor = 'rgba(148, 163, 184, 0.4)';
-        tierBadge.style.color = '#cbd5e1';
-      }
+      tierBadge.style.alignItems = 'center';
+      tierBadge.style.gap = '6px';
+      // Hiển thị chuẩn theo yêu cầu: Cấp kèm số lượng dino/max (ví dụ 👑 Cấp 3 (4/15)) tránh chồng chéo chữ
+      tierBadge.textContent = `${tierLabel} (${slotText})`;
+      tierBadge.style.background = bg;
+      tierBadge.style.borderColor = border;
+      tierBadge.style.color = color;
+      tierBadge.title = `Gara ${tierLabel}: Đang lưu ${count}/${maxSlots} khủng long`;
+    }
+
+    if (slotBadge) {
+      slotBadge.style.display = 'none';
+      slotBadge.textContent = slotText;
     }
   },
 

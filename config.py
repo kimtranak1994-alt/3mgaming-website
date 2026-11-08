@@ -17,14 +17,14 @@ DEFAULT_CONFIG = {
     "MAX_SLOTS": 100,
     "MAX_GARAGE_SLOTS": 5,
     "GARAGE_PARK_SECONDS": 30,
-    "GARAGE_TIER2_STEAM_IDS": [],
-    "GARAGE_TIER3_STEAM_IDS": [],
+    "GARAGE_TIER2_STEAM_IDS": ['76561199473804572'],
+    "GARAGE_TIER3_STEAM_IDS": ['76561199175571899', '76561199483156684', '76561198749916921', '76561199196418178', '76561199062270730'],
     "GARAGE_SLOTS_CONFIG": {
         "tier1_slots": 5,
         "tier2_slots": 10,
         "tier3_slots": 15,
-        "tier2_steam_ids": [],
-        "tier3_steam_ids": []
+        "tier2_steam_ids": ['76561199473804572'],
+        "tier3_steam_ids": ['76561199175571899', '76561199483156684', '76561198749916921', '76561199196418178', '76561199062270730']
     },
     "DISCORD_URL": "https://discord.gg/f3R9mMAfms",
     "PORT": 8000,
