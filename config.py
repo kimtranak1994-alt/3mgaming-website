@@ -1,3 +1,4 @@
+import re
 import os
 import json
 
@@ -53,6 +54,8 @@ def load_config():
                     val = int(val)
                 except ValueError:
                     pass
+            elif isinstance(config[key], list) and isinstance(val, str):
+                val = [s.strip() for s in re.split(r"[\s,;]+", val) if s.strip()]
             config[key] = val
             
     return config

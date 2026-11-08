@@ -578,34 +578,40 @@ const AdminPanel = {
         let t2 = data.tier2_steam_ids || [];
         let t3 = data.tier3_steam_ids || [];
 
-        // Failsafe Vĩnh Cửu: Nếu server vừa restart/redeploy trả về rỗng mà Admin đã từng lưu trên máy:
-        if (t2.length === 0 && t3.length === 0) {
-          try {
-            const cachedT2 = JSON.parse(localStorage.getItem('3m_garage_tier2_ids') || '[]');
-            const cachedT3 = JSON.parse(localStorage.getItem('3m_garage_tier3_ids') || '[]');
-            if (cachedT2.length > 0 || cachedT3.length > 0) {
-              t2 = cachedT2;
-              t3 = cachedT3;
-              // Tự động đẩy đồng bộ ngược lên server để server lưu file vĩnh viễn
-              fetch('/api/admin/garage/settings', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  maxSlots: this.garageSettings.maxSlots,
-                  parkSeconds: this.garageSettings.parkSeconds,
-                  tier2_steam_ids: t2,
-                  tier3_steam_ids: t3
-                })
-              }).catch(() => {});
+        // BẢO VỆ VĨNH CỬU: Chống bị đè hoặc reset khi server deploy/restart
+        try {
+          const cachedT2 = JSON.parse(localStorage.getItem('3m_garage_tier2_ids') || '[]');
+          const cachedT3 = JSON.parse(localStorage.getItem('3m_garage_tier3_ids') || '[]');
+          
+          // Kiểm tra xem server có bị thiếu những ID mà Admin đã lưu trước đây không
+          const missingInT2 = cachedT2.filter(id => !t2.includes(id));
+          const missingInT3 = cachedT3.filter(id => !t3.includes(id));
+
+          if (missingInT2.length > 0 || missingInT3.length > 0) {
+            // Hợp nhất danh sách đầy đủ từ máy Admin và tự động đồng bộ ngay lên Server
+            t2 = Array.from(new Set([...t2, ...cachedT2]));
+            t3 = Array.from(new Set([...t3, ...cachedT3]));
+
+            fetch('/api/admin/garage/settings', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                maxSlots: this.garageSettings.maxSlots,
+                parkSeconds: this.garageSettings.parkSeconds,
+                tier2_steam_ids: t2,
+                tier3_steam_ids: t3
+              })
+            }).catch(() => {});
+
+            if (window.App && window.App.showToast) {
+              window.App.showToast('🛡️ Đã tự động bảo toàn & khôi phục danh sách Steam ID phân quyền Gara!', 'success');
             }
-          } catch (e) {}
-        } else {
-          // Cập nhật lại cache localStorage của Admin
-          try {
+          } else if (t2.length > 0 || t3.length > 0) {
+            // Cập nhật bản sao lưu an toàn mới nhất
             localStorage.setItem('3m_garage_tier2_ids', JSON.stringify(t2));
             localStorage.setItem('3m_garage_tier3_ids', JSON.stringify(t3));
-          } catch (e) {}
-        }
+          }
+        } catch (e) {}
 
         if (elT2) elT2.value = t2.join('\n');
         if (elT3) elT3.value = t3.join('\n');

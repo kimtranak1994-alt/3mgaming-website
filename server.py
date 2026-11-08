@@ -184,6 +184,17 @@ def load_garage_tier_settings():
     max_slots = 5
     park_seconds = 30
 
+    def clean_and_add(target_set, items):
+        if not items:
+            return
+        if isinstance(items, str):
+            items = re.split(r"[\s,;]+", items)
+        for s in items:
+            clean_s = str(s).strip()
+            # Steam IDs hợp lệ là chuỗi số từ 10 ký tự trở lên
+            if clean_s.isdigit() and len(clean_s) >= 10:
+                target_set.add(clean_s)
+
     # 1. Đọc từ các file chuyên biệt persistent
     for fpath in [backup_file, primary_file]:
         if os.path.exists(fpath):
@@ -191,12 +202,8 @@ def load_garage_tier_settings():
                 with open(fpath, "r", encoding="utf-8") as f:
                     data = json.load(f)
                     if isinstance(data, dict):
-                        for s in data.get("tier2_steam_ids", []):
-                            if str(s).strip():
-                                tier2_ids.add(str(s).strip())
-                        for s in data.get("tier3_steam_ids", []):
-                            if str(s).strip():
-                                tier3_ids.add(str(s).strip())
+                        clean_and_add(tier2_ids, data.get("tier2_steam_ids", []))
+                        clean_and_add(tier3_ids, data.get("tier3_steam_ids", []))
                         if "maxSlots" in data:
                             max_slots = int(data["maxSlots"])
                         if "parkSeconds" in data:
@@ -210,40 +217,33 @@ def load_garage_tier_settings():
             with open(config_file, "r", encoding="utf-8") as f:
                 cfg_data = json.load(f)
                 if isinstance(cfg_data, dict):
-                    for s in cfg_data.get("GARAGE_TIER2_STEAM_IDS", []):
-                        if str(s).strip():
-                            tier2_ids.add(str(s).strip())
-                    for s in cfg_data.get("GARAGE_TIER3_STEAM_IDS", []):
-                        if str(s).strip():
-                            tier3_ids.add(str(s).strip())
+                    clean_and_add(tier2_ids, cfg_data.get("GARAGE_TIER2_STEAM_IDS", []))
+                    clean_and_add(tier3_ids, cfg_data.get("GARAGE_TIER3_STEAM_IDS", []))
                     cfg_slots = cfg_data.get("GARAGE_SLOTS_CONFIG", {})
                     if isinstance(cfg_slots, dict):
-                        for s in cfg_slots.get("tier2_steam_ids", []):
-                            if str(s).strip():
-                                tier2_ids.add(str(s).strip())
-                        for s in cfg_slots.get("tier3_steam_ids", []):
-                            if str(s).strip():
-                                tier3_ids.add(str(s).strip())
+                        clean_and_add(tier2_ids, cfg_slots.get("tier2_steam_ids", []))
+                        clean_and_add(tier3_ids, cfg_slots.get("tier3_steam_ids", []))
         except Exception:
             pass
 
     # 3. Đọc từ biến toàn cục config nếu có
     if "config" in globals() and isinstance(globals()["config"], dict):
         cfg = globals()["config"]
-        for s in cfg.get("GARAGE_TIER2_STEAM_IDS", []):
-            if str(s).strip():
-                tier2_ids.add(str(s).strip())
-        for s in cfg.get("GARAGE_TIER3_STEAM_IDS", []):
-            if str(s).strip():
-                tier3_ids.add(str(s).strip())
+        clean_and_add(tier2_ids, cfg.get("GARAGE_TIER2_STEAM_IDS", []))
+        clean_and_add(tier3_ids, cfg.get("GARAGE_TIER3_STEAM_IDS", []))
         cfg_slots = cfg.get("GARAGE_SLOTS_CONFIG", {})
         if isinstance(cfg_slots, dict):
-            for s in cfg_slots.get("tier2_steam_ids", []):
-                if str(s).strip():
-                    tier2_ids.add(str(s).strip())
-            for s in cfg_slots.get("tier3_steam_ids", []):
-                if str(s).strip():
-                    tier3_ids.add(str(s).strip())
+            clean_and_add(tier2_ids, cfg_slots.get("tier2_steam_ids", []))
+            clean_and_add(tier3_ids, cfg_slots.get("tier3_steam_ids", []))
+
+    # 4. Đọc từ biến môi trường (Render Dashboard Environment Variables)
+    for env_k in ["GARAGE_TIER2_STEAM_IDS", "TIER2_STEAM_IDS", "GARAGE_TIER2"]:
+        if os.environ.get(env_k):
+            clean_and_add(tier2_ids, os.environ[env_k])
+
+    for env_k in ["GARAGE_TIER3_STEAM_IDS", "TIER3_STEAM_IDS", "GARAGE_TIER3"]:
+        if os.environ.get(env_k):
+            clean_and_add(tier3_ids, os.environ[env_k])
 
     return {
         "maxSlots": max_slots,
@@ -300,7 +300,7 @@ def save_garage_tier_settings(settings_dict):
         save_config(globals()["config"])
 
     # Đồng bộ sang các thư mục dự án liên quan nếu có
-    for other_base in [r"E:\AI", r"E:\AImgaming-website"]:
+    for other_base in [r"E:\AI", r"E:\AI\3mgaming-website"]:
         if os.path.exists(other_base) and os.path.abspath(other_base) != os.path.abspath(base_dir):
             try:
                 for fname in ["garage_tier_settings.json", ".persistent_garage_tier_settings.json"]:
