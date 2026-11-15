@@ -40,7 +40,7 @@ const App = {
   switchTab(tabId) {
     const validTabs = [
       'home', 'bxh', 'dino-info', 'dinoinfo', 'damage', 'boss', 'ai-hunt', 'arena', 'garage', 'starter', 
-      'skinshop', 'skins', 'skineditor', 'referral', 'teleport', 'quests', 'carcass',
+      'skinshop', 'skins', 'skineditor', 'referral', 'teleport', 'quests', 'carcass', 'autotreo',
       'map', 'guide', 'rules', 'donate', 'admin'
     ];
     const currentMode = localStorage.getItem('admin_view_mode') || 'admin';
@@ -100,6 +100,10 @@ const App = {
       Teleport.render();
     } else if (tabId === 'quests') {
       Quests.render();
+    } else if (tabId === 'autotreo') {
+      if (window.AutoTreo && typeof window.AutoTreo.render === 'function') {
+        window.AutoTreo.render();
+      }
     } else if (tabId === 'carcass') {
       Carcass.render();
     } else if (tabId === 'map') {

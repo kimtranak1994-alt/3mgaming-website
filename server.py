@@ -401,6 +401,36 @@ def remove_from_deleted_dinos(dino_id):
             except Exception:
                 pass
 
+
+def load_auto_treo_data():
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    primary_file = os.path.join(base_dir, "auto_treo_settings.json")
+    backup_file = os.path.join(base_dir, ".persistent_auto_treo_settings.json")
+    for fpath in [backup_file, primary_file]:
+        if os.path.exists(fpath):
+            try:
+                with open(fpath, "r", encoding="utf-8") as f:
+                    content = json.load(f)
+                    if isinstance(content, dict):
+                        return content
+            except Exception:
+                pass
+    return {"settings": {}, "state": {}}
+
+def save_auto_treo_data(data):
+    if not isinstance(data, dict):
+        return
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    primary_file = os.path.join(base_dir, "auto_treo_settings.json")
+    backup_file = os.path.join(base_dir, ".persistent_auto_treo_settings.json")
+    for fpath in [primary_file, backup_file]:
+        try:
+            os.makedirs(os.path.dirname(fpath), exist_ok=True)
+            with open(fpath, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            print(f"[Save Auto Treo Error {fpath}] {e}")
+
 GARAGE_MUTATIONS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "garage_saved_mutations.json")
 
 def load_garage_saved_mutations():
@@ -1001,6 +1031,10 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
             return
 
+        elif self.path.startswith("/api/player/autotreo"):
+            self.handle_autotreo_get()
+            return
+
         elif self.path.startswith("/api/player/dino-info") or self.path.startswith("/api/dino-info"):
             self.handle_player_dino_info()
             return
@@ -1592,6 +1626,10 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
             self.handle_skin_import()
 
+            return
+
+        elif self.path.startswith("/api/player/autotreo"):
+            self.handle_autotreo_post()
             return
 
         elif self.path in ["/api/player/growth/lock", "/api/player/growth-lock", "/api/player/growth/toggle"]:
@@ -3209,6 +3247,319 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "list": warnings_list
             }
         })
+
+
+    def handle_autotreo_get(self):
+        query = urllib.parse.urlparse(self.path).query
+        q_params = urllib.parse.parse_qs(query)
+        passed_steam_id = q_params.get("steam_id", [None])[0]
+
+        cookie_header = self.headers.get("Cookie", "")
+        cookie_match = re.search(r"steam_user=([^;:]+)", cookie_header)
+        cookie_steam_id = cookie_match.group(1).strip() if cookie_match else None
+
+        steam_id = passed_steam_id or cookie_steam_id or self.get_active_steam_id()
+        is_logged_in = bool(passed_steam_id or cookie_steam_id)
+
+        if not is_logged_in or not steam_id:
+            self.send_json_response({
+                "ok": False,
+                "logged_in": False,
+                "message": "Vui lòng đăng nhập Steam để sử dụng tính năng AUTO TREO!"
+            })
+            return
+
+        data = load_auto_treo_data()
+        settings = data.setdefault("settings", {}).get(steam_id, {
+            "auto_mutation_enabled": False,
+            "slot1_mutation": "None",
+            "slot2_mutation": "None",
+            "slot3_mutation": "None",
+            "slot4_mutation": "None",
+            "auto_garage_enabled": False,
+            "target_growth_percent": 100
+        })
+        state = data.setdefault("state", {}).get(steam_id, {
+            "applied_slots": [],
+            "logs": []
+        })
+
+        player_data = self.fetch_islepilot(f"/players/{steam_id}", bypass_cache=True) or {}
+        has_active_dino = bool(player_data.get("species"))
+        dino_info = None
+        if has_active_dino:
+            growth = safe_float(player_data.get("growth"), 0.0)
+            dino_info = {
+                "species": player_data.get("species"),
+                "female": bool(player_data.get("female")),
+                "gender": "female" if player_data.get("female") else "male",
+                "gender_text": "Cái (Female ♀)" if player_data.get("female") else "Đực (Male ♂)",
+                "growth": growth,
+                "growth_percent": round(growth * 100, 1),
+                "health": safe_float(player_data.get("health"), 0.0),
+                "max_health": safe_float(player_data.get("maxHealth"), 1.0),
+                "hunger": safe_float(player_data.get("hunger"), 0.0),
+                "thirst": safe_float(player_data.get("thirst"), 0.0),
+                "mutation_slots": player_data.get("mutationSlots") or {
+                    "active": ["None", "None", "None", "None"],
+                    "parent": ["None", "None", "None", "None"],
+                    "elderA": ["None", "None", "None", "None"],
+                    "elderB": ["None", "None", "None", "None"]
+                }
+            }
+
+        tier_num, max_slots, tier_name = get_player_garage_tier_and_slots(steam_id)
+        cur_garage = self.fetch_islepilot(f"/players/{steam_id}/garage", bypass_cache=True) or {}
+        cur_dinos = cur_garage.get("garage", []) if isinstance(cur_garage, dict) else []
+        deleted_map = load_deleted_dinos()
+        valid_cur = [d for d in cur_dinos if str(d.get("id")) not in deleted_map]
+
+        self.send_json_response({
+            "ok": True,
+            "logged_in": True,
+            "steam_id": steam_id,
+            "settings": settings,
+            "state": state,
+            "has_active_dino": has_active_dino,
+            "dino": dino_info,
+            "garage": {
+                "count": len(valid_cur),
+                "max_slots": max_slots,
+                "tier": tier_num,
+                "tier_name": tier_name
+            }
+        })
+
+    def handle_autotreo_post(self):
+        try:
+            length = int(self.headers.get("Content-Length", 0))
+            payload = json.loads(self.rfile.read(length).decode("utf-8")) if length > 0 else {}
+
+            query = urllib.parse.urlparse(self.path).query
+            q_params = urllib.parse.parse_qs(query)
+            passed_steam_id = q_params.get("steam_id", [None])[0]
+
+            cookie_header = self.headers.get("Cookie", "")
+            cookie_match = re.search(r"steam_user=([^;:]+)", cookie_header)
+            cookie_steam_id = cookie_match.group(1).strip() if cookie_match else None
+
+            steam_id = str(payload.get("steam_id") or passed_steam_id or cookie_steam_id or self.get_active_steam_id() or "").strip()
+
+            if not steam_id:
+                self.send_json_response({"ok": False, "message": "Vui lòng đăng nhập Steam!"}, status=401)
+                return
+
+            action = payload.get("action", "save_settings")
+            data = load_auto_treo_data()
+
+            if action == "clear_logs":
+                if steam_id in data.get("state", {}):
+                    data["state"][steam_id]["logs"] = []
+                    save_auto_treo_data(data)
+                self.send_json_response({"ok": True, "message": "Đã xóa sạch nhật ký Auto Treo!"})
+                return
+
+            # Cập nhật cài đặt
+            settings = data.setdefault("settings", {}).setdefault(steam_id, {})
+            settings["auto_mutation_enabled"] = bool(payload.get("auto_mutation_enabled", False))
+            settings["slot1_mutation"] = str(payload.get("slot1_mutation") or "None").strip()
+            settings["slot2_mutation"] = str(payload.get("slot2_mutation") or "None").strip()
+            settings["slot3_mutation"] = str(payload.get("slot3_mutation") or "None").strip()
+            settings["slot4_mutation"] = str(payload.get("slot4_mutation") or "None").strip()
+            settings["auto_garage_enabled"] = bool(payload.get("auto_garage_enabled", False))
+
+            target_growth = float(payload.get("target_growth_percent", 100))
+            settings["target_growth_percent"] = max(10, min(100, target_growth))
+            settings["updated_at"] = datetime.datetime.now().isoformat()
+
+            state = data.setdefault("state", {}).setdefault(steam_id, {
+                "applied_slots": [],
+                "logs": []
+            })
+
+            status_mut = "BẬT" if settings["auto_mutation_enabled"] else "TẮT"
+            status_gar = f"BẬT (Mốc {settings['target_growth_percent']}%)" if settings["auto_garage_enabled"] else "TẮT"
+            now_str = datetime.datetime.now().strftime("%H:%M:%S %d/%m")
+            state.setdefault("logs", []).insert(0, {
+                "time": now_str,
+                "message": f"⚙️ Đã lưu cấu hình: Tự động Mutation: [{status_mut}] | Tự động cất Gara: [{status_gar}]",
+                "type": "info"
+            })
+            state["logs"] = state["logs"][:25]
+
+            save_auto_treo_data(data)
+
+            self.send_json_response({
+                "ok": True,
+                "message": "Đã lưu thành công cài đặt AUTO TREO!",
+                "settings": settings,
+                "state": state
+            })
+        except Exception as e:
+            self.send_json_response({"ok": False, "error": str(e)}, status=500)
+
+    def _process_auto_treo_tick(self):
+        data = load_auto_treo_data()
+        settings_map = data.get("settings", {})
+        if not settings_map:
+            return
+
+        state_map = data.setdefault("state", {})
+        needs_save = False
+
+        for steam_id, settings in settings_map.items():
+            if not isinstance(settings, dict):
+                continue
+            auto_mut = bool(settings.get("auto_mutation_enabled"))
+            auto_gar = bool(settings.get("auto_garage_enabled"))
+
+            if not auto_mut and not auto_gar:
+                continue
+
+            try:
+                player_data = self.fetch_islepilot(f"/players/{steam_id}", bypass_cache=True)
+                if not player_data or not isinstance(player_data, dict):
+                    continue
+                if not player_data.get("online") or not player_data.get("species"):
+                    continue
+
+                species = player_data.get("species")
+                growth = safe_float(player_data.get("growth"), 0.0)
+                growth_pct = round(growth * 100, 1)
+
+                p_state = state_map.setdefault(steam_id, {
+                    "applied_slots": [],
+                    "last_species": species,
+                    "logs": []
+                })
+
+                if p_state.get("last_species") != species:
+                    p_state["last_species"] = species
+                    p_state["applied_slots"] = []
+                    needs_save = True
+
+                applied = p_state.setdefault("applied_slots", [])
+                logs = p_state.setdefault("logs", [])
+                now_str = datetime.datetime.now().strftime("%H:%M:%S %d/%m")
+
+                # 1. AUTO MUTATION (26%, 50%, 76%)
+                if auto_mut:
+                    cur_slots = player_data.get("mutationSlots") or {}
+                    if not isinstance(cur_slots, dict):
+                        cur_slots = {}
+                    active_muts = list(cur_slots.get("active") or ["None", "None", "None", "None"])
+                    while len(active_muts) < 4:
+                        active_muts.append("None")
+
+                    mut_changed = False
+
+                    # Slot 1: mốc 26%
+                    slot1_mut = str(settings.get("slot1_mutation") or "None").strip()
+                    if growth_pct >= 26.0 and 1 not in applied and slot1_mut and slot1_mut != "None":
+                        active_muts[0] = slot1_mut
+                        applied.append(1)
+                        mut_changed = True
+                        logs.insert(0, {
+                            "time": now_str,
+                            "message": f"🧬 Khủng long {species} đạt {growth_pct}% (≥ 26%) - Đã tự động kích hoạt Đột biến Slot 1: {slot1_mut}!",
+                            "type": "success"
+                        })
+
+                    # Slot 2: mốc 50%
+                    slot2_mut = str(settings.get("slot2_mutation") or "None").strip()
+                    if growth_pct >= 50.0 and 2 not in applied and slot2_mut and slot2_mut != "None":
+                        active_muts[1] = slot2_mut
+                        applied.append(2)
+                        mut_changed = True
+                        logs.insert(0, {
+                            "time": now_str,
+                            "message": f"🧬 Khủng long {species} đạt {growth_pct}% (≥ 50%) - Đã tự động kích hoạt Đột biến Slot 2: {slot2_mut}!",
+                            "type": "success"
+                        })
+
+                    # Slot 3 & 4: mốc 76%
+                    if growth_pct >= 76.0:
+                        slot3_mut = str(settings.get("slot3_mutation") or "None").strip()
+                        if 3 not in applied and slot3_mut and slot3_mut != "None":
+                            active_muts[2] = slot3_mut
+                            applied.append(3)
+                            mut_changed = True
+                            logs.insert(0, {
+                                "time": now_str,
+                                "message": f"🧬 Khủng long {species} đạt {growth_pct}% (≥ 76%) - Đã tự động kích hoạt Đột biến Slot 3: {slot3_mut}!",
+                                "type": "success"
+                            })
+
+                        slot4_mut = str(settings.get("slot4_mutation") or "None").strip()
+                        if 4 not in applied and slot4_mut and slot4_mut != "None":
+                            active_muts[3] = slot4_mut
+                            applied.append(4)
+                            mut_changed = True
+                            logs.insert(0, {
+                                "time": now_str,
+                                "message": f"🧬 Khủng long {species} đạt {growth_pct}% (≥ 76%) - Đã tự động kích hoạt Đột biến Slot 4: {slot4_mut}!",
+                                "type": "success"
+                            })
+
+                    if mut_changed:
+                        needs_save = True
+                        try:
+                            self.fetch_islepilot("/commands", method="POST", body_data={
+                                "action": "mutations",
+                                "steamId": str(steam_id),
+                                "active": active_muts[:4]
+                            })
+                            print(f"[AutoTreo Mutation Success] {steam_id} ({species} {growth_pct}%): {active_muts[:4]}")
+                        except Exception as e_mut:
+                            print(f"[AutoTreo Mutation Error] {steam_id}: {e_mut}")
+
+                # 2. AUTO CẤT GARA KHI ĐẠT MỐC TĂNG TRƯỞNG
+                if auto_gar:
+                    target_pct = float(settings.get("target_growth_percent", 100))
+                    if growth_pct >= target_pct:
+                        tier_num, max_slots, tier_name = get_player_garage_tier_and_slots(steam_id)
+                        cur_garage = self.fetch_islepilot(f"/players/{steam_id}/garage", bypass_cache=True) or {}
+                        cur_dinos = cur_garage.get("garage", []) if isinstance(cur_garage, dict) else []
+                        deleted_map = load_deleted_dinos()
+                        valid_cur = [d for d in cur_dinos if str(d.get("id")) not in deleted_map]
+
+                        if len(valid_cur) >= max_slots:
+                            last_full_warn = p_state.get("last_full_warn_time", 0)
+                            if time.time() - last_full_warn > 180:
+                                p_state["last_full_warn_time"] = time.time()
+                                logs.insert(0, {
+                                    "time": now_str,
+                                    "message": f"⚠️ Gara của bạn ({tier_name}) đã đầy ({len(valid_cur)}/{max_slots})! Không thể tự động cất khủng long {species} ({growth_pct}%).",
+                                    "type": "warning"
+                                })
+                                needs_save = True
+                        else:
+                            self.capture_live_player_snapshot(steam_id)
+                            park_res = self.fetch_islepilot(f"/players/{steam_id}/garage/park", method="POST", body_data={})
+                            if park_res and isinstance(park_res, dict) and (park_res.get("ok") is True or park_res.get("success") is True or "commandId" in park_res):
+                                settings["auto_garage_enabled"] = False
+                                logs.insert(0, {
+                                    "time": now_str,
+                                    "message": f"🦖🎉 Khủng long {species} đạt {growth_pct}% (Mục tiêu {target_pct}%) - ĐÃ TỰ ĐỘNG CẤT VÀO GARA THÀNH CÔNG!",
+                                    "type": "success"
+                                })
+                                needs_save = True
+                                print(f"[AutoTreo Garage Park Success] {steam_id} ({species} {growth_pct}%) -> Stored to Garage")
+                            else:
+                                err = (park_res.get("error") if isinstance(park_res, dict) else str(park_res)) or "Lỗi kết nối IslePilot"
+                                logs.insert(0, {
+                                    "time": now_str,
+                                    "message": f"❌ Lỗi tự động cất Gara ({species} {growth_pct}%): {err}",
+                                    "type": "error"
+                                })
+                                needs_save = True
+
+                p_state["logs"] = logs[:25]
+            except Exception as e_player:
+                print(f"[AutoTreo Player Tick Error] {steam_id}: {e_player}")
+
+        if needs_save:
+            save_auto_treo_data(data)
 
     def handle_player_logout(self):
         self.send_response(200)
@@ -11940,6 +12291,20 @@ def parse_evrima_skin_code(code):
 
     }
 
+
+def start_auto_treo_worker():
+    def auto_treo_loop():
+        time.sleep(5.0)
+        req_handler = DinoRequestHandler.__new__(DinoRequestHandler)
+        while True:
+            try:
+                req_handler._process_auto_treo_tick()
+            except Exception as e:
+                print(f"[AutoTreo Worker Error] {e}")
+            time.sleep(15.0)
+    t = threading.Thread(target=auto_treo_loop, daemon=True, name="AutoTreoBackgroundWorker")
+    t.start()
+
 def start_boss_ai_worker():
     def boss_loop():
         time.sleep(3.0)
@@ -11964,6 +12329,7 @@ def start_boss_ai_worker():
 
 def run():
     start_boss_ai_worker()
+    start_auto_treo_worker()
 
     host = config.get("HOST", "0.0.0.0")
 
