@@ -238,18 +238,20 @@ async function follow(rid, okText) {
   msg('Đã gửi lệnh vào game, đang chờ…', 'wait');
   for (let i = 0; i < 30; i++) {
     await new Promise((r) => setTimeout(r, 700)); const r = await api('/api/skinart/result?rid=' + rid);
-    if (r.state && r.state !== 'pending') { r.state === 'applied' ? msg('✔ ' + okText, 'ok') : msg('✖ Game từ chối: ' + (r.message || r.state), 'err'); return; }
+    if (r.state && r.state !== 'pending') { const why = { species_mismatch: 'bạn đang chơi loài khác với skin này', not_allowed: 'bạn chưa được mở khóa', settling: 'dino vừa xuất hiện, thử lại sau vài giây', offline: 'bạn chưa vào game', not_alive: 'dino đã chết', species_unknown: 'loài này chưa được hỗ trợ' };
+    r.state === 'applied' ? msg('✔ ' + okText, 'ok') : msg('✖ Game từ chối: ' + (why[r.message] || r.message || r.state), 'err'); return; }
   }
   msg('Chưa nhận được trả lời. Hãy vào game và đang chơi đúng loài này rồi thử lại.', 'err');
 }
 // ------------------------------------------------------------------ baked skins tab
 S.tab = 'design'; S.skin = null;
 const owns = (k) => (info.owned || []).includes(k);
+const fits = (k) => { const s = info.current_species, x = info.baked.find((b) => b.kind === k); return !s || !x || x.species.includes('mọi loài') || x.species.includes(s); };
 function drawSkins() {
   const n = info.baked.filter((k) => owns(k.kind)).length;
   $('#skcount').textContent = `${n}/${info.baked.length} đã được cấp`;
   $('#skgrid').innerHTML = [...info.baked].sort((a, b) => owns(b.kind) - owns(a.kind)).map((k) => `<button class="sk ${owns(k.kind) ? '' : 'lock'}" data-k="${esc(k.kind)}" aria-pressed="${k.kind === S.skin}">
-    <img src="${esc(k.img)}" alt="" loading="lazy"><div class="t"><span class="badge2">${owns(k.kind) ? 'đã cấp' : '🔒 khóa'}</span><b>${esc(k.label)}</b><small>${esc(k.species.join(', '))}</small></div></button>`).join('');
+    <img src="${esc(k.img)}" alt="" loading="lazy"><div class="t"><span class="badge2">${!owns(k.kind) ? '🔒 khóa' : fits(k.kind) ? 'đã cấp' : 'khác loài'}</span><b>${esc(k.label)}</b><small>${esc(k.species.join(', '))}</small></div></button>`).join('');
 }
 function showTab(t) {
   S.tab = t; msg('');
@@ -257,14 +259,16 @@ function showTab(t) {
   $('#tab-design').style.display = t === 'design' ? 'flex' : 'none'; $('#tab-skins').hidden = t !== 'skins';
   $('#cv').style.visibility = t === 'design' ? 'visible' : 'hidden'; $('#tag').style.display = t === 'design' ? '' : 'none';
   $('#skinimg').style.display = t === 'skins' && S.skin ? 'block' : 'none'; $('#skintag').style.display = t === 'skins' && S.skin ? '' : 'none';
-  $('#apply').textContent = t === 'design' ? 'Mặc lên dino của tôi' : (S.skin && !owns(S.skin) ? '🔒 Chưa được cấp' : 'Mặc skin này');
-  $('#apply').disabled = t === 'skins' && (!S.skin || !owns(S.skin));
+  $('#apply').textContent = t === 'design' ? 'Mặc lên dino của tôi' : (S.skin && !owns(S.skin) ? '🔒 Chưa được cấp' : S.skin && !fits(S.skin) ? 'Khác loài với dino của bạn' : 'Mặc skin này');
+  $('#apply').disabled = t === 'skins' && (!S.skin || !owns(S.skin) || !fits(S.skin));
 }
 document.querySelector('.tabs').addEventListener('click', (e) => { if (e.target.dataset.tab) showTab(e.target.dataset.tab); });
 $('#skgrid').addEventListener('click', (e) => {
   const b = e.target.closest('.sk'); if (!b) return; S.skin = b.dataset.k; const k = info.baked.find((x) => x.kind === S.skin);
   $('#skinimg').src = k.img; $('#skintag').textContent = `${k.label} — ${k.species.join(', ')}`;
-  $('#skinfo').textContent = owns(S.skin)
+  $('#skinfo').textContent = owns(S.skin) && !fits(S.skin)
+    ? `Skin này dành cho ${k.species.join(', ')}, còn bạn đang chơi ${info.current_species}. Hãy vào game bằng đúng loài rồi mặc.`
+    : owns(S.skin)
     ? 'Skin này được vẽ sẵn trong gói tải của launcher; chỉ mặc được khi bạn đang chơi đúng loài. Dino chết thì mất skin.'
     : '🔒 Skin này chưa được admin cấp cho bạn. Hãy nhờ admin cấp rồi quay lại.';
   drawSkins(); showTab('skins');

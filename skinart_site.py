@@ -137,13 +137,14 @@ def handle(handler, config):
             cat = _catalog(config)
             out = {"ok": True, "configured": bool(_setting(config, "SKINART_GATEWAY_URL") and len(_setting(config, "SKINART_SECRET")) >= 32),
                    "logged_in": bool(sid), "name": name, "steam_id": sid, "is_admin": is_admin, "demo": False, "owned": [], "allowed": False,
-                   "game_online": False, "preview_species": list(PREVIEW_SPECIES), "baked": [], "species": [], "designs": {}, "fonts": []}
+                   "game_online": False, "current_species": None, "preview_species": list(PREVIEW_SPECIES), "baked": [], "species": [], "designs": {}, "fonts": []}
             if cat:
                 out.update({k: cat[k] for k in ("baked", "species", "designs", "fonts")})
             if sid and cat:
                 status, st = _gateway(config, "state", {"account": sid, "admin": is_admin})
                 if status == 200:
                     out.update({k: st[k] for k in ("game_online", "allowed", "owned")})
+                    out["current_species"] = st.get("species")
             return reply(out)
         if method == "GET" and path == "/api/skinart/result":
             rid = urllib.parse.parse_qs(urllib.parse.urlparse(handler.path).query).get("rid", [""])[0]
