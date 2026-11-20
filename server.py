@@ -11017,12 +11017,65 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             self.send_json_response({"ok": False, "message": f"Lỗi xử lý nhận thưởng: {e}"}, 500)
 
     def handle_player_skins(self):
-        steam_id = self.get_active_steam_id()
-        remote = self.fetch_islepilot(f"/players/{steam_id}/skins")
+        query = urllib.parse.urlparse(self.path).query
+        q_params = urllib.parse.parse_qs(query)
+        passed_sid = q_params.get("steam_id", [None])[0]
+        steam_id = str(passed_sid or self.get_active_steam_id() or "").strip()
+
         skins = []
-        if remote and "skins" in remote:
-            raw_skins = remote.get("skins", [])
-            skins = [self.enrich_skin_data(s) for s in raw_skins]
+
+        # 1. Lấy skin từ IslePilot
+        if steam_id:
+            try:
+                remote = self.fetch_islepilot(f"/players/{steam_id}/skins")
+                if remote and "skins" in remote:
+                    raw_skins = remote.get("skins", [])
+                    skins = [self.enrich_skin_data(s) for s in raw_skins]
+            except Exception as e:
+                print(f"[Player Skins IslePilot Error] {e}")
+
+        # 2. Lấy skin xăm (SkinArt) được Admin cấp từ SkinArt Gateway
+        if steam_id:
+            try:
+                cfg = skinart_site._file_config()
+                status, st = skinart_site._gateway(cfg, "state", {"account": steam_id, "admin": False})
+                if status == 200 and isinstance(st, dict) and st.get("owned"):
+                    cat = skinart_site._catalog(cfg)
+                    baked_list = cat.get("baked", []) if isinstance(cat, dict) else []
+                    baked_map = {b["kind"]: b for b in baked_list if isinstance(b, dict) and "kind" in b}
+
+                    for kind in st.get("owned", []):
+                        b_info = baked_map.get(kind, {})
+                        label = b_info.get("label", kind)
+                        species_list = b_info.get("species", ["Mọi loài"])
+                        sp_text = ", ".join(species_list) if isinstance(species_list, list) else str(species_list)
+                        img_path = b_info.get("img") or f"/cdn/skins/{skinart_site.SKIN_IMG.get(kind, 'rex_yakuza')}.webp"
+
+                        existing = any(str(s.get("id")) == f"skinart_{kind}" for s in skins)
+                        if not existing:
+                            skins.insert(0, {
+                                "id": f"skinart_{kind}",
+                                "kind": kind,
+                                "name": f"🐲 {label}",
+                                "species": sp_text,
+                                "description": f"Skin Xăm Độc Quyền (SkinArt) được Admin cấp quyền sở hữu vĩnh viễn.",
+                                "imageUrl": img_path,
+                                "image": img_path,
+                                "is_skinart": True,
+                                "allSpecies": True,
+                                "universal": True,
+                                "badge": "🐲 Skin Xăm Được Cấp",
+                                "palette": {
+                                    "body": "#ff2a85",
+                                    "underbelly": "#38bdf8",
+                                    "flank": "#f59e0b",
+                                    "markings": "#a855f7",
+                                    "display": "#ec4899",
+                                    "eyes": "#22c55e"
+                                }
+                            })
+            except Exception as e:
+                print(f"[Player Skins SkinArt Error] {e}")
 
         self.send_json_response({"skins": skins})
 
@@ -11868,6 +11921,39 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                                 break
                     except Exception:
                         pass
+
+            # 1.5. Xử lý áp dụng Skin Xăm (SkinArt) nếu là skin được Admin cấp
+            if skin_id.startswith("skinart_") or payload.get("is_skinart"):
+                kind = payload.get("kind") or skin_id.replace("skinart_", "").strip()
+                try:
+                    cfg = skinart_site._file_config()
+                    target_sp = live_species or requested_species
+                    status_sa, out_sa = skinart_site._gateway(cfg, "skin", {
+                        "account": steam_id,
+                        "admin": False,
+                        "kind": kind,
+                        "species": target_sp
+                    })
+                    if status_sa == 200 and out_sa.get("ok"):
+                        self.send_json_response({
+                            "ok": True,
+                            "success": True,
+                            "message": f"⚡ Đã áp dụng Skin Xăm [{kind}] vào khủng long trong server thành công! Hãy ngồi xuống (phím H) để server cập nhật giao diện."
+                        })
+                        return
+                    else:
+                        err_msg = out_sa.get("error") or "Không thể áp dụng skin xăm"
+                        self.send_json_response({
+                            "ok": False,
+                            "success": False,
+                            "error": err_msg,
+                            "message": f"Áp dụng skin xăm thất bại: {err_msg}"
+                        }, status=400)
+                        return
+                except Exception as e:
+                    print(f"[SkinArt Apply Error] {e}")
+                    self.send_json_response({"ok": False, "error": f"Lỗi áp dụng skin: {e}"}, status=500)
+                    return
 
             # 2. Nếu có skin_id (từ Kho Skin hoặc Shop Skin): kiểm tra xem có phải Skin Độc Quyền / Custom hay Skin IslePilot gốc
             matched_custom_skin = None

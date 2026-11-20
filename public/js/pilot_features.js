@@ -929,26 +929,27 @@ const GarageSkins = {
       };
 
       const skinImgUrl = SkinShop.getSkinImageUrl(s);
-
-
+      const isSkinArt = Boolean(s.is_skinart || (s.id && String(s.id).startsWith('skinart_')));
+      const cardBorder = isSkinArt ? 'border: 1px solid rgba(255, 42, 133, 0.55); box-shadow: 0 4px 20px rgba(255, 42, 133, 0.15);' : 'border: 1px solid rgba(0, 240, 118, 0.45);';
+      const badgeHtml = isSkinArt 
+        ? `<span class="growth-badge" style="background: rgba(255, 42, 133, 0.22); border-color: #ff2a85; color: #ff2a85; position: absolute; top: 12px; right: 12px; font-weight: 700;">🐲 Skin Xăm Được Cấp</span>`
+        : `<span class="growth-badge" style="background: rgba(0, 240, 118, 0.2); border-color: var(--accent); color: var(--accent); position: absolute; top: 12px; right: 12px;">✓ Đã Sở Hữu Trong Gara</span>`;
+      const bannerClick = isSkinArt ? `onclick="window.open('/xam', '_blank')"` : `onclick="SkinShop.openInStudio('${s.id}')"`;
+      const bannerTitle = isSkinArt ? `title="Bấm để mở Xưởng Xăm (/xam)"` : `title="Bấm để xem & xoay 3D trong Studio"`;
 
       return `
 
-        <div class="dino-card" style="border: 1px solid rgba(0, 240, 118, 0.45); background: rgba(14, 18, 25, 0.95); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;">
+        <div class="dino-card" style="${cardBorder} background: rgba(14, 18, 25, 0.95); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;">
 
-          <div class="dino-card-banner" style="position: relative; height: 240px; background: radial-gradient(circle at 50% 55%, rgba(0, 240, 118, 0.18) 0%, rgba(9, 13, 20, 0.98) 75%); overflow: hidden; display: flex; align-items: center; justify-content: center; cursor: pointer;" onclick="SkinShop.openInStudio('${s.id}')" title="Bấm để xem & xoay 3D trong Studio">
+          <div class="dino-card-banner" style="position: relative; height: 240px; background: radial-gradient(circle at 50% 55%, ${isSkinArt ? 'rgba(255, 42, 133, 0.22)' : 'rgba(0, 240, 118, 0.18)'} 0%, rgba(9, 13, 20, 0.98) 75%); overflow: hidden; display: flex; align-items: center; justify-content: center; cursor: pointer;" ${bannerClick} ${bannerTitle}>
 
             
 
-            <img src="${skinImgUrl}" alt="${s.name}" class="dino-img-render" style="max-height: 210px; width: 100%; object-fit: contain; filter: drop-shadow(0 8px 24px rgba(0, 240, 118, 0.35)); transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform='scale(1)'">
+            <img src="${skinImgUrl}" alt="${s.name}" class="dino-img-render" style="max-height: 210px; width: 100%; object-fit: contain; filter: drop-shadow(0 8px 24px ${isSkinArt ? 'rgba(255, 42, 133, 0.35)' : 'rgba(0, 240, 118, 0.35)'}); transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform='scale(1)'">
 
 
 
-            <span class="growth-badge" style="background: rgba(0, 240, 118, 0.2); border-color: var(--accent); color: var(--accent); position: absolute; top: 12px; right: 12px;">
-
-              ✓ Đã Sở Hữu Trong Gara
-
-            </span>
+            ${badgeHtml}
 
 
 
@@ -1039,19 +1040,18 @@ const GarageSkins = {
 
 
             <div style="display: flex; gap: 8px; margin-top: auto;">
-
-              <button class="btn-secondary" style="flex: 1; padding: 10px; font-size: 0.82rem;" onclick="SkinShop.openInStudio('${s.id}')">
-
-                🎮 Xem 3D Studio
-
-              </button>
-
-              <button class="btn-primary" style="flex: 1.2; padding: 10px; font-weight: 700; font-size: 0.85rem;" onclick="GarageSkins.applySkin('${s.id}', '${s.name}')">
-
+              ${isSkinArt ? `
+                <a href="/xam" target="_blank" class="btn-secondary" style="flex: 1; padding: 10px; font-size: 0.82rem; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px; border-color: rgba(56, 189, 248, 0.4); color: #38bdf8;">
+                  👁️ Xưởng Xăm ↗
+                </a>
+              ` : `
+                <button class="btn-secondary" style="flex: 1; padding: 10px; font-size: 0.82rem;" onclick="SkinShop.openInStudio('${s.id}')">
+                  🎮 Xem 3D Studio
+                </button>
+              `}
+              <button class="btn-primary" style="flex: 1.2; padding: 10px; font-weight: 700; font-size: 0.85rem; ${isSkinArt ? 'background: linear-gradient(135deg, #ff2a85, #c026d3); border: none;' : ''}" onclick="GarageSkins.applySkin('${s.id}', '${s.name}', ${isSkinArt}, '${s.kind || ''}')">
                 ⚡ Áp Dụng Ngay
-
               </button>
-
             </div>
 
           </div>
@@ -1064,46 +1064,30 @@ const GarageSkins = {
 
   },
 
-
-
-  async applySkin(skinId, skinName) {
-
+  async applySkin(skinId, skinName, isSkinArt = false, kind = '') {
     const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
-
     const steamId = user ? user.steamId : '76561199259679997';
 
-
-
     try {
-
       const res = await fetch('/api/server/skins/apply', {
-
         method: 'POST',
-
         headers: { 'Content-Type': 'application/json' },
-
-        body: JSON.stringify({ skin_id: skinId, steam_id: steamId })
-
+        body: JSON.stringify({
+          skin_id: skinId,
+          steam_id: steamId,
+          is_skinart: !!isSkinArt,
+          kind: kind || (String(skinId).startsWith('skinart_') ? String(skinId).replace('skinart_', '') : '')
+        })
       });
-
       const data = await res.json();
-
       if (data.success || data.ok) {
-
         App.showToast(data.message || "⚡ Đã áp dụng Skin vào khủng long trong Server thành công!");
-
       } else {
-
-        App.showToast(data.message || data.error || "Thất bại");
-
+        App.showToast(data.message || data.error || "Thất bại", "error");
       }
-
     } catch (e) {
-
-      App.showToast("Thất bại");
-
+      App.showToast("Thất bại", "error");
     }
-
   }
 
 };
