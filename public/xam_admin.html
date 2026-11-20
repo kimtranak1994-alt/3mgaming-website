@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cấp skin — 3MGAMING EVRIMA</title>
+<style>
+:root{--bg:#06080d;--card:rgba(15,20,32,.88);--line:rgba(255,255,255,.08);--accent:#ff2a85;--glow:rgba(255,42,133,.35);--alt:#38bdf8;
+--tx:#f1f5f9;--mute:#94a3b8;--dim:#64748b;--ok:#22c55e;--warn:#f59e0b;--bad:#ef4444;--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;--mono:ui-monospace,Consolas,monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--font);-webkit-font-smoothing:antialiased}
+header{height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:rgba(8,11,18,.95);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:8px;font-weight:800;letter-spacing:.06em;color:#fff;text-decoration:none}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent)}
+.badge{margin-left:12px;padding:3px 10px;border-radius:999px;border:1px solid rgba(255,42,133,.5);color:var(--accent);font-size:.72rem;font-weight:700}
+.chips{display:flex;gap:8px;align-items:center;font-size:.78rem}
+.chip{padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--mute)}
+a.back{color:var(--mute);text-decoration:none;border:1px solid var(--line);padding:4px 10px;border-radius:999px}
+.ribbon{background:rgba(245,158,11,.12);border-bottom:1px solid rgba(245,158,11,.35);color:var(--warn);font-size:.78rem;padding:6px 16px;text-align:center}
+.rolebtn{margin-left:6px;padding:2px 10px;border-radius:999px;border:1px solid rgba(245,158,11,.5);background:transparent;color:var(--warn);cursor:pointer;font:inherit;font-size:.74rem}
+.rolebtn.on{background:var(--warn);color:#1a1200;font-weight:700}
+main{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:14px;padding:14px;height:calc(100% - 52px - 30px)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;min-height:0}
+.card h3{font-size:.82rem;letter-spacing:.04em;text-transform:uppercase;color:var(--mute);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+label{display:block;font-size:.74rem;color:var(--mute);margin:8px 0 3px}
+input[type=text]{width:100%;background:#0b0f19;border:1px solid var(--line);border-radius:8px;color:var(--tx);padding:9px 10px;font:inherit;font-size:.88rem}
+input.mono{font-family:var(--mono)}
+.two{display:grid;grid-template-columns:1.4fr 1fr;gap:10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;overflow:auto;margin-top:8px;padding-right:4px;flex:1;min-height:120px}
+.sk{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#0b0f19;cursor:pointer;text-align:left;color:inherit;font:inherit;padding:0;position:relative}
+.sk img{width:100%;height:64px;object-fit:cover;display:block}
+.sk .t{padding:6px 8px}.sk b{display:block;font-size:.72rem}.sk small{color:var(--dim);font-size:.62rem}
+.sk[aria-pressed=true]{border-color:var(--accent);box-shadow:0 0 0 1px var(--glow) inset}
+.sk[aria-pressed=true]::after{content:"✓";position:absolute;right:6px;top:6px;width:18px;height:18px;border-radius:50%;background:var(--accent);color:#fff;font-size:.72rem;display:flex;align-items:center;justify-content:center;font-weight:800}
+.sk.has{opacity:.5}.sk.has .t::after{content:"đã có";float:right;font-size:.6rem;color:var(--ok)}
+.bar{display:flex;gap:8px;align-items:center;margin-top:10px}
+button.go{flex:1;padding:11px;border:0;border-radius:10px;background:linear-gradient(90deg,var(--accent),#c026d3);color:#fff;font-weight:800;font-size:.92rem;cursor:pointer}
+button.go:disabled{opacity:.4;cursor:not-allowed}
+button.ghost{padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--mute);cursor:pointer;font:inherit;font-size:.8rem}
+#msg{min-height:20px;font-size:.84rem;margin-top:8px}#msg.ok{color:var(--ok)}#msg.err{color:var(--bad)}
+.list{overflow:auto;flex:1;display:flex;flex-direction:column;gap:8px;margin-top:8px;padding-right:4px}
+.row{border:1px solid var(--line);border-radius:10px;padding:10px;background:#0b0f19}
+.row .h{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.row .sid{font-family:var(--mono);font-size:.8rem;cursor:pointer;color:var(--alt)}
+.row .meta{font-size:.68rem;color:var(--dim);margin-top:2px}
+.chipk{display:inline-flex;align-items:center;gap:5px;margin:6px 6px 0 0;padding:3px 4px 3px 9px;border-radius:999px;background:rgba(255,42,133,.1);border:1px solid rgba(255,42,133,.3);font-size:.7rem}
+.chipk button{border:0;background:transparent;color:var(--mute);cursor:pointer;width:18px;height:18px;border-radius:50%}
+.chipk button:hover{background:rgba(255,255,255,.12);color:#fff}
+.empty{color:var(--dim);font-size:.85rem;text-align:center;padding:30px 10px}
+.deny{max-width:520px;margin:80px auto;text-align:center;color:var(--mute)}
+@media(max-width:900px){main{grid-template-columns:1fr;height:auto}.grid{max-height:50vh}}
+</style>
+</head>
+<body>
+<header>
+  <div style="display:flex;align-items:center"><a class="brand" href="/"><span class="dot"></span>3MGAMING</a><span class="badge">Cấp skin</span></div>
+  <div class="chips"><a class="back" href="/xam">← Xưởng Xăm</a><span class="chip" id="c-user">…</span></div>
+</header>
+<div class="ribbon" id="ribbon" hidden>BẢN XEM THỬ — dữ liệu và game đều giả lập trên máy này. &nbsp;Xem như:
+  <button class="rolebtn" data-as="player">Người chơi</button><button class="rolebtn" data-as="admin">Admin</button></div>
+<div class="deny" id="deny" hidden><h2 style="color:var(--tx);margin-bottom:8px">Trang này chỉ dành cho admin</h2>Bạn chưa có quyền admin trên web.</div>
+<main id="main" hidden>
+  <section class="card">
+    <h3>Cấp skin cho người chơi <span class="chip" id="selcount">0 skin đã chọn</span></h3>
+    <div class="two">
+      <div><label for="sid">SteamID64 của người chơi</label><input type="text" id="sid" class="mono" placeholder="7656119…" maxlength="17" autocomplete="off" spellcheck="false"></div>
+      <div><label for="note">Ghi chú (tên, để dễ tìm)</label><input type="text" id="note" maxlength="60" placeholder="VD: Bạn A — donate"></div>
+    </div>
+    <div class="grid" id="grid"></div>
+    <div class="bar"><button class="ghost" id="all">Chọn tất cả</button><button class="ghost" id="none">Bỏ chọn</button><button class="go" id="grant" disabled>Cấp skin đã chọn</button></div>
+    <div id="msg"></div>
+  </section>
+  <section class="card">
+    <h3>Đã cấp <span class="chip" id="gcount"></span></h3>
+    <input type="text" id="q" placeholder="Tìm theo SteamID hoặc ghi chú…">
+    <div class="list" id="list"></div>
+  </section>
+</main>
+<script>
+"use strict";
+const $ = (s) => document.querySelector(s);
+const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const api = async (u, b) => { const r = await fetch(u, b ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) } : {}); return r.json().catch(() => ({ ok: false, error: 'lỗi mạng' })); };
+const A = { baked: [], grants: [], pick: new Set() };
+const label = (k) => (A.baked.find((x) => x.kind === k) || { label: k }).label;
+const msg = (t, c) => { $('#msg').textContent = t || ''; $('#msg').className = c || ''; };
+const validSid = (s) => /^7656119[0-9]{10}$/.test(s);
+const when = (t) => t ? new Date(t * 1000).toLocaleString('vi-VN', { hour12: false }) : '';
+const held = () => new Set((A.grants.find((g) => g.account === $('#sid').value.trim()) || { kinds: [] }).kinds);
+
+function drawGrid() {
+  const have = held();
+  $('#grid').innerHTML = A.baked.map((k) => `<button class="sk ${have.has(k.kind) ? 'has' : ''}" data-k="${esc(k.kind)}" aria-pressed="${A.pick.has(k.kind)}">
+    <img src="${esc(k.img)}" alt="" loading="lazy"><div class="t"><b>${esc(k.label)}</b><small>${esc(k.species.join(', '))}</small></div></button>`).join('');
+  $('#selcount').textContent = A.pick.size + ' skin đã chọn'; $('#grant').disabled = !(A.pick.size && validSid($('#sid').value.trim()));
+}
+function drawList() {
+  const q = $('#q').value.trim().toLowerCase();
+  const rows = A.grants.filter((g) => !q || g.account.includes(q) || (g.note || '').toLowerCase().includes(q));
+  $('#gcount').textContent = A.grants.length + ' người';
+  $('#list').innerHTML = rows.length ? rows.map((g) => `<div class="row"><div class="h"><span class="sid" data-sid="${esc(g.account)}" title="Bấm để cấp thêm cho người này">${esc(g.account)}</span>
+      <button class="ghost" data-revoke-all="${esc(g.account)}">Thu hồi hết</button></div>
+      <div class="meta">${esc(g.note || '—')} · ${g.kinds.length} skin · cấp ${esc(when(g.at))}</div>
+      <div>${g.kinds.map((k) => `<span class="chipk">${esc(label(k))}<button data-revoke="${esc(g.account)}|${esc(k)}" title="Thu hồi skin này">✕</button></span>`).join('')}</div></div>`).join('')
+    : '<div class="empty">Chưa cấp skin cho ai.</div>';
+}
+async function load() {
+  const s = await api('/api/skinart/state');
+  $('#c-user').textContent = '👤 ' + s.name; $('#ribbon').hidden = !s.demo;
+  document.querySelectorAll('.rolebtn').forEach((b) => b.classList.toggle('on', b.dataset.as === s.role));
+  if (!s.is_admin) { $('#deny').hidden = false; $('#main').hidden = true; return; }
+  const r = await api('/api/skinart/admin/grants'); if (!r.ok) { $('#deny').hidden = false; return; }
+  $('#deny').hidden = true; $('#main').hidden = false; A.baked = r.baked; A.grants = r.grants; drawGrid(); drawList();
+}
+$('#grid').addEventListener('click', (e) => { const b = e.target.closest('.sk'); if (!b) return; const k = b.dataset.k; A.pick.has(k) ? A.pick.delete(k) : A.pick.add(k); drawGrid(); });
+$('#all').onclick = () => { A.baked.forEach((k) => A.pick.add(k.kind)); drawGrid(); };
+$('#none').onclick = () => { A.pick.clear(); drawGrid(); };
+$('#sid').addEventListener('input', () => { msg(''); drawGrid(); });
+$('#q').addEventListener('input', drawList);
+$('#grant').onclick = async () => {
+  const account = $('#sid').value.trim(); $('#grant').disabled = true;
+  const r = await api('/api/skinart/admin/grant', { account, kinds: [...A.pick], note: $('#note').value });
+  if (!r.ok) msg('✖ ' + r.error, 'err'); else { msg(`✔ Đã cấp ${A.pick.size} skin cho ${account}. Họ có ${r.kinds.length} skin.`, 'ok'); A.pick.clear(); await load(); }
+};
+$('#list').addEventListener('click', async (e) => {
+  const sid = e.target.dataset.sid; if (sid) { $('#sid').value = sid; const g = A.grants.find((x) => x.account === sid); $('#note').value = g ? g.note : ''; drawGrid(); $('#sid').focus(); return; }
+  const one = e.target.dataset.revoke, all = e.target.dataset.revokeAll;
+  if (one) { const [account, kind] = one.split('|'); const r = await api('/api/skinart/admin/revoke', { account, kinds: [kind] }); msg(r.ok ? `✔ Đã thu hồi "${label(kind)}" của ${account}.` : '✖ ' + r.error, r.ok ? 'ok' : 'err'); await load(); }
+  if (all) { if (!confirm(`Thu hồi toàn bộ skin của ${all}?`)) return; const r = await api('/api/skinart/admin/revoke', { account: all }); msg(r.ok ? `✔ Đã thu hồi hết skin của ${all}.` : '✖ ' + r.error, r.ok ? 'ok' : 'err'); await load(); }
+});
+document.querySelectorAll('.rolebtn').forEach((b) => b.addEventListener('click', async () => { await api('/api/skinart/role?as=' + b.dataset.as); await load(); }));
+load();
+</script>
+</body>
+</html>

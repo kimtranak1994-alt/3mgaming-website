@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Xưởng Xăm — 3MGAMING EVRIMA</title>
+<style>
+:root{--bg:#06080d;--card:rgba(15,20,32,.88);--line:rgba(255,255,255,.08);--accent:#ff2a85;--glow:rgba(255,42,133,.35);--alt:#38bdf8;
+--tx:#f1f5f9;--mute:#94a3b8;--dim:#64748b;--ok:#22c55e;--warn:#f59e0b;--bad:#ef4444;
+--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;--mono:ui-monospace,Consolas,monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--font);-webkit-font-smoothing:antialiased}
+header{height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:rgba(8,11,18,.95);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:8px;font-weight:800;letter-spacing:.06em;color:#fff;text-decoration:none}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent)}
+.badge{margin-left:12px;padding:3px 10px;border-radius:999px;border:1px solid var(--border-active,rgba(255,42,133,.5));color:var(--accent);font-size:.72rem;font-weight:700}
+.chips{display:flex;gap:8px;align-items:center;font-size:.78rem}
+.chip{padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--mute)}
+.chip b{color:var(--tx)}.chip.ok{color:var(--ok)}.chip.bad{color:var(--bad)}
+.ribbon{background:rgba(245,158,11,.12);border-bottom:1px solid rgba(245,158,11,.35);color:var(--warn);font-size:.78rem;padding:6px 16px;text-align:center}
+main{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(340px,.75fr);gap:14px;padding:14px;height:calc(100% - 52px - 30px)}
+.stage{position:relative;border:1px solid var(--line);border-radius:14px;background:radial-gradient(ellipse at 50% 35%,#141b2b,#090c14 70%);overflow:hidden;min-height:360px}
+#cv{width:100%;height:100%;display:block}
+.stage .tag{position:absolute;left:14px;top:12px;font-size:.78rem;color:var(--mute)}
+.stage .note{position:absolute;left:14px;right:14px;bottom:10px;font-size:.7rem;color:var(--dim)}
+#nomodel{position:absolute;inset:0;display:none;align-items:center;justify-content:center;text-align:center;color:var(--mute);padding:30px;font-size:.9rem}
+aside{overflow:auto;padding-right:4px;display:flex;flex-direction:column;gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+.card h3{font-size:.82rem;letter-spacing:.04em;text-transform:uppercase;color:var(--mute);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+label{display:block;font-size:.74rem;color:var(--mute);margin:8px 0 3px}
+select,input[type=text]{width:100%;background:#0b0f19;border:1px solid var(--line);border-radius:8px;color:var(--tx);padding:8px 10px;font:inherit;font-size:.88rem}
+input[type=color]{width:38px;height:30px;border:1px solid var(--line);border-radius:6px;background:#0b0f19;padding:2px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px}
+.rg{display:flex;gap:6px;flex-wrap:wrap}
+.pill{padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:#0b0f19;color:var(--mute);font-size:.8rem;cursor:pointer}
+.pill[aria-pressed=true]{border-color:var(--accent);color:#fff;box-shadow:0 0 0 1px var(--glow) inset}
+.layer{border:1px dashed var(--line);border-radius:10px;padding:10px;margin-bottom:8px}
+.layer .top{display:grid;grid-template-columns:1fr 92px 38px 30px;gap:6px;align-items:center}
+.x{background:none;border:1px solid var(--line);color:var(--mute);border-radius:6px;height:30px;cursor:pointer}
+.mini{font-size:.7rem;color:var(--dim)}
+button.go{width:100%;padding:12px;border:0;border-radius:10px;background:linear-gradient(90deg,var(--accent),#c026d3);color:#fff;font-weight:800;font-size:.95rem;cursor:pointer}
+button.go:disabled{opacity:.45;cursor:not-allowed}
+button.ghost{padding:9px 14px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--mute);cursor:pointer;font:inherit;font-size:.85rem}
+.locked{opacity:.55}
+#msg{min-height:20px;font-size:.84rem;margin-top:8px}
+#msg.ok{color:var(--ok)}#msg.err{color:var(--bad)}#msg.wait{color:var(--alt)}
+.add{width:100%;padding:8px;border-radius:8px;border:1px dashed var(--line);background:transparent;color:var(--mute);cursor:pointer}
+.tabs{display:flex;gap:8px}.tabs .pill{flex:1;text-align:center;padding:10px;font-weight:700}
+#skinimg{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:radial-gradient(ellipse at 50% 40%,#141b2b,#090c14 75%);display:none;padding:34px 14px 40px}
+.skins{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.sk{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#0b0f19;cursor:pointer;text-align:left;color:inherit;font:inherit;padding:0}
+.sk img{width:100%;height:92px;object-fit:cover;display:block;background:#0b0f19}
+.sk .t{padding:8px 10px}.sk b{display:block;font-size:.8rem}.sk small{color:var(--dim);font-size:.68rem}
+.sk[aria-pressed=true]{border-color:var(--accent);box-shadow:0 0 0 1px var(--glow) inset}
+.life{font-size:.7rem;color:var(--warn);margin-top:6px}
+.rolebtn{margin-left:6px;padding:2px 10px;border-radius:999px;border:1px solid rgba(245,158,11,.5);background:transparent;color:var(--warn);cursor:pointer;font:inherit;font-size:.74rem}
+.rolebtn.on{background:var(--warn);color:#1a1200;font-weight:700}
+.sk.lock img{filter:grayscale(1) brightness(.55)}.sk.lock b{color:var(--mute)}
+.sk .badge2{float:right;font-size:.64rem;padding:1px 6px;border-radius:999px;background:rgba(34,197,94,.15);color:var(--ok)}
+.sk.lock .badge2{background:rgba(148,163,184,.15);color:var(--mute)}
+a.adminlink{color:var(--accent);text-decoration:none;border:1px solid rgba(255,42,133,.5);padding:4px 10px;border-radius:999px;font-weight:700}
+@media(max-width:900px){main{grid-template-columns:1fr;height:auto}.stage{height:46vh}}
+</style>
+</head>
+<body>
+<header>
+  <div style="display:flex;align-items:center"><a class="brand" href="/"><span class="dot"></span>3MGAMING</a><span class="badge">Xưởng Xăm</span></div>
+  <div class="chips"><a class="adminlink" id="adminlink" href="/xam-admin" hidden>🛠 Cấp skin</a><span class="chip" id="c-user">…</span><span class="chip" id="c-game">…</span></div>
+</header>
+<div class="ribbon" id="ribbon" hidden>BẢN XEM THỬ — game được giả lập trên máy này, chưa có gì gửi vào server thật. &nbsp;Xem như:
+  <button class="rolebtn" data-as="player">Người chơi</button><button class="rolebtn" data-as="admin">Admin</button></div>
+<div class="ribbon" id="notice" hidden></div>
+<main>
+  <section class="stage">
+    <canvas id="cv"></canvas>
+    <div class="tag" id="tag">Đang tải mô hình…</div>
+    <div id="nomodel">Loài này chưa có mô hình xem trước.<br>Bạn vẫn có thể thiết kế và mặc lên dino trong game.</div>
+    <img id="skinimg" alt="">
+    <div id="skintag" class="tag" style="display:none"></div>
+    <div class="note">Xem trước chỉ mang tính gần đúng (vị trí và độ mòn). Hình xăm thật được game vẽ lúc bạn bấm "Mặc lên dino".</div>
+  </section>
+  <aside>
+    <div class="tabs"><button class="pill" data-tab="design" aria-pressed="true">Thiết kế chữ</button><button class="pill" data-tab="skins" aria-pressed="false">Skin có sẵn</button></div>
+    <div id="tab-skins" hidden>
+      <div class="card"><h3>Skin có sẵn <span class="mini" id="skcount"></span></h3>
+        <div class="skins" id="skgrid"></div>
+        <div class="life" id="skinfo"></div></div>
+    </div>
+    <div id="tab-design" style="display:flex;flex-direction:column;gap:12px">
+    <div class="card">
+      <h3>Dino</h3>
+      <select id="species"></select>
+      <div class="mini" style="margin-top:6px">Chỉ mặc được khi bạn đang chơi đúng loài này.</div>
+    </div>
+    <div class="card">
+      <h3>Hình sọ</h3>
+      <div class="rg" id="designs"></div>
+      <div id="skullbox">
+        <div class="row"><div><label>Màu sọ</label><input type="color" id="sk-col" value="#c8c0aa"></div>
+          <div><label>Cỡ <span id="sk-size-v"></span></label><input type="range" id="sk-size" min="0.1" max="2" step="0.05" value="1"></div>
+          <div><label>Ngang</label><input type="range" id="sk-x" min="-1" max="1" step="0.02" value="0"></div>
+          <div><label>Dọc</label><input type="range" id="sk-y" min="-1" max="1" step="0.02" value="0"></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Chữ xăm <span class="mini" id="ncount"></span></h3>
+      <div id="layers"></div>
+      <button class="add" id="add">+ Thêm dòng chữ</button>
+    </div>
+    <div class="card locked">
+      <h3>Sticker <span class="mini">sắp có</span></h3>
+      <div class="mini">Vết cào, vằn hổ, tia sét, lửa, ngôi sao… cần thêm bộ vẽ hình (atlas) phía web. Bản này chỉ có chữ và sọ.</div>
+    </div>
+    </div>
+    <div class="card">
+      <button class="go" id="apply">Mặc lên dino của tôi</button>
+      <div style="display:flex;gap:8px;margin-top:8px"><button class="ghost" id="remove" style="flex:1">Gỡ hình xăm</button></div>
+      <div id="msg"></div>
+    </div>
+  </aside>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script>
+"use strict";
+const $ = (s) => document.querySelector(s);
+const FONT = { sans: '"Segoe UI",Arial,sans-serif', serif: 'Georgia,"Times New Roman",serif', heavy: '"Arial Black",Impact,sans-serif', mono: 'Consolas,monospace' };
+const S = { species: 'Tyrannosaurus', design: 'rex_deathmask', skull: { colour: '#c8c0aa', x: 0, y: 0.1, size: 1, rotation: 0, wear: 0.25 }, names: [], preview: [], busy: false, n: 0 };
+let info = null;
+
+const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const api = async (url, body) => {
+  const r = await fetch(url, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {});
+  const d = await r.json().catch(() => ({ ok: false, error: 'lỗi mạng' })); return d;
+};
+function msg(text, cls) { const m = $('#msg'); m.textContent = text || ''; m.className = cls || ''; }
+
+// ------------------------------------------------------------------ 3D preview
+const cv = $('#cv'); let renderer, scene, camera, controls, model = null, baseImg = null, tex = null;
+function init3d() {
+  renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.outputEncoding = THREE.sRGBEncoding;
+  scene = new THREE.Scene(); camera = new THREE.PerspectiveCamera(38, 1, 0.05, 500);
+  scene.add(new THREE.HemisphereLight(0xdfe8ff, 0x20242e, 1.15));
+  const d = new THREE.DirectionalLight(0xffffff, 1.4); d.position.set(3, 5, 4); scene.add(d);
+  controls = new THREE.OrbitControls(camera, cv); controls.enableDamping = true;
+  addEventListener('resize', resize); resize();
+  (function loop() { requestAnimationFrame(loop); controls.update(); renderer.render(scene, camera); })();
+}
+function resize() { const r = cv.parentElement.getBoundingClientRect(); renderer.setSize(r.width, r.height, false); camera.aspect = r.width / r.height; camera.updateProjectionMatrix(); }
+const loadImg = (u) => new Promise((ok, no) => { const i = new Image(); i.crossOrigin = 'anonymous'; i.onload = () => ok(i); i.onerror = no; i.src = u; });
+
+async function loadModel(sp) {
+  S.species = sp; $('#tag').textContent = sp; $('#nomodel').style.display = 'none';
+  if (model) { scene.remove(model); model = null; }
+  if (!S.preview.includes(sp)) { $('#nomodel').style.display = 'flex'; return; }
+  const ticket = ++S.n; $('#tag').textContent = sp + ' — đang tải…';
+  try {
+    const base = `/cdn/dinos/${encodeURIComponent(sp)}`;
+    const [img, gltf] = await Promise.all([loadImg(base + '/diffuse.png'), new Promise((ok, no) => new THREE.GLTFLoader().load(base + '/mesh.glb', ok, undefined, no))]);
+    if (ticket !== S.n) return;
+    baseImg = img; model = gltf.scene; tex = new THREE.CanvasTexture(document.createElement('canvas')); tex.flipY = false; tex.encoding = THREE.sRGBEncoding;
+    model.traverse((o) => { if (o.isMesh) { o.material = new THREE.MeshStandardMaterial({ map: tex, color: 0xb9c2a0, roughness: 0.9, metalness: 0 }); } });
+    const box = new THREE.Box3().setFromObject(model), c = box.getCenter(new THREE.Vector3()), s = box.getSize(new THREE.Vector3());
+    model.position.sub(c); scene.add(model); S.size = s;
+    const R = Math.max(s.x, s.y, s.z); camera.position.set(R * 0.9, R * 0.45, R * 1.25); controls.target.set(0, 0, 0); controls.update();
+    $('#tag').textContent = sp; paint();
+  } catch (e) { $('#tag').textContent = sp; $('#nomodel').style.display = 'flex'; console.warn(e); }
+}
+// Preview placement: shoot a ray at the body from the side and paint at the UV it hits (x along the body, y up).
+const ray = new THREE.Raycaster();
+function uvAt(px, py, sign) {
+  const s = S.size, longX = s.x >= s.z, along = px * (longX ? s.x : s.z) / 2 * 0.9, up = py * s.y / 2 * 0.9;
+  const o = longX ? new THREE.Vector3(along, up, sign * s.z) : new THREE.Vector3(sign * s.x, up, along);
+  ray.set(o, longX ? new THREE.Vector3(0, 0, -sign) : new THREE.Vector3(-sign, 0, 0));
+  const h = ray.intersectObject(model, true)[0]; return h && h.uv ? h.uv : null;
+}
+function paint() {
+  if (!tex || !baseImg || !model) return;
+  const c = tex.image, W = 1024; c.width = W; c.height = W; const g = c.getContext('2d');
+  g.drawImage(baseImg, 0, 0, W, W); model.updateMatrixWorld(true);
+  // The UV island of the flank may be turned: measure where "along the body" points in texture space and rotate to match.
+  const put = (p, sides, draw) => { for (const sg of sides) {
+    const uv = uvAt(p.x, p.y, sg), nx = uvAt(p.x + 0.06 * sg, p.y, sg); if (!uv) continue;
+    const base = nx ? Math.atan2(nx.y - uv.y, nx.x - uv.x) : 0, up = uvAt(p.x, p.y + 0.06, sg);
+    // a mirrored UV island turns the text into its reflection: detect it from the handedness of (along, down) and undo it
+    const mirrored = nx && up && ((nx.x - uv.x) * -(up.y - uv.y) - (nx.y - uv.y) * -(up.x - uv.x)) < 0;
+    g.save(); g.translate(uv.x * W, uv.y * W); g.rotate(base + p.rotation * Math.PI / 180); if (mirrored) g.scale(1, -1); g.globalAlpha = 1 - p.wear * 0.5; draw(); g.restore(); } };
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  if (S.design !== 'rex_namebrand') put(S.skull, [1], () => { g.fillStyle = S.skull.colour; g.font = `${Math.round(130 * S.skull.size)}px "Segoe UI Symbol","Noto Sans Symbols",sans-serif`; g.fillText('☠', 0, 0); });
+  for (const n of S.names) {
+    if (!n.text) continue;
+    put(n, n.side === 'left' ? [1] : n.side === 'right' ? [-1] : [1, -1], () => { g.fillStyle = n.colour; g.font = `${n.font === 'heavy' ? '900' : '600'} ${Math.round(95 * n.size)}px ${FONT[n.font]}`; g.fillText(n.text, 0, 0); });
+  }
+  tex.needsUpdate = true;
+}
+
+// ------------------------------------------------------------------ controls
+function drawLayers() {
+  $('#ncount').textContent = `${S.names.length}/4`; $('#add').style.display = S.names.length >= 4 ? 'none' : '';
+  $('#layers').innerHTML = S.names.map((n, i) => `<div class="layer" data-i="${i}">
+    <div class="top"><input type="text" data-k="text" maxlength="32" placeholder="Chữ xăm (tối đa 32)" value="${esc(n.text)}">
+      <select data-k="font">${info.fonts.map((f) => `<option value="${f}" ${f === n.font ? 'selected' : ''}>${f}</option>`).join('')}</select>
+      <input type="color" data-k="colour" value="${n.colour}"><button class="x" data-del="${i}" title="Xóa">✕</button></div>
+    <div class="row" style="margin-top:6px">
+      <div><label>Cỡ</label><input type="range" data-k="size" min="0.1" max="2" step="0.05" value="${n.size}"></div>
+      <div><label>Xoay</label><input type="range" data-k="rotation" min="-180" max="180" step="1" value="${n.rotation}"></div>
+      <div><label>Ngang</label><input type="range" data-k="x" min="-1" max="1" step="0.02" value="${n.x}"></div>
+      <div><label>Dọc</label><input type="range" data-k="y" min="-1" max="1" step="0.02" value="${n.y}"></div>
+      <div><label>Độ mòn</label><input type="range" data-k="wear" min="0" max="1" step="0.05" value="${n.wear}"></div>
+      <div><label>Bên</label><select data-k="side">${['both', 'left', 'right'].map((s) => `<option value="${s}" ${s === n.side ? 'selected' : ''}>${{ both: 'cả hai', left: 'trái', right: 'phải' }[s]}</option>`).join('')}</select></div>
+    </div></div>`).join('');
+}
+$('#layers').addEventListener('input', (e) => {
+  const L = e.target.closest('.layer'); if (!L || !e.target.dataset.k) return; const n = S.names[+L.dataset.i], k = e.target.dataset.k;
+  n[k] = e.target.type === 'range' ? +e.target.value : e.target.value; paint();
+});
+$('#layers').addEventListener('click', (e) => { const i = e.target.dataset.del; if (i === undefined) return; S.names.splice(+i, 1); drawLayers(); paint(); });
+$('#add').onclick = () => { S.names.push({ id: 'n' + Date.now().toString(36), text: '3M', font: 'heavy', colour: '#f4f0e6', x: 0, y: -0.3, size: 1, rotation: 0, wear: 0.25, side: 'both' }); drawLayers(); paint(); };
+function drawDesigns() {
+  $('#designs').innerHTML = Object.entries(info.designs).map(([k, v]) => `<button class="pill" data-d="${k}" aria-pressed="${k === S.design}">${esc(v)}</button>`).join('');
+  $('#skullbox').style.display = S.design === 'rex_namebrand' ? 'none' : '';
+}
+$('#designs').addEventListener('click', (e) => { if (!e.target.dataset.d) return; S.design = e.target.dataset.d; drawDesigns(); paint(); });
+for (const [id, k] of [['sk-col', 'colour'], ['sk-size', 'size'], ['sk-x', 'x'], ['sk-y', 'y']]) $('#' + id).addEventListener('input', (e) => { S.skull[k] = k === 'colour' ? e.target.value : +e.target.value; paint(); });
+$('#species').onchange = (e) => loadModel(e.target.value);
+
+// ------------------------------------------------------------------ talk to the server
+function toDoc() {
+  return { species: S.species, design: S.design,
+    names: S.names.filter((n) => n.text.trim()).map((n) => ({ id: n.id, text: n.text, font: n.font, colour: n.colour, placement: { x: n.x, y: n.y, size: n.size, rotation: n.rotation, wear: n.wear, side: n.side } })),
+    skull: { enabled: S.design !== 'rex_namebrand', colour: S.skull.colour, placement: { x: S.skull.x, y: S.skull.y, size: S.skull.size, rotation: S.skull.rotation, wear: S.skull.wear } } };
+}
+async function follow(rid, okText) {
+  msg('Đã gửi lệnh vào game, đang chờ…', 'wait');
+  for (let i = 0; i < 30; i++) {
+    await new Promise((r) => setTimeout(r, 700)); const r = await api('/api/skinart/result?rid=' + rid);
+    if (r.state && r.state !== 'pending') { r.state === 'applied' ? msg('✔ ' + okText, 'ok') : msg('✖ Game từ chối: ' + (r.message || r.state), 'err'); return; }
+  }
+  msg('Chưa nhận được trả lời. Hãy vào game và đang chơi đúng loài này rồi thử lại.', 'err');
+}
+// ------------------------------------------------------------------ baked skins tab
+S.tab = 'design'; S.skin = null;
+const owns = (k) => (info.owned || []).includes(k);
+function drawSkins() {
+  const n = info.baked.filter((k) => owns(k.kind)).length;
+  $('#skcount').textContent = `${n}/${info.baked.length} đã được cấp`;
+  $('#skgrid').innerHTML = [...info.baked].sort((a, b) => owns(b.kind) - owns(a.kind)).map((k) => `<button class="sk ${owns(k.kind) ? '' : 'lock'}" data-k="${esc(k.kind)}" aria-pressed="${k.kind === S.skin}">
+    <img src="${esc(k.img)}" alt="" loading="lazy"><div class="t"><span class="badge2">${owns(k.kind) ? 'đã cấp' : '🔒 khóa'}</span><b>${esc(k.label)}</b><small>${esc(k.species.join(', '))}</small></div></button>`).join('');
+}
+function showTab(t) {
+  S.tab = t; msg('');
+  document.querySelectorAll('.tabs .pill').forEach((b) => b.setAttribute('aria-pressed', b.dataset.tab === t));
+  $('#tab-design').style.display = t === 'design' ? 'flex' : 'none'; $('#tab-skins').hidden = t !== 'skins';
+  $('#cv').style.visibility = t === 'design' ? 'visible' : 'hidden'; $('#tag').style.display = t === 'design' ? '' : 'none';
+  $('#skinimg').style.display = t === 'skins' && S.skin ? 'block' : 'none'; $('#skintag').style.display = t === 'skins' && S.skin ? '' : 'none';
+  $('#apply').textContent = t === 'design' ? 'Mặc lên dino của tôi' : (S.skin && !owns(S.skin) ? '🔒 Chưa được cấp' : 'Mặc skin này');
+  $('#apply').disabled = t === 'skins' && (!S.skin || !owns(S.skin));
+}
+document.querySelector('.tabs').addEventListener('click', (e) => { if (e.target.dataset.tab) showTab(e.target.dataset.tab); });
+$('#skgrid').addEventListener('click', (e) => {
+  const b = e.target.closest('.sk'); if (!b) return; S.skin = b.dataset.k; const k = info.baked.find((x) => x.kind === S.skin);
+  $('#skinimg').src = k.img; $('#skintag').textContent = `${k.label} — ${k.species.join(', ')}`;
+  $('#skinfo').textContent = owns(S.skin)
+    ? 'Skin này được vẽ sẵn trong gói tải của launcher; chỉ mặc được khi bạn đang chơi đúng loài. Dino chết thì mất skin.'
+    : '🔒 Skin này chưa được admin cấp cho bạn. Hãy nhờ admin cấp rồi quay lại.';
+  drawSkins(); showTab('skins');
+});
+$('#apply').onclick = async () => {
+  if (!info.logged_in) { msg('Hãy đăng nhập Steam trước.', 'err'); return; }
+  if (S.busy) return; S.busy = true; $('#apply').disabled = true; msg('Đang kiểm tra…', 'wait');
+  if (S.tab === 'skins') {
+    const k = info.baked.find((x) => x.kind === S.skin), r = await api('/api/skinart/skin', { kind: S.skin });
+    if (!r.ok) msg('✖ ' + r.error, 'err'); else await follow(r.request_id, `Đã mặc skin ${k.label}.`);
+  } else {
+    const r = await api('/api/skinart/apply', toDoc());
+    if (!r.ok) msg('✖ ' + r.error, 'err'); else await follow(r.request_id, `Đã mặc hình xăm lên ${S.species} của bạn.`);
+  }
+  S.busy = false; showTab(S.tab);
+};
+$('#remove').onclick = async () => { const r = await api('/api/skinart/remove', {}); if (!r.ok) msg('✖ ' + r.error, 'err'); else follow(r.request_id, 'Đã gỡ hình xăm.'); };
+
+document.querySelectorAll('.rolebtn').forEach((b) => b.addEventListener('click', async () => { await api('/api/skinart/role?as=' + b.dataset.as); await refreshState(); }));
+async function refreshState() {
+  const s = await api('/api/skinart/state'); if (!s.ok) return;
+  $('#c-user').innerHTML = s.logged_in ? `👤 <b>${esc(s.name)}</b>` : '👤 Khách';
+  $('#c-game').className = 'chip ' + (!s.logged_in ? '' : s.game_online ? 'ok' : 'bad'); $('#c-game').textContent = !s.logged_in ? 'Chưa đăng nhập' : s.game_online ? '● Game: SkinArt sẵn sàng' : '○ Game đang offline';
+  $('#ribbon').hidden = !s.demo; $('#apply').title = s.allowed ? '' : 'Bạn chưa được mở khóa hình xăm';
+  $('#adminlink').hidden = !s.is_admin;
+  const nt = $('#notice');
+  if (!s.configured) { nt.textContent = 'SkinArt chưa được cấu hình trên web.'; nt.hidden = false; }
+  else if (!s.logged_in) { nt.innerHTML = 'Bạn chưa đăng nhập. <a style="color:#fff" href="/api/player/steam/login?redirect=/xam">Đăng nhập Steam</a> để dùng skin.'; nt.hidden = false; }
+  else if (!s.baked.length) { nt.textContent = 'Không kết nối được game server. Thử lại sau.'; nt.hidden = false; }
+  else nt.hidden = true;
+  document.querySelectorAll('.rolebtn').forEach((b) => b.classList.toggle('on', b.dataset.as === s.role));
+  info = s; if (typeof drawSkins === 'function' && S.tab) { drawSkins(); }
+  return s;
+}
+(async () => {
+  const s = await refreshState(); info = s; S.preview = s.preview_species;
+  $('#species').innerHTML = s.species.map((x) => `<option value="${x}" ${x === S.species ? 'selected' : ''}>${x}${s.preview_species.includes(x) ? '' : ' (không xem trước)'}</option>`).join('');
+  S.names.push({ id: 'n1', text: '3M', font: 'heavy', colour: '#f4f0e6', x: 0, y: -0.25, size: 1, rotation: 0, wear: 0.25, side: 'both' });
+  drawDesigns(); drawLayers(); drawSkins(); init3d(); loadModel(S.species); setInterval(refreshState, 5000);
+})();
+</script>
+</body>
+</html>

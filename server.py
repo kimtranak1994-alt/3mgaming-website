@@ -28,6 +28,7 @@ import math
 import concurrent.futures
 
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
+import skinart_site  # SkinArt: /xam, /xam-admin, /api/skinart/*
 
 import urllib.request
 
@@ -980,6 +981,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         return False, None
 
     def do_GET(self):
+        if skinart_site.wants(self.path):
+            skinart_site.handle(self, config)
+            return
 
         # 1. Config public endpoint
 
@@ -1475,6 +1479,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
     def do_POST(self):
         import time
         import datetime
+        if skinart_site.wants(self.path):
+            skinart_site.handle(self, config)
+            return
 
         if self.path == "/api/server/garage/store" or self.path == "/api/server/garage/park":
 
@@ -2922,6 +2929,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         redirect_target = params.get("redirect", [""])[0].strip()
         if redirect_target and redirect_target.startswith("/studio"):
             redirect_url = f"/studio?steam_id={steam_id}&name={encoded_name}"
+        elif redirect_target in ("/xam", "/xam-admin"):  # SkinArt pages: back to where the player came from (exact match, no open redirect)
+            redirect_url = redirect_target
         else:
             redirect_url = f"/?steam_id={steam_id}&name={encoded_name}#garage"
 
