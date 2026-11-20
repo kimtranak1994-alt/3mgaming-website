@@ -4391,3 +4391,128 @@ body[data-current-tab="admin"] .nav-links {
 .carcass-card-plant .carcass-btn-buy:hover {
   background: #059669 !important;
 }
+
+/* ===================================================
+   SKINART ADMIN PANEL STYLES
+   =================================================== */
+.admin-skinart-card {
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+  border-radius: 10px;
+  overflow: hidden;
+  background: #0b0f19;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  padding: 0;
+  position: relative;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+.admin-skinart-card:hover {
+  border-color: rgba(255, 42, 133, 0.5) !important;
+  transform: translateY(-2px);
+}
+.admin-skinart-card img {
+  width: 100%;
+  height: 68px;
+  object-fit: cover;
+  display: block;
+  background: #000;
+}
+.admin-skinart-card .t {
+  padding: 6px 8px;
+}
+.admin-skinart-card b {
+  display: block;
+  font-size: 0.76rem;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.admin-skinart-card small {
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.65rem;
+  display: block;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.admin-skinart-card[aria-pressed="true"] {
+  border-color: #ff2a85 !important;
+  box-shadow: 0 0 0 1px rgba(255, 42, 133, 0.5) inset, 0 4px 14px rgba(255, 42, 133, 0.3) !important;
+}
+.admin-skinart-card[aria-pressed="true"]::after {
+  content: "✓";
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ff2a85;
+  color: #fff;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+}
+.admin-skinart-card.has {
+  opacity: 0.6;
+}
+.admin-skinart-card.has .t::after {
+  content: "ĐÃ CÓ";
+  float: right;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.15);
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+.admin-grant-row {
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+  border-radius: 10px;
+  padding: 12px;
+  background: rgba(11, 15, 25, 0.85);
+  transition: all 0.2s ease;
+}
+.admin-grant-row:hover {
+  border-color: rgba(255, 42, 133, 0.3);
+}
+.admin-grant-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 6px 6px 0 0;
+  padding: 3px 6px 3px 10px;
+  border-radius: 999px;
+  background: rgba(255, 42, 133, 0.12);
+  border: 1px solid rgba(255, 42, 133, 0.35);
+  font-size: 0.72rem;
+  color: #ff70a6;
+  font-weight: 600;
+}
+.admin-grant-chip button {
+  border: 0;
+  background: transparent;
+  color: var(--text-muted, #94a3b8);
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  line-height: 1;
+}
+.admin-grant-chip button:hover {
+  background: rgba(239, 68, 68, 0.4);
+  color: #fff;
+}

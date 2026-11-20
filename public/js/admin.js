@@ -13,6 +13,10 @@ const AdminPanel = {
   filterCategory: 'all', // all | online | offline | herbivore | carnivore
   selectedPlayer: null,
   customSkins: [],
+  skinartBaked: [],
+  skinartGrants: [],
+  skinartPick: new Set(),
+  skinartSearchQuery: '',
   garageSettings: { maxSlots: 5, parkSeconds: 30 },
   teleportLocations: [],
 
@@ -145,6 +149,9 @@ const AdminPanel = {
             </button>
             <button class="admin-tab-btn" data-subtab="teleport" onclick="AdminPanel.switchSubTab('teleport')">
               🚀 Dịch Chuyển Admin
+            </button>
+            <button class="admin-tab-btn" data-subtab="skinart" onclick="AdminPanel.switchSubTab('skinart')">
+              🐲 Cấp Skin Xăm (SkinArt)
             </button>
           </div>
         </div>
@@ -378,6 +385,84 @@ const AdminPanel = {
             </div>
           </div>
 
+          <!-- SUBTAB 8: CẤP & THU HỒI SKIN XĂM / SKINART CHO NGƯỜI CHƠI -->
+          <div id="admin-sec-skinart" class="admin-sec-content" style="display: none;">
+            <div class="admin-grid-two-cols">
+              <!-- Cột 1: Cấp Skin Mới -->
+              <div class="card">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                  <h3 class="card-title" style="margin: 0;">🐲 CẤP SKIN XĂM (SKINART) CHO NGƯỜI CHƠI</h3>
+                  <a href="/xam" target="_blank" class="admin-pill" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px; border-color: rgba(56, 189, 248, 0.4); color: #38bdf8;">
+                    👁️ Mở Xưởng Xăm (/xam) ↗
+                  </a>
+                </div>
+                <p style="color: var(--text-muted); font-size: 0.88rem; margin: 8px 0 16px;">
+                  Chọn mẫu skin xăm độc quyền và nhập Steam ID người chơi để cấp quyền sở hữu vĩnh viễn trên game server.
+                </p>
+
+                <div class="admin-form-group" style="margin-bottom: 12px;">
+                  <label class="admin-form-label">Steam ID Người Chơi (17 số):</label>
+                  <input type="text" id="admin-skinart-sid" class="admin-search-input" placeholder="Ví dụ: 76561198975489051" oninput="AdminPanel.onSkinArtSidChange()">
+                </div>
+
+                <div class="admin-form-group" style="margin-bottom: 14px;">
+                  <label class="admin-form-label">Ghi Chú (Tên, Event, Đua Top, Donate...):</label>
+                  <input type="text" id="admin-skinart-note" class="admin-search-input" placeholder="Ví dụ: Đua top mùa 2, Tặng VIP...">
+                </div>
+
+                <!-- Thanh công cụ chọn nhanh -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+                  <span style="font-size: 0.82rem; font-weight: 700; color: var(--accent); text-transform: uppercase;">
+                    Kho SkinArt Có Sẵn (<span id="admin-skinart-selcount">0 skin đã chọn</span>):
+                  </span>
+                  <div style="display: flex; gap: 6px;">
+                    <button type="button" class="admin-pill" onclick="AdminPanel.skinartSelectAll()" style="font-size: 0.76rem; padding: 4px 10px;">✓ Chọn Tất Cả</button>
+                    <button type="button" class="admin-pill" onclick="AdminPanel.skinartClearSelection()" style="font-size: 0.76rem; padding: 4px 10px;">✕ Bỏ Chọn</button>
+                  </div>
+                </div>
+
+                <!-- Grid chọn SkinArt -->
+                <div id="admin-skinart-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; max-height: 380px; overflow-y: auto; padding-right: 4px; margin-bottom: 16px;">
+                  <div style="grid-column: 1/-1; text-align: center; padding: 30px; color: var(--text-muted);">
+                    <div class="spinner" style="margin: 0 auto 10px;"></div>
+                    Đang tải danh mục SkinArt...
+                  </div>
+                </div>
+
+                <!-- Thông báo trạng thái -->
+                <div id="admin-skinart-msg" style="min-height: 22px; font-size: 0.88rem; margin-bottom: 12px; font-weight: 600;"></div>
+
+                <button type="button" id="admin-btn-skinart-grant" class="btn-primary" style="width: 100%; padding: 12px; font-size: 0.95rem; font-weight: 800;" onclick="AdminPanel.submitSkinArtGrant()" disabled>
+                  🚀 CẤP SKIN CHO NGƯỜI CHƠI
+                </button>
+              </div>
+
+              <!-- Cột 2: Danh sách người đã được cấp -->
+              <div class="card">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                  <h3 class="card-title" style="margin: 0;">
+                    📋 DANH SÁCH ĐÃ CẤP SKIN (<span id="admin-skinart-count">0 người</span>)
+                  </h3>
+                  <button type="button" class="admin-pill" onclick="AdminPanel.loadSkinArtGrants()" style="font-size: 0.78rem; padding: 4px 12px;">
+                    🔄 Làm Mới
+                  </button>
+                </div>
+
+                <div class="admin-search-wrap" style="margin: 10px 0 14px;">
+                  <span class="search-icon">🔍</span>
+                  <input type="text" id="admin-skinart-search" class="admin-search-input" placeholder="Tìm kiếm Steam ID hoặc Ghi chú..." oninput="AdminPanel.filterSkinArtList(this.value)">
+                </div>
+
+                <div id="admin-skinart-list" style="display: flex; flex-direction: column; gap: 10px; max-height: 580px; overflow-y: auto; padding-right: 4px;">
+                  <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+                    <div class="spinner" style="margin: 0 auto 10px;"></div>
+                    Đang tải danh sách người chơi...
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     `;
@@ -493,6 +578,8 @@ const AdminPanel = {
       this.renderWhitelist();
     } else if (tab === 'teleport') {
       this.renderAdminTeleport();
+    } else if (tab === 'skinart') {
+      this.loadSkinArtGrants();
     }
   },
 
@@ -2984,6 +3071,320 @@ const AdminPanel = {
       if (disp) {
         disp.textContent = Math.max(0, Math.round(parseFloat(disp.textContent || 0) - amount));
       }
+    }
+  },
+
+  // ==========================================
+  // QUẢN LÝ CẤP & THU HỒI SKIN XĂM (SKINART)
+  // ==========================================
+  async loadSkinArtGrants() {
+    const listEl = document.getElementById('admin-skinart-list');
+    const countEl = document.getElementById('admin-skinart-count');
+
+    try {
+      const adminPass = localStorage.getItem('admin_passcode') || 'admin3m';
+      const u = (window.App && window.App.currentUser) || {};
+      const adminSid = (u && u.steamId) ? u.steamId : '76561199175571899';
+
+      const res = await fetch(`/api/skinart/admin/grants?passcode=${encodeURIComponent(adminPass)}`, {
+        credentials: 'same-origin',
+        headers: {
+          'X-Admin-Passcode': adminPass,
+          'X-Admin-Steam-Id': adminSid
+        }
+      });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        this.skinartBaked = data.baked || [];
+        this.skinartGrants = data.grants || [];
+        if (countEl) countEl.textContent = `${this.skinartGrants.length} người`;
+        this.drawSkinArtGrid();
+        this.drawSkinArtList();
+      } else {
+        if (listEl) listEl.innerHTML = `<div style="text-align: center; padding: 30px; color: var(--accent-red, #ef4444);">${data.error || 'Không thể tải danh sách SkinArt'}</div>`;
+      }
+    } catch (e) {
+      if (listEl) listEl.innerHTML = `<div style="text-align: center; padding: 30px; color: var(--accent-red, #ef4444);">Lỗi kết nối máy chủ SkinArt.</div>`;
+    }
+  },
+
+  getSkinArtHeldSet() {
+    const sidInput = document.getElementById('admin-skinart-sid');
+    const sid = sidInput ? sidInput.value.trim() : '';
+    if (!sid) return new Set();
+    const g = (this.skinartGrants || []).find(x => x.account === sid);
+    return new Set(g ? (g.kinds || []) : []);
+  },
+
+  onSkinArtSidChange() {
+    this.drawSkinArtGrid();
+  },
+
+  toggleSkinArtPick(kind) {
+    if (this.skinartPick.has(kind)) {
+      this.skinartPick.delete(kind);
+    } else {
+      this.skinartPick.add(kind);
+    }
+    this.drawSkinArtGrid();
+  },
+
+  skinartSelectAll() {
+    (this.skinartBaked || []).forEach(k => this.skinartPick.add(k.kind));
+    this.drawSkinArtGrid();
+  },
+
+  skinartClearSelection() {
+    this.skinartPick.clear();
+    this.drawSkinArtGrid();
+  },
+
+  drawSkinArtGrid() {
+    const gridEl = document.getElementById('admin-skinart-grid');
+    const countEl = document.getElementById('admin-skinart-selcount');
+    const btnGrant = document.getElementById('admin-btn-skinart-grant');
+    const sidInput = document.getElementById('admin-skinart-sid');
+    const sid = sidInput ? sidInput.value.trim() : '';
+    const isValidSid = /^7656119[0-9]{10}$/.test(sid);
+
+    if (countEl) countEl.textContent = `${this.skinartPick.size} skin đã chọn`;
+    if (btnGrant) btnGrant.disabled = !(this.skinartPick.size > 0 && isValidSid);
+
+    if (!gridEl) return;
+    if (!this.skinartBaked || this.skinartBaked.length === 0) {
+      gridEl.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 30px; color: var(--text-muted);">Không có mẫu SkinArt nào.</div>';
+      return;
+    }
+
+    const held = this.getSkinArtHeldSet();
+
+    gridEl.innerHTML = this.skinartBaked.map(k => {
+      const isPicked = this.skinartPick.has(k.kind);
+      const isHeld = held.has(k.kind);
+      const speciesText = Array.isArray(k.species) ? k.species.join(', ') : (k.species || 'Tất cả');
+
+      return `
+        <button type="button" class="admin-skinart-card ${isHeld ? 'has' : ''}" data-kind="${k.kind}" aria-pressed="${isPicked}" onclick="AdminPanel.toggleSkinArtPick('${k.kind}')">
+          <img src="${k.img}" alt="${k.label}" loading="lazy" onerror="this.src='assets/images/logo.jpg'">
+          <div class="t">
+            <b title="${k.label}">${k.label}</b>
+            <small title="${speciesText}">${speciesText}</small>
+          </div>
+        </button>
+      `;
+    }).join('');
+  },
+
+  filterSkinArtList(query) {
+    this.skinartSearchQuery = (query || '').trim().toLowerCase();
+    this.drawSkinArtList();
+  },
+
+  drawSkinArtList() {
+    const listEl = document.getElementById('admin-skinart-list');
+    if (!listEl) return;
+
+    const q = this.skinartSearchQuery;
+    const filtered = (this.skinartGrants || []).filter(g => {
+      if (!q) return true;
+      return (g.account || '').includes(q) || ((g.note || '').toLowerCase().includes(q));
+    });
+
+    if (filtered.length === 0) {
+      listEl.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted); font-size: 0.9rem;">Chưa có người chơi nào được cấp skin (hoặc không khớp tìm kiếm).</div>';
+      return;
+    }
+
+    const labelMap = {};
+    (this.skinartBaked || []).forEach(x => { labelMap[x.kind] = x.label; });
+
+    listEl.innerHTML = filtered.map(g => {
+      const kinds = g.kinds || [];
+      const dateStr = g.at ? new Date(g.at * 1000).toLocaleString('vi-VN', { hour12: false }) : '—';
+      const noteStr = g.note || 'Không có ghi chú';
+
+      const chipsHtml = kinds.map(k => {
+        const l = labelMap[k] || k;
+        return `
+          <span class="admin-grant-chip">
+            <span>${l}</span>
+            <button type="button" title="Thu hồi skin ${l}" onclick="AdminPanel.revokeSkinArtOne('${g.account}', '${k}')">✕</button>
+          </span>
+        `;
+      }).join('');
+
+      return `
+        <div class="admin-grant-row">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <div>
+              <span style="font-family: monospace; font-size: 0.92rem; font-weight: 700; color: #38bdf8; cursor: pointer;" title="Bấm để sao chép vào ô Cấp Skin" onclick="AdminPanel.selectGrantPlayer('${g.account}', '${(g.note || '').replace(/'/g, "\\'")}')">
+                🎮 ${g.account}
+              </span>
+              <div style="font-size: 0.76rem; color: var(--text-muted); margin-top: 3px;">
+                📝 <i>${noteStr}</i> • <b>${kinds.length}</b> skin • Cấp lúc: ${dateStr}
+              </div>
+            </div>
+            <button type="button" class="btn-danger" style="padding: 5px 12px; font-size: 0.78rem; border-radius: 8px;" onclick="AdminPanel.revokeSkinArtAll('${g.account}')">
+              🗑️ Thu hồi hết
+            </button>
+          </div>
+          <div style="margin-top: 8px;">
+            ${chipsHtml || '<span style="font-size: 0.78rem; color: var(--text-muted);">Không có skin nào</span>'}
+          </div>
+        </div>
+      `;
+    }).join('');
+  },
+
+  selectGrantPlayer(sid, note) {
+    const sidInput = document.getElementById('admin-skinart-sid');
+    const noteInput = document.getElementById('admin-skinart-note');
+    if (sidInput) sidInput.value = sid;
+    if (noteInput && note && note !== 'undefined') noteInput.value = note;
+    this.drawSkinArtGrid();
+    if (sidInput) {
+      sidInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      sidInput.focus();
+    }
+  },
+
+  setSkinArtMsg(text, isError = false) {
+    const msgEl = document.getElementById('admin-skinart-msg');
+    if (!msgEl) return;
+    msgEl.textContent = text || '';
+    msgEl.style.color = isError ? 'var(--accent-red, #ef4444)' : 'var(--accent-green, #22c55e)';
+  },
+
+  async submitSkinArtGrant() {
+    const sidInput = document.getElementById('admin-skinart-sid');
+    const noteInput = document.getElementById('admin-skinart-note');
+    const btn = document.getElementById('admin-btn-skinart-grant');
+    const account = sidInput ? sidInput.value.trim() : '';
+    const note = noteInput ? noteInput.value.trim() : '';
+
+    if (!account || !/^7656119[0-9]{10}$/.test(account)) {
+      this.setSkinArtMsg('Vui lòng nhập Steam ID hợp lệ (17 số bắt đầu bằng 7656119)!', true);
+      return;
+    }
+    if (this.skinartPick.size === 0) {
+      this.setSkinArtMsg('Vui lòng chọn ít nhất 1 skin!', true);
+      return;
+    }
+
+    if (btn) btn.disabled = true;
+    this.setSkinArtMsg('Đang gửi lệnh cấp skin tới game server...');
+
+    try {
+      const adminPass = localStorage.getItem('admin_passcode') || 'admin3m';
+      const u = (window.App && window.App.currentUser) || {};
+      const adminSid = (u && u.steamId) ? u.steamId : '76561199175571899';
+
+      const res = await fetch(`/api/skinart/admin/grant?passcode=${encodeURIComponent(adminPass)}`, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-Passcode': adminPass,
+          'X-Admin-Steam-Id': adminSid
+        },
+        body: JSON.stringify({
+          account,
+          kinds: Array.from(this.skinartPick),
+          note
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        this.setSkinArtMsg(`✔ Thành công! Đã cấp ${this.skinartPick.size} skin cho ${account}.`, false);
+        this.showNotification('Thành công', true);
+        this.skinartPick.clear();
+        await this.loadSkinArtGrants();
+      } else {
+        this.setSkinArtMsg(`✖ Thất bại: ${data.error || 'Lỗi server'}`, true);
+        this.showNotification('Thất bại', false);
+      }
+    } catch (e) {
+      this.setSkinArtMsg('✖ Lỗi kết nối khi cấp skin.', true);
+      this.showNotification('Thất bại', false);
+    } finally {
+      if (btn) btn.disabled = false;
+      this.drawSkinArtGrid();
+    }
+  },
+
+  async revokeSkinArtOne(account, kind) {
+    const labelMap = {};
+    (this.skinartBaked || []).forEach(x => { labelMap[x.kind] = x.label; });
+    const skinName = labelMap[kind] || kind;
+
+    if (!confirm(`Bạn có chắc muốn thu hồi skin "${skinName}" của người chơi ${account}?`)) return;
+
+    try {
+      const adminPass = localStorage.getItem('admin_passcode') || 'admin3m';
+      const u = (window.App && window.App.currentUser) || {};
+      const adminSid = (u && u.steamId) ? u.steamId : '76561199175571899';
+
+      const res = await fetch(`/api/skinart/admin/revoke?passcode=${encodeURIComponent(adminPass)}`, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-Passcode': adminPass,
+          'X-Admin-Steam-Id': adminSid
+        },
+        body: JSON.stringify({
+          account,
+          kinds: [kind]
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        this.setSkinArtMsg(`✔ Đã thu hồi skin "${skinName}" của ${account}.`, false);
+        this.showNotification('Thành công', true);
+        await this.loadSkinArtGrants();
+      } else {
+        this.setSkinArtMsg(`✖ Thu hồi thất bại: ${data.error || 'Lỗi server'}`, true);
+        this.showNotification('Thất bại', false);
+      }
+    } catch (e) {
+      this.setSkinArtMsg('✖ Lỗi kết nối khi thu hồi skin.', true);
+      this.showNotification('Thất bại', false);
+    }
+  },
+
+  async revokeSkinArtAll(account) {
+    if (!confirm(`⚠️ BẠN CÓ CHẮC MUỐN THU HỒI TOÀN BỘ SKIN CỦA NGƯỜI CHƠI ${account}?`)) return;
+
+    try {
+      const adminPass = localStorage.getItem('admin_passcode') || 'admin3m';
+      const u = (window.App && window.App.currentUser) || {};
+      const adminSid = (u && u.steamId) ? u.steamId : '76561199175571899';
+
+      const res = await fetch(`/api/skinart/admin/revoke?passcode=${encodeURIComponent(adminPass)}`, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-Passcode': adminPass,
+          'X-Admin-Steam-Id': adminSid
+        },
+        body: JSON.stringify({ account })
+      });
+
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        this.setSkinArtMsg(`✔ Đã thu hồi toàn bộ skin của ${account}.`, false);
+        this.showNotification('Thành công', true);
+        await this.loadSkinArtGrants();
+      } else {
+        this.setSkinArtMsg(`✖ Thu hồi thất bại: ${data.error || 'Lỗi server'}`, true);
+        this.showNotification('Thất bại', false);
+      }
+    } catch (e) {
+      this.setSkinArtMsg('✖ Lỗi kết nối khi thu hồi skin.', true);
+      this.showNotification('Thất bại', false);
     }
   },
   // Chỉ hiển thị "Thành công" hoặc "Thất bại"
