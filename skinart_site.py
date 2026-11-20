@@ -7,7 +7,7 @@ was granted and re-checks everything; this file only decides WHO is asking, usin
   * player  = the `steam_user` cookie the site already sets after Steam login
   * admin   = the site's existing `is_admin_request()`
 
-Config (config.json or environment): SKINART_GATEWAY_URL (e.g. https://host:port, no trailing slash) and SKINART_SECRET (32+ chars).
+Config (environment, config.json or skinart_config.json): SKINART_GATEWAY_URL (e.g. https://host:port, no trailing slash) and SKINART_SECRET (32+ chars).
 Without them the pages say "not configured" and nothing is sent anywhere.
 """
 import hashlib
@@ -41,8 +41,19 @@ def wants(path):
     return p in PAGES or p.startswith("/api/skinart/")
 
 
+def _file_config():
+    """skinart_config.json next to this file (SKINART_CONFIG_FILE overrides the path; tests point it at nothing)."""
+    path = os.environ.get("SKINART_CONFIG_FILE", os.path.join(BASE_DIR, "skinart_config.json"))
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            v = json.load(f)
+        return v if isinstance(v, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
 def _setting(config, key):
-    return os.environ.get(key) or config.get(key) or ""
+    return os.environ.get(key) or config.get(key) or _file_config().get(key) or ""
 
 
 def _gateway(config, op, body):
