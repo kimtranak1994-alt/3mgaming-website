@@ -9,7 +9,7 @@
   "MAX_SLOTS": 100,
   "MAX_GARAGE_SLOTS": 5,
   "GARAGE_PARK_SECONDS": 30,
-  "DISCORD_URL": "https://discord.gg/f3R9mMAfms",
+  "DISCORD_URL": "https://discord.gg/FxwPzNuVk",
   "PORT": 8000,
   "HOST": "0.0.0.0",
   "ADMIN_STEAM_IDS": [
