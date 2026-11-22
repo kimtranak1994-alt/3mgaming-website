@@ -513,7 +513,7 @@ const DinoInfo = {
             </div>
           </div>
 
-          <!-- 3 ACTION BUTTONS WITH 300s COUNTDOWN TIMER -->
+          <!-- 3 ACTION BUTTONS (BUFF TRỰC TIẾP TỨC THÌ) -->
           <div style="display: flex; gap: 14px; flex-wrap: wrap; align-items: center;">
             <!-- NÚT 1: BUFF 3 CHẤT A-B-Y 25% -->
             <button id="btn-powerup-aby" onclick="DinoInfo.buffNutrient('all', 25)" class="btn-primary" style="flex: 1.2; min-width: 220px; padding: 13px 22px; font-weight: 900; font-size: 0.95rem; background: linear-gradient(135deg, #059669, #10b981); border: 1px solid #34d399; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35); transition: all 0.2s;">
@@ -808,30 +808,15 @@ const DinoInfo = {
     }
   },
 
-  cooldownTimers: {},
+  isBuffing: false,
 
-  getCooldownKey(type) {
-    return 'dino_cd_' + (type || 'all');
-  },
-
-  getCooldownRemaining(type) {
-    try {
-      const cdEnd = parseInt(localStorage.getItem(this.getCooldownKey(type)) || '0', 10);
-      const remaining = Math.ceil((cdEnd - Date.now()) / 1000);
-      return remaining > 0 ? remaining : 0;
-    } catch (e) {
-      return 0;
-    }
-  },
-
-  setCooldown(type, seconds = 300) {
-    try {
-      const cdEnd = Date.now() + (seconds * 1000);
-      localStorage.setItem(this.getCooldownKey(type), cdEnd.toString());
-      this.startCooldownTimer(type, seconds);
-    } catch (e) {
-      console.error('[Cooldown Error]', e);
-    }
+  checkAllCooldowns() {
+    // Đã hủy bỏ thời gian chờ 300s, dọn sạch dữ liệu cooldown cũ trong localStorage
+    ['all', 'hunger', 'prime', 'carb', 'lipid', 'protein'].forEach(type => {
+      try {
+        localStorage.removeItem('dino_cd_' + type);
+      } catch (e) {}
+    });
   },
 
   getButtonElement(type) {
@@ -854,73 +839,9 @@ const DinoInfo = {
     return '';
   },
 
-  startCooldownTimer(type, initialSeconds) {
-    if (this.cooldownTimers[type]) {
-      clearInterval(this.cooldownTimers[type]);
-      delete this.cooldownTimers[type];
-    }
-
-    const updateBtn = () => {
-      const btn = this.getButtonElement(type);
-      const remaining = this.getCooldownRemaining(type);
-
-      if (remaining > 0) {
-        if (btn) {
-          btn.disabled = true;
-          btn.style.opacity = '0.65';
-          btn.style.cursor = 'not-allowed';
-          btn.style.filter = 'grayscale(0.5)';
-          const textSpan = btn.querySelector('.btn-text');
-          if (textSpan) {
-            textSpan.textContent = `Chờ (${remaining}s)...`;
-          } else {
-            btn.innerHTML = `<span>⏳</span> <span class="btn-text">Chờ (${remaining}s)...</span>`;
-          }
-        }
-      } else {
-        if (this.cooldownTimers[type]) {
-          clearInterval(this.cooldownTimers[type]);
-          delete this.cooldownTimers[type];
-        }
-        localStorage.removeItem(this.getCooldownKey(type));
-        if (btn) {
-          btn.disabled = false;
-          btn.style.opacity = '1';
-          btn.style.cursor = 'pointer';
-          btn.style.filter = 'none';
-          btn.innerHTML = this.getButtonDefaultHtml(type);
-        }
-      }
-    };
-
-    updateBtn();
-    this.cooldownTimers[type] = setInterval(updateBtn, 1000);
-  },
-
-  checkAllCooldowns() {
-    ['all', 'hunger', 'prime'].forEach(type => {
-      const remaining = this.getCooldownRemaining(type);
-      if (remaining > 0) {
-        this.startCooldownTimer(type, remaining);
-      } else {
-        const btn = this.getButtonElement(type);
-        if (btn) {
-          btn.disabled = false;
-          btn.style.opacity = '1';
-          btn.style.cursor = 'pointer';
-          btn.style.filter = 'none';
-          btn.innerHTML = this.getButtonDefaultHtml(type);
-        }
-      }
-    });
-  },
-
   async buffNutrient(type, amount = 25) {
-    const remaining = this.getCooldownRemaining(type);
-    if (remaining > 0) {
-      this.showToast(`⏳ Vui lòng chờ đếm ngược ${remaining}s kết thúc trước khi thực hiện tiếp!`, 'warning');
-      return;
-    }
+    if (this.isBuffing) return;
+    this.isBuffing = true;
 
     const labelMap = {
       all: `3 Dưỡng Chất A-B-Y (25%)`,
@@ -929,7 +850,7 @@ const DinoInfo = {
     };
     const label = labelMap[type] || 'Powerup';
 
-    // 1. CẬP NHẬT GIAO DIỆN NGAY LẬP TỨC (OPTIMISTIC UI UPDATE)
+    // 1. CẬP NHẬT GIAO DIỆN TỨC THÌ (OPTIMISTIC UI UPDATE)
     if (type === 'all') {
       const carbEl = document.getElementById('nutr-carb-val');
       const lipidEl = document.getElementById('nutr-lipid-val');
@@ -970,10 +891,14 @@ const DinoInfo = {
       }
     }
 
-    // 2. KÍCH HOẠT BỘ ĐẾM NGƯỢC 300S NGAY LẬP TỨC VÀ KHÓA NÚT
-    this.setCooldown(type, 300);
+    const btn = this.getButtonElement(type);
+    if (btn) {
+      btn.style.opacity = '0.75';
+      const textSpan = btn.querySelector('.btn-text');
+      if (textSpan) textSpan.textContent = 'Đang buff...';
+    }
 
-    // 3. GỬI LỆNH API THỰC THI ĐẾN MÁY CHỦ (CHẠY NGẦM KHÔNG GÂY GIÁN ĐOẠN)
+    // 2. GỬI LỆNH API THỰC THI ĐẾN MÁY CHỦ (KHÔNG CHỜ 300S, BUFF TỰ DO)
     try {
       const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
       const steamId = (user && (user.steamId || user.steam_id)) || (this.data && this.data.steam_id) || '';
@@ -991,20 +916,20 @@ const DinoInfo = {
       const data = await res.json();
       if (res.ok && data.ok) {
         this.showToast(data.message || `🎉 Đã buff thành công ${label}!`, 'success');
-        // Đồng bộ dữ liệu nền sau 1.5s
-        setTimeout(() => this.fetchData(false), 1500);
+        setTimeout(() => this.fetchData(false), 1200);
       } else {
         const errMsg = data.message || data.error || 'Thao tác thất bại!';
         this.showToast(errMsg, 'error');
-        // Nếu thất bại do máy chủ từ chối, hủy đếm ngược để người chơi thử lại
-        localStorage.removeItem(this.getCooldownKey(type));
-        this.checkAllCooldowns();
       }
     } catch (err) {
       console.error('[BuffNutrient Error]', err);
       this.showToast('Lỗi kết nối khi gửi lệnh thao tác!', 'error');
-      localStorage.removeItem(this.getCooldownKey(type));
-      this.checkAllCooldowns();
+    } finally {
+      this.isBuffing = false;
+      if (btn) {
+        btn.style.opacity = '1';
+        btn.innerHTML = this.getButtonDefaultHtml(type);
+      }
     }
   }
 };
