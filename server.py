@@ -6801,6 +6801,275 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             s["themeColor"] = "#00F076"
         return s
 
+    def get_tyrannosaurus_triceratops_shop_skins(self):
+        return [
+            # --- TYRANNOSAURUS ---
+            {
+                "id": "shop_rex_yakuza",
+                "kind": "yakuza",
+                "name": "T-Rex Yakuza Irezumi (VIP)",
+                "species": "Tyrannosaurus",
+                "price": 0,
+                "price_label": "Liên hệ Admin",
+                "contact_admin_only": True,
+                "is_skinart": True,
+                "imageUrl": "/cdn/skins/rex_yakuza.webp",
+                "image": "/cdn/skins/rex_yakuza.webp",
+                "badge": "👑 VIP - Liên Hệ Admin",
+                "description": "Mẫu skin xăm phong cách Yakuza Nhật Bản cực chất với họa tiết rồng phượng uy mãnh dành riêng cho bạo chúa T-Rex.",
+                "palette": {
+                    "body": "#120e18",
+                    "underbelly": "#d91b6e",
+                    "flank": "#38bdf8",
+                    "markings": "#ff2a85",
+                    "display": "#fbbf24",
+                    "eyes": "#22c55e"
+                }
+            },
+            {
+                "id": "shop_rex_jujutsu_kaisen",
+                "kind": "vipjjk0001",
+                "name": "T-Rex Jujutsu Kaisen (Chú Thuật)",
+                "species": "Tyrannosaurus",
+                "price": 0,
+                "price_label": "Liên hệ Admin",
+                "contact_admin_only": True,
+                "is_skinart": True,
+                "imageUrl": "/cdn/skins/rex_jujutsu_kaisen.webp",
+                "image": "/cdn/skins/rex_jujutsu_kaisen.webp",
+                "badge": "👑 VIP - Liên Hệ Admin",
+                "description": "Skin xăm ma mị phong cách Chú Thuật Hồi Chiến Ryomen Sukuna với hoa văn hắc ám cổ đại.",
+                "palette": {
+                    "body": "#090d16",
+                    "underbelly": "#ef4444",
+                    "flank": "#1e1b4b",
+                    "markings": "#dc2626",
+                    "display": "#991b1b",
+                    "eyes": "#f59e0b"
+                }
+            },
+            {
+                "id": "shop_rex_huyet_mach_tek",
+                "kind": "viptek0001",
+                "name": "T-Rex Huyết Mạch TEK (Cơ Giới)",
+                "species": "Tyrannosaurus",
+                "price": 0,
+                "price_label": "Liên hệ Admin",
+                "contact_admin_only": True,
+                "is_skinart": True,
+                "imageUrl": "/cdn/skins/rex_huyet_mach_tek.webp",
+                "image": "/cdn/skins/rex_huyet_mach_tek.webp",
+                "badge": "👑 VIP - Liên Hệ Admin",
+                "description": "Đường vân công nghệ TEK tương lai phát sáng đỏ rực dọc sống lưng và lớp giáp vi mạch công nghệ cao.",
+                "palette": {
+                    "body": "#0b0f19",
+                    "underbelly": "#0284c7",
+                    "flank": "#0f172a",
+                    "markings": "#ef4444",
+                    "display": "#38bdf8",
+                    "eyes": "#00f076"
+                }
+            },
+            {
+                "id": "shop_rex_anh_dao",
+                "kind": "vipsaku002",
+                "name": "T-Rex Hoa Anh Đào (Sakura)",
+                "species": "Tyrannosaurus",
+                "price": 0,
+                "price_label": "Liên hệ Admin",
+                "contact_admin_only": True,
+                "is_skinart": True,
+                "imageUrl": "/cdn/skins/rex_anh_dao.webp",
+                "image": "/cdn/skins/rex_anh_dao.webp",
+                "badge": "👑 VIP - Liên Hệ Admin",
+                "description": "Họa tiết hoa anh đào thanh nhã kết hợp hoàn hảo cùng thân hình dũng mãnh của bạo chúa Apex.",
+                "palette": {
+                    "body": "#1f1724",
+                    "underbelly": "#fda4af",
+                    "flank": "#f43f5e",
+                    "markings": "#fb7185",
+                    "display": "#fff1f2",
+                    "eyes": "#ec4899"
+                }
+            },
+            {
+                "id": "shop_rex_cyber",
+                "kind": "vipcyber01",
+                "name": "T-Rex Cyberpunk 2077 Neon",
+                "species": "Tyrannosaurus",
+                "price": 0,
+                "price_label": "Liên hệ Admin",
+                "contact_admin_only": True,
+                "is_skinart": True,
+                "imageUrl": "/cdn/skins/rex_cyber.webp",
+                "image": "/cdn/skins/rex_cyber.webp",
+                "badge": "👑 VIP - Liên Hệ Admin",
+                "description": "Thiết kế Cyberpunk viễn tưởng độc đáo với hệ thống dải đèn huỳnh quang Neon xanh lam rực rỡ.",
+                "palette": {
+                    "body": "#030712",
+                    "underbelly": "#06b6d4",
+                    "flank": "#0891b2",
+                    "markings": "#22d3ee",
+                    "display": "#00f076",
+                    "eyes": "#38bdf8"
+                }
+            },
+            {
+                "id": "shop_rex_doraemon",
+                "kind": "vipdora001",
+                "name": "T-Rex Doraemon (Mèo Máy)",
+                "species": "Tyrannosaurus",
+                "price": 0,
+                "price_label": "Liên hệ Admin",
+                "contact_admin_only": True,
+                "is_skinart": True,
+                "imageUrl": "/cdn/skins/rex_doraemon.webp",
+                "image": "/cdn/skins/rex_doraemon.webp",
+                "badge": "👑 VIP - Liên Hệ Admin",
+                "description": "Mẫu skin phong cách chú mèo máy thông minh Doraemon siêu độc đáo, hài hước và bắt mắt.",
+                "palette": {
+                    "body": "#0284c7",
+                    "underbelly": "#f8fafc",
+                    "flank": "#38bdf8",
+                    "markings": "#ef4444",
+                    "display": "#fbbf24",
+                    "eyes": "#1e293b"
+                }
+            },
+            {
+                "id": "shop_rex_robot",
+                "kind": "viprobot01",
+                "name": "T-Rex Robot Chiến Đấu (Mech V1)",
+                "species": "Tyrannosaurus",
+                "price": 0,
+                "price_label": "Liên hệ Admin",
+                "contact_admin_only": True,
+                "is_skinart": True,
+                "imageUrl": "/cdn/skins/rex_robot.webp",
+                "image": "/cdn/skins/rex_robot.webp",
+                "badge": "👑 VIP - Liên Hệ Admin",
+                "description": "Giáp cơ giới chiến thuật bọc thép nguyên khối, biến T-Rex thành cỗ máy chiến tranh bất khả chiến bại.",
+                "palette": {
+                    "body": "#1e293b",
+                    "underbelly": "#94a3b8",
+                    "flank": "#334155",
+                    "markings": "#f59e0b",
+                    "display": "#38bdf8",
+                    "eyes": "#ef4444"
+                }
+            },
+            {
+                "id": "shop_rex_robot_v3",
+                "kind": "viprobot03",
+                "name": "T-Rex Mech Titan Thần Binh (Mech V3)",
+                "species": "Tyrannosaurus",
+                "price": 0,
+                "price_label": "Liên hệ Admin",
+                "contact_admin_only": True,
+                "is_skinart": True,
+                "imageUrl": "/cdn/skins/rex_robot_v3.webp",
+                "image": "/cdn/skins/rex_robot_v3.webp",
+                "badge": "👑 VIP - Liên Hệ Admin",
+                "description": "Phiên bản Mech Titan tối thượng với giáp Titan đa lớp và hệ thống tản nhiệt năng lượng plasma.",
+                "palette": {
+                    "body": "#0f172a",
+                    "underbelly": "#cbd5e1",
+                    "flank": "#475569",
+                    "markings": "#ec4899",
+                    "display": "#a855f7",
+                    "eyes": "#38bdf8"
+                }
+            },
+            {
+                "id": "shop_rex_hong_nam_tinh",
+                "kind": "custom_1792926177045",
+                "name": "T-Rex Hồng Nam Tính 3D Apex",
+                "species": "Tyrannosaurus",
+                "price": 0,
+                "price_label": "Liên hệ Admin",
+                "contact_admin_only": True,
+                "imageUrl": "/assets/images/tyrannosaurus_hong_nam_tinh.png",
+                "image": "/assets/images/tyrannosaurus_hong_nam_tinh.png",
+                "badge": "👑 VIP - Liên Hệ Admin",
+                "description": "Mẫu skin phối màu hồng nam tính trứ danh của 3MGAMING, cực kỳ nổi bật trong mọi trận PK.",
+                "palette": {
+                    "body": "#ff2a85",
+                    "underbelly": "#d91b6e",
+                    "flank": "#ff70a6",
+                    "markings": "#120e18",
+                    "display": "#ffb6c1",
+                    "eyes": "#00f076"
+                }
+            },
+            # --- TRICERATOPS ---
+            {
+                "id": "shop_trice_anh_dao",
+                "kind": "vipsaku001",
+                "name": "Triceratops Hoa Anh Đào (Sakura)",
+                "species": "Triceratops",
+                "price": 0,
+                "price_label": "Liên hệ Admin",
+                "contact_admin_only": True,
+                "is_skinart": True,
+                "imageUrl": "/cdn/skins/trice_anh_dao.webp",
+                "image": "/cdn/skins/trice_anh_dao.webp",
+                "badge": "👑 VIP - Liên Hệ Admin",
+                "description": "Mẫu xăm cánh hoa anh đào nở rộ trên tấm khiên sừng Triceratops kiêu hãnh và thanh lịch.",
+                "palette": {
+                    "body": "#1c1427",
+                    "underbelly": "#fbcfe8",
+                    "flank": "#db2777",
+                    "markings": "#f472b6",
+                    "display": "#fdf2f8",
+                    "eyes": "#38bdf8"
+                }
+            },
+            {
+                "id": "shop_trice_hoang_kim_tek",
+                "kind": "trice_hoang_kim_tek",
+                "name": "Triceratops Hoàng Kim Giáp Chiến",
+                "species": "Triceratops",
+                "price": 0,
+                "price_label": "Liên hệ Admin",
+                "contact_admin_only": True,
+                "is_skinart": False,
+                "imageUrl": "/cdn/skins/trice_anh_dao.webp",
+                "image": "/cdn/skins/trice_anh_dao.webp",
+                "badge": "👑 VIP - Liên Hệ Admin",
+                "description": "Khiên sừng phủ vàng kim hoàng gia kết hợp hoa văn chiến binh đanh thép chống chọi mọi kẻ săn mồi.",
+                "palette": {
+                    "body": "#171717",
+                    "underbelly": "#fbbf24",
+                    "flank": "#78350f",
+                    "markings": "#f59e0b",
+                    "display": "#fef08a",
+                    "eyes": "#ef4444"
+                }
+            },
+            {
+                "id": "shop_trice_obsidian_hac_am",
+                "kind": "trice_obsidian_hac_am",
+                "name": "Triceratops Hắc Ám Obsidian",
+                "species": "Triceratops",
+                "price": 0,
+                "price_label": "Liên hệ Admin",
+                "contact_admin_only": True,
+                "is_skinart": False,
+                "imageUrl": "/cdn/skins/trice_anh_dao.webp",
+                "image": "/cdn/skins/trice_anh_dao.webp",
+                "badge": "👑 VIP - Liên Hệ Admin",
+                "description": "Tông màu đen bóng khoáng thạch Obsidian huyền bí kết hợp ánh tím hư không cực ngầu.",
+                "palette": {
+                    "body": "#09090b",
+                    "underbelly": "#a855f7",
+                    "flank": "#3b0764",
+                    "markings": "#c084fc",
+                    "display": "#581c87",
+                    "eyes": "#22c55e"
+                }
+            }
+        ]
+
     def handle_shop_skins(self):
         remote = self.fetch_islepilot("/shop/skins")
         skins = []
@@ -6817,7 +7086,14 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             except Exception:
                 pass
 
+        # Bổ sung toàn bộ Skin Tyrannosaurus & Triceratops VIP vào Shop Skin
+        vip_showcase = self.get_tyrannosaurus_triceratops_shop_skins()
         existing_ids = {s.get("id") for s in custom_list}
+        for v in vip_showcase:
+            if v.get("id") not in existing_ids:
+                custom_list.append(v)
+                existing_ids.add(v.get("id"))
+
         all_skins = [s for s in skins if s.get("id") not in existing_ids]
         final_skins = list(custom_list) + all_skins
         self.send_json_response({"skins": final_skins})

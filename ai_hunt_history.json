@@ -1,5 +1,46 @@
 [
   {
+    "season_id": "Mùa 8 (Ngày 20/11)",
+    "season_date": "2026-11-20",
+    "settled_at": "2026-11-22T22:08:07.742965+07:00",
+    "winner_steam_id": "76561198678435923",
+    "winner_name": "fugasten",
+    "species": "Tyrannosaurus",
+    "kills": 21,
+    "prey_breakdown": {
+      "Chicken": 1,
+      "Deer": 4,
+      "Dryosaurus": 2,
+      "Bullfrog": 1,
+      "Tyrannosaurus": 4,
+      "Omniraptor": 6,
+      "Boar": 1,
+      "Goat": 1,
+      "Compsognathus": 1
+    },
+    "reward_xu": 1000,
+    "total_participants": 3,
+    "total_ai_kills": 29,
+    "auto_settled": true
+  },
+  {
+    "season_id": "Mùa 7 (Ngày 03/11)",
+    "season_date": "2026-11-03",
+    "settled_at": "2026-11-20T19:58:11.543863+07:00",
+    "winner_steam_id": "76561199188118062",
+    "winner_name": "Meo Us",
+    "species": "Tyrannosaurus",
+    "kills": 3,
+    "prey_breakdown": {
+      "Boar": 2,
+      "Chicken": 1
+    },
+    "reward_xu": 1000,
+    "total_participants": 4,
+    "total_ai_kills": 6,
+    "auto_settled": true
+  },
+  {
     "season_id": "Mùa 5 (Ngày 02/11)",
     "season_date": "2026-11-02",
     "settled_at": "2026-11-03T00:00:01.031066+07:00",

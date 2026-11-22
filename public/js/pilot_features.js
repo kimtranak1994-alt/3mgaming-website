@@ -504,13 +504,15 @@ const SkinShop = {
 
     container.innerHTML = list.map(item => {
 
-      const isFree = !item.price || item.price === 0;
+      const isContactAdmin = Boolean(item.contact_admin_only || (item.price_label && item.price_label.includes('Admin')));
 
-      const priceText = isFree ? 'Miễn Phí (0 Xu)' : `${item.price.toLocaleString()} Xu`;
+      const isFree = !isContactAdmin && (!item.price || item.price === 0);
+
+      const priceText = isContactAdmin ? (item.price_label || 'Liên hệ Admin') : (isFree ? 'Miễn Phí (0 Xu)' : `${item.price.toLocaleString()} Xu`);
 
       
 
-      const isOwned = this.ownedSkins.some(owned => 
+      const isOwned = !isContactAdmin && this.ownedSkins.some(owned => 
 
         (owned.id === item.id) || 
 
@@ -546,23 +548,23 @@ const SkinShop = {
 
       return `
 
-        <div class="dino-card" style="border: 1px solid rgba(232, 67, 147, 0.45); background: rgba(14, 18, 25, 0.95); box-shadow: 0 10px 30px rgba(232, 67, 147, 0.15); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;">
+        <div class="dino-card" style="border: 1px solid ${isContactAdmin ? 'rgba(245, 158, 11, 0.5)' : 'rgba(232, 67, 147, 0.45)'}; background: rgba(14, 18, 25, 0.95); box-shadow: 0 10px 30px ${isContactAdmin ? 'rgba(245, 158, 11, 0.15)' : 'rgba(232, 67, 147, 0.15)'}; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;">
 
           
 
           <!-- 3D Dinosaur Render Banner (Hiển thị 100% sắc nét tức thì) -->
 
-          <div class="dino-card-banner" style="position: relative; height: 240px; background: radial-gradient(circle at 50% 55%, rgba(232, 67, 147, 0.28) 0%, rgba(9, 13, 20, 0.98) 75%); overflow: hidden; display: flex; align-items: center; justify-content: center; cursor: pointer;" onclick="SkinShop.openInStudio('${item.id}')" title="Bấm để xem & xoay 3D trong Studio">
+          <div class="dino-card-banner" style="position: relative; height: 240px; background: radial-gradient(circle at 50% 55%, ${isContactAdmin ? 'rgba(245, 158, 11, 0.25)' : 'rgba(232, 67, 147, 0.28)'} 0%, rgba(9, 13, 20, 0.98) 75%); overflow: hidden; display: flex; align-items: center; justify-content: center; cursor: pointer;" onclick="SkinShop.openInStudio('${item.id}')" title="Bấm để xem & xoay 3D trong Studio">
 
             
 
-            <img src="${itemImgUrl}" alt="${item.name}" class="dino-img-render" style="max-height: 210px; width: 100%; object-fit: contain; filter: drop-shadow(0 8px 24px rgba(232, 67, 147, 0.4)); transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform='scale(1)'">
+            <img src="${itemImgUrl}" alt="${item.name}" class="dino-img-render" style="max-height: 210px; width: 100%; object-fit: contain; filter: drop-shadow(0 8px 24px ${isContactAdmin ? 'rgba(245, 158, 11, 0.4)' : 'rgba(232, 67, 147, 0.4)'}); transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform='scale(1)'">
 
             
 
-            <span class="growth-badge" style="background: rgba(232, 67, 147, 0.32); border-color: #e84393; color: #ffb6c1; position: absolute; top: 12px; right: 12px; backdrop-filter: blur(4px);">
+            <span class="growth-badge" style="background: ${isContactAdmin ? 'rgba(245, 158, 11, 0.35)' : 'rgba(232, 67, 147, 0.32)'}; border-color: ${isContactAdmin ? '#f59e0b' : '#e84393'}; color: ${isContactAdmin ? '#fbbf24' : '#ffb6c1'}; position: absolute; top: 12px; right: 12px; backdrop-filter: blur(4px); font-weight: 700;">
 
-              ✨ Khủng Long 3D: ${item.name}
+              ${item.badge || ('✨ Khủng Long 3D: ' + item.name)}
 
             </span>
 
@@ -699,7 +701,11 @@ const SkinShop = {
               </button>
 
 
-              ${(item.allSpecies || item.universal) ? `
+              ${isContactAdmin ? `
+                <button type="button" class="btn-primary" style="flex: 1.25; padding: 8px 10px; font-size: 0.8rem; background: linear-gradient(135deg, #f59e0b, #ef4444); border: 1px solid #fbbf24; color: #fff; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;" onclick="SkinShop.contactAdmin('${(item.name || '').replace(/'/g, "\\'")}', '${(item.species || '').replace(/'/g, "\\'")}')">
+                  💬 Mua Qua Admin
+                </button>
+              ` : (item.allSpecies || item.universal) ? `
                 <button class="btn-primary" style="flex: 1.25; padding: 8px 10px; font-size: 0.8rem; background: linear-gradient(135deg, #00d9ff, #0284c7); border: 1px solid #38bdf8; color: #041019; font-weight: 800; cursor: pointer;" onclick="GarageSkins.applySkin('${item.id}', '${item.name}')">
                   ⚡ Áp Dụng Ngay (Mọi Dino)
                 </button>
@@ -840,6 +846,47 @@ const SkinShop = {
 
     }
 
+  },
+
+  contactAdmin(name, species) {
+    const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
+    const steamId = user ? (user.steamId || user.steamid || 'Chưa đăng nhập') : 'Chưa đăng nhập';
+
+    if (user && user.steamId && navigator.clipboard) {
+      navigator.clipboard.writeText(user.steamId).catch(() => {});
+    }
+
+    const modalHtml = `
+      <div id="contact-admin-modal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 99999; display: flex; align-items: center; justify-content: center; padding: 20px;">
+        <div style="background: #0f172a; border: 1px solid #f59e0b; border-radius: 16px; max-width: 480px; width: 100%; padding: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); text-align: center; color: #fff; font-family: inherit;">
+          <div style="font-size: 2.2rem; margin-bottom: 10px;">👑</div>
+          <h3 style="font-size: 1.3rem; font-weight: 800; color: #fbbf24; margin-bottom: 8px;">MUA SKIN VIP QUA ADMIN</h3>
+          <p style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 16px;">
+            Mẫu skin: <b style="color: #38bdf8;">${name}</b><br>
+            Loài khủng long: <b style="color: #a78bfa;">${species}</b>
+          </p>
+          <div style="background: rgba(15,23,42,0.9); border: 1px dashed rgba(245,158,11,0.5); border-radius: 10px; padding: 14px; margin-bottom: 18px; text-align: left; font-size: 0.85rem;">
+            <div style="color: #fbbf24; font-weight: 700; margin-bottom: 6px;">📌 Hướng dẫn liên hệ Admin:</div>
+            <div style="color: #cbd5e1; line-height: 1.6;">
+              1. SteamID của bạn: <code style="background: #020617; color: #22c55e; padding: 2px 6px; border-radius: 4px; font-weight: 700;">${steamId}</code> ${user && user.steamId ? '<span style="color: #38bdf8; font-size: 0.75rem;">(Đã copy vào bộ nhớ tạm)</span>' : ''}<br>
+              2. Nhấn nút <b>Mở Discord 3MGAMING</b> bên dưới.<br>
+              3. Gửi tên skin <b>${name}</b> và <b>SteamID</b> cho Admin qua Ticket / Kênh Chat để được kích hoạt ngay!
+            </div>
+          </div>
+          <div style="display: flex; gap: 10px; justify-content: center;">
+            <a href="https://discord.gg/f3R9mMAfms" target="_blank" rel="noopener noreferrer" style="flex: 1; text-decoration: none; padding: 10px 16px; background: #5865F2; color: #fff; border-radius: 8px; font-weight: 700; font-size: 0.9rem; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+              💬 Mở Discord Admin
+            </a>
+            <button type="button" onclick="document.getElementById('contact-admin-modal').remove()" style="padding: 10px 18px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 8px; font-weight: 600; cursor: pointer;">
+              Đóng
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+    const old = document.getElementById('contact-admin-modal');
+    if (old) old.remove();
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
   }
 
 };
