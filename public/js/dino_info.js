@@ -202,12 +202,12 @@ const DinoInfo = {
       const is_frozen = Boolean(dino.is_growth_frozen || (this.data && this.data.is_growth_frozen) || (dino.growth_state === 'frozen'));
       const posStr = (pos.x !== null && pos.x !== undefined) ? `X: ${pos.x}, Y: ${pos.y}, Z: ${pos.z}` : 'Đang cập nhật...';
 
-      // Mutation Slots
-      const mutSlots = dino.mutation_slots || {};
-      const activeMuts = mutSlots.active || [];
-      const parentMuts = mutSlots.parent || [];
-      const elderAMuts = mutSlots.elderA || [];
-      const elderBMuts = mutSlots.elderB || [];
+      // Evrima Nutrients / Powerups (3 Mục Buff Chất Chuẩn IslePilot)
+      const nutrition = dino.nutrition || {};
+      const carbPct = Math.min(100, Math.max(0, Math.round(Number(nutrition.carb) || 0)));
+      const lipidPct = Math.min(100, Math.max(0, Math.round(Number(nutrition.lipid) || 0)));
+      const proteinPct = Math.min(100, Math.max(0, Math.round(Number(nutrition.protein) || 0)));
+      const isPerfectDiet = carbPct > 0 && lipidPct > 0 && proteinPct > 0;
 
       // Prime Elder Progression
       const prime = dino.prime || {};
@@ -458,59 +458,174 @@ const DinoInfo = {
           </div>
         </div>
 
-        <!-- MUTATION SLOTS (HỆ THỐNG ĐỘT BIẾN GEN) -->
-        <div class="card" style="padding: 24px; margin-bottom: 24px; background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 14px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 10px;">
+        <!-- 3 MỤC BUFF CHẤT DINH DƯỠNG (POWERUPS - EVRIMA DIET BUFFS) -->
+        <div class="card" style="padding: 24px; margin-bottom: 24px; background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.4);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
             <div>
-              <h3 style="font-size: 1.25rem; font-weight: 900; color: #fff; margin: 0; display: flex; align-items: center; gap: 8px;">
-                <span>🧬</span> Hệ Thống Đột Biến Gen (Mutation Slots)
+              <h3 style="font-size: 1.3rem; font-weight: 900; color: #fff; margin: 0; display: flex; align-items: center; gap: 10px;">
+                <span>⚡</span> Hệ Thống Buff Chất Dinh Dưỡng (Powerups · Evrima Diet)
               </h3>
-              <p style="color: #94a3b8; font-size: 0.85rem; margin: 2px 0 0;">
-                Các đột biến gen hiện tại đang kích hoạt và kế thừa từ gia phả của khủng long
+              <p style="color: #94a3b8; font-size: 0.88rem; margin: 4px 0 0;">
+                Tăng cường sức mạnh tức thì cho khủng long với 3 dưỡng chất Evrima chuẩn API IslePilot (<a href="https://3mgaming.islepilot.eu/powerups" target="_blank" style="color: #38bdf8; text-decoration: underline;">islepilot.eu/powerups</a>)
               </p>
             </div>
-            <span style="background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; font-size: 0.8rem; font-weight: 800; padding: 4px 12px; border-radius: 14px;">
-              4 Gen Kích Hoạt &bull; 4 Gen Kế Thừa
-            </span>
-          </div>
-
-          <!-- 4 ACTIVE MUTATIONS -->
-          <div style="margin-bottom: 20px;">
-            <div style="font-size: 0.82rem; font-weight: 800; color: #34d399; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
-              <span>⚡</span> Gen Đang Kích Hoạt (Active Mutations):
-            </div>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
-              ${this.renderMutationCards(activeMuts, '#10b981')}
+            <div>
+              ${isPerfectDiet 
+                ? `<span style="background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; font-size: 0.82rem; font-weight: 800; padding: 6px 14px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px;">
+                    <span>🌟</span> Chế Độ Ăn Hoàn Hảo (Perfect Diet 3/3)
+                   </span>`
+                : `<span style="background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #f59e0b; font-size: 0.82rem; font-weight: 800; padding: 6px 14px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px;">
+                    <span>⚠️</span> Cần Bổ Sung Dưỡng Chất (Incomplete Diet)
+                   </span>`
+              }
             </div>
           </div>
 
-          <!-- 4 PARENT MUTATIONS -->
-          <div style="margin-bottom: 20px;">
-            <div style="font-size: 0.82rem; font-weight: 800; color: #818cf8; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
-              <span>🧬</span> Gen Di Truyền Bố Mẹ (Parent Mutations):
+          <!-- 3 NUTRIENT CARDS GRID -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 20px;">
+            
+            <!-- NUTRIENT 1: CARBOHYDRATE (S) -->
+            <div style="background: rgba(2, 6, 23, 0.6); border: 1px solid rgba(6, 182, 212, 0.3); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden;">
+              <div style="position: absolute; top: -10px; right: -10px; width: 60px; height: 60px; background: radial-gradient(circle, rgba(6, 182, 212, 0.2), transparent 70%); pointer-events: none;"></div>
+              <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 1.5rem;">🥖</span>
+                    <div>
+                      <div style="font-size: 0.98rem; font-weight: 900; color: #fff;">Carbohydrates</div>
+                      <div style="font-size: 0.75rem; color: #06b6d4; font-weight: 700; text-transform: uppercase;">Dưỡng Chất S · Tinh Bột</div>
+                    </div>
+                  </div>
+                  <span style="background: rgba(6, 182, 212, 0.2); color: #22d3ee; border: 1px solid rgba(6, 182, 212, 0.5); font-weight: 900; font-size: 0.82rem; padding: 3px 10px; border-radius: 6px; font-family: monospace;">
+                    [ S ]
+                  </span>
+                </div>
+
+                <!-- BUFF PERKS -->
+                <div style="font-size: 0.8rem; color: #94a3b8; line-height: 1.45; margin-bottom: 14px; background: rgba(255,255,255,0.03); padding: 8px 10px; border-radius: 6px;">
+                  <div>⚡ <b>Hồi Phục Thể Lực (Stamina Regen):</b> Tăng tốc hồi stamina siêu nhanh.</div>
+                  <div style="margin-top: 3px;">🏃 <b>Kháng Mệt Mỏi:</b> Giảm tiêu hao thể lực khi bứt tốc & nhảy.</div>
+                </div>
+
+                <!-- PROGRESS METER -->
+                <div style="margin-bottom: 14px;">
+                  <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 5px;">
+                    <span style="color: #64748b; font-weight: 700;">Chỉ số hiện tại:</span>
+                    <b style="color: #22d3ee; font-family: monospace; font-size: 0.9rem;">${carbPct}% / 100%</b>
+                  </div>
+                  <div style="background: rgba(0,0,0,0.6); height: 10px; border-radius: 5px; overflow: hidden; border: 1px solid rgba(6, 182, 212, 0.2);">
+                    <div style="background: linear-gradient(90deg, #0284c7, #06b6d4, #38bdf8); width: ${carbPct}%; height: 100%; border-radius: 5px; transition: width 0.4s ease; box-shadow: 0 0 10px rgba(6, 182, 212, 0.5);"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ACTION BUTTON -->
+              <button onclick="DinoInfo.buffNutrient('carb')" class="btn-primary" style="width: 100%; padding: 10px 14px; font-weight: 800; font-size: 0.88rem; background: linear-gradient(135deg, #0284c7, #06b6d4); border: 1px solid #38bdf8; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
+                <span>⚡</span> Buff 100% Chất S (Carb)
+              </button>
             </div>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
-              ${this.renderMutationCards(parentMuts, '#6366f1')}
+
+            <!-- NUTRIENT 2: LIPID (//) -->
+            <div style="background: rgba(2, 6, 23, 0.6); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden;">
+              <div style="position: absolute; top: -10px; right: -10px; width: 60px; height: 60px; background: radial-gradient(circle, rgba(16, 185, 129, 0.2), transparent 70%); pointer-events: none;"></div>
+              <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 1.5rem;">🥑</span>
+                    <div>
+                      <div style="font-size: 0.98rem; font-weight: 900; color: #fff;">Lipids</div>
+                      <div style="font-size: 0.75rem; color: #10b981; font-weight: 700; text-transform: uppercase;">Dưỡng Chất // · Chất Béo</div>
+                    </div>
+                  </div>
+                  <span style="background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.5); font-weight: 900; font-size: 0.82rem; padding: 3px 10px; border-radius: 6px; font-family: monospace;">
+                    [ // ]
+                  </span>
+                </div>
+
+                <!-- BUFF PERKS -->
+                <div style="font-size: 0.8rem; color: #94a3b8; line-height: 1.45; margin-bottom: 14px; background: rgba(255,255,255,0.03); padding: 8px 10px; border-radius: 6px;">
+                  <div>🌱 <b>Tốc Độ Lớn (Growth Speed):</b> Đẩy mạnh tốc độ phát triển cơ thể tối đa.</div>
+                  <div style="margin-top: 3px;">💚 <b>Hồi Phục Máu (Health Regen):</b> Hồi máu nhanh chóng khi nằm nghỉ ngơi.</div>
+                </div>
+
+                <!-- PROGRESS METER -->
+                <div style="margin-bottom: 14px;">
+                  <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 5px;">
+                    <span style="color: #64748b; font-weight: 700;">Chỉ số hiện tại:</span>
+                    <b style="color: #34d399; font-family: monospace; font-size: 0.9rem;">${lipidPct}% / 100%</b>
+                  </div>
+                  <div style="background: rgba(0,0,0,0.6); height: 10px; border-radius: 5px; overflow: hidden; border: 1px solid rgba(16, 185, 129, 0.2);">
+                    <div style="background: linear-gradient(90deg, #059669, #10b981, #34d399); width: ${lipidPct}%; height: 100%; border-radius: 5px; transition: width 0.4s ease; box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ACTION BUTTON -->
+              <button onclick="DinoInfo.buffNutrient('lipid')" class="btn-primary" style="width: 100%; padding: 10px 14px; font-weight: 800; font-size: 0.88rem; background: linear-gradient(135deg, #059669, #10b981); border: 1px solid #34d399; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
+                <span>⚡</span> Buff 100% Chất // (Lipid)
+              </button>
             </div>
+
+            <!-- NUTRIENT 3: PROTEIN (:) -->
+            <div style="background: rgba(2, 6, 23, 0.6); border: 1px solid rgba(249, 115, 22, 0.3); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden;">
+              <div style="position: absolute; top: -10px; right: -10px; width: 60px; height: 60px; background: radial-gradient(circle, rgba(249, 115, 22, 0.2), transparent 70%); pointer-events: none;"></div>
+              <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 1.5rem;">🥩</span>
+                    <div>
+                      <div style="font-size: 0.98rem; font-weight: 900; color: #fff;">Proteins</div>
+                      <div style="font-size: 0.75rem; color: #f97316; font-weight: 700; text-transform: uppercase;">Dưỡng Chất : · Chất Đạm</div>
+                    </div>
+                  </div>
+                  <span style="background: rgba(249, 115, 22, 0.2); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.5); font-weight: 900; font-size: 0.82rem; padding: 3px 10px; border-radius: 6px; font-family: monospace;">
+                    [ : ]
+                  </span>
+                </div>
+
+                <!-- BUFF PERKS -->
+                <div style="font-size: 0.8rem; color: #94a3b8; line-height: 1.45; margin-bottom: 14px; background: rgba(255,255,255,0.03); padding: 8px 10px; border-radius: 6px;">
+                  <div>⚔️ <b>Sát Thương Tấn Công (Attack Power):</b> Tăng sức mạnh sát thương cắn xé.</div>
+                  <div style="margin-top: 3px;">🛡️ <b>Kháng Chảy Máu (Bleed Resist):</b> Giảm thời gian chảy máu & mau lành vết thương.</div>
+                </div>
+
+                <!-- PROGRESS METER -->
+                <div style="margin-bottom: 14px;">
+                  <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 5px;">
+                    <span style="color: #64748b; font-weight: 700;">Chỉ số hiện tại:</span>
+                    <b style="color: #fb923c; font-family: monospace; font-size: 0.9rem;">${proteinPct}% / 100%</b>
+                  </div>
+                  <div style="background: rgba(0,0,0,0.6); height: 10px; border-radius: 5px; overflow: hidden; border: 1px solid rgba(249, 115, 22, 0.2);">
+                    <div style="background: linear-gradient(90deg, #ea580c, #f97316, #fb923c); width: ${proteinPct}%; height: 100%; border-radius: 5px; transition: width 0.4s ease; box-shadow: 0 0 10px rgba(249, 115, 22, 0.5);"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ACTION BUTTON -->
+              <button onclick="DinoInfo.buffNutrient('protein')" class="btn-primary" style="width: 100%; padding: 10px 14px; font-weight: 800; font-size: 0.88rem; background: linear-gradient(135deg, #ea580c, #f97316); border: 1px solid #fb923c; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
+                <span>⚡</span> Buff 100% Chất : (Protein)
+              </button>
+            </div>
+
           </div>
 
-          <!-- 4 ELDER A & 4 ELDER B MUTATIONS -->
-          <div style="margin-bottom: 20px;">
-            <div style="font-size: 0.82rem; font-weight: 800; color: #fbbf24; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
-              <span>🧬</span> Gen Cổ Đại Nhánh A (Elder A Mutations):
+          <!-- ALL-IN-ONE PERFECT DIET BUFF -->
+          <div style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(16, 185, 129, 0.1)); border: 1px solid rgba(245, 158, 11, 0.35); border-radius: 12px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="font-size: 2rem;">👑</span>
+              <div>
+                <div style="font-size: 1.05rem; font-weight: 900; color: #fde047; display: flex; align-items: center; gap: 6px;">
+                  Nạp Đầy Cả 3 Dưỡng Chất (100% Perfect Diet)
+                </div>
+                <div style="font-size: 0.82rem; color: #94a3b8; margin-top: 2px;">
+                  Kích hoạt trọn vẹn cả 3 buff (Stamina + Tốc độ lớn + Sát thương) & tự động hoàn thành nhiệm vụ <b>"Get perfect diet"</b> để hóa Prime Elder!
+                </div>
+              </div>
             </div>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
-              ${this.renderMutationCards(elderAMuts, '#f59e0b')}
-            </div>
-          </div>
 
-          <div>
-            <div style="font-size: 0.82rem; font-weight: 800; color: #f472b6; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
-              <span>🧬</span> Gen Cổ Đại Nhánh B (Elder B Mutations):
-            </div>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
-              ${this.renderMutationCards(elderBMuts, '#ec4899')}
-            </div>
+            <button onclick="DinoInfo.buffNutrient('all')" class="btn-primary" style="padding: 12px 24px; font-weight: 900; font-size: 0.95rem; background: linear-gradient(135deg, #f59e0b, #d97706, #10b981); border: 1px solid #fde047; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3); transition: all 0.2s;">
+              <span>✨</span> Buff Đầy Cả 3 Chất (100% Hoàn Hảo)
+            </button>
           </div>
         </div>
 
@@ -667,7 +782,7 @@ const DinoInfo = {
           Xem Hồ Sơ & Chỉ Số Khủng Long Trực Tiếp
         </h2>
         <p style="color: #94a3b8; font-size: 0.98rem; line-height: 1.6; margin-bottom: 24px;">
-          Vui lòng đăng nhập Steam để xem chỉ số sinh tồn thời gian thực (Máu, Đói, Khát), tọa độ GPS, 16 đột biến gen và tiến độ Prime Elder của bạn!
+          Vui lòng đăng nhập Steam để xem chỉ số sinh tồn thời gian thực (Máu, Đói, Khát), tọa độ GPS, 3 mục Buff Chất Dinh Dưỡng (Powerups) và tiến độ Prime Elder của bạn!
         </p>
         <a href="/api/player/steam/login?redirect=%2F#dino-info" class="btn-primary" style="display: inline-flex; align-items: center; gap: 10px; font-size: 1.05rem; padding: 12px 28px; border-radius: 10px; text-decoration: none;">
           <span>🎮</span> Đăng Nhập Bằng Steam Ngay
@@ -747,6 +862,50 @@ const DinoInfo = {
     } catch (e) {
       console.error('[GrowthLock Error]', e);
       this.showToast('Lỗi kết nối máy chủ khi gửi lệnh tăng trưởng!', 'error');
+    }
+  },
+
+  async buffNutrient(type) {
+    if (this.isBuffing) return;
+    this.isBuffing = true;
+
+    const labelMap = {
+      carb: 'Dưỡng Chất S (Carbohydrates)',
+      lipid: 'Dưỡng Chất // (Lipids)',
+      protein: 'Dưỡng Chất : (Proteins)',
+      all: 'Toàn Bộ 3 Dưỡng Chất (100% Perfect Diet)'
+    };
+    const label = labelMap[type] || 'Dinh Dưỡng';
+
+    try {
+      this.showToast(`⚡ Đang gửi yêu cầu nạp ${label} tới IslePilot...`, 'info');
+
+      const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
+      const steamId = (user && (user.steamId || user.steam_id)) || (this.data && this.data.steam_id) || '';
+
+      const res = await fetch('/api/player/powerup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          steam_id: steamId,
+          nutrient: type
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        this.showToast(data.message || `🎉 Đã buff thành công ${label}!`, 'success');
+        // Tải lại thông tin dino sau khi buff
+        setTimeout(() => this.fetchData(true), 800);
+      } else {
+        const errMsg = data.message || data.error || 'Nạp dinh dưỡng thất bại!';
+        this.showToast(errMsg, 'error');
+      }
+    } catch (err) {
+      console.error('[BuffNutrient Error]', err);
+      this.showToast('Lỗi kết nối khi gửi lệnh buff chất dinh dưỡng!', 'error');
+    } finally {
+      this.isBuffing = false;
     }
   }
 };

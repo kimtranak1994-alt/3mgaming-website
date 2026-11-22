@@ -1707,6 +1707,10 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             self.handle_daily_dino_claim()
             return
 
+        elif self.path in ["/api/player/powerup", "/api/player/powerups", "/api/player/buff-nutrition", "/api/player/powerups/buff"]:
+            self.handle_player_powerup_buff()
+            return
+
         elif self.path in ["/api/server/referral/apply", "/api/server/referral/redeem"]:
 
             self.handle_referral_apply()
@@ -3271,6 +3275,12 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             "elderB": ["None", "None", "None", "None"]
         }
 
+        raw_nutr = player_data.get("nutrition") or {}
+        carb_val = min(100.0, max(0.0, round(safe_float(raw_nutr.get("carb", 0.0)), 1)))
+        protein_val = min(100.0, max(0.0, round(safe_float(raw_nutr.get("protein", 0.0)), 1)))
+        lipid_val = min(100.0, max(0.0, round(safe_float(raw_nutr.get("lipid", 0.0)), 1)))
+        is_perfect_diet = (carb_val > 0.0 and protein_val > 0.0 and lipid_val > 0.0)
+
         warnings_list = warnings_data.get("warnings") or []
         active_warning_count = warnings_data.get("activeCount", len(warnings_list))
 
@@ -3311,6 +3321,12 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "thirst": thirst,
                 "max_thirst": max_thirst,
                 "thirst_percent": thirst_pct,
+                "nutrition": {
+                    "carb": carb_val,
+                    "protein": protein_val,
+                    "lipid": lipid_val,
+                    "is_perfect": is_perfect_diet
+                },
                 "position": pos_formatted,
                 "mutation_slots": mut_slots,
                 "prime": prime_info,
@@ -12138,6 +12154,104 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         except Exception as e:
             print(f"[Daily Dino Claim Error] {e}")
             self.send_json_response({"ok": False, "error": str(e)}, 500)
+
+    def handle_player_powerup_buff(self):
+        """
+        API Buff 3 Mục Dưỡng Chất Dinh Dưỡng (Powerups Evrima chuẩn IslePilot: https://3mgaming.islepilot.eu/powerups)
+        - type / nutrient: 'carb' (Chất S), 'lipid' (Chất //), 'protein' (Chất :), 'all' (Cả 3 chất)
+        """
+        try:
+            length = int(self.headers.get("Content-Length", 0))
+            payload = json.loads(self.rfile.read(length).decode("utf-8")) if length > 0 else {}
+            
+            cookie_header = self.headers.get("Cookie", "")
+            cookie_match = re.search(r"steam_user=([^;:]+)", cookie_header)
+            cookie_steam_id = cookie_match.group(1).strip() if cookie_match else None
+            
+            steam_id = payload.get("steam_id") or cookie_steam_id or self.get_active_steam_id()
+            if not steam_id:
+                self.send_json_response({"ok": False, "message": "Vui lòng đăng nhập Steam trước khi buff chất dinh dưỡng!"}, 401)
+                return
+            
+            sid_str = str(steam_id).strip()
+            
+            # 1. Kiểm tra khủng long đang sống trong game từ IslePilot
+            player_info = self.fetch_islepilot(f"/players/{sid_str}") or {}
+            species = player_info.get("species")
+            if not species:
+                self.send_json_response({
+                    "ok": False,
+                    "message": "Không tìm thấy khủng long nào đang hoạt động trên bản đồ! Bạn cần có khủng long đang sống trong game để buff chất."
+                }, 400)
+                return
+            
+            # 2. Xác định loại chất buff
+            nutrient_type = str(payload.get("nutrient") or payload.get("type") or "all").lower().strip()
+            
+            # Đọc dinh dưỡng hiện tại từ player_info nếu chỉ buff 1 chất
+            curr_nutr = player_info.get("nutrition") or {}
+            curr_c = safe_float(curr_nutr.get("carb", 100.0), 100.0)
+            curr_p = safe_float(curr_nutr.get("protein", 100.0), 100.0)
+            curr_l = safe_float(curr_nutr.get("lipid", 100.0), 100.0)
+            
+            cmd_body = {
+                "action": "setnutrition",
+                "steamId": sid_str
+            }
+            
+            if nutrient_type in ["carb", "s", "carbohydrate"]:
+                cmd_body["carb"] = 100.0
+                cmd_body["protein"] = curr_p
+                cmd_body["lipid"] = curr_l
+                buff_name = "Dưỡng Chất S (Carbohydrates)"
+            elif nutrient_type in ["lipid", "fat", "line", "//"]:
+                cmd_body["carb"] = curr_c
+                cmd_body["protein"] = curr_p
+                cmd_body["lipid"] = 100.0
+                buff_name = "Dưỡng Chất // (Lipids)"
+            elif nutrient_type in ["protein", "dot", ":"]:
+                cmd_body["carb"] = curr_c
+                cmd_body["protein"] = 100.0
+                cmd_body["lipid"] = curr_l
+                buff_name = "Dưỡng Chất : (Proteins)"
+            else:  # "all" hoặc "perfect"
+                cmd_body["carb"] = 100.0
+                cmd_body["protein"] = 100.0
+                cmd_body["lipid"] = 100.0
+                buff_name = "Cả 3 Dưỡng Chất (100% Hoàn Hảo - Perfect Diet)"
+            
+            # 3. Gửi lệnh chuẩn tới IslePilot API
+            res = self.fetch_islepilot("/commands", method="POST", body_data=cmd_body)
+            
+            # 4. Lưu snapshot dinh dưỡng và xóa cache để cập nhật ngay
+            save_garage_dino_snapshot(f"{sid_str}_last_nutrients", {
+                "nutrients": {
+                    "carb": cmd_body.get("carb", 100.0),
+                    "protein": cmd_body.get("protein", 100.0),
+                    "lipid": cmd_body.get("lipid", 100.0)
+                }
+            })
+            if hasattr(DinoRequestHandler, "_islepilot_cache"):
+                DinoRequestHandler._islepilot_cache.pop(f"/players/{sid_str}", None)
+            
+            if res and (res.get("ok") is True or "commandId" in res):
+                self.send_json_response({
+                    "ok": True,
+                    "success": True,
+                    "message": f"⚡ Đã buff đầy 100% {buff_name} cho khủng long {species} thành công!",
+                    "nutrition": {
+                        "carb": cmd_body.get("carb", 100.0),
+                        "protein": cmd_body.get("protein", 100.0),
+                        "lipid": cmd_body.get("lipid", 100.0)
+                    },
+                    "result": res
+                })
+            else:
+                err_msg = (res.get("error") if isinstance(res, dict) else None) or "Máy chủ IslePilot chưa phản hồi lệnh buff chất."
+                self.send_json_response({"ok": False, "message": f"Buff chất thất bại: {err_msg}"}, 400)
+        except Exception as e:
+            print(f"[Powerup Buff Error] {e}")
+            self.send_json_response({"ok": False, "message": f"Lỗi hệ thống: {e}"}, 500)
 
     def handle_buy_skin(self):
         try:
