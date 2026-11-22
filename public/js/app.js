@@ -53,6 +53,13 @@ const App = {
     this.currentTab = tabId;
     document.body.setAttribute('data-current-tab', tabId);
 
+    // Đóng sidebar trên mobile khi chuyển tab
+    const sidebar = document.getElementById('app-sidebar');
+    const backdrop = document.getElementById('sidebar-backdrop');
+    if (sidebar) sidebar.classList.remove('open');
+    if (backdrop) backdrop.classList.remove('active');
+    document.body.classList.remove('sidebar-open');
+
     // Cập nhật nút điều hướng active
     document.querySelectorAll('.nav-btn').forEach(btn => {
       btn.classList.toggle('active', btn.getAttribute('data-tab') === tabId);
@@ -127,13 +134,41 @@ const App = {
       });
     }
 
-    // Nút mở menu mobile
+    // Nút mở/đóng menu sidebar trên mobile
     const toggleBtn = document.getElementById('menu-toggle');
+    const sidebar = document.getElementById('app-sidebar');
+    const backdrop = document.getElementById('sidebar-backdrop');
+    const closeBtn = document.getElementById('sidebar-close-btn');
+
+    const openSidebar = () => {
+      if (sidebar) sidebar.classList.add('open');
+      if (backdrop) backdrop.classList.add('active');
+      document.body.classList.add('sidebar-open');
+    };
+
+    const closeSidebar = () => {
+      if (sidebar) sidebar.classList.remove('open');
+      if (backdrop) backdrop.classList.remove('active');
+      document.body.classList.remove('sidebar-open');
+    };
+
     if (toggleBtn) {
-      toggleBtn.addEventListener('click', () => {
-        const nav = document.getElementById('nav-links');
-        if (nav) nav.classList.toggle('open');
+      toggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (sidebar && sidebar.classList.contains('open')) {
+          closeSidebar();
+        } else {
+          openSidebar();
+        }
       });
+    }
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', closeSidebar);
+    }
+
+    if (backdrop) {
+      backdrop.addEventListener('click', closeSidebar);
     }
 
   },
