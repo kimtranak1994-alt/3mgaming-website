@@ -21,6 +21,7 @@ import json
 import time
 
 import datetime
+import traceback
 
 import random
 import threading
@@ -476,6 +477,12 @@ def load_garage_dino_snapshots():
             except Exception:
                 pass
     return {}
+
+def load_garage_dino_snapshot(key):
+    if not key:
+        return {}
+    snapshots = load_garage_dino_snapshots()
+    return snapshots.get(str(key), {})
 
 def save_garage_dino_snapshot(key, snapshot_data):
     if not key or not snapshot_data or not isinstance(snapshot_data, dict):
