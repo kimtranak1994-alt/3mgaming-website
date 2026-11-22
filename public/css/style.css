@@ -3760,16 +3760,11 @@ body:has(#view-admin.active) .main-wrapper,
 }
 
 
-/* Trang admin chỉ giữ lại các ô bôi đỏ (Trang chủ, Bảng xếp hạng, Bản đồ Gateway, Quản Trị) - ẩn tất cả các mục khác */
-.admin-mode-active .nav-item-player,
-body.admin-mode-active .nav-item-player,
+/* Chỉ khi đang xem tab Quản Trị (#admin) mới thu gọn thanh điều hướng thành 4 mục */
 body[data-current-tab="admin"] .nav-item-player {
   display: none !important;
 }
 
-/* Đảm bảo 4 nút còn lại dàn đều đẹp mắt trên một hàng duy nhất */
-.admin-mode-active .nav-links,
-body.admin-mode-active .nav-links,
 body[data-current-tab="admin"] .nav-links {
   gap: 12px 18px;
 }

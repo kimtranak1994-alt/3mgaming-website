@@ -4576,6 +4576,22 @@ const Referral = {
 
 const Teleport = {
   locations: [],
+  defaultLocations: [
+    { id: 'cmvqtjyrr4ombph01vi8dknwg', name: 'ĐẤU TRƯỜNG', cost: 0 },
+    { id: 'cmvs3zs7s0h6np001armto8dp', name: 'Rừng dừa Dellta', cost: 1000 },
+    { id: 'cmvqqbmyf43xpph01gie764yv', name: 'WATER ACCESS', cost: 1000 },
+    { id: 'cmvqr6syg493mpc01131d0h7i', name: 'SPAWM', cost: 1000 },
+    { id: 'cmvm99rrk5fvula01pwetdn17', name: 'South Plains', cost: 1000 },
+    { id: 'cmvqrbj3l487dsg01u9301xwb', name: 'WEST RAIL', cost: 1000 },
+    { id: 'cmvqrkkkh49mosg01nftcxxhr', name: 'HIGHT LAND', cost: 1000 },
+    { id: 'cmvs48af50hhqvx01sc9jz3tu', name: 'Rừng dừa Eastem Jungle', cost: 1000 },
+    { id: 'cmvs4n8mk01nwoz014fah3tg2', name: 'Rừng dừa Northern Jungle', cost: 1000 },
+    { id: 'cmvs5cspt03m7qj01pwvmtl7b', name: 'Rừng dừa South Plains', cost: 1000 },
+    { id: 'cmvs5jdxh04ijqj01kooaoaj5', name: 'Rừng dừa Souther Strait', cost: 1000 },
+    { id: 'cmvs5rd9s05i3ql01qx1rvm0f', name: 'Rừng dừa Swamps', cost: 1000 },
+    { id: 'cmvlvi9x73mhipd013kd20gr3', name: 'CẦU DELLTA', cost: 1000 },
+    { id: 'cmvs561md02h9ql014j1d10vb', name: 'Rừng dừa West Rail', cost: 1000 }
+  ],
   balance: 8090,
   activeCode: null,
   timerInterval: null,
@@ -4695,6 +4711,10 @@ const Teleport = {
     }
 
     if (!container) return;
+
+    if (!this.locations || this.locations.length === 0) {
+      this.locations = (this.defaultLocations || []).slice();
+    }
 
     if (this.locations.length === 0) {
       container.innerHTML = '<div style="text-align: center; padding: 30px; color: #94a3b8; grid-column: 1/-1;">Hiện không có điểm đến nào khả dụng trên máy chủ.</div>';

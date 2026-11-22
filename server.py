@@ -888,6 +888,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
     _combat_log_cached_data = None
     _killfeed_cache_time = 0.0
     _killfeed_cached_data = None
+    _islepilot_cache = {}
 
     def __init__(self, *args, **kwargs):
 
@@ -2685,7 +2686,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         now_ts = time.time()
 
         if not hasattr(DinoRequestHandler, "_islepilot_cache"):
-            DinoRequestHandler._islepilot_cache = {}
+            DinoRequestHandler._islepilot_cache = {
+                "/teleport/locations": (time.time(), {"locations": list(DinoRequestHandler.DEFAULT_TELEPORT_LOCATIONS)})
+            }
 
         # 1. Kiểm tra cache GET để tránh bị IslePilot rate-limit (HTTP 429)
         ttl = 0
@@ -7112,14 +7115,44 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
         self.send_json_response({"dinos": []})
 
+    DEFAULT_TELEPORT_LOCATIONS = [
+        {"id": "cmvqtjyrr4ombph01vi8dknwg", "name": "ĐẤU TRƯỜNG", "cost": 0, "minHealthPct": 0, "maxGrowthPct": 100, "priceCurrency": None},
+        {"id": "cmvs3zs7s0h6np001armto8dp", "name": "Rừng dừa Dellta", "cost": 1000, "minHealthPct": 80, "maxGrowthPct": 100, "priceCurrency": None},
+        {"id": "cmvqqbmyf43xpph01gie764yv", "name": "WATER ACCESS", "cost": 1000, "minHealthPct": 80, "maxGrowthPct": 100, "priceCurrency": None},
+        {"id": "cmvqr6syg493mpc01131d0h7i", "name": "SPAWM", "cost": 1000, "minHealthPct": 80, "maxGrowthPct": 100, "priceCurrency": None},
+        {"id": "cmvm99rrk5fvula01pwetdn17", "name": "South Plains", "cost": 1000, "minHealthPct": 80, "maxGrowthPct": 100, "priceCurrency": None},
+        {"id": "cmvqrbj3l487dsg01u9301xwb", "name": "WEST RAIL", "cost": 1000, "minHealthPct": 80, "maxGrowthPct": 100, "priceCurrency": None},
+        {"id": "cmvqrkkkh49mosg01nftcxxhr", "name": "HIGHT LAND", "cost": 1000, "minHealthPct": 80, "maxGrowthPct": 100, "priceCurrency": None},
+        {"id": "cmvs48af50hhqvx01sc9jz3tu", "name": "Rừng dừa Eastem Jungle", "cost": 1000, "minHealthPct": 80, "maxGrowthPct": 100, "priceCurrency": None},
+        {"id": "cmvs4n8mk01nwoz014fah3tg2", "name": "Rừng dừa Northern Jungle", "cost": 1000, "minHealthPct": 80, "maxGrowthPct": 100, "priceCurrency": None},
+        {"id": "cmvs5cspt03m7qj01pwvmtl7b", "name": "Rừng dừa South Plains", "cost": 1000, "minHealthPct": 80, "maxGrowthPct": 100, "priceCurrency": None},
+        {"id": "cmvs5jdxh04ijqj01kooaoaj5", "name": "Rừng dừa Souther Strait", "cost": 1000, "minHealthPct": 80, "maxGrowthPct": 100, "priceCurrency": None},
+        {"id": "cmvs5rd9s05i3ql01qx1rvm0f", "name": "Rừng dừa Swamps", "cost": 1000, "minHealthPct": 80, "maxGrowthPct": 100, "priceCurrency": None},
+        {"id": "cmvlvi9x73mhipd013kd20gr3", "name": "CẦU DELLTA", "cost": 1000, "minHealthPct": 80, "maxGrowthPct": 100, "priceCurrency": None},
+        {"id": "cmvs561md02h9ql014j1d10vb", "name": "Rừng dừa West Rail", "cost": 1000, "minHealthPct": 80, "maxGrowthPct": 100, "priceCurrency": None}
+    ]
+
     def handle_teleport_locations(self):
         # Trả về 100% địa điểm dịch chuyển thực tế từ IslePilot API của server
         remote = self.fetch_islepilot("/teleport/locations")
         locations = remote.get("locations", []) if isinstance(remote, dict) else []
+        if not locations:
+            # Fallback nếu IslePilot API bị 429 hoặc gián đoạn
+            locations = list(self.DEFAULT_TELEPORT_LOCATIONS)
         
         # Lấy số dư ví (wallet balance) thực tế từ tài khoản người chơi
-        steam_id = self.get_active_steam_id()
-        player_info = self.fetch_islepilot(f"/players/{steam_id}")
+        query = urllib.parse.urlparse(self.path).query
+        q_params = urllib.parse.parse_qs(query)
+        explicit_steam_id = q_params.get("steam_id", [None])[0]
+        steam_id = explicit_steam_id or self.get_active_steam_id()
+
+        player_info = None
+        if explicit_steam_id:
+            try:
+                player_info = self.fetch_islepilot(f"/players/{explicit_steam_id}")
+            except Exception:
+                player_info = None
+
         balance = 8090
         if isinstance(player_info, dict):
             wallet = player_info.get("wallet", {})
