@@ -723,10 +723,49 @@ const DinoInfo = {
 
   showToast(msg, type = 'info') {
     if (window.App && typeof App.showToast === 'function') {
-      App.showToast(msg, type);
-    } else {
-      alert(msg);
+      try {
+        App.showToast(msg, type);
+      } catch (e) {}
     }
+
+    // Luôn hiển thị Toast thông báo tự động biến mất, tuyệt đối không dùng alert() để không bắt người chơi bấm OK
+    let toast = document.getElementById('dino-info-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'dino-info-toast';
+      toast.style.cssText = 'position: fixed; bottom: 28px; right: 28px; z-index: 999999; padding: 12px 22px; border-radius: 10px; font-weight: 800; font-size: 0.92rem; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: none; opacity: 0; transform: translateY(20px); display: flex; align-items: center; gap: 8px; backdrop-filter: blur(8px);';
+      document.body.appendChild(toast);
+    }
+
+    let bg = 'linear-gradient(135deg, #1e293b, #0f172a)';
+    let border = '1px solid rgba(56, 189, 248, 0.4)';
+    let color = '#38bdf8';
+    if (type === 'success') {
+      bg = 'linear-gradient(135deg, rgba(6, 78, 59, 0.95), rgba(16, 185, 129, 0.95))';
+      border = '1px solid #34d399';
+      color = '#fff';
+    } else if (type === 'error') {
+      bg = 'linear-gradient(135deg, rgba(127, 29, 29, 0.95), rgba(239, 68, 68, 0.95))';
+      border = '1px solid #f87171';
+      color = '#fff';
+    } else if (type === 'warning') {
+      bg = 'linear-gradient(135deg, rgba(120, 53, 15, 0.95), rgba(245, 158, 11, 0.95))';
+      border = '1px solid #fbbf24';
+      color = '#fff';
+    }
+
+    toast.style.background = bg;
+    toast.style.border = border;
+    toast.style.color = color;
+    toast.innerHTML = msg;
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateY(0)';
+
+    clearTimeout(this._toastTimeout);
+    this._toastTimeout = setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(20px)';
+    }, 2800);
   },
 
   async setGrowthLock(frozen) {
@@ -934,10 +973,8 @@ const DinoInfo = {
     // 2. KÍCH HOẠT BỘ ĐẾM NGƯỢC 300S NGAY LẬP TỨC VÀ KHÓA NÚT
     this.setCooldown(type, 300);
 
-    // 3. GỬI LỆNH API THỰC THI ĐẾN MÁY CHỦ
+    // 3. GỬI LỆNH API THỰC THI ĐẾN MÁY CHỦ (CHẠY NGẦM KHÔNG GÂY GIÁN ĐOẠN)
     try {
-      this.showToast(`⚡ Đang thực thi buff ${label} vào máy chủ...`, 'info');
-
       const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
       const steamId = (user && (user.steamId || user.steam_id)) || (this.data && this.data.steam_id) || '';
 
