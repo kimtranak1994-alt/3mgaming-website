@@ -58,6 +58,7 @@
       <div class="sidebar-section-title">MENU CHÍNH</div>
       <ul class="nav-links" id="nav-links">
         <li id="nav-item-home"><a href="#home" class="nav-btn active" data-tab="home"><span class="nav-icon">🏠</span> <span class="nav-text">Trang chủ</span></a></li>
+        <li class="nav-item-player"><a href="#starter" class="nav-btn" data-tab="starter" style="color: #fbbf24; font-weight: 600;"><span class="nav-icon">🎁</span> <span class="nav-text">Quà tân thủ</span> <span class="badge-new-gift" style="background: linear-gradient(135deg, #f59e0b, #ef4444); color: #fff; font-size: 0.65rem; padding: 1px 5px; border-radius: 999px; font-weight: 800; text-transform: uppercase; margin-left: auto;">HOT</span></a></li>
         <li id="nav-item-bxh"><a href="#bxh" class="nav-btn" data-tab="bxh"><span class="nav-icon">🏆</span> <span class="nav-text">Bảng xếp hạng</span></a></li>
         <li class="nav-item-player" id="nav-item-dino-info"><a href="#dino-info" class="nav-btn" data-tab="dino-info"><span class="nav-icon">🦕</span> <span class="nav-text">Info Dino</span></a></li>
         <li class="nav-item-player"><a href="#garage" class="nav-btn" data-tab="garage"><span class="nav-icon">🦖</span> <span class="nav-text">Gara Dino</span></a></li>
@@ -66,10 +67,9 @@
         <li class="nav-item-player"><a href="#skineditor" class="nav-btn" data-tab="skineditor"><span class="nav-icon">🖌️</span> <span class="nav-text">Chỉnh sửa skin</span></a></li>
         <li class="nav-item-player"><a href="#quests" class="nav-btn" data-tab="quests"><span class="nav-icon">📜</span> <span class="nav-text">Nhiệm vụ</span></a></li>
         <li id="nav-item-map"><a href="#map" class="nav-btn" data-tab="map"><span class="nav-icon">🗺️</span> <span class="nav-text">Bản đồ Gateway</span></a></li>
-        <li class="nav-item-player"><a href="#guide" class="nav-btn" data-tab="guide"><span class="nav-icon">📖</span> <span class="nav-text">Hướng dẫn</span></a></li>
         <li class="nav-item-player" id="nav-item-damage"><a href="#damage" class="nav-btn" data-tab="damage"><span class="nav-icon">⚔️</span> <span class="nav-text">Check Dame</span></a></li>
-        <li class="nav-item-player"><a href="#starter" class="nav-btn" data-tab="starter" style="color: #fbbf24; font-weight: 600;"><span class="nav-icon">🎁</span> <span class="nav-text">Quà tân thủ</span> <span class="badge-new-gift" style="background: linear-gradient(135deg, #f59e0b, #ef4444); color: #fff; font-size: 0.65rem; padding: 1px 5px; border-radius: 999px; font-weight: 800; text-transform: uppercase; margin-left: auto;">HOT</span></a></li>
         <li class="nav-item-player"><a href="#rules" class="nav-btn" data-tab="rules"><span class="nav-icon">📋</span> <span class="nav-text">Nội quy</span></a></li>
+        <li class="nav-item-player"><a href="#guide" class="nav-btn" data-tab="guide"><span class="nav-icon">📖</span> <span class="nav-text">Hướng dẫn</span></a></li>
         <li class="nav-item-player"><a href="#donate" class="nav-btn" data-tab="donate"><span class="nav-icon">💖</span> <span class="nav-text">Ủng hộ</span></a></li>
         <li id="nav-item-admin" style="display: none;"><a href="#admin" class="nav-btn" data-tab="admin" style="border-color: rgba(255, 42, 133, 0.4);"><span class="nav-icon" style="color: #ff2a85;">👑</span> <span class="nav-text">Quản Trị</span></a></li>
       </ul>
@@ -1661,24 +1661,15 @@
     <div class="footer-inner">
 
       <ul class="footer-links">
-
         <li><a href="#home">Trang chủ</a></li>
-
-        <li><a href="#guide">Cách vào server</a></li>
-
-        <li><a href="#rules">Nội quy</a></li>
-
-        <li><a href="#map">Bản đồ Gateway</a></li>
-
+        <li><a href="#starter">🎁 Quà tân thủ</a></li>
         <li><a href="#bxh">Bảng xếp hạng</a></li>
-
         <li><a href="#garage">Gara khủng long</a></li>
-            <li><a href="#starter">🎁 Quà tân thủ</a></li>
-
+        <li><a href="#map">Bản đồ Gateway</a></li>
+        <li><a href="#rules">Nội quy</a></li>
+        <li><a href="#guide">Hướng dẫn</a></li>
         <li><a href="#donate">Ủng hộ server</a></li>
-
         <li><a href="https://discord.gg/ZhjEGReXe" target="_blank" class="discord-link">Discord Cộng Đồng</a></li>
-
       </ul>
 
     </div>
@@ -1712,7 +1703,7 @@
   <script src="js/dino_info.js?v=2.0"></script>
   <script src="js/arena.js?v=1.1"></script>
   <script src="js/auto_treo.js?v=1.0"></script>
-  <script src="js/app.js?v=4.8"></script>
+  <script src="js/app.js?v=4.9"></script>
 
   <!-- Floating Guest Mode Indicator for Admin -->
   <div id="floating-guest-pill" class="floating-guest-indicator" style="display: none !important;" onclick="App.setAdminViewMode('admin')">
