@@ -39,7 +39,7 @@ const App = {
 
   switchTab(tabId) {
     const validTabs = [
-      'home', 'bxh', 'dino-info', 'dinoinfo', 'damage', 'garage', 'starter', 
+      'home', 'bxh', 'dino-info', 'dinoinfo', 'damage', 'garage', 'starter', 'nhandino', 'claim-dino',
       'skinshop', 'skins', 'skineditor', 'referral', 'quests',
       'map', 'guide', 'rules', 'donate', 'admin'
     ];
@@ -86,6 +86,12 @@ const App = {
         window.StarterGift.render();
       } else if (typeof StarterGift !== 'undefined' && typeof StarterGift.render === 'function') {
         StarterGift.render();
+      }
+    } else if (tabId === 'nhandino' || tabId === 'claim-dino') {
+      if (window.DailyDino && typeof window.DailyDino.render === 'function') {
+        window.DailyDino.render();
+      } else if (typeof DailyDino !== 'undefined' && typeof DailyDino.render === 'function') {
+        DailyDino.render();
       }
     } else if (tabId === 'skinshop') {
       SkinShop.render();

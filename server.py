@@ -670,6 +670,55 @@ def save_claimed_starter(data):
             except Exception as e:
                 print(f"Error saving claimed_starter to {fpath}: {e}")
 
+_daily_dino_lock = threading.RLock()
+_daily_dino_cache = None
+
+def _get_daily_dino_paths():
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    primary_file = os.path.join(base_dir, "daily_dino_claims.json")
+    backup_file = os.path.join(base_dir, ".persistent_daily_dino_claims.json")
+    return [backup_file, primary_file]
+
+def load_daily_dino_claims():
+    global _daily_dino_cache
+    with _daily_dino_lock:
+        paths = _get_daily_dino_paths()
+        merged = {}
+        for fpath in paths:
+            if os.path.exists(fpath):
+                try:
+                    with open(fpath, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                        if isinstance(data, dict):
+                            for sid, val in data.items():
+                                sid_str = str(sid).strip()
+                                if sid_str not in merged:
+                                    merged[sid_str] = val
+                                elif isinstance(val, dict) and isinstance(merged[sid_str], dict):
+                                    merged[sid_str].update(val)
+                except Exception:
+                    pass
+        if isinstance(_daily_dino_cache, dict):
+            for sid, val in _daily_dino_cache.items():
+                if sid not in merged:
+                    merged[sid] = val
+        _daily_dino_cache = dict(merged)
+        return dict(merged)
+
+def save_daily_dino_claims(data):
+    global _daily_dino_cache
+    with _daily_dino_lock:
+        if isinstance(data, dict):
+            _daily_dino_cache = dict(data)
+        paths = _get_daily_dino_paths()
+        for fpath in paths:
+            try:
+                os.makedirs(os.path.dirname(fpath), exist_ok=True)
+                with open(fpath, "w", encoding="utf-8") as f:
+                    json.dump(data, f, ensure_ascii=False, indent=2)
+            except Exception as e:
+                print(f"Error saving daily_dino_claims to {fpath}: {e}")
+
 def _sync_claims_from_islepilot_wallet(steam_id, claimed_db=None):
     """
     Kéo lịch sử giao dịch từ IslePilot Cloud Wallet để đồng bộ và khôi phục
@@ -1185,6 +1234,11 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             self.handle_claims()
             return
 
+        # 20.1. Nhận Khủng Long Mỗi 24 Giờ (89% Prime & 4 Mutations)
+        elif self.path.startswith("/api/player/daily-dino"):
+            self.handle_daily_dino_get()
+            return
+
         elif self.path.startswith("/api/server/carcass/offers") or self.path.startswith("/api/server/shop/carcasses"):
 
             self.handle_carcass_offers()
@@ -1647,6 +1701,10 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
         elif self.path in ["/api/server/claims/claim", "/api/server/starter/claim"]:
             self.handle_claim_starter()
+            return
+
+        elif self.path in ["/api/player/daily-dino/claim", "/api/player/daily-dino"]:
+            self.handle_daily_dino_claim()
             return
 
         elif self.path in ["/api/server/referral/apply", "/api/server/referral/redeem"]:
@@ -11899,6 +11957,187 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             print(f"[Handle Claim Starter Error] {e}")
             self.send_json_response({"ok": False, "error": str(e)}, 500)
 
+
+    def handle_daily_dino_get(self):
+        try:
+            query = urllib.parse.urlparse(self.path).query
+            q_params = urllib.parse.parse_qs(query)
+            steam_id = q_params.get("steam_id", [None])[0] or self.get_active_steam_id()
+            
+            sid_str = str(steam_id).strip() if steam_id else ""
+            claims_db = load_daily_dino_claims()
+            
+            player_record = claims_db.get(sid_str, {}) if sid_str else {}
+            last_ts = player_record.get("last_claimed_timestamp", 0) if isinstance(player_record, dict) else 0
+            
+            now_ts = time.time()
+            cooldown_seconds = 24 * 3600  # 86400s (24 giờ)
+            elapsed = now_ts - last_ts
+            
+            can_claim = True
+            remaining_seconds = 0
+            if last_ts > 0 and elapsed < cooldown_seconds:
+                can_claim = False
+                remaining_seconds = int(cooldown_seconds - elapsed)
+            
+            # Lấy danh sách loài và đột biến từ config
+            cfg = config if isinstance(config, dict) else {}
+            starter_cfg = cfg.get("STARTER_GIFT", {})
+            species_list = starter_cfg.get("dino_choices", [])
+            mutation_list = starter_cfg.get("mutation_choices", [])
+            default_mutations = starter_cfg.get("default_mutations", [
+                "Multichambered Lungs",
+                "Hypermetabolic Inanition",
+                "Congenital Hypoalgesia",
+                "Photosynthetic Tissue"
+            ])
+
+            next_iso = None
+            if remaining_seconds > 0:
+                try:
+                    next_iso = datetime.datetime.fromtimestamp(last_ts + cooldown_seconds, datetime.timezone.utc).isoformat()
+                except Exception:
+                    pass
+
+            self.send_json_response({
+                "ok": True,
+                "steam_id": sid_str,
+                "can_claim": can_claim if sid_str else False,
+                "is_logged_in": bool(sid_str),
+                "remaining_seconds": remaining_seconds,
+                "cooldown_hours": 24,
+                "last_claimed_at": player_record.get("last_claimed_at") if isinstance(player_record, dict) else None,
+                "next_claim_at": next_iso,
+                "growth": 0.89,
+                "growth_display": "89%",
+                "is_prime": True,
+                "species_list": species_list,
+                "mutation_list": mutation_list,
+                "default_mutations": default_mutations
+            })
+        except Exception as e:
+            print(f"[Handle Daily Dino Get Error] {e}")
+            self.send_json_response({"ok": False, "error": str(e)}, 500)
+
+    def handle_daily_dino_claim(self):
+        try:
+            length = int(self.headers.get("Content-Length", 0))
+            payload = json.loads(self.rfile.read(length).decode("utf-8")) if length > 0 else {}
+            
+            steam_id = payload.get("steam_id") or self.get_active_steam_id()
+            if not steam_id:
+                self.send_json_response({"ok": False, "error": "Vui lòng đăng nhập Steam trước khi nhận khủng long!"}, 401)
+                return
+            
+            sid_str = str(steam_id).strip()
+            with _daily_dino_lock:
+                claims_db = load_daily_dino_claims()
+                player_record = claims_db.get(sid_str, {}) if isinstance(claims_db.get(sid_str), dict) else {}
+                last_ts = player_record.get("last_claimed_timestamp", 0)
+                
+                now_ts = time.time()
+                cooldown_seconds = 24 * 3600  # 24 giờ
+                elapsed = now_ts - last_ts
+                if last_ts > 0 and elapsed < cooldown_seconds:
+                    rem_sec = int(cooldown_seconds - elapsed)
+                    rem_h = rem_sec // 3600
+                    rem_m = (rem_sec % 3600) // 60
+                    self.send_json_response({
+                        "ok": False,
+                        "error": f"Bạn đã nhận khủng long hôm nay! Vui lòng quay lại sau {rem_h} giờ {rem_m} phút.",
+                        "remaining_seconds": rem_sec
+                    }, 400)
+                    return
+                
+                chosen_species = str(payload.get("species") or "").strip()
+                if not chosen_species:
+                    chosen_species = "Tyrannosaurus"
+                
+                chosen_gender = str(payload.get("gender") or "Male").strip()
+                if chosen_gender not in ["Male", "Female"]:
+                    chosen_gender = "Male"
+                
+                raw_mutations = payload.get("mutations") or []
+                if not isinstance(raw_mutations, list) or len(raw_mutations) == 0:
+                    raw_mutations = [
+                        "Multichambered Lungs",
+                        "Hypermetabolic Inanition",
+                        "Congenital Hypoalgesia",
+                        "Photosynthetic Tissue"
+                    ]
+                
+                chosen_mutations = [str(m).strip() for m in raw_mutations if str(m).strip()][:4]
+                while len(chosen_mutations) < 4:
+                    chosen_mutations.append("None")
+                
+                mut_slots = {
+                    "active": list(chosen_mutations),
+                    "parent": ["None", "None", "None", "None"],
+                    "elderA": ["None", "None", "None", "None"],
+                    "elderB": ["None", "None", "None", "None"]
+                }
+                
+                now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
+                dino_id = f"daily_prime_{sid_str}_{int(now_ts)}"
+                
+                # Cập nhật lịch sử claim 24h
+                history = player_record.get("history", []) if isinstance(player_record.get("history"), list) else []
+                claim_entry = {
+                    "claimed_at": now_iso,
+                    "species": chosen_species,
+                    "gender": chosen_gender,
+                    "growth": 0.89,
+                    "isPrimeElder": True,
+                    "mutations": chosen_mutations,
+                    "dino_id": dino_id
+                }
+                history.append(claim_entry)
+                
+                claims_db[sid_str] = {
+                    "last_claimed_at": now_iso,
+                    "last_claimed_timestamp": now_ts,
+                    "total_claims": player_record.get("total_claims", 0) + 1,
+                    "history": history[-20:]
+                }
+                save_daily_dino_claims(claims_db)
+            
+            # Thêm khủng long 89% Prime vào Gara Dino của người chơi
+            gifts = load_user_gift_dinos()
+            if sid_str not in gifts:
+                gifts[sid_str] = []
+            
+            dino_entry = {
+                "id": dino_id,
+                "name": f"Prime 89%: {chosen_species}",
+                "species": chosen_species,
+                "gender": chosen_gender,
+                "growth": 0.89,
+                "isPrimeElder": True,
+                "weight_label": "Prime 89%",
+                "mutations": chosen_mutations,
+                "mutationSlots": mut_slots,
+                "created_at": now_iso
+            }
+            gifts[sid_str].append(dino_entry)
+            save_user_gift_dinos(gifts)
+            
+            # Lưu 4 đột biến vào hệ thống mutations của Gara
+            save_garage_saved_mutation(dino_id, mut_slots)
+            save_garage_saved_mutation(f"{sid_str}_{dino_id}", mut_slots)
+            
+            mut_names = ", ".join([m for m in chosen_mutations if m != "None"])
+            print(f"[Daily Dino Claim] Player {sid_str} claimed {chosen_species} (Prime 89%, {chosen_gender}) with 4 mutations: [{mut_names}]")
+            
+            self.send_json_response({
+                "ok": True,
+                "success": True,
+                "message": f"🎉 Chúc mừng bạn đã nhận thành công {chosen_species} Prime 89% với 4 đột biến gen! Khủng long đã được chuyển vào Gara Dino của bạn.",
+                "dino": dino_entry,
+                "next_claim_at": datetime.datetime.fromtimestamp(now_ts + cooldown_seconds, datetime.timezone.utc).isoformat()
+            })
+        except Exception as e:
+            print(f"[Daily Dino Claim Error] {e}")
+            self.send_json_response({"ok": False, "error": str(e)}, 500)
 
     def handle_buy_skin(self):
         try:

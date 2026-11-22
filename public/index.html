@@ -59,6 +59,7 @@
       <ul class="nav-links" id="nav-links">
         <li id="nav-item-home"><a href="#home" class="nav-btn active" data-tab="home"><span class="nav-icon">🏠</span> <span class="nav-text">Trang chủ</span></a></li>
         <li class="nav-item-player"><a href="#starter" class="nav-btn" data-tab="starter" style="color: #fbbf24; font-weight: 600;"><span class="nav-icon">🎁</span> <span class="nav-text">Quà tân thủ</span> <span class="badge-new-gift" style="background: linear-gradient(135deg, #f59e0b, #ef4444); color: #fff; font-size: 0.65rem; padding: 1px 5px; border-radius: 999px; font-weight: 800; text-transform: uppercase; margin-left: auto;">HOT</span></a></li>
+        <li class="nav-item-player" id="nav-item-nhandino"><a href="#nhandino" class="nav-btn" data-tab="nhandino" style="color: #38bdf8; font-weight: 600;"><span class="nav-icon">🦖</span> <span class="nav-text">Nhận Dino</span> <span class="badge-new-gift" style="background: linear-gradient(135deg, #0284c7, #0369a1); color: #fff; font-size: 0.65rem; padding: 1px 5px; border-radius: 999px; font-weight: 800; text-transform: uppercase; margin-left: auto;">24H</span></a></li>
         <li id="nav-item-bxh"><a href="#bxh" class="nav-btn" data-tab="bxh"><span class="nav-icon">🏆</span> <span class="nav-text">Bảng xếp hạng</span></a></li>
         <li class="nav-item-player" id="nav-item-dino-info"><a href="#dino-info" class="nav-btn" data-tab="dino-info"><span class="nav-icon">🦕</span> <span class="nav-text">Info Dino</span></a></li>
         <li class="nav-item-player"><a href="#garage" class="nav-btn" data-tab="garage"><span class="nav-icon">🦖</span> <span class="nav-text">Gara Dino</span></a></li>
@@ -600,6 +601,13 @@
 
       <div id="starter-container">
         <!-- Render động từ StarterGift.render() -->
+      </div>
+    </section>
+
+    <!-- TAB: NHẬN DINO 24H (DAILY PRIME DINO 89% & 4 MUTATIONS) -->
+    <section id="view-nhandino" class="view-section">
+      <div id="nhandino-container">
+        <!-- Render động từ DailyDino.render() -->
       </div>
     </section>
 
@@ -1663,6 +1671,7 @@
       <ul class="footer-links">
         <li><a href="#home">Trang chủ</a></li>
         <li><a href="#starter">🎁 Quà tân thủ</a></li>
+        <li><a href="#nhandino">🦖 Nhận Dino 24H</a></li>
         <li><a href="#bxh">Bảng xếp hạng</a></li>
         <li><a href="#garage">Gara khủng long</a></li>
         <li><a href="#map">Bản đồ Gateway</a></li>
@@ -1703,7 +1712,8 @@
   <script src="js/dino_info.js?v=2.0"></script>
   <script src="js/arena.js?v=1.1"></script>
   <script src="js/auto_treo.js?v=1.0"></script>
-  <script src="js/app.js?v=4.9"></script>
+  <script src="js/daily_dino.js?v=1.0"></script>
+  <script src="js/app.js?v=5.0"></script>
 
   <!-- Floating Guest Mode Indicator for Admin -->
   <div id="floating-guest-pill" class="floating-guest-indicator" style="display: none !important;" onclick="App.setAdminViewMode('admin')">
