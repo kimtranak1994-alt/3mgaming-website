@@ -52,7 +52,7 @@ Mở file `config.json` tại thư mục gốc để chỉnh sửa:
   "SERVER_IP": "103.179.189.50",
   "SERVER_PORT": 7777,
   "MAX_SLOTS": 100,
-  "DISCORD_URL": "https://discord.gg/dino4vn",
+  "DISCORD_URL": "https://discord.gg/ZhjEGReXe",
   "BANK_INFO": {
     "BANK_NAME": "MBBANK",
     "ACCOUNT_NUMBER": "999988887777",

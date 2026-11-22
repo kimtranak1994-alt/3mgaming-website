@@ -874,7 +874,7 @@ const SkinShop = {
             </div>
           </div>
           <div style="display: flex; gap: 10px; justify-content: center;">
-            <a href="https://discord.gg/f3R9mMAfms" target="_blank" rel="noopener noreferrer" style="flex: 1; text-decoration: none; padding: 10px 16px; background: #5865F2; color: #fff; border-radius: 8px; font-weight: 700; font-size: 0.9rem; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+            <a href="https://discord.gg/ZhjEGReXe" target="_blank" rel="noopener noreferrer" style="flex: 1; text-decoration: none; padding: 10px 16px; background: #5865F2; color: #fff; border-radius: 8px; font-weight: 700; font-size: 0.9rem; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
               💬 Mở Discord Admin
             </a>
             <button type="button" onclick="document.getElementById('contact-admin-modal').remove()" style="padding: 10px 18px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 8px; font-weight: 600; cursor: pointer;">
