@@ -850,16 +850,24 @@ const DinoInfo = {
     };
     const label = labelMap[type] || 'Powerup';
 
-    // 1. CẬP NHẬT GIAO DIỆN TỨC THÌ (OPTIMISTIC UI UPDATE)
+    // 1. CẬP NHẬT GIAO DIỆN TỨC THÌ (OPTIMISTIC UI UPDATE - CỘNG THÊM 25%)
     if (type === 'all') {
       const carbEl = document.getElementById('nutr-carb-val');
       const lipidEl = document.getElementById('nutr-lipid-val');
       const proteinEl = document.getElementById('nutr-protein-val');
       const dietBadge = document.getElementById('nutr-diet-badge');
 
-      if (carbEl) carbEl.textContent = '25%';
-      if (lipidEl) lipidEl.textContent = '25%';
-      if (proteinEl) proteinEl.textContent = '25%';
+      const curC = Number(this.data && this.data.dino && this.data.dino.nutrition && this.data.dino.nutrition.carb) || 0;
+      const curL = Number(this.data && this.data.dino && this.data.dino.nutrition && this.data.dino.nutrition.lipid) || 0;
+      const curP = Number(this.data && this.data.dino && this.data.dino.nutrition && this.data.dino.nutrition.protein) || 0;
+
+      const newC = Math.min(100, Math.round(curC + 25));
+      const newL = Math.min(100, Math.round(curL + 25));
+      const newP = Math.min(100, Math.round(curP + 25));
+
+      if (carbEl) carbEl.textContent = `${newC}%`;
+      if (lipidEl) lipidEl.textContent = `${newL}%`;
+      if (proteinEl) proteinEl.textContent = `${newP}%`;
       if (dietBadge) {
         dietBadge.style = 'background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; font-size: 0.82rem; font-weight: 800; padding: 6px 14px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px;';
         dietBadge.innerHTML = '<span>🌟</span> Chế Độ Ăn Hoàn Hảo (Perfect Diet 3/3)';
@@ -867,9 +875,9 @@ const DinoInfo = {
 
       if (this.data && this.data.dino) {
         if (!this.data.dino.nutrition) this.data.dino.nutrition = {};
-        this.data.dino.nutrition.carb = 25;
-        this.data.dino.nutrition.lipid = 25;
-        this.data.dino.nutrition.protein = 25;
+        this.data.dino.nutrition.carb = newC;
+        this.data.dino.nutrition.lipid = newL;
+        this.data.dino.nutrition.protein = newP;
         this.data.dino.nutrition.is_perfect_diet = true;
       }
     } else if (type === 'hunger') {

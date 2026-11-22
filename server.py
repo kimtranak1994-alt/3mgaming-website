@@ -12218,7 +12218,12 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
             # THAO TÁC 1: BUFF ĐÓI (HUNGER)
             if nutrient_type in ["hunger", "doi", "food"]:
-                cur_hu = safe_float(player_info.get("hunger"), 0.0)
+                snap_entry = load_garage_dino_snapshot(f"{sid_str}_last_hunger") or {}
+                snap_time = safe_float(snap_entry.get("timestamp", 0), 0)
+                if snap_entry and (time.time() - snap_time) < 300:
+                    cur_hu = safe_float(snap_entry.get("hunger"), safe_float(player_info.get("hunger"), 0.0))
+                else:
+                    cur_hu = safe_float(player_info.get("hunger"), 0.0)
                 max_hu = safe_float(player_info.get("maxHunger"), 1000.0)
                 target_hu = min(max_hu, cur_hu + (max_hu * (amount_val / 100.0)))
                 res = self.fetch_islepilot("/commands", method="POST", body_data={
@@ -12274,12 +12279,20 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     self.send_json_response({"ok": False, "message": f"Kích hoạt Prime thất bại: {err_msg}"}, 400)
                 return
 
-            # THAO TÁC 3: BUFF CHẤT DINH DƯỠNG (A, B, Y hoặc CẢ 3 CHẤT)
-            # Đọc dinh dưỡng hiện tại từ player_info nếu chỉ buff 1 chất
-            curr_nutr = player_info.get("nutrition") or {}
-            curr_c = safe_float(curr_nutr.get("carb", 100.0), 100.0)
-            curr_p = safe_float(curr_nutr.get("protein", 100.0), 100.0)
-            curr_l = safe_float(curr_nutr.get("lipid", 100.0), 100.0)
+            # THAO TÁC 3: BUFF CHẤT DINH DƯỠNG (A, B, Y hoặc CẢ 3 CHẤT) - CỘNG DỒN (+25%)
+            snap_entry = load_garage_dino_snapshot(f"{sid_str}_last_nutrients") or {}
+            snap_nutr = snap_entry.get("nutrients") or {}
+            snap_time = safe_float(snap_entry.get("timestamp", 0), 0)
+            
+            raw_nutr = player_info.get("nutrition") or {}
+            if snap_nutr and (time.time() - snap_time) < 300:
+                curr_c = safe_float(snap_nutr.get("carb"), safe_float(raw_nutr.get("carb"), 0.0))
+                curr_p = safe_float(snap_nutr.get("protein"), safe_float(raw_nutr.get("protein"), 0.0))
+                curr_l = safe_float(snap_nutr.get("lipid"), safe_float(raw_nutr.get("lipid"), 0.0))
+            else:
+                curr_c = safe_float(raw_nutr.get("carb"), 0.0)
+                curr_p = safe_float(raw_nutr.get("protein"), 0.0)
+                curr_l = safe_float(raw_nutr.get("lipid"), 0.0)
             
             cmd_body = {
                 "action": "setnutrition",
@@ -12287,25 +12300,25 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             }
             
             if nutrient_type in ["carb", "s", "carbohydrate", "a"]:
-                cmd_body["carb"] = amount_val
-                cmd_body["protein"] = curr_p
-                cmd_body["lipid"] = curr_l
-                buff_name = f"Dưỡng Chất A (Carb {int(amount_val)}%)"
+                cmd_body["carb"] = min(100.0, max(0.0, round(curr_c + amount_val, 1)))
+                cmd_body["protein"] = min(100.0, max(0.0, round(curr_p, 1)))
+                cmd_body["lipid"] = min(100.0, max(0.0, round(curr_l, 1)))
+                buff_name = f"Dưỡng Chất A (+{int(amount_val)}% -> {cmd_body['carb']}%)"
             elif nutrient_type in ["lipid", "fat", "line", "//", "y"]:
-                cmd_body["carb"] = curr_c
-                cmd_body["protein"] = curr_p
-                cmd_body["lipid"] = amount_val
-                buff_name = f"Dưỡng Chất Y (Lipid {int(amount_val)}%)"
+                cmd_body["carb"] = min(100.0, max(0.0, round(curr_c, 1)))
+                cmd_body["protein"] = min(100.0, max(0.0, round(curr_p, 1)))
+                cmd_body["lipid"] = min(100.0, max(0.0, round(curr_l + amount_val, 1)))
+                buff_name = f"Dưỡng Chất Y (+{int(amount_val)}% -> {cmd_body['lipid']}%)"
             elif nutrient_type in ["protein", "dot", ":", "b"]:
-                cmd_body["carb"] = curr_c
-                cmd_body["protein"] = amount_val
-                cmd_body["lipid"] = curr_l
-                buff_name = f"Dưỡng Chất B (Protein {int(amount_val)}%)"
+                cmd_body["carb"] = min(100.0, max(0.0, round(curr_c, 1)))
+                cmd_body["protein"] = min(100.0, max(0.0, round(curr_p + amount_val, 1)))
+                cmd_body["lipid"] = min(100.0, max(0.0, round(curr_l, 1)))
+                buff_name = f"Dưỡng Chất B (+{int(amount_val)}% -> {cmd_body['protein']}%)"
             else:  # "all" hoặc "perfect" hoặc "aby"
-                cmd_body["carb"] = amount_val
-                cmd_body["protein"] = amount_val
-                cmd_body["lipid"] = amount_val
-                buff_name = f"Cả 3 Dưỡng Chất A - B - Y ({int(amount_val)}% Perfect Diet)"
+                cmd_body["carb"] = min(100.0, max(0.0, round(curr_c + amount_val, 1)))
+                cmd_body["protein"] = min(100.0, max(0.0, round(curr_p + amount_val, 1)))
+                cmd_body["lipid"] = min(100.0, max(0.0, round(curr_l + amount_val, 1)))
+                buff_name = f"Cả 3 Dưỡng Chất A - B - Y (+{int(amount_val)}% -> {cmd_body['carb']}%)"
             
             # Gửi lệnh chuẩn tới IslePilot API
             res = self.fetch_islepilot("/commands", method="POST", body_data=cmd_body)
@@ -12326,7 +12339,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 self.send_json_response({
                     "ok": True,
                     "success": True,
-                    "message": f"⚡ Đã buff {buff_name} cho khủng long {species} thành công!",
+                    "message": f"⚡ Đã cộng +{int(amount_val)}% cả 3 chất A-B-Y thành công! (Hiện tại: {cmd_body['carb']}%)",
                     "nutrition": {
                         "carb": cmd_body.get("carb", 100.0),
                         "protein": cmd_body.get("protein", 100.0),
