@@ -536,7 +536,29 @@ def load_user_gift_dinos():
     if os.path.exists(fpath):
         try:
             with open(fpath, "r", encoding="utf-8") as f:
-                return json.load(f)
+                data = json.load(f)
+            if isinstance(data, dict):
+                changed = False
+                for sid_k, d_list in data.items():
+                    if isinstance(d_list, list):
+                        for item in d_list:
+                            if isinstance(item, dict):
+                                raw_id = str(item.get("id") or "").strip()
+                                if raw_id and not raw_id.startswith("gift_"):
+                                    item["id"] = f"gift_{raw_id}"
+                                    changed = True
+                                if not item.get("parkedAt") and item.get("created_at"):
+                                    item["parkedAt"] = item["created_at"]
+                                    changed = True
+                                if item.get("source") != "admin_granted":
+                                    item["source"] = "admin_granted"
+                                    changed = True
+                                if not item.get("is_gift"):
+                                    item["is_gift"] = True
+                                    changed = True
+                if changed:
+                    save_user_gift_dinos(data)
+                return data
         except Exception:
             pass
     return {}
@@ -2104,10 +2126,14 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     return
                 elif action == "delete_garage_dino":
                     dino_id = str(params.get("garageDinoId") or "").strip()
+                    dino_id_bare = dino_id[5:] if dino_id.startswith("gift_") else dino_id
                     save_deleted_dino(dino_id, target_steam_id)
                     gifts = load_user_gift_dinos()
                     user_gifts = gifts.get(str(target_steam_id), [])
-                    new_gifts = [g for g in user_gifts if str(g.get("id")) != dino_id]
+                    new_gifts = [
+                        g for g in user_gifts
+                        if str(g.get("id")) not in (dino_id, dino_id_bare, f"gift_{dino_id_bare}")
+                    ]
                     if len(new_gifts) != len(user_gifts):
                         gifts[str(target_steam_id)] = new_gifts
                         save_user_gift_dinos(gifts)
@@ -2119,24 +2145,21 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     return
                 elif action == "restore_garage_dino":
                     dino_id = str(params.get("garageDinoId") or "").strip()
+                    dino_id_bare = dino_id[5:] if dino_id.startswith("gift_") else dino_id
                     remove_from_deleted_dinos(dino_id)
-                    gift_file = "user_gift_dinos.json"
                     found_gift = None
-                    if os.path.exists(gift_file):
-                        try:
-                            with open(gift_file, "r", encoding="utf-8") as f:
-                                gifts = json.load(f)
-                            user_gifts = gifts.get(str(target_steam_id), [])
-                            for idx, g in enumerate(user_gifts):
-                                if str(g.get("id")) == dino_id:
-                                    found_gift = g
-                                    user_gifts.pop(idx)
-                                    break
-                            if found_gift:
-                                with open(gift_file, "w", encoding="utf-8") as f:
-                                    json.dump(gifts, f, ensure_ascii=False, indent=2)
-                        except Exception as e:
-                            print("Error reading gift_file:", e)
+                    try:
+                        gifts = load_user_gift_dinos()
+                        user_gifts = gifts.get(str(target_steam_id), [])
+                        for idx, g in enumerate(user_gifts):
+                            if str(g.get("id")) in (dino_id, dino_id_bare, f"gift_{dino_id_bare}"):
+                                found_gift = g
+                                user_gifts.pop(idx)
+                                break
+                        if found_gift:
+                            save_user_gift_dinos(gifts)
+                    except Exception as e:
+                        print("Error reading gift_file:", e)
 
                     if found_gift:
                         species = found_gift.get("species", "Tyrannosaurus")
@@ -5978,13 +6001,16 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
     def handle_garage(self):
         query = urllib.parse.urlparse(self.path).query
         q_params = urllib.parse.parse_qs(query)
-        active_steam_id = q_params.get("steam_id", [None])[0]
+        active_steam_id = q_params.get("steam_id", [None])[0] or q_params.get("steamId", [None])[0]
 
         if not active_steam_id:
             cookie_header = self.headers.get("Cookie", "")
             match = re.search(r"steam_user=([^;:]+)", cookie_header)
             if match:
                 active_steam_id = match.group(1)
+
+        if active_steam_id:
+            active_steam_id = urllib.parse.unquote(str(active_steam_id)).split(":", 1)[0].strip()
 
         if not active_steam_id:
             players_data = self.fetch_islepilot("/players")
@@ -6161,12 +6187,14 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                         spec_raw = gd.get("species", "Tyrannosaurus")
                         stats = calc_dino_stats(spec_raw, g_growth, 1.0, 1.0, 1.0, is_p)
                         w_lbl = gd.get("weight_label") or ("Chuẩn Prime Elder" if is_p else "Chuẩn")
+                        g_parked = gd.get("parkedAt") or gd.get("created_at") or "Vừa thêm"
                         dinos.append({
                             "id": gd.get("id"),
                             "name": gd.get("name") or gd.get("species"),
                             "species": spec_raw,
                             "gender": "Cái (Female)" if gd.get("gender") == "Female" else "Đực (Male)",
                             "raw_gender": gd.get("gender", "Male"),
+                            "female": gd.get("gender") == "Female",
                             "growth": g_growth,
                             "growth_percent": g_pct,
                             "stage": g_stage,
@@ -6178,20 +6206,28 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                             "weight_label": w_lbl,
                             "current_hp": stats["current_hp"],
                             "max_hp": stats["max_hp"],
+                            "maxHealth": stats["max_hp"],
                             "health": stats["health_pct"],
+                            "health_ratio": 1.0,
                             "current_hunger": stats["current_hunger"],
                             "max_hunger": stats["max_hunger"],
+                            "maxHunger": stats["max_hunger"],
                             "hunger": stats["hunger_pct"],
+                            "hunger_ratio": 1.0,
                             "current_thirst": stats["current_thirst"],
                             "max_thirst": stats["max_thirst"],
+                            "maxThirst": stats["max_thirst"],
                             "thirst": stats["thirst_pct"],
+                            "thirst_ratio": 1.0,
                             "stamina": 100,
+                            "stamina_ratio": 1.0,
                             "nutrients": {"carb": 100, "protein": 100, "lipid": 100},
-                            "stored_at": gd.get("parkedAt", "Vừa thêm"),
-                            "parked_at": gd.get("parkedAt"),
-                            "parkedAt": gd.get("parkedAt"),
+                            "stored_at": g_parked,
+                            "parked_at": gd.get("parkedAt") or gd.get("created_at"),
+                            "parkedAt": gd.get("parkedAt") or gd.get("created_at"),
                             "status": "stored",
-                            "source": "admin_granted"
+                            "source": "admin_granted",
+                            "is_gift": True
                         })
                 except Exception:
                     pass
@@ -6227,36 +6263,47 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     spec_raw = gd.get("species", "Tyrannosaurus")
                     stats = calc_dino_stats(spec_raw, g_growth, 1.0, 1.0, 1.0, is_p)
                     w_lbl = gd.get("weight_label") or ("Chuẩn Prime Elder" if is_p else "Chuẩn")
+                    g_parked = gd.get("parkedAt") or gd.get("created_at") or "Vừa thêm"
                     fallback_dinos.append({
                         "id": gd.get("id"),
                         "name": gd.get("name") or gd.get("species"),
                         "species": spec_raw,
                         "gender": "Cái (Female)" if gd.get("gender") == "Female" else "Đực (Male)",
                         "raw_gender": gd.get("gender", "Male"),
+                        "female": gd.get("gender") == "Female",
                         "growth": g_growth,
                         "growth_percent": g_pct,
                         "stage": g_stage,
                         "is_prime_elder": is_p,
                         "isPrimeElder": is_p,
                         "mutations": gd.get("mutations", []),
+                        "mutationSlots": gd.get("mutationSlots") or {"active": gd.get("mutations", []), "parent": ["None", "None", "None", "None"], "elderA": ["None", "None", "None", "None"], "elderB": ["None", "None", "None", "None"]},
                         "weight": stats["max_hp"],
                         "weight_label": w_lbl,
                         "current_hp": stats["current_hp"],
                         "max_hp": stats["max_hp"],
+                        "maxHealth": stats["max_hp"],
                         "health": stats["health_pct"],
+                        "health_ratio": 1.0,
                         "current_hunger": stats["current_hunger"],
                         "max_hunger": stats["max_hunger"],
+                        "maxHunger": stats["max_hunger"],
                         "hunger": stats["hunger_pct"],
+                        "hunger_ratio": 1.0,
                         "current_thirst": stats["current_thirst"],
                         "max_thirst": stats["max_thirst"],
+                        "maxThirst": stats["max_thirst"],
                         "thirst": stats["thirst_pct"],
+                        "thirst_ratio": 1.0,
                         "stamina": 100,
+                        "stamina_ratio": 1.0,
                         "nutrients": {"carb": 100, "protein": 100, "lipid": 100},
-                        "stored_at": gd.get("parkedAt", "Vừa thêm"),
-                        "parked_at": gd.get("parkedAt"),
-                        "parkedAt": gd.get("parkedAt"),
+                        "stored_at": g_parked,
+                        "parked_at": gd.get("parkedAt") or gd.get("created_at"),
+                        "parkedAt": gd.get("parkedAt") or gd.get("created_at"),
                         "status": "stored",
-                        "source": "admin_granted"
+                        "source": "admin_granted",
+                        "is_gift": True
                     })
             except Exception:
                 pass
@@ -6413,24 +6460,22 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 self.send_json_response({"success": False, "ok": False, "message": "Vui lòng đăng nhập Steam trước khi rút khủng long!"}, 401)
                 return
 
-            # Kiểm tra xem đây có phải là khủng long Admin cấp (gift) hay không
-            gift_file = "user_gift_dinos.json"
+            # Kiểm tra xem đây có phải là khủng long Admin cấp / Quà tặng / Dino 24h (gift) hay không
             found_gift = None
-            if os.path.exists(gift_file):
-                try:
-                    with open(gift_file, "r", encoding="utf-8") as f:
-                        gifts = json.load(f)
-                    user_gifts = gifts.get(str(steam_id), [])
-                    for idx, g in enumerate(user_gifts):
-                        if str(g.get("id")) == str(dino_id):
-                            found_gift = g
-                            user_gifts.pop(idx)
-                            break
-                    if found_gift:
-                        with open(gift_file, "w", encoding="utf-8") as f:
-                            json.dump(gifts, f, ensure_ascii=False, indent=2)
-                except Exception:
-                    pass
+            dino_id_str = str(dino_id).strip()
+            dino_id_bare = dino_id_str[5:] if dino_id_str.startswith("gift_") else dino_id_str
+            try:
+                gifts = load_user_gift_dinos()
+                user_gifts = gifts.get(str(steam_id), [])
+                for idx, g in enumerate(user_gifts):
+                    if str(g.get("id")) in (dino_id_str, dino_id_bare, f"gift_{dino_id_bare}"):
+                        found_gift = g
+                        user_gifts.pop(idx)
+                        break
+                if found_gift:
+                    save_user_gift_dinos(gifts)
+            except Exception:
+                pass
 
             if found_gift:
                 species = found_gift.get("species", "Tyrannosaurus")
@@ -6565,9 +6610,13 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 return
 
             # Kiểm tra xem có phải gift dino cục bộ không
+            dino_id_bare = dino_id[5:] if dino_id.startswith("gift_") else dino_id
             gifts = load_user_gift_dinos()
             user_gifts = gifts.get(str(steam_id), [])
-            new_gifts = [g for g in user_gifts if str(g.get("id")) != dino_id]
+            new_gifts = [
+                g for g in user_gifts
+                if str(g.get("id")) not in (dino_id, dino_id_bare, f"gift_{dino_id_bare}")
+            ]
             was_gift = len(new_gifts) != len(user_gifts)
             if was_gift:
                 gifts[str(steam_id)] = new_gifts
@@ -12008,7 +12057,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             q_params = urllib.parse.parse_qs(query)
             steam_id = q_params.get("steam_id", [None])[0] or self.get_active_steam_id()
             
-            sid_str = str(steam_id).strip() if steam_id else ""
+            sid_str = urllib.parse.unquote(str(steam_id)).split(":", 1)[0].strip() if steam_id else ""
             claims_db = load_daily_dino_claims()
             
             player_record = claims_db.get(sid_str, {}) if sid_str else {}
@@ -12073,7 +12122,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 self.send_json_response({"ok": False, "error": "Vui lòng đăng nhập Steam trước khi nhận khủng long!"}, 401)
                 return
             
-            sid_str = str(steam_id).strip()
+            sid_str = urllib.parse.unquote(str(steam_id)).split(":", 1)[0].strip()
             with _daily_dino_lock:
                 claims_db = load_daily_dino_claims()
                 player_record = claims_db.get(sid_str, {}) if isinstance(claims_db.get(sid_str), dict) else {}
@@ -12122,7 +12171,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 }
                 
                 now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
-                dino_id = f"daily_prime_{sid_str}_{int(now_ts)}"
+                dino_id = f"gift_{int(now_ts * 1000)}"
                 
                 # Cập nhật lịch sử claim 24h
                 history = player_record.get("history", []) if isinstance(player_record.get("history"), list) else []
@@ -12145,7 +12194,15 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 }
                 save_daily_dino_claims(claims_db)
             
-            # Thêm khủng long 89% Prime vào Gara Dino của người chơi
+            # Thêm khủng long 89% Prime vào Gara Dino của người chơi (chuẩn cấu trúc add_garage_dino để F6 nhận diện 100%)
+            spec_lower = (chosen_species or "").lower()
+            base_info = {"hp": 9500, "prime_hp": 13000, "label": "9.5 Tấn (9,500 kg)", "prime_label": "13.0 Tấn (13,000 kg)"}
+            for k, v in SPECIES_BASE_STATS.items():
+                if k in spec_lower:
+                    base_info = v
+                    break
+            target_hp = base_info.get("prime_hp", 13000)
+
             gifts = load_user_gift_dinos()
             if sid_str not in gifts:
                 gifts[sid_str] = []
@@ -12156,11 +12213,21 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "species": chosen_species,
                 "gender": chosen_gender,
                 "growth": 0.89,
-                "isPrimeElder": True,
+                "health": 1.0,
+                "maxHealth": target_hp,
+                "weight": target_hp,
                 "weight_label": "Prime 89%",
+                "hunger": 1.0,
+                "thirst": 1.0,
+                "stamina": 1.0,
+                "isPrimeElder": True,
+                "is_prime_elder": True,
                 "mutations": chosen_mutations,
                 "mutationSlots": mut_slots,
-                "created_at": now_iso
+                "parkedAt": now_iso,
+                "created_at": now_iso,
+                "source": "admin_granted",
+                "is_gift": True
             }
             gifts[sid_str].append(dino_entry)
             save_user_gift_dinos(gifts)
@@ -12168,6 +12235,137 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             # Lưu 4 đột biến vào hệ thống mutations của Gara
             save_garage_saved_mutation(dino_id, mut_slots)
             save_garage_saved_mutation(f"{sid_str}_{dino_id}", mut_slots)
+            save_garage_saved_mutation(f"{sid_str}_{chosen_species}", mut_slots)
+
+            # Đồng bộ trực tiếp khủng long 24h lên Gara IslePilot (nếu người chơi đang trong server) để bảng F6 thấy ngay trên IslePilot Garage
+            target_hunger = int(base_info.get("hunger", 4000) * 1.25)
+            def sync_daily_dino_to_islepilot_garage():
+                try:
+                    lp = None
+                    for _ in range(15):
+                        cur_p = self.fetch_islepilot(f"/players/{sid_str}", bypass_cache=True) or {}
+                        if cur_p.get("online"):
+                            lp = cur_p
+                            break
+                        time.sleep(2.0)
+                    if not lp or not lp.get("online"):
+                        return
+
+                    # Kiểm tra nếu người chơi đã rút con này từ web ra trước rồi thì dừng
+                    cur_gifts = load_user_gift_dinos().get(sid_str, [])
+                    if not any(str(g.get("id")) == str(dino_id) for g in cur_gifts):
+                        return
+
+                    pre_gar = self.fetch_islepilot(f"/players/{sid_str}/garage", bypass_cache=True) or {}
+                    pre_ids = {str(gd.get("id")) for gd in (pre_gar.get("garage") or []) if gd.get("id")}
+
+                    if spec_lower not in ["spinosaurus", "spino", "puerta", "indorex", "indo"]:
+                        self.fetch_islepilot("/commands", method="POST", body_data={
+                            "action": "swap",
+                            "steamId": sid_str,
+                            "species": chosen_species,
+                            "gender": chosen_gender
+                        })
+                        time.sleep(4.0)
+
+                    self.fetch_islepilot("/commands", method="POST", body_data={
+                        "action": "setprime",
+                        "steamId": sid_str,
+                        "eligible": True,
+                        "conditions": 10,
+                        "isElder": True,
+                        "stacks": 10
+                    })
+                    time.sleep(0.35)
+
+                    self.fetch_islepilot("/commands", method="POST", body_data={
+                        "action": "setstats",
+                        "steamId": sid_str,
+                        "growth": 0.89,
+                        "health": target_hp,
+                        "maxHealth": target_hp,
+                        "hunger": target_hunger,
+                        "thirst": 1000,
+                        "stamina": 100,
+                        "bleed": 0
+                    })
+                    time.sleep(0.35)
+
+                    self.fetch_islepilot("/commands", method="POST", body_data={
+                        "action": "setnutrition",
+                        "steamId": sid_str,
+                        "carb": 100,
+                        "protein": 100,
+                        "lipid": 100
+                    })
+                    time.sleep(0.35)
+
+                    self.fetch_islepilot("/commands", method="POST", body_data={
+                        "action": "setgrowth",
+                        "steamId": sid_str,
+                        "growth": 0.89,
+                        "frozen": False
+                    })
+                    time.sleep(0.35)
+
+                    self.fetch_islepilot("/commands", method="POST", body_data={
+                        "action": "mutations",
+                        "steamId": sid_str,
+                        "active": chosen_mutations[:4],
+                        "parent": ["None", "None", "None", "None"],
+                        "elderA": chosen_mutations[:4],
+                        "elderB": ["None", "None", "None", "None"]
+                    })
+                    time.sleep(1.0)
+
+                    park_res = self.fetch_islepilot(f"/players/{sid_str}/garage/park", method="POST", body_data={})
+                    if park_res and isinstance(park_res, dict) and (park_res.get("ok") is True or park_res.get("success") is True or "commandId" in park_res):
+                        # Xóa bản ghi tạm trong user_gift_dinos.json khi đã cất thật lên Gara IslePilot thành công
+                        g_map = load_user_gift_dinos()
+                        u_list = g_map.get(sid_str, [])
+                        g_map[sid_str] = [g for g in u_list if str(g.get("id")) != str(dino_id)]
+                        save_user_gift_dinos(g_map)
+
+                        target_new = None
+                        for wait_s in [0.5, 1.2, 2.0, 3.5, 5.0]:
+                            time.sleep(wait_s)
+                            fresh_gar = self.fetch_islepilot(f"/players/{sid_str}/garage", bypass_cache=True) or {}
+                            for gd in (fresh_gar.get("garage") or []):
+                                if gd.get("id") and str(gd.get("id")) not in pre_ids:
+                                    target_new = gd
+                                    break
+                            if target_new:
+                                break
+
+                        if target_new and target_new.get("id"):
+                            new_id = str(target_new.get("id"))
+                            save_garage_saved_mutation(f"{sid_str}_{new_id}", mut_slots)
+                            save_garage_saved_mutation(new_id, mut_slots)
+                            save_garage_dino_snapshot(f"{sid_str}_{new_id}", {
+                                "id": new_id,
+                                "species": chosen_species,
+                                "gender": chosen_gender,
+                                "growth": 0.89,
+                                "isPrimeElder": True,
+                                "mutationSlots": mut_slots,
+                                "nutrients": {"carb": 100.0, "protein": 100.0, "lipid": 100.0}
+                            })
+                            save_garage_dino_snapshot(new_id, {
+                                "id": new_id,
+                                "species": chosen_species,
+                                "gender": chosen_gender,
+                                "growth": 0.89,
+                                "isPrimeElder": True,
+                                "mutationSlots": mut_slots,
+                                "nutrients": {"carb": 100.0, "protein": 100.0, "lipid": 100.0}
+                            })
+                        if hasattr(DinoRequestHandler, "_islepilot_cache"):
+                            DinoRequestHandler._islepilot_cache.pop(f"/players/{sid_str}/garage", None)
+                        print(f"[Daily Dino Claim] Đã đồng bộ khủng long 24h ({chosen_species}) thẳng lên Gara IslePilot cho {sid_str}!")
+                except Exception as ex_sync:
+                    print(f"[Daily Dino IslePilot Garage Sync Error] {ex_sync}")
+
+            threading.Thread(target=sync_daily_dino_to_islepilot_garage, daemon=True).start()
             
             mut_names = ", ".join([m for m in chosen_mutations if m != "None"])
             print(f"[Daily Dino Claim] Player {sid_str} claimed {chosen_species} (Prime 89%, {chosen_gender}) with 4 mutations: [{mut_names}]")
