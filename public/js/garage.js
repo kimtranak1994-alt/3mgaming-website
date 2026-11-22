@@ -294,6 +294,11 @@ const Garage = {
         const deletedList = this.getDeletedDinos();
         const newDinos = data.dinos.filter(d => !deletedList.includes(String(d.id)));
 
+        // Nếu data trả về rỗng do mạng/rate-limit nhưng trước đó đang có dino -> giữ nguyên tránh chớp giật
+        if (newDinos.length === 0 && (this.dinos || []).length > 0) {
+          return;
+        }
+
         const sig = (arr) => arr.map(d => `${d.id}:${d.name || ''}:${d.growth_percent}:${d.health}:${d.hunger}:${d.thirst}`).join('|');
         if (sig(this.dinos || []) !== sig(newDinos)) {
           this.dinos = newDinos;
@@ -332,6 +337,10 @@ const Garage = {
     }
 
     if (!data || !data.dinos || data.dinos.length === 0) {
+      if ((this.dinos || []).length > 0) {
+        // Đã có dữ liệu từ lượt tải trước, không xóa giao diện nếu mạng/API bị giật
+        return;
+      }
       container.innerHTML = `
         <div class="card" style="grid-column: 1/-1; text-align: center; padding: 40px;">
           <p style="font-size: 1.05rem; margin-bottom: 16px;">

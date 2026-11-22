@@ -889,6 +889,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
     _killfeed_cache_time = 0.0
     _killfeed_cached_data = None
     _islepilot_cache = {}
+    _persistent_player_garage = {}
 
     def __init__(self, *args, **kwargs):
 
@@ -2694,7 +2695,10 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         ttl = 0
         if method == "GET" and not bypass_cache:
             if clean_key.startswith("/players/"):
-                ttl = 4.0  # Cache 4s cho thông tin player / ví
+                if "/garage" in clean_key:
+                    ttl = 15.0  # Cache 15s cho garage để giảm 80% gánh nặng gọi IslePilot liên tục
+                else:
+                    ttl = 4.0  # Cache 4s cho thông tin player / ví
             elif clean_key == "/players":
                 ttl = 6.0  # Cache 6s cho danh sách players
             elif clean_key == "/server":
@@ -5890,6 +5894,11 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         if active_steam_id:
             remote_garage = self.fetch_islepilot(f"/players/{active_steam_id}/garage")
             if isinstance(remote_garage, dict) and "garage" in remote_garage:
+                DinoRequestHandler._persistent_player_garage[str(active_steam_id)] = remote_garage
+            elif str(active_steam_id) in DinoRequestHandler._persistent_player_garage:
+                remote_garage = DinoRequestHandler._persistent_player_garage[str(active_steam_id)]
+
+            if isinstance(remote_garage, dict) and "garage" in remote_garage:
                 dinos = []
                 custom_names = load_custom_names()
                 snapshots_map = load_garage_dino_snapshots()
@@ -6271,15 +6280,17 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         err_str = str(err_raw or "").strip()
         upper = err_str.upper()
         if "PLAYER_OFFLINE" in upper or "NOT ONLINE" in upper:
-            return "Bạn chưa online trong máy chủ game! Vui lòng vào game trước khi thực hiện."
+            return "Bạn chưa vào máy chủ game! Vui lòng mở game The Isle, vào server 3MGAMING (ở sảnh hoặc màn hình chọn khủng long) rồi bấm Rút Dino."
         if "COOLDOWN" in upper:
-            return "Thao tác Gara đang trong thời gian chờ (Cooldown). Vui lòng thử lại sau ít giây!"
+            return "Thao tác Gara đang trong thời gian chờ (Cooldown). Vui lòng đợi 15-30 giây rồi thử lại!"
         if "LIMIT_REACHED" in upper or "FULL" in upper:
             return "Gara của bạn đã đầy! Vui lòng rút hoặc xóa bớt khủng long trước khi cất thêm."
         if "ACTION_PENDING" in upper or "PENDING" in upper:
-            return "Đang có một lệnh Gara khác đang xử lý cho nhân vật của bạn. Vui lòng đợi hoàn tất!"
+            return "Đang có một lệnh Gara khác đang được máy chủ xử lý. Vui lòng đợi 5-10 giây rồi thử lại!"
         if "CONFLICT" in upper or "ALREADY" in upper:
-            return "Trạng thái nhân vật trong game không hợp lệ (đang có khủng long sống hoặc đang giao tranh)!"
+            return "Bạn đang có một khủng long đang sống trong game! Hãy bấm 'Cất Vào Gara' cho khủng long hiện tại hoặc vào màn hình Spawn rồi mới rút con khác được."
+        if "RATE_LIMITED" in upper or "429" in upper:
+            return "Máy chủ đang quá tải yêu cầu. Hệ thống đã tự động thử lại, vui lòng bấm lại sau 3 giây!"
         if "NOT_FOUND" in upper:
             return "Không tìm thấy khủng long này trong Gara IslePilot!"
         return err_str or "Không thể thực hiện yêu cầu với máy chủ IslePilot."
@@ -6345,8 +6356,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 self.send_json_response({"success": True, "ok": True, "message": f"Đã lấy khủng long quà tặng {species} vào game thành công!"})
                 return
 
-            # 1. Tìm thông tin chi tiết khủng long từ remote garage (bypass_cache=True)
-            remote_garage = self.fetch_islepilot(f"/players/{steam_id}/garage", bypass_cache=True) or {}
+            # 1. Tìm thông tin chi tiết khủng long từ remote garage
+            remote_garage = self.fetch_islepilot(f"/players/{steam_id}/garage") or {}
             target_gd = None
             if isinstance(remote_garage, dict) and "garage" in remote_garage:
                 for gd in remote_garage["garage"]:
@@ -6354,10 +6365,37 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                         target_gd = gd
                         break
 
-            # 2. Gọi lệnh restore chính thức của IslePilot API với body_data={} (không truyền "mutations" để tránh lỗi "Picking mutations is off on this server")
-            res = self.fetch_islepilot(f"/players/{steam_id}/garage/{dino_id}/restore", method="POST", body_data={})
+            # 2. Gọi lệnh restore chính thức của IslePilot API với auto-retry nếu gặp 429 hoặc auto-park nếu conflict
+            res = None
+            for attempt in range(3):
+                res = self.fetch_islepilot(f"/players/{steam_id}/garage/{dino_id}/restore", method="POST", body_data={})
+                if res and isinstance(res, dict) and (res.get("ok") is True or "commandId" in res):
+                    break
+                err_check = str((res.get("error") if isinstance(res, dict) else "") or "").upper()
+                if ("RATE_LIMITED" in err_check or "429" in err_check) and attempt < 2:
+                    time.sleep(1.0 * (attempt + 1))
+                    continue
+                # Nếu bị CONFLICT (đang có khủng long sống trong game): thử tự động cất khủng long hiện tại trước
+                if ("CONFLICT" in err_check or "ALREADY" in err_check) and attempt == 0:
+                    try:
+                        print(f"[Garage Spawn] Player {steam_id} has alive dino. Attempting auto-park before unpark...")
+                        park_try = self.fetch_islepilot(f"/players/{steam_id}/garage/park", method="POST", body_data={})
+                        if park_try and isinstance(park_try, dict) and (park_try.get("ok") is True or "commandId" in park_try):
+                            time.sleep(1.2)
+                            continue
+                    except Exception as ex_swap:
+                        print(f"[Auto Park Try Error] {ex_swap}")
+                break
 
             if res and isinstance(res, dict) and (res.get("ok") is True or "commandId" in res):
+                # Xóa cache và cập nhật persistent cache để lượt xem sau cập nhật ngay
+                if hasattr(DinoRequestHandler, "_islepilot_cache"):
+                    DinoRequestHandler._islepilot_cache.pop(f"/players/{steam_id}/garage", None)
+                if hasattr(DinoRequestHandler, "_persistent_player_garage"):
+                    p_gar = DinoRequestHandler._persistent_player_garage.get(str(steam_id))
+                    if isinstance(p_gar, dict) and "garage" in p_gar:
+                        p_gar["garage"] = [d for d in p_gar["garage"] if str(d.get("id")) != str(dino_id)]
+
                 dino_spec, dino_growth = self.restore_dino_full_state_worker(
                     steam_id=steam_id,
                     dino_id=dino_id,
