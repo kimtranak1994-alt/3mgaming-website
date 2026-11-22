@@ -465,9 +465,6 @@ const DinoInfo = {
               <h3 style="font-size: 1.3rem; font-weight: 900; color: #fff; margin: 0; display: flex; align-items: center; gap: 10px;">
                 <span>⚡</span> Hệ Thống Buff Chất Dinh Dưỡng (Powerups · Evrima Diet)
               </h3>
-              <p style="color: #94a3b8; font-size: 0.88rem; margin: 4px 0 0;">
-                Tăng cường sức mạnh tức thì cho khủng long với 3 dưỡng chất Evrima chuẩn API IslePilot (<a href="https://3mgaming.islepilot.eu/powerups" target="_blank" style="color: #38bdf8; text-decoration: underline;">islepilot.eu/powerups</a>)
-              </p>
             </div>
             <div>
               ${isPerfectDiet 
@@ -484,7 +481,7 @@ const DinoInfo = {
           <!-- 3 NUTRIENT CARDS GRID -->
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 20px;">
             
-            <!-- NUTRIENT 1: CARBOHYDRATE (S) -->
+            <!-- NUTRIENT 1: CARBOHYDRATE (A / S) -->
             <div style="background: rgba(2, 6, 23, 0.6); border: 1px solid rgba(6, 182, 212, 0.3); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden;">
               <div style="position: absolute; top: -10px; right: -10px; width: 60px; height: 60px; background: radial-gradient(circle, rgba(6, 182, 212, 0.2), transparent 70%); pointer-events: none;"></div>
               <div>
@@ -493,11 +490,11 @@ const DinoInfo = {
                     <span style="font-size: 1.5rem;">🥖</span>
                     <div>
                       <div style="font-size: 0.98rem; font-weight: 900; color: #fff;">Carbohydrates</div>
-                      <div style="font-size: 0.75rem; color: #06b6d4; font-weight: 700; text-transform: uppercase;">Dưỡng Chất S · Tinh Bột</div>
+                      <div style="font-size: 0.75rem; color: #06b6d4; font-weight: 700; text-transform: uppercase;">Dưỡng Chất A · S · Tinh Bột</div>
                     </div>
                   </div>
                   <span style="background: rgba(6, 182, 212, 0.2); color: #22d3ee; border: 1px solid rgba(6, 182, 212, 0.5); font-weight: 900; font-size: 0.82rem; padding: 3px 10px; border-radius: 6px; font-family: monospace;">
-                    [ S ]
+                    [ A / S ]
                   </span>
                 </div>
 
@@ -519,13 +516,18 @@ const DinoInfo = {
                 </div>
               </div>
 
-              <!-- ACTION BUTTON -->
-              <button onclick="DinoInfo.buffNutrient('carb')" class="btn-primary" style="width: 100%; padding: 10px 14px; font-weight: 800; font-size: 0.88rem; background: linear-gradient(135deg, #0284c7, #06b6d4); border: 1px solid #38bdf8; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
-                <span>⚡</span> Buff 100% Chất S (Carb)
-              </button>
+              <!-- ACTION BUTTONS -->
+              <div style="display: flex; gap: 8px;">
+                <button onclick="DinoInfo.buffNutrient('carb', 25)" class="btn-primary" style="flex: 1; padding: 10px 12px; font-weight: 800; font-size: 0.88rem; background: linear-gradient(135deg, #0284c7, #06b6d4); border: 1px solid #38bdf8; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
+                  <span>⚡</span> Buff 25% Chất A
+                </button>
+                <button onclick="DinoInfo.buffNutrient('carb', 100)" class="btn-secondary" style="padding: 10px 14px; font-weight: 800; font-size: 0.82rem; border-radius: 8px; cursor: pointer; background: rgba(6, 182, 212, 0.15); border: 1px solid rgba(6, 182, 212, 0.4); color: #38bdf8;" title="Nạp đầy 100% Chất A">
+                  100%
+                </button>
+              </div>
             </div>
 
-            <!-- NUTRIENT 2: LIPID (//) -->
+            <!-- NUTRIENT 2: LIPID (Y / //) -->
             <div style="background: rgba(2, 6, 23, 0.6); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden;">
               <div style="position: absolute; top: -10px; right: -10px; width: 60px; height: 60px; background: radial-gradient(circle, rgba(16, 185, 129, 0.2), transparent 70%); pointer-events: none;"></div>
               <div>
@@ -534,11 +536,11 @@ const DinoInfo = {
                     <span style="font-size: 1.5rem;">🥑</span>
                     <div>
                       <div style="font-size: 0.98rem; font-weight: 900; color: #fff;">Lipids</div>
-                      <div style="font-size: 0.75rem; color: #10b981; font-weight: 700; text-transform: uppercase;">Dưỡng Chất // · Chất Béo</div>
+                      <div style="font-size: 0.75rem; color: #10b981; font-weight: 700; text-transform: uppercase;">Dưỡng Chất Y · // · Chất Béo</div>
                     </div>
                   </div>
                   <span style="background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.5); font-weight: 900; font-size: 0.82rem; padding: 3px 10px; border-radius: 6px; font-family: monospace;">
-                    [ // ]
+                    [ Y / // ]
                   </span>
                 </div>
 
@@ -560,13 +562,18 @@ const DinoInfo = {
                 </div>
               </div>
 
-              <!-- ACTION BUTTON -->
-              <button onclick="DinoInfo.buffNutrient('lipid')" class="btn-primary" style="width: 100%; padding: 10px 14px; font-weight: 800; font-size: 0.88rem; background: linear-gradient(135deg, #059669, #10b981); border: 1px solid #34d399; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
-                <span>⚡</span> Buff 100% Chất // (Lipid)
-              </button>
+              <!-- ACTION BUTTONS -->
+              <div style="display: flex; gap: 8px;">
+                <button onclick="DinoInfo.buffNutrient('lipid', 25)" class="btn-primary" style="flex: 1; padding: 10px 12px; font-weight: 800; font-size: 0.88rem; background: linear-gradient(135deg, #059669, #10b981); border: 1px solid #34d399; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
+                  <span>⚡</span> Buff 25% Chất Y
+                </button>
+                <button onclick="DinoInfo.buffNutrient('lipid', 100)" class="btn-secondary" style="padding: 10px 14px; font-weight: 800; font-size: 0.82rem; border-radius: 8px; cursor: pointer; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); color: #34d399;" title="Nạp đầy 100% Chất Y">
+                  100%
+                </button>
+              </div>
             </div>
 
-            <!-- NUTRIENT 3: PROTEIN (:) -->
+            <!-- NUTRIENT 3: PROTEIN (B / :) -->
             <div style="background: rgba(2, 6, 23, 0.6); border: 1px solid rgba(249, 115, 22, 0.3); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden;">
               <div style="position: absolute; top: -10px; right: -10px; width: 60px; height: 60px; background: radial-gradient(circle, rgba(249, 115, 22, 0.2), transparent 70%); pointer-events: none;"></div>
               <div>
@@ -575,11 +582,11 @@ const DinoInfo = {
                     <span style="font-size: 1.5rem;">🥩</span>
                     <div>
                       <div style="font-size: 0.98rem; font-weight: 900; color: #fff;">Proteins</div>
-                      <div style="font-size: 0.75rem; color: #f97316; font-weight: 700; text-transform: uppercase;">Dưỡng Chất : · Chất Đạm</div>
+                      <div style="font-size: 0.75rem; color: #f97316; font-weight: 700; text-transform: uppercase;">Dưỡng Chất B · : · Chất Đạm</div>
                     </div>
                   </div>
                   <span style="background: rgba(249, 115, 22, 0.2); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.5); font-weight: 900; font-size: 0.82rem; padding: 3px 10px; border-radius: 6px; font-family: monospace;">
-                    [ : ]
+                    [ B / : ]
                   </span>
                 </div>
 
@@ -601,31 +608,54 @@ const DinoInfo = {
                 </div>
               </div>
 
-              <!-- ACTION BUTTON -->
-              <button onclick="DinoInfo.buffNutrient('protein')" class="btn-primary" style="width: 100%; padding: 10px 14px; font-weight: 800; font-size: 0.88rem; background: linear-gradient(135deg, #ea580c, #f97316); border: 1px solid #fb923c; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
-                <span>⚡</span> Buff 100% Chất : (Protein)
-              </button>
+              <!-- ACTION BUTTONS -->
+              <div style="display: flex; gap: 8px;">
+                <button onclick="DinoInfo.buffNutrient('protein', 25)" class="btn-primary" style="flex: 1; padding: 10px 12px; font-weight: 800; font-size: 0.88rem; background: linear-gradient(135deg, #ea580c, #f97316); border: 1px solid #fb923c; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
+                  <span>⚡</span> Buff 25% Chất B
+                </button>
+                <button onclick="DinoInfo.buffNutrient('protein', 100)" class="btn-secondary" style="padding: 10px 14px; font-weight: 800; font-size: 0.82rem; border-radius: 8px; cursor: pointer; background: rgba(249, 115, 22, 0.15); border: 1px solid rgba(249, 115, 22, 0.4); color: #fb923c;" title="Nạp đầy 100% Chất B">
+                  100%
+                </button>
+              </div>
             </div>
 
           </div>
 
-          <!-- ALL-IN-ONE PERFECT DIET BUFF -->
-          <div style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(16, 185, 129, 0.1)); border: 1px solid rgba(245, 158, 11, 0.35); border-radius: 12px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+          <!-- ACTION CONTROL PANEL: BUFF ĐÓI 25%, ĐẠT PRIME, BUFF 3 CHẤT A-B-Y 25% -->
+          <div style="background: rgba(2, 6, 23, 0.7); border: 1px solid rgba(245, 158, 11, 0.35); border-radius: 12px; padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
             <div style="display: flex; align-items: center; gap: 12px;">
-              <span style="font-size: 2rem;">👑</span>
+              <span style="font-size: 1.8rem;">⚡</span>
               <div>
-                <div style="font-size: 1.05rem; font-weight: 900; color: #fde047; display: flex; align-items: center; gap: 6px;">
-                  Nạp Đầy Cả 3 Dưỡng Chất (100% Perfect Diet)
+                <div style="font-size: 1.05rem; font-weight: 900; color: #fde047;">
+                  Tiện Ích Nạp Nhanh (Instant Powerups)
                 </div>
                 <div style="font-size: 0.82rem; color: #94a3b8; margin-top: 2px;">
-                  Kích hoạt trọn vẹn cả 3 buff (Stamina + Tốc độ lớn + Sát thương) & tự động hoàn thành nhiệm vụ <b>"Get perfect diet"</b> để hóa Prime Elder!
+                  Hỗ trợ nạp 3 chất A-B-Y 25%, hồi phục thức ăn (đói) và kích hoạt trực tiếp trạng thái Prime Elder.
                 </div>
               </div>
             </div>
 
-            <button onclick="DinoInfo.buffNutrient('all')" class="btn-primary" style="padding: 12px 24px; font-weight: 900; font-size: 0.95rem; background: linear-gradient(135deg, #f59e0b, #d97706, #10b981); border: 1px solid #fde047; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3); transition: all 0.2s;">
-              <span>✨</span> Buff Đầy Cả 3 Chất (100% Hoàn Hảo)
-            </button>
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+              <!-- NÚT BUFF ĐÓI 25% -->
+              <button onclick="DinoInfo.buffNutrient('hunger', 25)" class="btn-secondary" style="padding: 11px 18px; font-weight: 800; font-size: 0.9rem; background: rgba(245, 158, 11, 0.15); border: 1px solid #f59e0b; color: #fbbf24; border-radius: 9px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s;">
+                <span>🍖</span> Buff Đói 25%
+              </button>
+
+              <!-- NÚT ĐẠT PRIME -->
+              <button onclick="DinoInfo.buffNutrient('prime')" class="btn-primary" style="padding: 11px 20px; font-weight: 900; font-size: 0.9rem; background: linear-gradient(135deg, #8b5cf6, #6366f1); border: 1px solid #a78bfa; border-radius: 9px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35); transition: all 0.2s;">
+                <span>👑</span> Đạt Prime
+              </button>
+
+              <!-- NÚT BUFF 3 CHẤT A B Y 25% -->
+              <button onclick="DinoInfo.buffNutrient('all', 25)" class="btn-primary" style="padding: 11px 20px; font-weight: 900; font-size: 0.9rem; background: linear-gradient(135deg, #059669, #10b981); border: 1px solid #34d399; border-radius: 9px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35); transition: all 0.2s;">
+                <span>✨</span> Buff 3 Chất A-B-Y 25%
+              </button>
+
+              <!-- NÚT BUFF ĐẦY 3 CHẤT 100% -->
+              <button onclick="DinoInfo.buffNutrient('all', 100)" class="btn-secondary" style="padding: 11px 16px; font-weight: 800; font-size: 0.85rem; border-radius: 9px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;" title="Nạp đầy 100% cả 3 chất">
+                <span>🌟</span> 100% All
+              </button>
+            </div>
           </div>
         </div>
 
@@ -865,20 +895,22 @@ const DinoInfo = {
     }
   },
 
-  async buffNutrient(type) {
+  async buffNutrient(type, amount = 25) {
     if (this.isBuffing) return;
     this.isBuffing = true;
 
     const labelMap = {
-      carb: 'Dưỡng Chất S (Carbohydrates)',
-      lipid: 'Dưỡng Chất // (Lipids)',
-      protein: 'Dưỡng Chất : (Proteins)',
-      all: 'Toàn Bộ 3 Dưỡng Chất (100% Perfect Diet)'
+      carb: `Dưỡng Chất A (Carb ${amount}%)`,
+      lipid: `Dưỡng Chất Y (Lipid ${amount}%)`,
+      protein: `Dưỡng Chất B (Protein ${amount}%)`,
+      all: `Cả 3 Dưỡng Chất A-B-Y (${amount}%)`,
+      hunger: `Thức Ăn Đói (+${amount}%)`,
+      prime: 'Trạng Thái Prime Elder'
     };
-    const label = labelMap[type] || 'Dinh Dưỡng';
+    const label = labelMap[type] || 'Powerup';
 
     try {
-      this.showToast(`⚡ Đang gửi yêu cầu nạp ${label} tới IslePilot...`, 'info');
+      this.showToast(`⚡ Đang gửi yêu cầu kích hoạt ${label}...`, 'info');
 
       const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
       const steamId = (user && (user.steamId || user.steam_id)) || (this.data && this.data.steam_id) || '';
@@ -888,22 +920,23 @@ const DinoInfo = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           steam_id: steamId,
-          nutrient: type
+          nutrient: type,
+          amount: amount
         })
       });
 
       const data = await res.json();
       if (res.ok && data.ok) {
-        this.showToast(data.message || `🎉 Đã buff thành công ${label}!`, 'success');
+        this.showToast(data.message || `🎉 Đã kích hoạt thành công ${label}!`, 'success');
         // Tải lại thông tin dino sau khi buff
         setTimeout(() => this.fetchData(true), 800);
       } else {
-        const errMsg = data.message || data.error || 'Nạp dinh dưỡng thất bại!';
+        const errMsg = data.message || data.error || 'Thao tác thất bại!';
         this.showToast(errMsg, 'error');
       }
     } catch (err) {
       console.error('[BuffNutrient Error]', err);
-      this.showToast('Lỗi kết nối khi gửi lệnh buff chất dinh dưỡng!', 'error');
+      this.showToast('Lỗi kết nối khi gửi lệnh thao tác!', 'error');
     } finally {
       this.isBuffing = false;
     }

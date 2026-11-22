@@ -12185,9 +12185,62 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 }, 400)
                 return
             
-            # 2. Xác định loại chất buff
+            # 2. Xác định loại chất buff / thao tác powerup
             nutrient_type = str(payload.get("nutrient") or payload.get("type") or "all").lower().strip()
-            
+            amount_val = safe_float(payload.get("amount"), 25.0)
+            amount_val = max(1.0, min(100.0, amount_val))
+
+            # THAO TÁC 1: BUFF ĐÓI (HUNGER)
+            if nutrient_type in ["hunger", "doi", "food"]:
+                cur_hu = safe_float(player_info.get("hunger"), 0.0)
+                max_hu = safe_float(player_info.get("maxHunger"), 1000.0)
+                target_hu = min(max_hu, cur_hu + (max_hu * (amount_val / 100.0)))
+                res = self.fetch_islepilot("/commands", method="POST", body_data={
+                    "action": "setstats",
+                    "steamId": sid_str,
+                    "hunger": target_hu
+                })
+                if hasattr(DinoRequestHandler, "_islepilot_cache"):
+                    DinoRequestHandler._islepilot_cache.pop(f"/players/{sid_str}", None)
+                if res and (res.get("ok") is True or "commandId" in res):
+                    self.send_json_response({
+                        "ok": True,
+                        "success": True,
+                        "message": f"🍖 Đã buff +{int(amount_val)}% Thức ăn (Đói) cho khủng long {species} thành công! ({round(target_hu, 1)} / {round(max_hu, 1)})",
+                        "hunger": target_hu,
+                        "max_hunger": max_hu,
+                        "result": res
+                    })
+                else:
+                    err_msg = (res.get("error") if isinstance(res, dict) else None) or "Máy chủ IslePilot chưa phản hồi lệnh buff đói."
+                    self.send_json_response({"ok": False, "message": f"Buff đói thất bại: {err_msg}"}, 400)
+                return
+
+            # THAO TÁC 2: KÍCH HOẠT ĐẠT PRIME (PRIME ELDER)
+            elif nutrient_type in ["prime", "prime_elder", "elder"]:
+                res = self.fetch_islepilot("/commands", method="POST", body_data={
+                    "action": "setprime",
+                    "steamId": sid_str,
+                    "eligible": True,
+                    "conditions": 10,
+                    "isElder": True,
+                    "stacks": 10
+                })
+                if hasattr(DinoRequestHandler, "_islepilot_cache"):
+                    DinoRequestHandler._islepilot_cache.pop(f"/players/{sid_str}", None)
+                if res and (res.get("ok") is True or "commandId" in res):
+                    self.send_json_response({
+                        "ok": True,
+                        "success": True,
+                        "message": f"👑 Chúc mừng! Khủng long {species} của bạn đã đạt trạng thái PRIME ELDER thành công!",
+                        "result": res
+                    })
+                else:
+                    err_msg = (res.get("error") if isinstance(res, dict) else None) or "Máy chủ IslePilot chưa phản hồi lệnh kích hoạt Prime."
+                    self.send_json_response({"ok": False, "message": f"Kích hoạt Prime thất bại: {err_msg}"}, 400)
+                return
+
+            # THAO TÁC 3: BUFF CHẤT DINH DƯỠNG (A, B, Y hoặc CẢ 3 CHẤT)
             # Đọc dinh dưỡng hiện tại từ player_info nếu chỉ buff 1 chất
             curr_nutr = player_info.get("nutrition") or {}
             curr_c = safe_float(curr_nutr.get("carb", 100.0), 100.0)
@@ -12199,31 +12252,31 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "steamId": sid_str
             }
             
-            if nutrient_type in ["carb", "s", "carbohydrate"]:
-                cmd_body["carb"] = 100.0
+            if nutrient_type in ["carb", "s", "carbohydrate", "a"]:
+                cmd_body["carb"] = amount_val
                 cmd_body["protein"] = curr_p
                 cmd_body["lipid"] = curr_l
-                buff_name = "Dưỡng Chất S (Carbohydrates)"
-            elif nutrient_type in ["lipid", "fat", "line", "//"]:
+                buff_name = f"Dưỡng Chất A (Carb {int(amount_val)}%)"
+            elif nutrient_type in ["lipid", "fat", "line", "//", "y"]:
                 cmd_body["carb"] = curr_c
                 cmd_body["protein"] = curr_p
-                cmd_body["lipid"] = 100.0
-                buff_name = "Dưỡng Chất // (Lipids)"
-            elif nutrient_type in ["protein", "dot", ":"]:
+                cmd_body["lipid"] = amount_val
+                buff_name = f"Dưỡng Chất Y (Lipid {int(amount_val)}%)"
+            elif nutrient_type in ["protein", "dot", ":", "b"]:
                 cmd_body["carb"] = curr_c
-                cmd_body["protein"] = 100.0
+                cmd_body["protein"] = amount_val
                 cmd_body["lipid"] = curr_l
-                buff_name = "Dưỡng Chất : (Proteins)"
-            else:  # "all" hoặc "perfect"
-                cmd_body["carb"] = 100.0
-                cmd_body["protein"] = 100.0
-                cmd_body["lipid"] = 100.0
-                buff_name = "Cả 3 Dưỡng Chất (100% Hoàn Hảo - Perfect Diet)"
+                buff_name = f"Dưỡng Chất B (Protein {int(amount_val)}%)"
+            else:  # "all" hoặc "perfect" hoặc "aby"
+                cmd_body["carb"] = amount_val
+                cmd_body["protein"] = amount_val
+                cmd_body["lipid"] = amount_val
+                buff_name = f"Cả 3 Dưỡng Chất A - B - Y ({int(amount_val)}% Perfect Diet)"
             
-            # 3. Gửi lệnh chuẩn tới IslePilot API
+            # Gửi lệnh chuẩn tới IslePilot API
             res = self.fetch_islepilot("/commands", method="POST", body_data=cmd_body)
             
-            # 4. Lưu snapshot dinh dưỡng và xóa cache để cập nhật ngay
+            # Lưu snapshot dinh dưỡng và xóa cache để cập nhật ngay
             save_garage_dino_snapshot(f"{sid_str}_last_nutrients", {
                 "nutrients": {
                     "carb": cmd_body.get("carb", 100.0),
@@ -12238,7 +12291,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 self.send_json_response({
                     "ok": True,
                     "success": True,
-                    "message": f"⚡ Đã buff đầy 100% {buff_name} cho khủng long {species} thành công!",
+                    "message": f"⚡ Đã buff {buff_name} cho khủng long {species} thành công!",
                     "nutrition": {
                         "carb": cmd_body.get("carb", 100.0),
                         "protein": cmd_body.get("protein", 100.0),
