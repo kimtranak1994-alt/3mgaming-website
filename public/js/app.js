@@ -40,7 +40,7 @@ const App = {
   switchTab(tabId) {
     const validTabs = [
       'home', 'bxh', 'dino-info', 'dinoinfo', 'damage', 'garage', 'starter', 
-      'skinshop', 'skins', 'skineditor', 'referral', 'quests', 'autotreo',
+      'skinshop', 'skins', 'skineditor', 'referral', 'quests',
       'map', 'guide', 'rules', 'donate', 'admin'
     ];
     const currentMode = localStorage.getItem('admin_view_mode') || 'admin';
@@ -97,10 +97,6 @@ const App = {
       Referral.render();
     } else if (tabId === 'quests') {
       Quests.render();
-    } else if (tabId === 'autotreo') {
-      if (window.AutoTreo && typeof window.AutoTreo.render === 'function') {
-        window.AutoTreo.render();
-      }
     } else if (tabId === 'map') {
       GatewayMap.init();
     } else if (tabId === 'bxh') {
