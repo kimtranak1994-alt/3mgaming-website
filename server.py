@@ -3236,6 +3236,10 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
         hunger = safe_float(player_data.get("hunger"), 0.0)
         max_hunger = safe_float(player_data.get("maxHunger"), 1.0)
+        # Kiểm tra snapshot buff đói gần nhất (trong vòng 300s)
+        snap_hunger_entry = load_garage_dino_snapshot(f"{steam_id}_last_hunger") or {}
+        if snap_hunger_entry and (time.time() - safe_float(snap_hunger_entry.get("timestamp", 0), 0)) < 300:
+            hunger = min(max_hunger, safe_float(snap_hunger_entry.get("hunger"), hunger))
         hunger_pct = min(100.0, max(0.0, round((hunger / max_hunger * 100), 1))) if max_hunger > 0 else 100.0
 
         thirst = safe_float(player_data.get("thirst"), 0.0)
@@ -3247,6 +3251,11 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
         is_prime_elder = bool(player_data.get("isPrimeElder"))
         prime_eligible = bool(player_data.get("primeEligible"))
+        # Kiểm tra snapshot kích hoạt Prime gần nhất (trong vòng 300s)
+        snap_prime_entry = load_garage_dino_snapshot(f"{steam_id}_last_prime") or {}
+        if snap_prime_entry and (time.time() - safe_float(snap_prime_entry.get("timestamp", 0), 0)) < 300:
+            is_prime_elder = True
+            prime_eligible = True
 
         if is_prime_elder:
             stage = "Prime Elder (Cổ Đại Tối Thượng)"
@@ -3275,10 +3284,20 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             "elderB": ["None", "None", "None", "None"]
         }
 
+        # Kiểm tra snapshot buff dinh dưỡng gần nhất (trong vòng 300s)
+        snap_nutr_entry = load_garage_dino_snapshot(f"{steam_id}_last_nutrients") or {}
+        snap_nutr = snap_nutr_entry.get("nutrients") or {}
+        snap_nutr_time = safe_float(snap_nutr_entry.get("timestamp", 0), 0)
+
         raw_nutr = player_data.get("nutrition") or {}
-        carb_val = min(100.0, max(0.0, round(safe_float(raw_nutr.get("carb", 0.0)), 1)))
-        protein_val = min(100.0, max(0.0, round(safe_float(raw_nutr.get("protein", 0.0)), 1)))
-        lipid_val = min(100.0, max(0.0, round(safe_float(raw_nutr.get("lipid", 0.0)), 1)))
+        if snap_nutr and (time.time() - snap_nutr_time) < 300:
+            carb_val = min(100.0, max(0.0, round(safe_float(snap_nutr.get("carb", 25.0)), 1)))
+            protein_val = min(100.0, max(0.0, round(safe_float(snap_nutr.get("protein", 25.0)), 1)))
+            lipid_val = min(100.0, max(0.0, round(safe_float(snap_nutr.get("lipid", 25.0)), 1)))
+        else:
+            carb_val = min(100.0, max(0.0, round(safe_float(raw_nutr.get("carb", 0.0)), 1)))
+            protein_val = min(100.0, max(0.0, round(safe_float(raw_nutr.get("protein", 0.0)), 1)))
+            lipid_val = min(100.0, max(0.0, round(safe_float(raw_nutr.get("lipid", 0.0)), 1)))
         is_perfect_diet = (carb_val > 0.0 and protein_val > 0.0 and lipid_val > 0.0)
 
         warnings_list = warnings_data.get("warnings") or []
@@ -12203,6 +12222,10 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 if hasattr(DinoRequestHandler, "_islepilot_cache"):
                     DinoRequestHandler._islepilot_cache.pop(f"/players/{sid_str}", None)
                 if res and (res.get("ok") is True or "commandId" in res):
+                    save_garage_dino_snapshot(f"{sid_str}_last_hunger", {
+                        "hunger": target_hu,
+                        "timestamp": time.time()
+                    })
                     self.send_json_response({
                         "ok": True,
                         "success": True,
@@ -12229,6 +12252,10 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 if hasattr(DinoRequestHandler, "_islepilot_cache"):
                     DinoRequestHandler._islepilot_cache.pop(f"/players/{sid_str}", None)
                 if res and (res.get("ok") is True or "commandId" in res):
+                    save_garage_dino_snapshot(f"{sid_str}_last_prime", {
+                        "isPrimeElder": True,
+                        "timestamp": time.time()
+                    })
                     self.send_json_response({
                         "ok": True,
                         "success": True,
@@ -12282,7 +12309,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     "carb": cmd_body.get("carb", 100.0),
                     "protein": cmd_body.get("protein", 100.0),
                     "lipid": cmd_body.get("lipid", 100.0)
-                }
+                },
+                "timestamp": time.time()
             })
             if hasattr(DinoRequestHandler, "_islepilot_cache"):
                 DinoRequestHandler._islepilot_cache.pop(f"/players/{sid_str}", None)

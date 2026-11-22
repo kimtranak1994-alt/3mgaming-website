@@ -458,204 +458,77 @@ const DinoInfo = {
           </div>
         </div>
 
-        <!-- 3 MỤC BUFF CHẤT DINH DƯỠNG (POWERUPS - EVRIMA DIET BUFFS) -->
-        <div class="card" style="padding: 24px; margin-bottom: 24px; background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.4);">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
-            <div>
-              <h3 style="font-size: 1.3rem; font-weight: 900; color: #fff; margin: 0; display: flex; align-items: center; gap: 10px;">
-                <span>⚡</span> Hệ Thống Buff Chất Dinh Dưỡng (Powerups · Evrima Diet)
+        <!-- HỆ THỐNG BUFF DINH DƯỠNG & TIỆN ÍCH (POWERUPS EVRIMA) -->
+        <div class="card" style="padding: 22px 24px; margin-bottom: 24px; background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.4);">
+          
+          <!-- HEADER -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 1.6rem;">⚡</span>
+              <h3 style="font-size: 1.25rem; font-weight: 900; color: #fff; margin: 0;">
+                Hệ Thống Buff Chất Dinh Dưỡng & Sinh Tồn (Powerups)
               </h3>
             </div>
             <div>
-              ${isPerfectDiet 
-                ? `<span style="background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; font-size: 0.82rem; font-weight: 800; padding: 6px 14px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px;">
-                    <span>🌟</span> Chế Độ Ăn Hoàn Hảo (Perfect Diet 3/3)
-                   </span>`
-                : `<span style="background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #f59e0b; font-size: 0.82rem; font-weight: 800; padding: 6px 14px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px;">
-                    <span>⚠️</span> Cần Bổ Sung Dưỡng Chất (Incomplete Diet)
-                   </span>`
-              }
+              <span id="nutr-diet-badge" style="${isPerfectDiet 
+                ? 'background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981;' 
+                : 'background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #f59e0b;'} font-size: 0.82rem; font-weight: 800; padding: 6px 14px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px;">
+                ${isPerfectDiet ? '<span>🌟</span> Chế Độ Ăn Hoàn Hảo (Perfect Diet 3/3)' : '<span>⚠️</span> Cần Bổ Sung Dưỡng Chất'}
+              </span>
             </div>
           </div>
 
-          <!-- 3 NUTRIENT CARDS GRID -->
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 20px;">
-            
-            <!-- NUTRIENT 1: CARBOHYDRATE (A / S) -->
-            <div style="background: rgba(2, 6, 23, 0.6); border: 1px solid rgba(6, 182, 212, 0.3); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden;">
-              <div style="position: absolute; top: -10px; right: -10px; width: 60px; height: 60px; background: radial-gradient(circle, rgba(6, 182, 212, 0.2), transparent 70%); pointer-events: none;"></div>
+          <!-- COMPACT NUTRITION & VITALS STATUS BAR -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; background: rgba(2, 6, 23, 0.6); padding: 14px 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 1.4rem;">🥖</span>
               <div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                  <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="font-size: 1.5rem;">🥖</span>
-                    <div>
-                      <div style="font-size: 0.98rem; font-weight: 900; color: #fff;">Carbohydrates</div>
-                      <div style="font-size: 0.75rem; color: #06b6d4; font-weight: 700; text-transform: uppercase;">Dưỡng Chất A · S · Tinh Bột</div>
-                    </div>
-                  </div>
-                  <span style="background: rgba(6, 182, 212, 0.2); color: #22d3ee; border: 1px solid rgba(6, 182, 212, 0.5); font-weight: 900; font-size: 0.82rem; padding: 3px 10px; border-radius: 6px; font-family: monospace;">
-                    [ A / S ]
-                  </span>
-                </div>
-
-                <!-- BUFF PERKS -->
-                <div style="font-size: 0.8rem; color: #94a3b8; line-height: 1.45; margin-bottom: 14px; background: rgba(255,255,255,0.03); padding: 8px 10px; border-radius: 6px;">
-                  <div>⚡ <b>Hồi Phục Thể Lực (Stamina Regen):</b> Tăng tốc hồi stamina siêu nhanh.</div>
-                  <div style="margin-top: 3px;">🏃 <b>Kháng Mệt Mỏi:</b> Giảm tiêu hao thể lực khi bứt tốc & nhảy.</div>
-                </div>
-
-                <!-- PROGRESS METER -->
-                <div style="margin-bottom: 14px;">
-                  <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 5px;">
-                    <span style="color: #64748b; font-weight: 700;">Chỉ số hiện tại:</span>
-                    <b style="color: #22d3ee; font-family: monospace; font-size: 0.9rem;">${carbPct}% / 100%</b>
-                  </div>
-                  <div style="background: rgba(0,0,0,0.6); height: 10px; border-radius: 5px; overflow: hidden; border: 1px solid rgba(6, 182, 212, 0.2);">
-                    <div style="background: linear-gradient(90deg, #0284c7, #06b6d4, #38bdf8); width: ${carbPct}%; height: 100%; border-radius: 5px; transition: width 0.4s ease; box-shadow: 0 0 10px rgba(6, 182, 212, 0.5);"></div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- ACTION BUTTONS -->
-              <div style="display: flex; gap: 8px;">
-                <button onclick="DinoInfo.buffNutrient('carb', 25)" class="btn-primary" style="flex: 1; padding: 10px 12px; font-weight: 800; font-size: 0.88rem; background: linear-gradient(135deg, #0284c7, #06b6d4); border: 1px solid #38bdf8; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
-                  <span>⚡</span> Buff 25% Chất A
-                </button>
-                <button onclick="DinoInfo.buffNutrient('carb', 100)" class="btn-secondary" style="padding: 10px 14px; font-weight: 800; font-size: 0.82rem; border-radius: 8px; cursor: pointer; background: rgba(6, 182, 212, 0.15); border: 1px solid rgba(6, 182, 212, 0.4); color: #38bdf8;" title="Nạp đầy 100% Chất A">
-                  100%
-                </button>
+                <div style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Chất A (Carb · S)</div>
+                <div style="font-size: 1.15rem; font-weight: 900; color: #38bdf8; font-family: monospace;" id="nutr-carb-val">${carbPct}%</div>
               </div>
             </div>
 
-            <!-- NUTRIENT 2: LIPID (Y / //) -->
-            <div style="background: rgba(2, 6, 23, 0.6); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden;">
-              <div style="position: absolute; top: -10px; right: -10px; width: 60px; height: 60px; background: radial-gradient(circle, rgba(16, 185, 129, 0.2), transparent 70%); pointer-events: none;"></div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 1.4rem;">🥑</span>
               <div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                  <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="font-size: 1.5rem;">🥑</span>
-                    <div>
-                      <div style="font-size: 0.98rem; font-weight: 900; color: #fff;">Lipids</div>
-                      <div style="font-size: 0.75rem; color: #10b981; font-weight: 700; text-transform: uppercase;">Dưỡng Chất Y · // · Chất Béo</div>
-                    </div>
-                  </div>
-                  <span style="background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.5); font-weight: 900; font-size: 0.82rem; padding: 3px 10px; border-radius: 6px; font-family: monospace;">
-                    [ Y / // ]
-                  </span>
-                </div>
-
-                <!-- BUFF PERKS -->
-                <div style="font-size: 0.8rem; color: #94a3b8; line-height: 1.45; margin-bottom: 14px; background: rgba(255,255,255,0.03); padding: 8px 10px; border-radius: 6px;">
-                  <div>🌱 <b>Tốc Độ Lớn (Growth Speed):</b> Đẩy mạnh tốc độ phát triển cơ thể tối đa.</div>
-                  <div style="margin-top: 3px;">💚 <b>Hồi Phục Máu (Health Regen):</b> Hồi máu nhanh chóng khi nằm nghỉ ngơi.</div>
-                </div>
-
-                <!-- PROGRESS METER -->
-                <div style="margin-bottom: 14px;">
-                  <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 5px;">
-                    <span style="color: #64748b; font-weight: 700;">Chỉ số hiện tại:</span>
-                    <b style="color: #34d399; font-family: monospace; font-size: 0.9rem;">${lipidPct}% / 100%</b>
-                  </div>
-                  <div style="background: rgba(0,0,0,0.6); height: 10px; border-radius: 5px; overflow: hidden; border: 1px solid rgba(16, 185, 129, 0.2);">
-                    <div style="background: linear-gradient(90deg, #059669, #10b981, #34d399); width: ${lipidPct}%; height: 100%; border-radius: 5px; transition: width 0.4s ease; box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);"></div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- ACTION BUTTONS -->
-              <div style="display: flex; gap: 8px;">
-                <button onclick="DinoInfo.buffNutrient('lipid', 25)" class="btn-primary" style="flex: 1; padding: 10px 12px; font-weight: 800; font-size: 0.88rem; background: linear-gradient(135deg, #059669, #10b981); border: 1px solid #34d399; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
-                  <span>⚡</span> Buff 25% Chất Y
-                </button>
-                <button onclick="DinoInfo.buffNutrient('lipid', 100)" class="btn-secondary" style="padding: 10px 14px; font-weight: 800; font-size: 0.82rem; border-radius: 8px; cursor: pointer; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); color: #34d399;" title="Nạp đầy 100% Chất Y">
-                  100%
-                </button>
+                <div style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Chất Y (Lipid · //)</div>
+                <div style="font-size: 1.15rem; font-weight: 900; color: #34d399; font-family: monospace;" id="nutr-lipid-val">${lipidPct}%</div>
               </div>
             </div>
 
-            <!-- NUTRIENT 3: PROTEIN (B / :) -->
-            <div style="background: rgba(2, 6, 23, 0.6); border: 1px solid rgba(249, 115, 22, 0.3); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden;">
-              <div style="position: absolute; top: -10px; right: -10px; width: 60px; height: 60px; background: radial-gradient(circle, rgba(249, 115, 22, 0.2), transparent 70%); pointer-events: none;"></div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 1.4rem;">🥩</span>
               <div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                  <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="font-size: 1.5rem;">🥩</span>
-                    <div>
-                      <div style="font-size: 0.98rem; font-weight: 900; color: #fff;">Proteins</div>
-                      <div style="font-size: 0.75rem; color: #f97316; font-weight: 700; text-transform: uppercase;">Dưỡng Chất B · : · Chất Đạm</div>
-                    </div>
-                  </div>
-                  <span style="background: rgba(249, 115, 22, 0.2); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.5); font-weight: 900; font-size: 0.82rem; padding: 3px 10px; border-radius: 6px; font-family: monospace;">
-                    [ B / : ]
-                  </span>
-                </div>
-
-                <!-- BUFF PERKS -->
-                <div style="font-size: 0.8rem; color: #94a3b8; line-height: 1.45; margin-bottom: 14px; background: rgba(255,255,255,0.03); padding: 8px 10px; border-radius: 6px;">
-                  <div>⚔️ <b>Sát Thương Tấn Công (Attack Power):</b> Tăng sức mạnh sát thương cắn xé.</div>
-                  <div style="margin-top: 3px;">🛡️ <b>Kháng Chảy Máu (Bleed Resist):</b> Giảm thời gian chảy máu & mau lành vết thương.</div>
-                </div>
-
-                <!-- PROGRESS METER -->
-                <div style="margin-bottom: 14px;">
-                  <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 5px;">
-                    <span style="color: #64748b; font-weight: 700;">Chỉ số hiện tại:</span>
-                    <b style="color: #fb923c; font-family: monospace; font-size: 0.9rem;">${proteinPct}% / 100%</b>
-                  </div>
-                  <div style="background: rgba(0,0,0,0.6); height: 10px; border-radius: 5px; overflow: hidden; border: 1px solid rgba(249, 115, 22, 0.2);">
-                    <div style="background: linear-gradient(90deg, #ea580c, #f97316, #fb923c); width: ${proteinPct}%; height: 100%; border-radius: 5px; transition: width 0.4s ease; box-shadow: 0 0 10px rgba(249, 115, 22, 0.5);"></div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- ACTION BUTTONS -->
-              <div style="display: flex; gap: 8px;">
-                <button onclick="DinoInfo.buffNutrient('protein', 25)" class="btn-primary" style="flex: 1; padding: 10px 12px; font-weight: 800; font-size: 0.88rem; background: linear-gradient(135deg, #ea580c, #f97316); border: 1px solid #fb923c; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
-                  <span>⚡</span> Buff 25% Chất B
-                </button>
-                <button onclick="DinoInfo.buffNutrient('protein', 100)" class="btn-secondary" style="padding: 10px 14px; font-weight: 800; font-size: 0.82rem; border-radius: 8px; cursor: pointer; background: rgba(249, 115, 22, 0.15); border: 1px solid rgba(249, 115, 22, 0.4); color: #fb923c;" title="Nạp đầy 100% Chất B">
-                  100%
-                </button>
+                <div style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Chất B (Protein · :)</div>
+                <div style="font-size: 1.15rem; font-weight: 900; color: #fb923c; font-family: monospace;" id="nutr-protein-val">${proteinPct}%</div>
               </div>
             </div>
 
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 1.4rem;">🍖</span>
+              <div>
+                <div style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Độ Đói (Hunger)</div>
+                <div style="font-size: 1.15rem; font-weight: 900; color: #f59e0b; font-family: monospace;" id="nutr-hunger-val">${hungerPct}%</div>
+              </div>
+            </div>
           </div>
 
-          <!-- ACTION CONTROL PANEL: BUFF ĐÓI 25%, ĐẠT PRIME, BUFF 3 CHẤT A-B-Y 25% -->
-          <div style="background: rgba(2, 6, 23, 0.7); border: 1px solid rgba(245, 158, 11, 0.35); border-radius: 12px; padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
-            <div style="display: flex; align-items: center; gap: 12px;">
-              <span style="font-size: 1.8rem;">⚡</span>
-              <div>
-                <div style="font-size: 1.05rem; font-weight: 900; color: #fde047;">
-                  Tiện Ích Nạp Nhanh (Instant Powerups)
-                </div>
-                <div style="font-size: 0.82rem; color: #94a3b8; margin-top: 2px;">
-                  Hỗ trợ nạp 3 chất A-B-Y 25%, hồi phục thức ăn (đói) và kích hoạt trực tiếp trạng thái Prime Elder.
-                </div>
-              </div>
-            </div>
+          <!-- 3 ACTION BUTTONS WITH 300s COUNTDOWN TIMER -->
+          <div style="display: flex; gap: 14px; flex-wrap: wrap; align-items: center;">
+            <!-- NÚT 1: BUFF 3 CHẤT A-B-Y 25% -->
+            <button id="btn-powerup-aby" onclick="DinoInfo.buffNutrient('all', 25)" class="btn-primary" style="flex: 1.2; min-width: 220px; padding: 13px 22px; font-weight: 900; font-size: 0.95rem; background: linear-gradient(135deg, #059669, #10b981); border: 1px solid #34d399; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35); transition: all 0.2s;">
+              <span>✨</span> <span class="btn-text">Buff 3 Chất A-B-Y 25%</span>
+            </button>
 
-            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-              <!-- NÚT BUFF ĐÓI 25% -->
-              <button onclick="DinoInfo.buffNutrient('hunger', 25)" class="btn-secondary" style="padding: 11px 18px; font-weight: 800; font-size: 0.9rem; background: rgba(245, 158, 11, 0.15); border: 1px solid #f59e0b; color: #fbbf24; border-radius: 9px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s;">
-                <span>🍖</span> Buff Đói 25%
-              </button>
+            <!-- NÚT 2: BUFF ĐÓI 25% -->
+            <button id="btn-powerup-hunger" onclick="DinoInfo.buffNutrient('hunger', 25)" class="btn-secondary" style="flex: 1; min-width: 180px; padding: 13px 22px; font-weight: 800; font-size: 0.95rem; background: rgba(245, 158, 11, 0.15); border: 1px solid #f59e0b; color: #fbbf24; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
+              <span>🍖</span> <span class="btn-text">Buff Đói 25%</span>
+            </button>
 
-              <!-- NÚT ĐẠT PRIME -->
-              <button onclick="DinoInfo.buffNutrient('prime')" class="btn-primary" style="padding: 11px 20px; font-weight: 900; font-size: 0.9rem; background: linear-gradient(135deg, #8b5cf6, #6366f1); border: 1px solid #a78bfa; border-radius: 9px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35); transition: all 0.2s;">
-                <span>👑</span> Đạt Prime
-              </button>
-
-              <!-- NÚT BUFF 3 CHẤT A B Y 25% -->
-              <button onclick="DinoInfo.buffNutrient('all', 25)" class="btn-primary" style="padding: 11px 20px; font-weight: 900; font-size: 0.9rem; background: linear-gradient(135deg, #059669, #10b981); border: 1px solid #34d399; border-radius: 9px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35); transition: all 0.2s;">
-                <span>✨</span> Buff 3 Chất A-B-Y 25%
-              </button>
-
-              <!-- NÚT BUFF ĐẦY 3 CHẤT 100% -->
-              <button onclick="DinoInfo.buffNutrient('all', 100)" class="btn-secondary" style="padding: 11px 16px; font-weight: 800; font-size: 0.85rem; border-radius: 9px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;" title="Nạp đầy 100% cả 3 chất">
-                <span>🌟</span> 100% All
-              </button>
-            </div>
+            <!-- NÚT 3: ĐẠT PRIME -->
+            <button id="btn-powerup-prime" onclick="DinoInfo.buffNutrient('prime')" class="btn-primary" style="flex: 1; min-width: 180px; padding: 13px 22px; font-weight: 900; font-size: 0.95rem; background: linear-gradient(135deg, #8b5cf6, #6366f1); border: 1px solid #a78bfa; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35); transition: all 0.2s;">
+              <span>👑</span> <span class="btn-text">Đạt Prime</span>
+            </button>
           </div>
         </div>
 
@@ -711,6 +584,7 @@ const DinoInfo = {
           </div>
         </div>
       `;
+      this.checkAllCooldowns();
     } catch (err) {
       console.error("[DinoInfo] Lỗi renderUI:", err);
       container.innerHTML = `
@@ -895,22 +769,174 @@ const DinoInfo = {
     }
   },
 
+  cooldownTimers: {},
+
+  getCooldownKey(type) {
+    return 'dino_cd_' + (type || 'all');
+  },
+
+  getCooldownRemaining(type) {
+    try {
+      const cdEnd = parseInt(localStorage.getItem(this.getCooldownKey(type)) || '0', 10);
+      const remaining = Math.ceil((cdEnd - Date.now()) / 1000);
+      return remaining > 0 ? remaining : 0;
+    } catch (e) {
+      return 0;
+    }
+  },
+
+  setCooldown(type, seconds = 300) {
+    try {
+      const cdEnd = Date.now() + (seconds * 1000);
+      localStorage.setItem(this.getCooldownKey(type), cdEnd.toString());
+      this.startCooldownTimer(type, seconds);
+    } catch (e) {
+      console.error('[Cooldown Error]', e);
+    }
+  },
+
+  getButtonElement(type) {
+    if (type === 'all' || type === 'aby') return document.getElementById('btn-powerup-aby');
+    if (type === 'hunger' || type === 'doi') return document.getElementById('btn-powerup-hunger');
+    if (type === 'prime') return document.getElementById('btn-powerup-prime');
+    return null;
+  },
+
+  getButtonDefaultHtml(type) {
+    if (type === 'all' || type === 'aby') {
+      return `<span>✨</span> <span class="btn-text">Buff 3 Chất A-B-Y 25%</span>`;
+    }
+    if (type === 'hunger' || type === 'doi') {
+      return `<span>🍖</span> <span class="btn-text">Buff Đói 25%</span>`;
+    }
+    if (type === 'prime') {
+      return `<span>👑</span> <span class="btn-text">Đạt Prime</span>`;
+    }
+    return '';
+  },
+
+  startCooldownTimer(type, initialSeconds) {
+    if (this.cooldownTimers[type]) {
+      clearInterval(this.cooldownTimers[type]);
+      delete this.cooldownTimers[type];
+    }
+
+    const updateBtn = () => {
+      const btn = this.getButtonElement(type);
+      const remaining = this.getCooldownRemaining(type);
+
+      if (remaining > 0) {
+        if (btn) {
+          btn.disabled = true;
+          btn.style.opacity = '0.65';
+          btn.style.cursor = 'not-allowed';
+          btn.style.filter = 'grayscale(0.5)';
+          const textSpan = btn.querySelector('.btn-text');
+          if (textSpan) {
+            textSpan.textContent = `Chờ (${remaining}s)...`;
+          } else {
+            btn.innerHTML = `<span>⏳</span> <span class="btn-text">Chờ (${remaining}s)...</span>`;
+          }
+        }
+      } else {
+        if (this.cooldownTimers[type]) {
+          clearInterval(this.cooldownTimers[type]);
+          delete this.cooldownTimers[type];
+        }
+        localStorage.removeItem(this.getCooldownKey(type));
+        if (btn) {
+          btn.disabled = false;
+          btn.style.opacity = '1';
+          btn.style.cursor = 'pointer';
+          btn.style.filter = 'none';
+          btn.innerHTML = this.getButtonDefaultHtml(type);
+        }
+      }
+    };
+
+    updateBtn();
+    this.cooldownTimers[type] = setInterval(updateBtn, 1000);
+  },
+
+  checkAllCooldowns() {
+    ['all', 'hunger', 'prime'].forEach(type => {
+      const remaining = this.getCooldownRemaining(type);
+      if (remaining > 0) {
+        this.startCooldownTimer(type, remaining);
+      } else {
+        const btn = this.getButtonElement(type);
+        if (btn) {
+          btn.disabled = false;
+          btn.style.opacity = '1';
+          btn.style.cursor = 'pointer';
+          btn.style.filter = 'none';
+          btn.innerHTML = this.getButtonDefaultHtml(type);
+        }
+      }
+    });
+  },
+
   async buffNutrient(type, amount = 25) {
-    if (this.isBuffing) return;
-    this.isBuffing = true;
+    const remaining = this.getCooldownRemaining(type);
+    if (remaining > 0) {
+      this.showToast(`⏳ Vui lòng chờ đếm ngược ${remaining}s kết thúc trước khi thực hiện tiếp!`, 'warning');
+      return;
+    }
 
     const labelMap = {
-      carb: `Dưỡng Chất A (Carb ${amount}%)`,
-      lipid: `Dưỡng Chất Y (Lipid ${amount}%)`,
-      protein: `Dưỡng Chất B (Protein ${amount}%)`,
-      all: `Cả 3 Dưỡng Chất A-B-Y (${amount}%)`,
-      hunger: `Thức Ăn Đói (+${amount}%)`,
+      all: `3 Dưỡng Chất A-B-Y (25%)`,
+      hunger: `Thức Ăn Đói (+25%)`,
       prime: 'Trạng Thái Prime Elder'
     };
     const label = labelMap[type] || 'Powerup';
 
+    // 1. CẬP NHẬT GIAO DIỆN NGAY LẬP TỨC (OPTIMISTIC UI UPDATE)
+    if (type === 'all') {
+      const carbEl = document.getElementById('nutr-carb-val');
+      const lipidEl = document.getElementById('nutr-lipid-val');
+      const proteinEl = document.getElementById('nutr-protein-val');
+      const dietBadge = document.getElementById('nutr-diet-badge');
+
+      if (carbEl) carbEl.textContent = '25%';
+      if (lipidEl) lipidEl.textContent = '25%';
+      if (proteinEl) proteinEl.textContent = '25%';
+      if (dietBadge) {
+        dietBadge.style = 'background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; font-size: 0.82rem; font-weight: 800; padding: 6px 14px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px;';
+        dietBadge.innerHTML = '<span>🌟</span> Chế Độ Ăn Hoàn Hảo (Perfect Diet 3/3)';
+      }
+
+      if (this.data && this.data.dino) {
+        if (!this.data.dino.nutrition) this.data.dino.nutrition = {};
+        this.data.dino.nutrition.carb = 25;
+        this.data.dino.nutrition.lipid = 25;
+        this.data.dino.nutrition.protein = 25;
+        this.data.dino.nutrition.is_perfect_diet = true;
+      }
+    } else if (type === 'hunger') {
+      const hungerEl = document.getElementById('nutr-hunger-val');
+      if (this.data && this.data.dino) {
+        const curH = Number(this.data.dino.hunger) || 0;
+        const maxH = Number(this.data.dino.max_hunger) || 1000;
+        const newH = Math.min(maxH, curH + (maxH * 0.25));
+        this.data.dino.hunger = newH;
+        const pct = Math.min(100, Math.round((newH / maxH) * 100));
+        if (hungerEl) hungerEl.textContent = `${pct}%`;
+      } else if (hungerEl) {
+        hungerEl.textContent = '100%';
+      }
+    } else if (type === 'prime') {
+      if (this.data && this.data.dino) {
+        this.data.dino.is_prime_elder = true;
+        this.data.dino.stage = 'Prime Elder (Cổ Đại Tối Thượng)';
+      }
+    }
+
+    // 2. KÍCH HOẠT BỘ ĐẾM NGƯỢC 300S NGAY LẬP TỨC VÀ KHÓA NÚT
+    this.setCooldown(type, 300);
+
+    // 3. GỬI LỆNH API THỰC THI ĐẾN MÁY CHỦ
     try {
-      this.showToast(`⚡ Đang gửi yêu cầu kích hoạt ${label}...`, 'info');
+      this.showToast(`⚡ Đang thực thi buff ${label} vào máy chủ...`, 'info');
 
       const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
       const steamId = (user && (user.steamId || user.steam_id)) || (this.data && this.data.steam_id) || '';
@@ -927,18 +953,21 @@ const DinoInfo = {
 
       const data = await res.json();
       if (res.ok && data.ok) {
-        this.showToast(data.message || `🎉 Đã kích hoạt thành công ${label}!`, 'success');
-        // Tải lại thông tin dino sau khi buff
-        setTimeout(() => this.fetchData(true), 800);
+        this.showToast(data.message || `🎉 Đã buff thành công ${label}!`, 'success');
+        // Đồng bộ dữ liệu nền sau 1.5s
+        setTimeout(() => this.fetchData(false), 1500);
       } else {
         const errMsg = data.message || data.error || 'Thao tác thất bại!';
         this.showToast(errMsg, 'error');
+        // Nếu thất bại do máy chủ từ chối, hủy đếm ngược để người chơi thử lại
+        localStorage.removeItem(this.getCooldownKey(type));
+        this.checkAllCooldowns();
       }
     } catch (err) {
       console.error('[BuffNutrient Error]', err);
       this.showToast('Lỗi kết nối khi gửi lệnh thao tác!', 'error');
-    } finally {
-      this.isBuffing = false;
+      localStorage.removeItem(this.getCooldownKey(type));
+      this.checkAllCooldowns();
     }
   }
 };
