@@ -124,14 +124,10 @@
           <li class="nav-item-player"><a href="#skinshop" class="nav-btn" data-tab="skinshop">🎨 Shop skin</a></li>
           <li class="nav-item-player"><a href="#skins" class="nav-btn" data-tab="skins">🗃️ Garage skin</a></li>
           <li class="nav-item-player"><a href="#skineditor" class="nav-btn" data-tab="skineditor">🖌️ Chỉnh sửa skin</a></li>
-          <li class="nav-item-player" id="nav-item-teleport"><a href="#teleport" class="nav-btn" data-tab="teleport">🚀 Dịch chuyển</a></li>
           <li class="nav-item-player"><a href="#quests" class="nav-btn" data-tab="quests">📜 Nhiệm vụ</a></li>
-          <li class="nav-item-player"><a href="#carcass" class="nav-btn" data-tab="carcass">🥩 Thả xác & Trồng cây</a></li>
           <li id="nav-item-map"><a href="#map" class="nav-btn" data-tab="map">🗺️ Bản đồ Gateway</a></li>
           <li class="nav-item-player"><a href="#guide" class="nav-btn" data-tab="guide">📖 Hướng dẫn</a></li>
           <li class="nav-item-player" id="nav-item-damage"><a href="#damage" class="nav-btn" data-tab="damage">⚔️ Check Dame</a></li>
-          <li class="nav-item-player" id="nav-item-boss"><a href="#boss" class="nav-btn" data-tab="boss">🏹 Săn AI</a></li>
-          <li class="nav-item-player" id="nav-item-arena"><a href="#arena" class="nav-btn" data-tab="arena">🥊 Đấu Trường PK</a></li>
           <li class="nav-item-player"><a href="#starter" class="nav-btn" data-tab="starter" style="color: #fbbf24; font-weight: 600;"><span style="position: relative; display: inline-flex; align-items: center; gap: 4px;">🎁 Quà tân thủ <span class="badge-new-gift" style="background: linear-gradient(135deg, #f59e0b, #ef4444); color: #fff; font-size: 0.65rem; padding: 1px 5px; border-radius: 999px; font-weight: 800; text-transform: uppercase;">HOT</span></span></a></li>
           <li class="nav-item-player"><a href="#rules" class="nav-btn" data-tab="rules">📋 Nội quy</a></li>
           <li class="nav-item-player"><a href="#donate" class="nav-btn" data-tab="donate">💖 Ủng hộ</a></li>
@@ -480,11 +476,6 @@
     <!-- TAB CHECK DAME (COMBAT LOG) -->
     <section id="view-damage" class="view-section"></section>
 
-    <!-- TAB SĂN BOSS THẦN THOẠI -->
-    <section id="view-boss" class="view-section"></section>
-
-    <!-- TAB ĐẤU TRƯỜNG PK (PVP ARENA) -->
-    <section id="view-arena" class="view-section"></section>
 
     <section id="view-dino-info" class="view-section"></section>
 
@@ -1132,123 +1123,6 @@
 
 
 
-    <!-- TAB: DỊCH CHUYỂN -->
-
-    <section id="view-teleport" class="view-section">
-
-      <!-- Header & Balance Badge -->
-
-      <div class="teleport-header-wrap">
-
-        <div>
-
-          <h2 class="teleport-main-title">Dịch chuyển</h2>
-
-          <p class="teleport-sub-title">Nhảy tới một điểm đến đã lưu hoặc gặp bạn bè.</p>
-
-        </div>
-
-
-
-      </div>
-
-      <!-- HƯỚNG DẪN DỊCH CHUYỂN CHUẨN TRONG GAME -->
-      <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 10px; padding: 14px 18px; margin-bottom: 18px; display: flex; align-items: center; gap: 14px;">
-        <span style="font-size: 1.6rem;">💡</span>
-        <div style="font-size: 0.9rem; color: #a7f3d0; line-height: 1.55;">
-          <b>Quy định dịch chuyển server 3MGAMING:</b> Chỉ những khủng long <b>LÀNH LẶN ĐẠT 100% MÁU</b>, <b>KHÔNG BỊ THƯƠNG</b> và <b>KHÔNG CHẢY MÁU (Bleed)</b> mới được phép dịch chuyển. Trước khi bấm <b>Dịch chuyển</b>, hãy <b>NGỪNG DI CHUYỂN (Thả tay khỏi W-A-S-D)</b> và <b>BẤM PHÍM H (Ngồi xuống / Nằm nghỉ)</b> trong <b>5 - 8 giây</b> để máy chủ đồng bộ vị trí thành công 100%!
-        </div>
-      </div>
-
-      <!-- BANNER BỘ ĐẾM 60S HỒI CHIÊU -->
-      <div id="teleport-cooldown-banner" style="display: none; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 10px; padding: 12px 18px; margin-bottom: 18px; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <span style="font-size: 1.3rem;">⏳</span>
-          <span style="font-size: 0.95rem; color: #bae6fd; font-weight: 700;">Hồi chiêu dịch chuyển: <span id="teleport-cooldown-timer-text" style="color: #fbbf24; font-family: monospace; font-size: 1.15rem;">60s</span></span>
-        </div>
-        <span style="font-size: 0.82rem; color: #94a3b8;">Vui lòng chờ hết thời gian hồi chiêu để tiếp tục dịch chuyển</span>
-      </div>
-
-      <!-- Danh Sách Điểm Đến Đã Lưu (Gần cầu Delta, spawm...) -->
-
-      <div id="teleport-locations-container" class="teleport-locations-grid">
-
-        <div style="text-align: center; padding: 30px; color: var(--text-muted); grid-column: 1/-1;">Đang tải danh sách điểm đến...</div>
-
-      </div>
-
-      <!-- Khối Dịch Chuyển Tới Bạn Bè -->
-
-      <div class="teleport-friend-container">
-
-        <div class="teleport-friend-header">
-
-          <span class="teleport-friend-header-icon">👤⁺</span>
-
-          <h3 class="teleport-friend-header-title">Dịch chuyển tới bạn bè</h3>
-
-        </div>
-
-        <p class="teleport-friend-sub">Chia sẻ mã để bạn bè dịch chuyển thẳng tới chỗ bạn.</p>
-
-        <div class="teleport-friend-grid">
-
-          <!-- Sub-card 1: Mời ai đó tới chỗ bạn -->
-
-          <div class="teleport-friend-subcard">
-
-            <div>
-
-              <h4 class="teleport-subcard-title">Mời ai đó tới chỗ bạn</h4>
-
-              <p class="teleport-subcard-text">Tạo mã và gửi cho bạn bè. Họ nhập mã và sẽ xuất hiện ngay chỗ bạn.</p>
-
-            </div>
-
-            <div id="teleport-invite-action-wrap">
-
-              <button type="button" class="teleport-btn-ticket" onclick="Teleport.createFriendCode()">
-
-                <span>🎟️</span> <span>Tạo mã</span>
-
-              </button>
-
-            </div>
-
-          </div>
-
-          <!-- Sub-card 2: Tới chỗ bạn bè -->
-
-          <div class="teleport-friend-subcard">
-
-            <div>
-
-              <h4 class="teleport-subcard-title">Tới chỗ bạn bè</h4>
-
-              <p class="teleport-subcard-text">Nhập mã bạn bè đưa để dịch chuyển tới chỗ họ. Bạn cần đang ở trong game.</p>
-
-            </div>
-
-            <div>
-
-              <input type="text" id="teleport-friend-code-input" class="teleport-code-input" placeholder="A B C 1 2 3" maxlength="8" oninput="Teleport.onCodeInput(this.value)">
-
-              <button type="button" id="teleport-friend-btn-submit" class="teleport-btn-submit" onclick="Teleport.redeemFriendCode()">
-
-                Dịch chuyển
-
-              </button>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </div>
-
-    </section>
-
     <!-- TAB: NHIỆM VỤ -->
 
     <section id="view-quests" class="view-section">
@@ -1289,42 +1163,6 @@
 
     <!-- TAB: AUTO TREO (AFK AUTO MANAGER) -->
     <section id="view-autotreo" class="view-section"></section>
-
-    <!-- TAB: THẢ XÁC -->
-
-    <!-- TAB: THẢ XÁC (CARCASS SPAWNER) -->
-
-    <section id="view-carcass" class="view-section">
-
-      <div style="max-width: 1100px; margin: 0 auto;">
-
-        <div style="margin-bottom: 20px;">
-          <h1 style="font-size: 1.5rem; font-weight: 700; color: #fff; margin-bottom: 6px; display: flex; align-items: center; gap: 10px;">
-            <span>🥩</span> Thả Xác & <span>🌿</span> Trồng Cây Thức Ăn
-          </h1>
-          <p style="font-size: 0.9rem; color: #94a3b8; line-height: 1.5; margin: 0;">
-            Cung cấp thức ăn trực tiếp trước mặt bạn trong game. Động vật ăn thịt nhận xác tươi (Carcass) và động vật ăn cỏ trồng cây thảo mộc dinh dưỡng (Flora). Bạn phải đang online trong game. Thời gian giãn cách: 300 giây/lần.
-          </p>
-        </div>
-
-        <!-- Bộ lọc Chế độ Ăn (Diet Filter Tabs) -->
-        <div class="carcass-diet-tabs" style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
-          <button type="button" class="map-filter-btn active" id="carcass-filter-all" onclick="Carcass.switchCategory('all', this)">
-            🌐 Tất Cả Nguồn Thức Ăn
-          </button>
-          <button type="button" class="map-filter-btn" id="carcass-filter-carnivore" onclick="Carcass.switchCategory('carnivore', this)">
-            🍖 Động Vật Ăn Thịt (Thả Xác)
-          </button>
-          <button type="button" class="map-filter-btn" id="carcass-filter-herbivore" onclick="Carcass.switchCategory('herbivore', this)" style="border-color: rgba(16, 185, 129, 0.4); color: #34d399;">
-            🌿 Động Vật Ăn Cỏ (Trồng Cây)
-          </button>
-        </div>
-
-        <div class="carcass-grid" id="carcass-grid-container"></div>
-
-      </div>
-
-    </section>
 
     <!-- TAB 4: BẢN ĐỒ GATEWAY TƯƠNG TÁC -->
 
@@ -1875,7 +1713,7 @@
   <script src="js/dino_info.js?v=2.0"></script>
   <script src="js/arena.js?v=1.1"></script>
   <script src="js/auto_treo.js?v=1.0"></script>
-  <script src="js/app.js?v=4.5"></script>
+  <script src="js/app.js?v=4.6"></script>
 
   <!-- Floating Guest Mode Indicator for Admin -->
   <div id="floating-guest-pill" class="floating-guest-indicator" style="display: none !important;" onclick="App.setAdminViewMode('admin')">

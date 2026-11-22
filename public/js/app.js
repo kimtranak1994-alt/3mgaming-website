@@ -39,8 +39,8 @@ const App = {
 
   switchTab(tabId) {
     const validTabs = [
-      'home', 'bxh', 'dino-info', 'dinoinfo', 'damage', 'boss', 'ai-hunt', 'arena', 'garage', 'starter', 
-      'skinshop', 'skins', 'skineditor', 'referral', 'teleport', 'quests', 'carcass', 'autotreo',
+      'home', 'bxh', 'dino-info', 'dinoinfo', 'damage', 'garage', 'starter', 
+      'skinshop', 'skins', 'skineditor', 'referral', 'quests', 'autotreo',
       'map', 'guide', 'rules', 'donate', 'admin'
     ];
     const currentMode = localStorage.getItem('admin_view_mode') || 'admin';
@@ -68,14 +68,6 @@ const App = {
       if (window.DamageChecker && typeof window.DamageChecker.render === 'function') {
         window.DamageChecker.render();
       }
-    } else if (tabId === 'boss' || tabId === 'ai-hunt') {
-      if (window.BossHunt && typeof window.BossHunt.render === 'function') {
-        window.BossHunt.render();
-      }
-    } else if (tabId === 'arena') {
-      if (window.Arena && typeof window.Arena.render === 'function') {
-        window.Arena.render();
-      }
     } else if (tabId === 'dino-info' || tabId === 'dinoinfo') {
       if (window.DinoInfo && typeof window.DinoInfo.render === 'function') {
         window.DinoInfo.render();
@@ -96,16 +88,12 @@ const App = {
       SkinEditor.init();
     } else if (tabId === 'referral') {
       Referral.render();
-    } else if (tabId === 'teleport') {
-      Teleport.render();
     } else if (tabId === 'quests') {
       Quests.render();
     } else if (tabId === 'autotreo') {
       if (window.AutoTreo && typeof window.AutoTreo.render === 'function') {
         window.AutoTreo.render();
       }
-    } else if (tabId === 'carcass') {
-      Carcass.render();
     } else if (tabId === 'map') {
       GatewayMap.init();
     } else if (tabId === 'bxh') {
