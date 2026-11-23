@@ -21,7 +21,6 @@ import json
 import time
 
 import datetime
-import traceback
 
 import random
 import threading
@@ -174,160 +173,157 @@ def calc_dino_stats(species_name, growth, health_val, hunger_val, thirst_val, is
 
 CUSTOM_NAMES_FILE = os.path.join(os.path.dirname(__file__), "dino_names.json")
 DELETED_GARAGE_FILE = os.path.join(os.path.dirname(__file__), "deleted_garage_dinos.json")
+_file_io_lock = threading.RLock()
+_garage_tier_cache = None
+_garage_tier_cache_ts = 0.0
+_deleted_dinos_cache = None
+_auto_treo_cache = None
+_auto_treo_cache_ts = 0.0
+_garage_mutations_cache = None
+_garage_snapshots_cache = None
+_claimed_quests_cache = None
+_wallet_quest_sync_ts = {}
 
 def load_garage_tier_settings():
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    primary_file = os.path.join(base_dir, "garage_tier_settings.json")
-    backup_file = os.path.join(base_dir, ".persistent_garage_tier_settings.json")
-    config_file = os.path.join(base_dir, "config.json")
+    global _garage_tier_cache, _garage_tier_cache_ts
+    now_ts = time.time()
+    with _file_io_lock:
+        if isinstance(_garage_tier_cache, dict) and (now_ts - _garage_tier_cache_ts) < 30.0:
+            return dict(_garage_tier_cache)
 
-    tier2_ids = set()
-    tier3_ids = set()
-    max_slots = 5
-    park_seconds = 30
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        primary_file = os.path.join(base_dir, "garage_tier_settings.json")
+        backup_file = os.path.join(base_dir, ".persistent_garage_tier_settings.json")
+        config_file = os.path.join(base_dir, "config.json")
 
-    def clean_and_add(target_set, items):
-        if not items:
-            return
-        if isinstance(items, str):
-            items = re.split(r"[\s,;]+", items)
-        for s in items:
-            clean_s = str(s).strip()
-            # Steam IDs hợp lệ là chuỗi số từ 10 ký tự trở lên
-            if clean_s.isdigit() and len(clean_s) >= 10:
-                target_set.add(clean_s)
+        tier2_ids = set()
+        tier3_ids = set()
+        max_slots = 5
+        park_seconds = 30
 
-    # 1. Đọc từ các file chuyên biệt persistent
-    for fpath in [backup_file, primary_file]:
-        if os.path.exists(fpath):
+        def clean_and_add(target_set, items):
+            if not items:
+                return
+            if isinstance(items, str):
+                items = re.split(r"[\s,;]+", items)
+            for s in items:
+                clean_s = str(s).strip()
+                # Steam IDs hợp lệ là chuỗi số từ 10 ký tự trở lên
+                if clean_s.isdigit() and len(clean_s) >= 10:
+                    target_set.add(clean_s)
+
+        # 1. Đọc từ các file chuyên biệt persistent
+        for fpath in [backup_file, primary_file]:
+            if os.path.exists(fpath):
+                try:
+                    with open(fpath, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                        if isinstance(data, dict):
+                            clean_and_add(tier2_ids, data.get("tier2_steam_ids", []))
+                            clean_and_add(tier3_ids, data.get("tier3_steam_ids", []))
+                            if "maxSlots" in data:
+                                max_slots = int(data["maxSlots"])
+                            if "parkSeconds" in data:
+                                park_seconds = int(data["parkSeconds"])
+                except Exception:
+                    pass
+
+        # 2. Đọc bổ sung từ config.json
+        if os.path.exists(config_file):
             try:
-                with open(fpath, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                    if isinstance(data, dict):
-                        clean_and_add(tier2_ids, data.get("tier2_steam_ids", []))
-                        clean_and_add(tier3_ids, data.get("tier3_steam_ids", []))
-                        if "maxSlots" in data:
-                            max_slots = int(data["maxSlots"])
-                        if "parkSeconds" in data:
-                            park_seconds = int(data["parkSeconds"])
+                with open(config_file, "r", encoding="utf-8") as f:
+                    cfg_data = json.load(f)
+                    if isinstance(cfg_data, dict):
+                        clean_and_add(tier2_ids, cfg_data.get("GARAGE_TIER2_STEAM_IDS", []))
+                        clean_and_add(tier3_ids, cfg_data.get("GARAGE_TIER3_STEAM_IDS", []))
+                        cfg_slots = cfg_data.get("GARAGE_SLOTS_CONFIG", {})
+                        if isinstance(cfg_slots, dict):
+                            clean_and_add(tier2_ids, cfg_slots.get("tier2_steam_ids", []))
+                            clean_and_add(tier3_ids, cfg_slots.get("tier3_steam_ids", []))
             except Exception:
                 pass
 
-    # 2. Đọc bổ sung từ config.json
-    if os.path.exists(config_file):
-        try:
-            with open(config_file, "r", encoding="utf-8") as f:
-                cfg_data = json.load(f)
-                if isinstance(cfg_data, dict):
-                    clean_and_add(tier2_ids, cfg_data.get("GARAGE_TIER2_STEAM_IDS", []))
-                    clean_and_add(tier3_ids, cfg_data.get("GARAGE_TIER3_STEAM_IDS", []))
-                    cfg_slots = cfg_data.get("GARAGE_SLOTS_CONFIG", {})
-                    if isinstance(cfg_slots, dict):
-                        clean_and_add(tier2_ids, cfg_slots.get("tier2_steam_ids", []))
-                        clean_and_add(tier3_ids, cfg_slots.get("tier3_steam_ids", []))
-        except Exception:
-            pass
+        # 3. Đọc từ biến toàn cục config nếu có
+        if "config" in globals() and isinstance(globals()["config"], dict):
+            cfg = globals()["config"]
+            clean_and_add(tier2_ids, cfg.get("GARAGE_TIER2_STEAM_IDS", []))
+            clean_and_add(tier3_ids, cfg.get("GARAGE_TIER3_STEAM_IDS", []))
+            cfg_slots = cfg.get("GARAGE_SLOTS_CONFIG", {})
+            if isinstance(cfg_slots, dict):
+                clean_and_add(tier2_ids, cfg_slots.get("tier2_steam_ids", []))
+                clean_and_add(tier3_ids, cfg_slots.get("tier3_steam_ids", []))
 
-    # 3. Đọc từ biến toàn cục config nếu có
-    if "config" in globals() and isinstance(globals()["config"], dict):
-        cfg = globals()["config"]
-        clean_and_add(tier2_ids, cfg.get("GARAGE_TIER2_STEAM_IDS", []))
-        clean_and_add(tier3_ids, cfg.get("GARAGE_TIER3_STEAM_IDS", []))
-        cfg_slots = cfg.get("GARAGE_SLOTS_CONFIG", {})
-        if isinstance(cfg_slots, dict):
-            clean_and_add(tier2_ids, cfg_slots.get("tier2_steam_ids", []))
-            clean_and_add(tier3_ids, cfg_slots.get("tier3_steam_ids", []))
+        # 4. Đọc từ biến môi trường (Render Dashboard Environment Variables)
+        for env_k in ["GARAGE_TIER2_STEAM_IDS", "TIER2_STEAM_IDS", "GARAGE_TIER2"]:
+            if os.environ.get(env_k):
+                clean_and_add(tier2_ids, os.environ[env_k])
 
-    # 4. Đọc từ biến môi trường (Render Dashboard Environment Variables)
-    for env_k in ["GARAGE_TIER2_STEAM_IDS", "TIER2_STEAM_IDS", "GARAGE_TIER2"]:
-        if os.environ.get(env_k):
-            clean_and_add(tier2_ids, os.environ[env_k])
+        for env_k in ["GARAGE_TIER3_STEAM_IDS", "TIER3_STEAM_IDS", "GARAGE_TIER3"]:
+            if os.environ.get(env_k):
+                clean_and_add(tier3_ids, os.environ[env_k])
 
-    for env_k in ["GARAGE_TIER3_STEAM_IDS", "TIER3_STEAM_IDS", "GARAGE_TIER3"]:
-        if os.environ.get(env_k):
-            clean_and_add(tier3_ids, os.environ[env_k])
-
-    return {
-        "maxSlots": max_slots,
-        "parkSeconds": park_seconds,
-        "tier1_slots": 5,
-        "tier2_slots": 10,
-        "tier3_slots": 15,
-        "tier2_steam_ids": sorted(list(tier2_ids)),
-        "tier3_steam_ids": sorted(list(tier3_ids))
-    }
+        res = {
+            "maxSlots": max_slots,
+            "parkSeconds": park_seconds,
+            "tier1_slots": 5,
+            "tier2_slots": 10,
+            "tier3_slots": 15,
+            "tier2_steam_ids": sorted(list(tier2_ids)),
+            "tier3_steam_ids": sorted(list(tier3_ids))
+        }
+        _garage_tier_cache = dict(res)
+        _garage_tier_cache_ts = now_ts
+        return res
 
 def save_garage_tier_settings(settings_dict):
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    primary_file = os.path.join(base_dir, "garage_tier_settings.json")
-    backup_file = os.path.join(base_dir, ".persistent_garage_tier_settings.json")
-    
-    t2_list = [str(s).strip() for s in settings_dict.get("tier2_steam_ids", []) if str(s).strip()]
-    t3_list = [str(s).strip() for s in settings_dict.get("tier3_steam_ids", []) if str(s).strip()]
-    max_slots = int(settings_dict.get("maxSlots", 5))
-    park_secs = int(settings_dict.get("parkSeconds", 30))
+    global _garage_tier_cache, _garage_tier_cache_ts
+    with _file_io_lock:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        primary_file = os.path.join(base_dir, "garage_tier_settings.json")
+        backup_file = os.path.join(base_dir, ".persistent_garage_tier_settings.json")
+        
+        t2_list = [str(s).strip() for s in settings_dict.get("tier2_steam_ids", []) if str(s).strip()]
+        t3_list = [str(s).strip() for s in settings_dict.get("tier3_steam_ids", []) if str(s).strip()]
+        max_slots = int(settings_dict.get("maxSlots", 5))
+        park_secs = int(settings_dict.get("parkSeconds", 30))
 
-    clean_data = {
-        "maxSlots": max_slots,
-        "parkSeconds": park_secs,
-        "tier1_slots": 5,
-        "tier2_slots": 10,
-        "tier3_slots": 15,
-        "tier2_steam_ids": t2_list,
-        "tier3_steam_ids": t3_list,
-        "updated_at": datetime.datetime.now().isoformat()
-    }
-
-    # Lưu vào cả primary và backup persistent files
-    for fpath in [primary_file, backup_file]:
-        try:
-            with open(fpath, "w", encoding="utf-8") as f:
-                json.dump(clean_data, f, ensure_ascii=False, indent=2)
-        except Exception as e:
-            print(f"[Garage Tier Save Error {fpath}] {e}")
-
-    # Đồng bộ vào config.json và in-memory config
-    if "config" in globals() and isinstance(globals()["config"], dict):
-        globals()["config"]["MAX_GARAGE_SLOTS"] = max_slots
-        globals()["config"]["GARAGE_PARK_SECONDS"] = park_secs
-        globals()["config"]["GARAGE_TIER2_STEAM_IDS"] = t2_list
-        globals()["config"]["GARAGE_TIER3_STEAM_IDS"] = t3_list
-        globals()["config"]["GARAGE_SLOTS_CONFIG"] = {
+        clean_data = {
+            "maxSlots": max_slots,
+            "parkSeconds": park_secs,
             "tier1_slots": 5,
             "tier2_slots": 10,
             "tier3_slots": 15,
             "tier2_steam_ids": t2_list,
-            "tier3_steam_ids": t3_list
+            "tier3_steam_ids": t3_list,
+            "updated_at": datetime.datetime.now().isoformat()
         }
-        save_config(globals()["config"])
+        _garage_tier_cache = dict(clean_data)
+        _garage_tier_cache_ts = time.time()
 
-    # Đồng bộ sang các thư mục dự án liên quan nếu có
-    for other_base in [r"E:\AI", r"E:\AI\3mgaming-website"]:
-        if os.path.exists(other_base) and os.path.abspath(other_base) != os.path.abspath(base_dir):
+        # Lưu vào cả primary và backup persistent files
+        for fpath in [primary_file, backup_file]:
             try:
-                for fname in ["garage_tier_settings.json", ".persistent_garage_tier_settings.json"]:
-                    dst = os.path.join(other_base, fname)
-                    with open(dst, "w", encoding="utf-8") as f:
-                        json.dump(clean_data, f, ensure_ascii=False, indent=2)
-                other_cfg = os.path.join(other_base, "config.json")
-                if os.path.exists(other_cfg):
-                    with open(other_cfg, "r", encoding="utf-8") as f:
-                        cdata = json.load(f)
-                    cdata["GARAGE_TIER2_STEAM_IDS"] = t2_list
-                    cdata["GARAGE_TIER3_STEAM_IDS"] = t3_list
-                    cdata["GARAGE_SLOTS_CONFIG"] = {
-                        "tier1_slots": 5,
-                        "tier2_slots": 10,
-                        "tier3_slots": 15,
-                        "tier2_steam_ids": t2_list,
-                        "tier3_steam_ids": t3_list
-                    }
-                    with open(other_cfg, "w", encoding="utf-8") as f:
-                        json.dump(cdata, f, ensure_ascii=False, indent=2)
-            except Exception:
-                pass
+                with open(fpath, "w", encoding="utf-8") as f:
+                    json.dump(clean_data, f, ensure_ascii=False, indent=2)
+            except Exception as e:
+                print(f"[Garage Tier Save Error {fpath}] {e}")
 
-    return clean_data
+        # Đồng bộ vào config.json và in-memory config
+        if "config" in globals() and isinstance(globals()["config"], dict):
+            globals()["config"]["MAX_GARAGE_SLOTS"] = max_slots
+            globals()["config"]["GARAGE_PARK_SECONDS"] = park_secs
+            globals()["config"]["GARAGE_TIER2_STEAM_IDS"] = t2_list
+            globals()["config"]["GARAGE_TIER3_STEAM_IDS"] = t3_list
+            globals()["config"]["GARAGE_SLOTS_CONFIG"] = {
+                "tier1_slots": 5,
+                "tier2_slots": 10,
+                "tier3_slots": 15,
+                "tier2_steam_ids": t2_list,
+                "tier3_steam_ids": t3_list
+            }
+            save_config(globals()["config"])
+
+        return clean_data
 
 def get_player_garage_tier_and_slots(steam_id):
     sid = str(steam_id or "").strip()
@@ -344,139 +340,184 @@ def get_player_garage_tier_and_slots(steam_id):
         return 1, max_t1, "Cấp 1 (Chuẩn 5 Slot)"
 
 def load_deleted_dinos():
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    primary_file = os.path.join(base_dir, "deleted_garage_dinos.json")
-    backup_file = os.path.join(base_dir, ".persistent_deleted_garage_dinos.json")
+    global _deleted_dinos_cache
+    with _file_io_lock:
+        if isinstance(_deleted_dinos_cache, dict):
+            return dict(_deleted_dinos_cache)
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        primary_file = os.path.join(base_dir, "deleted_garage_dinos.json")
+        backup_file = os.path.join(base_dir, ".persistent_deleted_garage_dinos.json")
 
-    result = {}
-    for fpath in [backup_file, primary_file]:
-        if os.path.exists(fpath):
-            try:
-                with open(fpath, "r", encoding="utf-8") as f:
-                    content = json.load(f)
-                    if isinstance(content, dict):
-                        result.update(content)
-                    elif isinstance(content, list):
-                        for item in content:
-                            result[str(item)] = {"deleted_at": datetime.datetime.now().isoformat()}
-            except Exception:
-                pass
-    return result
+        result = {}
+        for fpath in [backup_file, primary_file]:
+            if os.path.exists(fpath):
+                try:
+                    with open(fpath, "r", encoding="utf-8") as f:
+                        content = json.load(f)
+                        if isinstance(content, dict):
+                            result.update(content)
+                        elif isinstance(content, list):
+                            for item in content:
+                                result[str(item)] = {"deleted_at": datetime.datetime.now().isoformat()}
+                except Exception:
+                    pass
+        _deleted_dinos_cache = dict(result)
+        return result
 
 def save_deleted_dino(dino_id, steam_id=""):
+    global _deleted_dinos_cache
     dino_id_str = str(dino_id).strip()
     if not dino_id_str:
         return
-    data = load_deleted_dinos()
-    data[dino_id_str] = {
-        "steam_id": str(steam_id).strip(),
-        "deleted_at": datetime.datetime.now().isoformat()
-    }
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    primary_file = os.path.join(base_dir, "deleted_garage_dinos.json")
-    backup_file = os.path.join(base_dir, ".persistent_deleted_garage_dinos.json")
+    with _file_io_lock:
+        data = load_deleted_dinos()
+        data[dino_id_str] = {
+            "steam_id": str(steam_id).strip(),
+            "deleted_at": datetime.datetime.now().isoformat()
+        }
+        _deleted_dinos_cache = dict(data)
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        primary_file = os.path.join(base_dir, "deleted_garage_dinos.json")
+        backup_file = os.path.join(base_dir, ".persistent_deleted_garage_dinos.json")
 
-    for fpath in [primary_file, backup_file]:
-        try:
-            os.makedirs(os.path.dirname(fpath), exist_ok=True)
-            with open(fpath, "w", encoding="utf-8") as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
-        except Exception as e:
-            print(f"[Save Deleted Dino Error {fpath}] {e}")
+        for fpath in [primary_file, backup_file]:
+            try:
+                os.makedirs(os.path.dirname(fpath), exist_ok=True)
+                with open(fpath, "w", encoding="utf-8") as f:
+                    json.dump(data, f, ensure_ascii=False, indent=2)
+            except Exception as e:
+                print(f"[Save Deleted Dino Error {fpath}] {e}")
 
 def remove_from_deleted_dinos(dino_id):
+    global _deleted_dinos_cache
     dino_id_str = str(dino_id).strip()
     if not dino_id_str:
         return
-    data = load_deleted_dinos()
-    if dino_id_str in data:
-        del data[dino_id_str]
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        for fpath in [
-            os.path.join(base_dir, "deleted_garage_dinos.json"),
-            os.path.join(base_dir, ".persistent_deleted_garage_dinos.json")
-        ]:
-            try:
-                if os.path.exists(os.path.dirname(fpath)):
-                    with open(fpath, "w", encoding="utf-8") as f:
-                        json.dump(data, f, ensure_ascii=False, indent=2)
-            except Exception:
-                pass
+    with _file_io_lock:
+        data = load_deleted_dinos()
+        if dino_id_str in data:
+            del data[dino_id_str]
+            _deleted_dinos_cache = dict(data)
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+            for fpath in [
+                os.path.join(base_dir, "deleted_garage_dinos.json"),
+                os.path.join(base_dir, ".persistent_deleted_garage_dinos.json")
+            ]:
+                try:
+                    if os.path.exists(os.path.dirname(fpath)):
+                        with open(fpath, "w", encoding="utf-8") as f:
+                            json.dump(data, f, ensure_ascii=False, indent=2)
+                except Exception:
+                    pass
 
 
 def load_auto_treo_data():
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    primary_file = os.path.join(base_dir, "auto_treo_settings.json")
-    backup_file = os.path.join(base_dir, ".persistent_auto_treo_settings.json")
-    for fpath in [backup_file, primary_file]:
-        if os.path.exists(fpath):
-            try:
-                with open(fpath, "r", encoding="utf-8") as f:
-                    content = json.load(f)
-                    if isinstance(content, dict):
-                        return content
-            except Exception:
-                pass
-    return {"settings": {}, "state": {}}
+    global _auto_treo_cache, _auto_treo_cache_ts
+    now_ts = time.time()
+    with _file_io_lock:
+        if isinstance(_auto_treo_cache, dict) and (now_ts - _auto_treo_cache_ts) < 5.0:
+            return _auto_treo_cache
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        primary_file = os.path.join(base_dir, "auto_treo_settings.json")
+        backup_file = os.path.join(base_dir, ".persistent_auto_treo_settings.json")
+        for fpath in [backup_file, primary_file]:
+            if os.path.exists(fpath):
+                try:
+                    with open(fpath, "r", encoding="utf-8") as f:
+                        content = json.load(f)
+                        if isinstance(content, dict):
+                            _auto_treo_cache = content
+                            _auto_treo_cache_ts = now_ts
+                            return content
+                except Exception:
+                    pass
+        res = {"settings": {}, "state": {}}
+        _auto_treo_cache = res
+        _auto_treo_cache_ts = now_ts
+        return res
 
 def save_auto_treo_data(data):
+    global _auto_treo_cache, _auto_treo_cache_ts
     if not isinstance(data, dict):
         return
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    primary_file = os.path.join(base_dir, "auto_treo_settings.json")
-    backup_file = os.path.join(base_dir, ".persistent_auto_treo_settings.json")
-    for fpath in [primary_file, backup_file]:
-        try:
-            os.makedirs(os.path.dirname(fpath), exist_ok=True)
-            with open(fpath, "w", encoding="utf-8") as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
-        except Exception as e:
-            print(f"[Save Auto Treo Error {fpath}] {e}")
+    with _file_io_lock:
+        _auto_treo_cache = data
+        _auto_treo_cache_ts = time.time()
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        primary_file = os.path.join(base_dir, "auto_treo_settings.json")
+        backup_file = os.path.join(base_dir, ".persistent_auto_treo_settings.json")
+        for fpath in [primary_file, backup_file]:
+            try:
+                os.makedirs(os.path.dirname(fpath), exist_ok=True)
+                with open(fpath, "w", encoding="utf-8") as f:
+                    json.dump(data, f, ensure_ascii=False, indent=2)
+            except Exception as e:
+                print(f"[Save Auto Treo Error {fpath}] {e}")
 
 GARAGE_MUTATIONS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "garage_saved_mutations.json")
 
 def load_garage_saved_mutations():
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    primary_file = os.path.join(base_dir, "garage_saved_mutations.json")
-    backup_file = os.path.join(base_dir, ".persistent_garage_saved_mutations.json")
-    for fpath in [primary_file, backup_file]:
-        if os.path.exists(fpath):
-            try:
-                with open(fpath, "r", encoding="utf-8") as f:
-                    return json.load(f)
-            except Exception:
-                pass
-    return {}
+    global _garage_mutations_cache
+    with _file_io_lock:
+        if isinstance(_garage_mutations_cache, dict):
+            return _garage_mutations_cache
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        primary_file = os.path.join(base_dir, "garage_saved_mutations.json")
+        backup_file = os.path.join(base_dir, ".persistent_garage_saved_mutations.json")
+        for fpath in [primary_file, backup_file]:
+            if os.path.exists(fpath):
+                try:
+                    with open(fpath, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                        if isinstance(data, dict):
+                            _garage_mutations_cache = data
+                            return data
+                except Exception:
+                    pass
+        _garage_mutations_cache = {}
+        return _garage_mutations_cache
 
 def save_garage_saved_mutation(key, mutation_slots):
     if not key or not mutation_slots:
         return
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    primary_file = os.path.join(base_dir, "garage_saved_mutations.json")
-    backup_file = os.path.join(base_dir, ".persistent_garage_saved_mutations.json")
-    data = load_garage_saved_mutations()
-    data[str(key)] = mutation_slots
-    for fpath in [primary_file, backup_file]:
-        try:
-            os.makedirs(os.path.dirname(fpath), exist_ok=True)
-            with open(fpath, "w", encoding="utf-8") as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
-        except Exception:
-            pass
+    with _file_io_lock:
+        data = load_garage_saved_mutations()
+        k_str = str(key)
+        if data.get(k_str) == mutation_slots:
+            return
+        data[k_str] = mutation_slots
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        primary_file = os.path.join(base_dir, "garage_saved_mutations.json")
+        backup_file = os.path.join(base_dir, ".persistent_garage_saved_mutations.json")
+        for fpath in [primary_file, backup_file]:
+            try:
+                os.makedirs(os.path.dirname(fpath), exist_ok=True)
+                with open(fpath, "w", encoding="utf-8") as f:
+                    json.dump(data, f, ensure_ascii=False, indent=2)
+            except Exception:
+                pass
 
 
 def load_garage_dino_snapshots():
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    primary_file = os.path.join(base_dir, "garage_dino_snapshots.json")
-    backup_file = os.path.join(base_dir, ".persistent_garage_dino_snapshots.json")
-    for fpath in [primary_file, backup_file]:
-        if os.path.exists(fpath):
-            try:
-                with open(fpath, "r", encoding="utf-8") as f:
-                    return json.load(f)
-            except Exception:
-                pass
-    return {}
+    global _garage_snapshots_cache
+    with _file_io_lock:
+        if isinstance(_garage_snapshots_cache, dict):
+            return _garage_snapshots_cache
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        primary_file = os.path.join(base_dir, "garage_dino_snapshots.json")
+        backup_file = os.path.join(base_dir, ".persistent_garage_dino_snapshots.json")
+        for fpath in [primary_file, backup_file]:
+            if os.path.exists(fpath):
+                try:
+                    with open(fpath, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                        if isinstance(data, dict):
+                            _garage_snapshots_cache = data
+                            return data
+                except Exception:
+                    pass
+        _garage_snapshots_cache = {}
+        return _garage_snapshots_cache
 
 def load_garage_dino_snapshot(key):
     if not key:
@@ -487,46 +528,49 @@ def load_garage_dino_snapshot(key):
 def save_garage_dino_snapshot(key, snapshot_data):
     if not key or not snapshot_data or not isinstance(snapshot_data, dict):
         return
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    primary_file = os.path.join(base_dir, "garage_dino_snapshots.json")
-    backup_file = os.path.join(base_dir, ".persistent_garage_dino_snapshots.json")
-    data = load_garage_dino_snapshots()
-    k_str = str(key)
-    existing = data.get(k_str)
-    if isinstance(existing, dict):
-        merged = dict(existing)
-        for fk, fv in snapshot_data.items():
-            if fv is not None:
-                if fk == "nutrients" and isinstance(fv, dict):
-                    n_merged = dict(existing.get("nutrients") or {})
-                    for nk, nv in fv.items():
-                        if nv is not None:
-                            val_f = safe_float(nv, -1.0)
-                            if val_f >= 0:
-                                n_merged[nk] = max(0.0, min(100.0, val_f))
-                    merged["nutrients"] = n_merged
-                elif fk == "mutationSlots" and isinstance(fv, dict):
-                    has_any = any(any(m and m != "None" for m in (fv.get(slot) or [])) for slot in ["active", "parent", "elderA", "elderB"])
-                    if has_any or not existing.get("mutationSlots"):
-                        merged["mutationSlots"] = fv
-                else:
-                    merged[fk] = fv
-        if "nutrients" not in merged or not isinstance(merged.get("nutrients"), dict):
-            merged["nutrients"] = {"carb": 100.0, "protein": 100.0, "lipid": 100.0}
-        data[k_str] = merged
-    else:
-        snap_copy = dict(snapshot_data)
-        if "nutrients" not in snap_copy or not isinstance(snap_copy.get("nutrients"), dict):
-            snap_copy["nutrients"] = {"carb": 100.0, "protein": 100.0, "lipid": 100.0}
-        data[k_str] = snap_copy
+    with _file_io_lock:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        primary_file = os.path.join(base_dir, "garage_dino_snapshots.json")
+        backup_file = os.path.join(base_dir, ".persistent_garage_dino_snapshots.json")
+        data = load_garage_dino_snapshots()
+        k_str = str(key)
+        existing = data.get(k_str)
+        if isinstance(existing, dict):
+            merged = dict(existing)
+            for fk, fv in snapshot_data.items():
+                if fv is not None:
+                    if fk == "nutrients" and isinstance(fv, dict):
+                        n_merged = dict(existing.get("nutrients") or {})
+                        for nk, nv in fv.items():
+                            if nv is not None:
+                                val_f = safe_float(nv, -1.0)
+                                if val_f >= 0:
+                                    n_merged[nk] = max(0.0, min(100.0, val_f))
+                        merged["nutrients"] = n_merged
+                    elif fk == "mutationSlots" and isinstance(fv, dict):
+                        has_any = any(any(m and m != "None" for m in (fv.get(slot) or [])) for slot in ["active", "parent", "elderA", "elderB"])
+                        if has_any or not existing.get("mutationSlots"):
+                            merged["mutationSlots"] = fv
+                    else:
+                        merged[fk] = fv
+            if "nutrients" not in merged or not isinstance(merged.get("nutrients"), dict):
+                merged["nutrients"] = {"carb": 100.0, "protein": 100.0, "lipid": 100.0}
+            if merged == existing:
+                return
+            data[k_str] = merged
+        else:
+            snap_copy = dict(snapshot_data)
+            if "nutrients" not in snap_copy or not isinstance(snap_copy.get("nutrients"), dict):
+                snap_copy["nutrients"] = {"carb": 100.0, "protein": 100.0, "lipid": 100.0}
+            data[k_str] = snap_copy
 
-    for fpath in [primary_file, backup_file]:
-        try:
-            os.makedirs(os.path.dirname(fpath), exist_ok=True)
-            with open(fpath, "w", encoding="utf-8") as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
-        except Exception:
-            pass
+        for fpath in [primary_file, backup_file]:
+            try:
+                os.makedirs(os.path.dirname(fpath), exist_ok=True)
+                with open(fpath, "w", encoding="utf-8") as f:
+                    json.dump(data, f, ensure_ascii=False, indent=2)
+            except Exception:
+                pass
 
 def get_user_gift_file():
     return os.path.join(os.path.dirname(os.path.abspath(__file__)), "user_gift_dinos.json")
@@ -616,37 +660,46 @@ def _get_claimed_quests_paths():
     return [backup_file, primary_file]
 
 def load_claimed_quests():
-    paths = _get_claimed_quests_paths()
-    merged = {}
-    for fpath in paths:
-        if os.path.exists(fpath):
-            try:
-                with open(fpath, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                    if isinstance(data, dict):
-                        for sid, val in data.items():
-                            sid_str = str(sid).strip()
-                            if sid_str not in merged:
-                                merged[sid_str] = val
-                            elif isinstance(val, dict) and isinstance(merged[sid_str], dict):
-                                merged[sid_str].update(val)
-                            elif isinstance(val, list) and isinstance(merged[sid_str], list):
-                                for item in val:
-                                    if item not in merged[sid_str]:
-                                        merged[sid_str].append(item)
-            except Exception:
-                pass
-    return merged
+    global _claimed_quests_cache
+    with _file_io_lock:
+        if isinstance(_claimed_quests_cache, dict):
+            return _claimed_quests_cache
+        paths = _get_claimed_quests_paths()
+        merged = {}
+        for fpath in paths:
+            if os.path.exists(fpath):
+                try:
+                    with open(fpath, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                        if isinstance(data, dict):
+                            for sid, val in data.items():
+                                sid_str = str(sid).strip()
+                                if sid_str not in merged:
+                                    merged[sid_str] = val
+                                elif isinstance(val, dict) and isinstance(merged[sid_str], dict):
+                                    merged[sid_str].update(val)
+                                elif isinstance(val, list) and isinstance(merged[sid_str], list):
+                                    for item in val:
+                                        if item not in merged[sid_str]:
+                                            merged[sid_str].append(item)
+                except Exception:
+                    pass
+        _claimed_quests_cache = merged
+        return _claimed_quests_cache
 
 def save_claimed_quests(data):
-    paths = _get_claimed_quests_paths()
-    for fpath in paths:
-        try:
-            os.makedirs(os.path.dirname(fpath), exist_ok=True)
-            with open(fpath, "w", encoding="utf-8") as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
-        except Exception as e:
-            print(f"Error saving claimed_quests to {fpath}: {e}")
+    global _claimed_quests_cache
+    with _file_io_lock:
+        if isinstance(data, dict):
+            _claimed_quests_cache = data
+        paths = _get_claimed_quests_paths()
+        for fpath in paths:
+            try:
+                os.makedirs(os.path.dirname(fpath), exist_ok=True)
+                with open(fpath, "w", encoding="utf-8") as f:
+                    json.dump(data, f, ensure_ascii=False, indent=2)
+            except Exception as e:
+                print(f"Error saving claimed_quests to {fpath}: {e}")
 
 
 CLAIMED_STARTER_FILE = os.path.join(os.path.dirname(__file__), "claimed_starter.json")
@@ -748,11 +801,12 @@ def save_daily_dino_claims(data):
             except Exception as e:
                 print(f"Error saving daily_dino_claims to {fpath}: {e}")
 
-def _sync_claims_from_islepilot_wallet(steam_id, claimed_db=None):
+def _sync_claims_from_islepilot_wallet(steam_id, claimed_db=None, force=False):
     """
     Kéo lịch sử giao dịch từ IslePilot Cloud Wallet để đồng bộ và khôi phục
     toàn bộ trạng thái nhận thưởng nhiệm vụ của người chơi ngay cả khi máy chủ
     vừa restart hoặc deploy lại bản mới (bảo vệ tuyệt đối khỏi lỗi nhận trùng thưởng).
+    Có cache 300s theo từng steam_id để tránh gọi lặp /wallet trong vòng lặp quests.
     """
     sid = str(steam_id).strip()
     if not sid:
@@ -767,10 +821,23 @@ def _sync_claims_from_islepilot_wallet(steam_id, claimed_db=None):
             for old_id in old_list:
                 claimed_db[sid][str(old_id)] = {"quest_id": str(old_id), "period_key": "", "claimed_at": None}
 
+    now_ts = time.time()
+    if sid in getattr(DinoRequestHandler, "_not_found_steam_ids", {}):
+        return claimed_db.get(sid, {})
+
+    last_sync = _wallet_quest_sync_ts.get(sid, 0.0)
+    if not force and (now_ts - last_sync) < 300.0:
+        return claimed_db.get(sid, {})
+
+    if not force and now_ts < getattr(DinoRequestHandler, "_rate_limit_until", 0.0):
+        return claimed_db.get(sid, {})
+
     api_key = config.get("ISLEPILOT_API_KEY", "").strip()
     server_id = config.get("SERVER_ID", "cmv3zzfix02g3pj01yay0hw4g")
     if not api_key:
         return claimed_db.get(sid, {})
+
+    _wallet_quest_sync_ts[sid] = now_ts
 
     try:
         url = f"https://islepilot.eu/api/v1/players/{sid}/wallet?serverId={server_id}"
@@ -805,6 +872,9 @@ def _sync_claims_from_islepilot_wallet(steam_id, claimed_db=None):
                             has_new = True
             if has_new:
                 save_claimed_quests(claimed_db)
+    except urllib.error.HTTPError as e:
+        if e.code == 429:
+            DinoRequestHandler._rate_limit_until = time.time() + 5.0
     except Exception:
         pass
 
@@ -968,6 +1038,10 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
     _killfeed_cached_data = None
     _islepilot_cache = {}
     _persistent_player_garage = {}
+    _cache_lock = threading.RLock()
+    _inflight_locks = {}
+    _rate_limit_until = 0.0
+    _admin_discord_cache = {}
 
     def __init__(self, *args, **kwargs):
 
@@ -1015,7 +1089,6 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
         # 1. Kiểm tra tài khoản Steam ID có quyền Admin
         actual_steam_id = None
-        # Chỉ lấy steam_id từ query nếu route KHÔNG PHẢI là thao tác nhắm vào target player (player-detail / player-action)
         if not (self.path.startswith("/api/admin/player-detail") or self.path.startswith("/api/admin/player-action")):
             actual_steam_id = q_params.get("steam_id", [None])[0]
 
@@ -1025,24 +1098,34 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 actual_steam_id = match.group(1)
 
         if actual_steam_id:
-            actual_steam_id = str(actual_steam_id)
+            actual_steam_id = urllib.parse.unquote(str(actual_steam_id)).split(":", 1)[0].strip()
             if actual_steam_id in blocked_admin_ids:
                 return False, None
             if actual_steam_id in admin_steam_ids:
                 return True, f"steam:{actual_steam_id}"
-            
-            # Kiểm tra tài khoản Discord liên kết với Steam ID này từ IslePilot
-            try:
-                player_info = self.fetch_islepilot(f"/players/{actual_steam_id}")
+
+            # Kiểm tra cache kết quả Discord Admin (TTL 600s) để KHÔNG phải gọi API IslePilot liên tục cho người chơi thường
+            now_ts = time.time()
+            cached_adm = DinoRequestHandler._admin_discord_cache.get(actual_steam_id)
+            if cached_adm and (now_ts - cached_adm[0]) < 600.0:
+                if cached_adm[1]:
+                    return True, cached_adm[2]
+            else:
+                # Chỉ đọc từ bộ nhớ cache _islepilot_cache nếu đã có sẵn, tránh gọi mạng mới cho mỗi request khách
+                player_info = None
+                cache_entry = DinoRequestHandler._islepilot_cache.get(f"/players/{actual_steam_id}")
+                if cache_entry:
+                    player_info = cache_entry[1]
                 if player_info and isinstance(player_info, dict):
                     discord_info = player_info.get("discord") or {}
                     discord_id = str(discord_info.get("id", ""))
                     if discord_id and discord_id in blocked_admin_ids:
+                        DinoRequestHandler._admin_discord_cache[actual_steam_id] = (now_ts, False, None)
                         return False, None
                     if discord_id and discord_id in admin_discord_ids:
+                        DinoRequestHandler._admin_discord_cache[actual_steam_id] = (now_ts, True, f"discord:{discord_id}")
                         return True, f"discord:{discord_id}"
-            except Exception:
-                pass
+                    DinoRequestHandler._admin_discord_cache[actual_steam_id] = (now_ts, False, None)
 
         # 2. Kiểm tra tài khoản Discord ID truyền trực tiếp qua tham số hoặc cookie
         discord_id_param = q_params.get("discord_id", [None])[0] or self.headers.get("X-Admin-Discord-Id")
@@ -1055,8 +1138,6 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             return False, None
         if discord_id_param and str(discord_id_param) in admin_discord_ids:
             return True, f"discord:{discord_id_param}"
-
-        return False, None
 
         return False, None
 
@@ -2768,6 +2849,61 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 
         t = threading.Thread(target=worker, daemon=True)
         t.start()
+    _outbound_semaphore = threading.Semaphore(4)
+    _not_found_steam_ids = {}
+    _live_players_map = {}
+    _live_players_ts = 0.0
+    _leaderboard_map = {}
+    _leaderboard_ts = 0.0
+
+    def _get_cache_ttl(self, clean_key):
+        if clean_key.startswith("/players/"):
+            if "/garage" in clean_key:
+                return 25.0
+            if "/quests" in clean_key:
+                return 25.0
+            if "/skins" in clean_key or "/warnings" in clean_key or "/carcass" in clean_key:
+                return 45.0
+            if "/wallet" in clean_key:
+                return 30.0
+            return 12.0
+        elif clean_key == "/players":
+            return 10.0
+        elif clean_key == "/server":
+            return 12.0
+        elif clean_key == "/leaderboard":
+            return 20.0
+        elif clean_key in ["/killfeed", "/combat-log"]:
+            return 6.0
+        elif clean_key in ["/teleport/locations", "/shop/skins", "/shop/dinos", "/events"]:
+            return 60.0
+        elif clean_key == "/growth-overrides":
+            return 20.0
+        return 10.0
+
+    def _short_circuit_not_found_player(self, clean_key):
+        if not clean_key.startswith("/players/"):
+            return False, None
+        parts = clean_key.split("/")
+        if len(parts) < 3:
+            return False, None
+        target_sid = parts[2].strip()
+        nf_ts = DinoRequestHandler._not_found_steam_ids.get(target_sid)
+        if nf_ts and (time.time() - nf_ts) < 120.0:
+            if len(parts) == 3:
+                return True, {}
+            sub = parts[3]
+            if sub == "garage":
+                return True, {"garage": []}
+            if sub == "warnings":
+                return True, {"warnings": [], "activeCount": 0}
+            if sub == "skins":
+                return True, {"skins": []}
+            if sub == "quests":
+                return True, None
+            return True, {}
+        return False, None
+
     def fetch_islepilot(self, endpoint, method="GET", body_data=None, bypass_cache=False):
         api_key = config.get("ISLEPILOT_API_KEY", "").strip()
         base_url = "https://islepilot.eu/api/v1"
@@ -2778,36 +2914,61 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         clean_key = endpoint.split("?")[0].strip()
         now_ts = time.time()
 
-        if not hasattr(DinoRequestHandler, "_islepilot_cache"):
-            DinoRequestHandler._islepilot_cache = {
-                "/teleport/locations": (time.time(), {"locations": list(DinoRequestHandler.DEFAULT_TELEPORT_LOCATIONS)})
-            }
+        # Chuẩn hóa /players thành /players?limit=250 để dùng chung 1 cache duy nhất cho cả Map, BXH, Admin, AutoTreo
+        if method == "GET" and clean_key == "/players" and "limit=" not in endpoint:
+            endpoint = "/players?limit=250"
 
-        # 1. Kiểm tra cache GET để tránh bị IslePilot rate-limit (HTTP 429)
-        ttl = 0
-        if method == "GET" and not bypass_cache:
-            if clean_key.startswith("/players/"):
-                if "/garage" in clean_key:
-                    ttl = 15.0  # Cache 15s cho garage để giảm 80% gánh nặng gọi IslePilot liên tục
-                else:
-                    ttl = 4.0  # Cache 4s cho thông tin player / ví
-            elif clean_key == "/players":
-                ttl = 6.0  # Cache 6s cho danh sách players
-            elif clean_key == "/server":
-                ttl = 8.0  # Cache 8s cho trạng thái server
-            elif clean_key in ["/killfeed", "/combat-log"]:
-                ttl = 3.5  # Cache 3.5s cho combat / killfeed
-            elif clean_key == "/teleport/locations":
-                ttl = 60.0
-            elif clean_key == "/growth-overrides":
-                ttl = 5.0
-            else:
-                ttl = 3.0
+        if not hasattr(DinoRequestHandler, "_islepilot_cache") or "/teleport/locations" not in DinoRequestHandler._islepilot_cache:
+            if not hasattr(DinoRequestHandler, "_islepilot_cache"):
+                DinoRequestHandler._islepilot_cache = {}
+            DinoRequestHandler._islepilot_cache["/teleport/locations"] = (
+                now_ts,
+                {"locations": list(DinoRequestHandler.DEFAULT_TELEPORT_LOCATIONS)}
+            )
 
-            if ttl > 0 and clean_key in DinoRequestHandler._islepilot_cache:
-                cached_time, cached_val = DinoRequestHandler._islepilot_cache[clean_key]
-                if (now_ts - cached_time) < ttl:
-                    return cached_val
+        ttl = self._get_cache_ttl(clean_key) if method == "GET" else 0
+
+        # 1. Kiểm tra nhanh cho player không tồn tại trên IslePilot (đã trả về 404 gần đây)
+        if method == "GET":
+            is_nf, nf_val = self._short_circuit_not_found_player(clean_key)
+            if is_nf:
+                return nf_val
+
+        # 2. Kiểm tra cache GET nhanh
+        if method == "GET" and not bypass_cache and ttl > 0:
+            cache_entry = DinoRequestHandler._islepilot_cache.get(clean_key)
+            if cache_entry and (now_ts - cache_entry[0]) < ttl:
+                return cache_entry[1]
+
+        # Nếu là truy vấn con (/garage, /quests, /warnings) của 1 player chưa rõ có trên server không,
+        # kiểm tra hồ sơ gốc /players/{sid} trước để nếu 404 thì chặn luôn toàn bộ truy vấn con
+        if method == "GET" and clean_key.startswith("/players/"):
+            parts = clean_key.split("/")
+            if len(parts) > 3:
+                target_sid = parts[2].strip()
+                if (
+                    target_sid
+                    and target_sid != "76561199483156684"
+                    and f"/players/{target_sid}" not in DinoRequestHandler._islepilot_cache
+                    and target_sid not in DinoRequestHandler._not_found_steam_ids
+                ):
+                    self.fetch_islepilot(f"/players/{target_sid}")
+                    is_nf, nf_val = self._short_circuit_not_found_player(clean_key)
+                    if is_nf:
+                        return nf_val
+
+        # 3. Cơ chế In-Flight Lock cho GET: Chống 20-50 luồng cùng bắn 1 endpoint giống hệt nhau
+        key_lock = None
+        if method == "GET":
+            with DinoRequestHandler._cache_lock:
+                if not bypass_cache and ttl > 0:
+                    cache_entry = DinoRequestHandler._islepilot_cache.get(clean_key)
+                    if cache_entry and (time.time() - cache_entry[0]) < ttl:
+                        return cache_entry[1]
+                key_lock = DinoRequestHandler._inflight_locks.get(clean_key)
+                if key_lock is None:
+                    key_lock = threading.Lock()
+                    DinoRequestHandler._inflight_locks[clean_key] = key_lock
 
         if "serverId=" not in endpoint:
             sep = "&" if "?" in endpoint else "?"
@@ -2818,80 +2979,158 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         if body_data is not None:
             data_bytes = json.dumps(body_data).encode("utf-8")
 
-        max_attempts = 3 if method == "POST" else 2
-        for attempt in range(max_attempts):
-            req = urllib.request.Request(url, data=data_bytes, method=method)
-            req.add_header("Authorization", f"Bearer {api_key}")
-            req.add_header("x-api-key", api_key)
-            req.add_header("User-Agent", "3MGAMING-Portal/1.0")
-            if data_bytes is not None:
-                req.add_header("Content-Type", "application/json")
+        def _do_request():
+            # Double-check sau khi vào lock: nếu luồng trước vừa lấy xong thì trả về ngay trong 0ms!
+            if method == "GET":
+                is_nf2, nf_val2 = self._short_circuit_not_found_player(clean_key)
+                if is_nf2:
+                    return nf_val2
+                cache_entry2 = DinoRequestHandler._islepilot_cache.get(clean_key)
+                effective_ttl = ttl if not bypass_cache else 2.0
+                if cache_entry2 and (time.time() - cache_entry2[0]) < effective_ttl:
+                    return cache_entry2[1]
 
-            try:
-                with urllib.request.urlopen(req, timeout=8) as response:
-                    if response.status in [200, 201]:
-                        res_json = json.loads(response.read().decode("utf-8"))
+                # Circuit Breaker: Nếu IslePilot đang báo 429, trả về ngay dữ liệu cache cũ hoặc dữ liệu từ _live_players_map
+                if time.time() < DinoRequestHandler._rate_limit_until:
+                    if cache_entry2:
+                        return cache_entry2[1]
+                    if clean_key.startswith("/players/") and len(clean_key.split("/")) == 3:
+                        t_sid = clean_key.split("/")[2].strip()
+                        if t_sid in DinoRequestHandler._live_players_map:
+                            return DinoRequestHandler._live_players_map[t_sid]
+                    return None
+
+            max_attempts = 2 if method == "POST" else 1
+            for attempt in range(max_attempts):
+                req = urllib.request.Request(url, data=data_bytes, method=method)
+                req.add_header("Authorization", f"Bearer {api_key}")
+                req.add_header("x-api-key", api_key)
+                req.add_header("User-Agent", "3MGAMING-Portal/2.0")
+                if data_bytes is not None:
+                    req.add_header("Content-Type", "application/json")
+
+                try:
+                    with DinoRequestHandler._outbound_semaphore:
+                        with urllib.request.urlopen(req, timeout=6) as response:
+                            if response.status in [200, 201]:
+                                res_json = json.loads(response.read().decode("utf-8"))
+                                cur_t = time.time()
+                                if method == "GET":
+                                    DinoRequestHandler._islepilot_cache[clean_key] = (cur_t, res_json)
+                                    if clean_key == "/players" and isinstance(res_json, dict):
+                                        p_list = res_json.get("players") or []
+                                        DinoRequestHandler._live_players_map = {
+                                            str(p.get("steamId")): p for p in p_list if isinstance(p, dict) and p.get("steamId")
+                                        }
+                                        DinoRequestHandler._live_players_ts = cur_t
+                                        # Đồng bộ bổ trợ cho các player đang online chưa có cache riêng
+                                        for p_item in p_list:
+                                            if isinstance(p_item, dict) and p_item.get("steamId"):
+                                                p_sid = str(p_item.get("steamId")).strip()
+                                                DinoRequestHandler._not_found_steam_ids.pop(p_sid, None)
+                                    elif clean_key == "/leaderboard" and isinstance(res_json, dict):
+                                        e_list = res_json.get("entries") or []
+                                        DinoRequestHandler._leaderboard_map = {
+                                            str(e.get("steamId")): e for e in e_list if isinstance(e, dict) and e.get("steamId")
+                                        }
+                                        DinoRequestHandler._leaderboard_ts = cur_t
+                                else:
+                                    # Khi gọi POST: CHỈ xóa cache của đúng người chơi chịu tác động, KHÔNG xóa cache của người chơi khác!
+                                    target_sid = None
+                                    if clean_key.startswith("/players/"):
+                                        parts_p = clean_key.split("/")
+                                        if len(parts_p) >= 3:
+                                            target_sid = parts_p[2].strip()
+                                    elif isinstance(body_data, dict) and body_data.get("steamId"):
+                                        target_sid = str(body_data.get("steamId")).strip()
+
+                                    if target_sid:
+                                        DinoRequestHandler._not_found_steam_ids.pop(target_sid, None)
+                                        prefix = f"/players/{target_sid}"
+                                        for k_del in list(DinoRequestHandler._islepilot_cache.keys()):
+                                            if k_del == prefix or k_del.startswith(prefix + "/"):
+                                                DinoRequestHandler._islepilot_cache.pop(k_del, None)
+                                    if isinstance(body_data, dict) and body_data.get("action") == "setgrowth":
+                                        DinoRequestHandler._islepilot_cache.pop("/growth-overrides", None)
+                                return res_json
+                except urllib.error.HTTPError as e:
+                    if e.code == 404 and method == "GET":
+                        cur_t = time.time()
+                        if clean_key.startswith("/players/"):
+                            parts_nf = clean_key.split("/")
+                            if len(parts_nf) == 3:
+                                t_sid = parts_nf[2].strip()
+                                DinoRequestHandler._not_found_steam_ids[t_sid] = cur_t
+                                DinoRequestHandler._islepilot_cache[clean_key] = (cur_t, {})
+                                return {}
+                            elif "/garage" in clean_key:
+                                DinoRequestHandler._islepilot_cache[clean_key] = (cur_t, {"garage": []})
+                                return {"garage": []}
+                            elif "/warnings" in clean_key:
+                                DinoRequestHandler._islepilot_cache[clean_key] = (cur_t, {"warnings": [], "activeCount": 0})
+                                return {"warnings": [], "activeCount": 0}
+                        DinoRequestHandler._islepilot_cache[clean_key] = (cur_t, {})
+                        return {}
+
+                    if e.code == 429:
+                        retry_after = 2.5
+                        try:
+                            ra_hdr = e.headers.get("Retry-After") if e.headers else None
+                            if ra_hdr:
+                                retry_after = min(5.0, max(1.0, float(ra_hdr)))
+                        except Exception:
+                            pass
+                        DinoRequestHandler._rate_limit_until = time.time() + retry_after
                         if method == "GET":
-                            DinoRequestHandler._islepilot_cache[clean_key] = (time.time(), res_json)
-                        else:
-                            for k_del in list(DinoRequestHandler._islepilot_cache.keys()):
-                                if k_del.startswith("/players"):
-                                    DinoRequestHandler._islepilot_cache.pop(k_del, None)
-                        return res_json
-            except urllib.error.HTTPError as e:
-                if e.code in [429, 500, 502, 503, 504] and attempt < max_attempts - 1:
-                    time.sleep(0.8 * (attempt + 1))
-                    continue
-                if method == "GET" and clean_key in DinoRequestHandler._islepilot_cache:
-                    _, fallback_val = DinoRequestHandler._islepilot_cache[clean_key]
-                    return fallback_val
-                if method != "GET":
-                    try:
-                        err_content = e.read().decode("utf-8")
-                        return json.loads(err_content)
-                    except Exception:
-                        pass
-                print(f"[IslePilot API] Gọi {url} HTTP {e.code}")
-                break
-            except Exception as e:
-                if attempt < max_attempts - 1:
-                    time.sleep(0.8 * (attempt + 1))
-                    continue
-                if method == "GET" and clean_key in DinoRequestHandler._islepilot_cache:
-                    _, fallback_val = DinoRequestHandler._islepilot_cache[clean_key]
-                    return fallback_val
-                print(f"[IslePilot API] Gọi {url} thất bại: {e}")
-                break
+                            if clean_key in DinoRequestHandler._islepilot_cache:
+                                return DinoRequestHandler._islepilot_cache[clean_key][1]
+                            if clean_key.startswith("/players/") and len(clean_key.split("/")) == 3:
+                                t_sid = clean_key.split("/")[2].strip()
+                                if t_sid in DinoRequestHandler._live_players_map:
+                                    return DinoRequestHandler._live_players_map[t_sid]
+                            print(f"[IslePilot API] Rate limited (429) on GET {clean_key}, activar cooldown {retry_after}s")
+                            break
 
-        return None
+                    if e.code in [429, 500, 502, 503, 504] and attempt < max_attempts - 1:
+                        time.sleep(0.8 * (attempt + 1))
+                        continue
+                    if method == "GET" and clean_key in DinoRequestHandler._islepilot_cache:
+                        return DinoRequestHandler._islepilot_cache[clean_key][1]
+                    if method != "GET":
+                        try:
+                            err_content = e.read().decode("utf-8")
+                            return json.loads(err_content)
+                        except Exception:
+                            pass
+                    print(f"[IslePilot API] Gọi {url} HTTP {e.code}")
+                    break
+                except Exception as e:
+                    if attempt < max_attempts - 1:
+                        time.sleep(0.5 * (attempt + 1))
+                        continue
+                    if method == "GET" and clean_key in DinoRequestHandler._islepilot_cache:
+                        return DinoRequestHandler._islepilot_cache[clean_key][1]
+                    print(f"[IslePilot API] Gọi {url} thất bại: {e}")
+                    break
+            return None
+
+        if key_lock is not None:
+            with key_lock:
+                return _do_request()
+        return _do_request()
 
     def get_active_steam_id(self):
-
         query = urllib.parse.urlparse(self.path).query
-
         q_params = urllib.parse.parse_qs(query)
-
         active_steam_id = q_params.get("steam_id", [None])[0]
-
         if not active_steam_id:
-
             cookie_header = self.headers.get("Cookie", "")
-
             match = re.search(r"steam_user=([^;:]+)", cookie_header)
-
             if match:
-
                 active_steam_id = match.group(1)
-
-        if not active_steam_id:
-
-            players_data = self.fetch_islepilot("/players")
-
-            if players_data and "players" in players_data and len(players_data["players"]) > 0:
-
-                active_steam_id = players_data["players"][0].get("steamId")
-
-        return active_steam_id or "76561199259679997"
+        if active_steam_id:
+            active_steam_id = urllib.parse.unquote(str(active_steam_id)).split(":", 1)[0].strip()
+        return active_steam_id or ""
 
     # --- Steam OpenID Authentication Logic ---
 
@@ -3072,14 +3311,14 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
         balance = 0
         if is_logged_in and steam_id:
-            balance = self._get_player_xu_balance(steam_id)
-            if not name:
-                try:
-                    p_info = self.fetch_islepilot(f"/players/{steam_id}")
-                    if isinstance(p_info, dict) and p_info.get("name"):
-                        name = p_info.get("name")
-                except Exception:
-                    pass
+            p_info = None
+            try:
+                p_info = self.fetch_islepilot(f"/players/{steam_id}")
+                if not name and isinstance(p_info, dict) and p_info.get("name"):
+                    name = p_info.get("name")
+            except Exception:
+                pass
+            balance = self._get_player_xu_balance(steam_id, player_info=p_info)
         self.send_json_response({
             "logged_in": is_logged_in,
             "steam_id": steam_id if is_logged_in else None,
@@ -3207,44 +3446,53 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         cookie_steam_id = cookie_match.group(1).strip() if cookie_match else None
 
         steam_id = passed_steam_id or cookie_steam_id or self.get_active_steam_id()
+        if steam_id:
+            steam_id = urllib.parse.unquote(str(steam_id)).split(":", 1)[0].strip()
         is_logged_in = bool(passed_steam_id or cookie_steam_id)
 
         if not is_logged_in or not steam_id:
             self.send_json_response({
                 "ok": False,
                 "logged_in": False,
-                "message": "Vui l?ng ??ng nh?p Steam ?? xem th?ng tin kh?ng long!"
+                "message": "Vui lòng đăng nhập Steam để xem thông tin khủng long!"
             })
             return
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
-            f_player = executor.submit(self.fetch_islepilot, f"/players/{steam_id}")
-            f_warnings = executor.submit(self.fetch_islepilot, f"/players/{steam_id}/warnings")
-            f_garage = executor.submit(self.fetch_islepilot, f"/players/{steam_id}/garage")
-            f_growth = executor.submit(self.fetch_islepilot, "/growth-overrides")
-
-            player_data = f_player.result() or {}
-            warnings_data = f_warnings.result() or {}
-            garage_data = f_garage.result() or {}
-            growth_data = f_growth.result() or {}
-
-        growth_overrides_list = growth_data.get("overrides", []) if isinstance(growth_data, dict) else []
-        growth_state = "resumed"
-        for ov in growth_overrides_list:
-            if isinstance(ov, dict) and str(ov.get("steamId", "")).strip() == str(steam_id).strip():
-                growth_state = str(ov.get("state", "resumed")).strip().lower()
-                break
-        is_growth_frozen = (growth_state == "frozen")
-
+        # 1. Lấy thông tin người chơi trước (tái sử dụng cache từ /api/player/me nếu vừa gọi)
+        player_data = self.fetch_islepilot(f"/players/{steam_id}") or {}
         if not isinstance(player_data, dict):
             player_data = {}
-        if not isinstance(warnings_data, dict):
-            warnings_data = {}
-
-        balance = self._get_player_xu_balance(steam_id)
 
         species = player_data.get("species")
         has_active_dino = bool(species)
+
+        # 2. Chỉ kiểm tra growth-overrides (1 request dùng chung toàn server) khi người chơi thực sự đang có khủng long sống
+        growth_state = "resumed"
+        if has_active_dino:
+            growth_data = self.fetch_islepilot("/growth-overrides") or {}
+            growth_overrides_list = growth_data.get("overrides", []) if isinstance(growth_data, dict) else []
+            for ov in growth_overrides_list:
+                if isinstance(ov, dict) and str(ov.get("steamId", "")).strip() == str(steam_id).strip():
+                    growth_state = str(ov.get("state", "resumed")).strip().lower()
+                    break
+        is_growth_frozen = (growth_state == "frozen")
+
+        # 3. Warnings: đọc từ cache nếu có, tránh gọi API /warnings liên tục mỗi 4s cho từng người chơi
+        w_cache = DinoRequestHandler._islepilot_cache.get(f"/players/{steam_id}/warnings")
+        warnings_data = w_cache[1] if (w_cache and isinstance(w_cache[1], dict)) else {}
+
+        # 4. Garage count: ưu tiên lấy từ cache hoặc persistent_player_garage để giảm tải API
+        g_cache = DinoRequestHandler._islepilot_cache.get(f"/players/{steam_id}/garage")
+        if g_cache and isinstance(g_cache[1], dict):
+            garage_data = g_cache[1]
+        elif str(steam_id) in DinoRequestHandler._persistent_player_garage:
+            garage_data = DinoRequestHandler._persistent_player_garage[str(steam_id)]
+        elif not has_active_dino:
+            garage_data = self.fetch_islepilot(f"/players/{steam_id}/garage") or {}
+        else:
+            garage_data = {}
+
+        balance = self._get_player_xu_balance(steam_id, player_info=player_data)
 
         garage_list = []
         if isinstance(garage_data, dict):
@@ -3334,6 +3582,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
         warnings_list = warnings_data.get("warnings") or []
         active_warning_count = warnings_data.get("activeCount", len(warnings_list))
+        g_tier, g_max_slots, g_tier_name = get_player_garage_tier_and_slots(steam_id)
 
         self.send_json_response({
             "ok": True,
@@ -3348,9 +3597,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             "last_seen_at": player_data.get("lastSeenAt"),
             "has_active_dino": has_active_dino,
             "garage_count": len(valid_garage_list),
-            "garage_tier": get_player_garage_tier_and_slots(steam_id)[0],
-            "garage_max_slots": get_player_garage_tier_and_slots(steam_id)[1],
-            "garage_tier_name": get_player_garage_tier_and_slots(steam_id)[2],
+            "garage_tier": g_tier,
+            "garage_max_slots": g_max_slots,
+            "garage_tier_name": g_tier_name,
             "dino": {
                 "species": species,
                 "female": bool(player_data.get("female", False)),
@@ -3400,6 +3649,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         cookie_steam_id = cookie_match.group(1).strip() if cookie_match else None
 
         steam_id = passed_steam_id or cookie_steam_id or self.get_active_steam_id()
+        if steam_id:
+            steam_id = urllib.parse.unquote(str(steam_id)).split(":", 1)[0].strip()
         is_logged_in = bool(passed_steam_id or cookie_steam_id)
 
         if not is_logged_in or not steam_id:
@@ -3425,7 +3676,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             "logs": []
         })
 
-        player_data = self.fetch_islepilot(f"/players/{steam_id}", bypass_cache=True) or {}
+        player_data = self.fetch_islepilot(f"/players/{steam_id}") or {}
         has_active_dino = bool(player_data.get("species"))
         dino_info = None
         if has_active_dino:
@@ -3450,7 +3701,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             }
 
         tier_num, max_slots, tier_name = get_player_garage_tier_and_slots(steam_id)
-        cur_garage = self.fetch_islepilot(f"/players/{steam_id}/garage", bypass_cache=True) or {}
+        cur_garage = self.fetch_islepilot(f"/players/{steam_id}/garage") or {}
         cur_dinos = cur_garage.get("garage", []) if isinstance(cur_garage, dict) else []
         deleted_map = load_deleted_dinos()
         valid_cur = [d for d in cur_dinos if str(d.get("id")) not in deleted_map]
@@ -3545,20 +3796,33 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         if not settings_map:
             return
 
+        active_users = [
+            (str(sid).strip(), st)
+            for sid, st in settings_map.items()
+            if isinstance(st, dict) and (st.get("auto_mutation_enabled") or st.get("auto_garage_enabled"))
+        ]
+        if not active_users:
+            return
+
+        # Gọi duy nhất 1 request /players để biết những ai thực sự đang online trong game
+        online_resp = self.fetch_islepilot("/players") or {}
+        online_players = online_resp.get("players", []) if isinstance(online_resp, dict) else []
+        online_map = {str(p.get("steamId")).strip(): p for p in online_players if isinstance(p, dict) and p.get("steamId")}
+        if not online_map:
+            return
+
         state_map = data.setdefault("state", {})
         needs_save = False
 
-        for steam_id, settings in settings_map.items():
-            if not isinstance(settings, dict):
+        for steam_id, settings in active_users:
+            live_p = online_map.get(steam_id)
+            if not live_p or not live_p.get("online") or not live_p.get("species"):
                 continue
             auto_mut = bool(settings.get("auto_mutation_enabled"))
             auto_gar = bool(settings.get("auto_garage_enabled"))
 
-            if not auto_mut and not auto_gar:
-                continue
-
             try:
-                player_data = self.fetch_islepilot(f"/players/{steam_id}", bypass_cache=True)
+                player_data = self.fetch_islepilot(f"/players/{steam_id}") or live_p
                 if not player_data or not isinstance(player_data, dict):
                     continue
                 if not player_data.get("online") or not player_data.get("species"):
@@ -4145,37 +4409,51 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             except Exception as e:
                 print(f"[Arena DB Save Error] {e}")
 
-    def _get_cached_player_balance(self, steam_id):
-        steam_id = str(steam_id).strip()
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        cache_file = os.path.join(base_dir, "player_wallet_cache.json")
-        if os.path.exists(cache_file):
-            try:
-                with open(cache_file, "r", encoding="utf-8") as f:
-                    cache_data = json.load(f)
-                    return int(cache_data.get(steam_id, 0))
-            except Exception:
-                pass
-        return 0
+    _wallet_cache_lock = threading.RLock()
+    _wallet_memory_cache = None
 
-    def _update_cached_player_balance(self, steam_id, balance):
-        steam_id = str(steam_id).strip()
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        for cpath in [os.path.join(base_dir, "player_wallet_cache.json"), os.path.join(base_dir, ".persistent_player_wallet_cache.json")]:
-            try:
-                cache_data = {}
+    def _load_wallet_memory_cache(self):
+        with DinoRequestHandler._wallet_cache_lock:
+            if isinstance(DinoRequestHandler._wallet_memory_cache, dict):
+                return DinoRequestHandler._wallet_memory_cache
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+            for cpath in [os.path.join(base_dir, ".persistent_player_wallet_cache.json"), os.path.join(base_dir, "player_wallet_cache.json")]:
                 if os.path.exists(cpath):
                     try:
                         with open(cpath, "r", encoding="utf-8") as f:
-                            cache_data = json.load(f)
+                            data = json.load(f)
+                            if isinstance(data, dict):
+                                DinoRequestHandler._wallet_memory_cache = data
+                                return data
                     except Exception:
-                        cache_data = {}
-                cache_data[steam_id] = int(balance)
-                os.makedirs(os.path.dirname(cpath), exist_ok=True)
-                with open(cpath, "w", encoding="utf-8") as f:
-                    json.dump(cache_data, f, indent=2, ensure_ascii=False)
-            except Exception:
-                pass
+                        pass
+            DinoRequestHandler._wallet_memory_cache = {}
+            return DinoRequestHandler._wallet_memory_cache
+
+    def _get_cached_player_balance(self, steam_id):
+        steam_id = str(steam_id).strip()
+        cache_data = self._load_wallet_memory_cache()
+        try:
+            return int(cache_data.get(steam_id, 0))
+        except Exception:
+            return 0
+
+    def _update_cached_player_balance(self, steam_id, balance):
+        steam_id = str(steam_id).strip()
+        bal_int = int(balance)
+        with DinoRequestHandler._wallet_cache_lock:
+            cache_data = self._load_wallet_memory_cache()
+            if cache_data.get(steam_id) == bal_int:
+                return
+            cache_data[steam_id] = bal_int
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+            for cpath in [os.path.join(base_dir, "player_wallet_cache.json"), os.path.join(base_dir, ".persistent_player_wallet_cache.json")]:
+                try:
+                    os.makedirs(os.path.dirname(cpath), exist_ok=True)
+                    with open(cpath, "w", encoding="utf-8") as f:
+                        json.dump(cache_data, f, indent=2, ensure_ascii=False)
+                except Exception:
+                    pass
 
     def _adjust_player_xu(self, steam_id, amount, reason=""):
         steam_id = str(steam_id).strip()
@@ -4249,18 +4527,19 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
         return True
 
-    def _get_player_xu_balance(self, steam_id):
+    def _get_player_xu_balance(self, steam_id, player_info=None):
         steam_id = str(steam_id).strip()
         if not steam_id:
             return 0
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        
-        # 1. Đọc số dư lưu trong player_wallet_cache
+
+        # 1. Đọc số dư lưu trong player_wallet_cache (in-memory)
         last_known = self._get_cached_player_balance(steam_id)
 
-        # 2. Thử lấy dữ liệu thực tế từ IslePilot
+        # 2. Thử lấy dữ liệu thực tế từ IslePilot (hoặc dùng player_info truyền sẵn để không gọi lại API)
         try:
-            player_info = self.fetch_islepilot(f"/players/{steam_id}")
+            if player_info is None:
+                player_info = self.fetch_islepilot(f"/players/{steam_id}")
             if isinstance(player_info, dict):
                 wallet = player_info.get("wallet", {})
                 if isinstance(wallet, dict) and "balance" in wallet:
@@ -4393,6 +4672,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         })
 
     def _auto_check_in_progress_matches(self, matches):
+        # Chỉ quét /killfeed và /combat-log nếu thực sự đang có trận đấu ở trạng thái in_progress
+        if not matches or not any(isinstance(m, dict) and m.get("status") == "in_progress" for m in matches):
+            return
         # Tự động quét IslePilot Killfeed, Combat Log & Trạng thái Player để xác định người chiến thắng
         now_ts = time.time()
 
@@ -5416,10 +5698,25 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             except Exception:
                 pass
 
+    _ai_hunt_check_lock = threading.Lock()
+    _ai_hunt_last_check_ts = 0.0
+
     def _auto_check_ai_hunt_status(self, db):
         if not db or not db.get("active"):
             return
 
+        now_mono = time.time()
+        if (now_mono - DinoRequestHandler._ai_hunt_last_check_ts) < 5.0:
+            return
+        if not DinoRequestHandler._ai_hunt_check_lock.acquire(blocking=False):
+            return
+        try:
+            DinoRequestHandler._ai_hunt_last_check_ts = now_mono
+            self._auto_check_ai_hunt_status_locked(db)
+        finally:
+            DinoRequestHandler._ai_hunt_check_lock.release()
+
+    def _auto_check_ai_hunt_status_locked(self, db):
         tz_vn = datetime.timezone(datetime.timedelta(hours=7))
         now_vn = self._get_vn_now()
         today_date_str = now_vn.strftime("%Y-%m-%d")
@@ -11371,20 +11668,40 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         q_params = urllib.parse.parse_qs(query)
         passed_steam_id = q_params.get("steam_id", [None])[0]
         active_steam_id = self.get_active_steam_id()
-        is_guest = not passed_steam_id
+        is_guest = not (passed_steam_id or active_steam_id)
 
         target_steam_id = passed_steam_id or active_steam_id or "76561199483156684"
+        if target_steam_id:
+            target_steam_id = urllib.parse.unquote(str(target_steam_id)).split(":", 1)[0].strip()
+
         remote = self.fetch_islepilot(f"/players/{target_steam_id}/quests")
+        used_fallback = False
         if not (remote and isinstance(remote, dict) and "quests" in remote):
             # Thử lại với ID admin dự phòng nếu người chơi mới chưa có hồ sơ
             remote = self.fetch_islepilot("/players/76561199483156684/quests")
+            used_fallback = True
 
         if remote and isinstance(remote, dict) and "quests" in remote:
             claimed_db = load_claimed_quests()
             today_vn = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=7))).strftime("%Y-%m-%d")
             week_vn = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=7))).strftime("%Y-W%W")
 
-            for q in remote["quests"]:
+            has_any_completed = any(
+                isinstance(rq, dict) and (
+                    rq.get("completedAt") is not None
+                    or any(c.get("done") for c in (rq.get("conditions") or []) if isinstance(c, dict))
+                )
+                for rq in remote["quests"]
+            )
+            if not is_guest and not used_fallback and not has_any_completed:
+                # Nếu chưa hoàn thành nhiệm vụ nào thì chưa cần gọi API /wallet trên đám mây
+                _wallet_quest_sync_ts[target_steam_id] = time.time()
+
+            out_quests = []
+            for orig_q in remote["quests"]:
+                if not isinstance(orig_q, dict):
+                    continue
+                q = dict(orig_q)
                 q_id = str(q.get("id") or "").strip()
                 prog_id = str(q.get("progressId") or "").strip()
                 period = str(q.get("period") or "daily").strip().lower()
@@ -11393,15 +11710,19 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     period_key = week_vn if period == "weekly" else today_vn
 
                 quest_name = str(q.get("name") or "").strip()
-                if is_guest:
-                    # Khách chưa đăng nhập: hiển thị trạng thái chưa nhận để người chơi xem danh sách nhiệm vụ
+                if is_guest or used_fallback:
+                    q["progress"] = 0
+                    q["completedAt"] = None
                     q["claimedAt"] = None
                 else:
                     is_claimed, claimed_at = _is_quest_claimed(target_steam_id, q_id, period_key, prog_id, claimed_db, quest_name=quest_name)
                     if is_claimed and not q.get("claimedAt"):
                         q["claimedAt"] = claimed_at or datetime.datetime.now(datetime.timezone.utc).isoformat()
+                out_quests.append(q)
 
-            self.send_json_response(remote)
+            resp_payload = dict(remote)
+            resp_payload["quests"] = out_quests
+            self.send_json_response(resp_payload)
             return
 
         self.send_json_response({"quests": []})
@@ -11469,8 +11790,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     self.send_json_response({"ok": False, "message": "Bạn chưa hoàn thành tiến độ nhiệm vụ này trong game!"}, 400)
                     return
 
-            # 2. Kiểm tra bộ nhớ cache khóa theo chu kỳ ngày / tuần (và đồng bộ ví IslePilot)
+            # 2. Kiểm tra bộ nhớ cache khóa theo chu kỳ ngày / tuần (và đồng bộ ví IslePilot khi thực hiện claim)
             claimed_db = load_claimed_quests()
+            _sync_claims_from_islepilot_wallet(steam_id, claimed_db, force=True)
             is_claimed, _ = _is_quest_claimed(steam_id, quest_id, period_key, progress_id, claimed_db, quest_name=quest_name)
             if is_claimed:
                 time_unit = "ngày hôm nay" if period == "daily" else "tuần này"
@@ -11783,7 +12105,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             steam_id = q_params.get("steam_id", [None])[0] or self.get_active_steam_id()
             
             claimed_db = load_claimed_starter()
-            sid_str = str(steam_id).strip() if steam_id else ""
+            sid_str = urllib.parse.unquote(str(steam_id)).split(":", 1)[0].strip() if steam_id else ""
             is_claimed = sid_str in claimed_db if sid_str else False
             claim_info = claimed_db.get(sid_str, {}) if is_claimed else None
             
