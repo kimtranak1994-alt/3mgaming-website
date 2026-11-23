@@ -1111,21 +1111,20 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 if cached_adm[1]:
                     return True, cached_adm[2]
             else:
-                # Chỉ đọc từ bộ nhớ cache _islepilot_cache nếu đã có sẵn, tránh gọi mạng mới cho mỗi request khách
-                player_info = None
-                cache_entry = DinoRequestHandler._islepilot_cache.get(f"/players/{actual_steam_id}")
-                if cache_entry:
-                    player_info = cache_entry[1]
-                if player_info and isinstance(player_info, dict):
-                    discord_info = player_info.get("discord") or {}
-                    discord_id = str(discord_info.get("id", ""))
-                    if discord_id and discord_id in blocked_admin_ids:
-                        DinoRequestHandler._admin_discord_cache[actual_steam_id] = (now_ts, False, None)
-                        return False, None
-                    if discord_id and discord_id in admin_discord_ids:
-                        DinoRequestHandler._admin_discord_cache[actual_steam_id] = (now_ts, True, f"discord:{discord_id}")
-                        return True, f"discord:{discord_id}"
+                try:
+                    player_info = self.fetch_islepilot(f"/players/{actual_steam_id}")
+                    if player_info and isinstance(player_info, dict):
+                        discord_info = player_info.get("discord") or {}
+                        discord_id = str(discord_info.get("id", ""))
+                        if discord_id and discord_id in blocked_admin_ids:
+                            DinoRequestHandler._admin_discord_cache[actual_steam_id] = (now_ts, False, None)
+                            return False, None
+                        if discord_id and discord_id in admin_discord_ids:
+                            DinoRequestHandler._admin_discord_cache[actual_steam_id] = (now_ts, True, f"discord:{discord_id}")
+                            return True, f"discord:{discord_id}"
                     DinoRequestHandler._admin_discord_cache[actual_steam_id] = (now_ts, False, None)
+                except Exception:
+                    pass
 
         # 2. Kiểm tra tài khoản Discord ID truyền trực tiếp qua tham số hoặc cookie
         discord_id_param = q_params.get("discord_id", [None])[0] or self.headers.get("X-Admin-Discord-Id")
