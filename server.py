@@ -2999,7 +2999,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                             return DinoRequestHandler._live_players_map[t_sid]
                     return None
 
-            max_attempts = 2 if method == "POST" else 1
+            max_attempts = 3 if method == "POST" else 1
             for attempt in range(max_attempts):
                 req = urllib.request.Request(url, data=data_bytes, method=method)
                 req.add_header("Authorization", f"Bearer {api_key}")
@@ -3009,8 +3009,11 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     req.add_header("Content-Type", "application/json")
 
                 try:
-                    with DinoRequestHandler._outbound_semaphore:
-                        with urllib.request.urlopen(req, timeout=6) as response:
+                    # Lệnh POST (Buff, Gara, Dịch chuyển...) được đi luồng ưu tiên (VIP Fast-Lane), không phải xếp hàng sau GET
+                    if method == "GET":
+                        DinoRequestHandler._outbound_semaphore.acquire()
+                    try:
+                        with urllib.request.urlopen(req, timeout=6 if method == "GET" else 8) as response:
                             if response.status in [200, 201]:
                                 res_json = json.loads(response.read().decode("utf-8"))
                                 cur_t = time.time()
@@ -3022,7 +3025,6 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                                             str(p.get("steamId")): p for p in p_list if isinstance(p, dict) and p.get("steamId")
                                         }
                                         DinoRequestHandler._live_players_ts = cur_t
-                                        # Đồng bộ bổ trợ cho các player đang online chưa có cache riêng
                                         for p_item in p_list:
                                             if isinstance(p_item, dict) and p_item.get("steamId"):
                                                 p_sid = str(p_item.get("steamId")).strip()
@@ -3034,7 +3036,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                                         }
                                         DinoRequestHandler._leaderboard_ts = cur_t
                                 else:
-                                    # Khi gọi POST: CHỈ xóa cache của đúng người chơi chịu tác động, KHÔNG xóa cache của người chơi khác!
+                                    # Khi gọi POST: Không xóa trắng (.pop) làm mất dữ liệu fallback khi 429,
+                                    # mà chỉ hạ timestamp cache của riêng player đó về 0.0 để làm mới an toàn
                                     target_sid = None
                                     if clean_key.startswith("/players/"):
                                         parts_p = clean_key.split("/")
@@ -3048,10 +3051,15 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                                         prefix = f"/players/{target_sid}"
                                         for k_del in list(DinoRequestHandler._islepilot_cache.keys()):
                                             if k_del == prefix or k_del.startswith(prefix + "/"):
-                                                DinoRequestHandler._islepilot_cache.pop(k_del, None)
+                                                old_entry = DinoRequestHandler._islepilot_cache.get(k_del)
+                                                if old_entry:
+                                                    DinoRequestHandler._islepilot_cache[k_del] = (0.0, old_entry[1])
                                     if isinstance(body_data, dict) and body_data.get("action") == "setgrowth":
                                         DinoRequestHandler._islepilot_cache.pop("/growth-overrides", None)
                                 return res_json
+                    finally:
+                        if method == "GET":
+                            DinoRequestHandler._outbound_semaphore.release()
                 except urllib.error.HTTPError as e:
                     if e.code == 404 and method == "GET":
                         cur_t = time.time()
@@ -3461,6 +3469,12 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         player_data = self.fetch_islepilot(f"/players/{steam_id}") or {}
         if not isinstance(player_data, dict):
             player_data = {}
+        if not player_data.get("species") and str(steam_id) in DinoRequestHandler._live_players_map:
+            live_p = DinoRequestHandler._live_players_map.get(str(steam_id))
+            if isinstance(live_p, dict) and live_p.get("species"):
+                merged_p = dict(live_p)
+                merged_p.update({k: v for k, v in player_data.items() if v is not None})
+                player_data = merged_p
 
         species = player_data.get("species")
         has_active_dino = bool(species)
@@ -4497,9 +4511,17 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             print(f"[Arena Currency Success] Đã áp dụng {amount:+d} Xu cho Steam {steam_id} trên IslePilot (Số dư mới: {new_islepilot_balance})")
             if new_islepilot_balance is not None:
                 self._update_cached_player_balance(steam_id, new_islepilot_balance)
-            # Xóa cache GET /players/{steam_id} để lần đọc tiếp theo lấy số dư mới nhất
+            # Cập nhật số dư mới trực tiếp vào cache GET /players/{steam_id} thay vì xóa trắng (.pop)
             if hasattr(DinoRequestHandler, "_islepilot_cache"):
-                DinoRequestHandler._islepilot_cache.pop(f"/players/{steam_id}", None)
+                c_key = f"/players/{steam_id}"
+                old_c = DinoRequestHandler._islepilot_cache.get(c_key)
+                if old_c and isinstance(old_c[1], dict):
+                    updated_p = dict(old_c[1])
+                    if new_islepilot_balance is not None:
+                        w_obj = dict(updated_p.get("wallet") or {})
+                        w_obj["balance"] = new_islepilot_balance
+                        updated_p["wallet"] = w_obj
+                    DinoRequestHandler._islepilot_cache[c_key] = (0.0, updated_p)
             return True
 
         # 3. Dự phòng: Nếu IslePilot tạm thời lỗi/429/offline, ghi nhận vào admin_wallet_adjustments.json
@@ -6205,12 +6227,15 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         self.handle_ai_hunt_post()
 
 
-    def capture_live_player_snapshot(self, steam_id, custom_nutrients=None):
+    def capture_live_player_snapshot(self, steam_id, custom_nutrients=None, player_info=None):
         """Chụp lại nguyên trạng 100% chỉ số khủng long đang sống trong game trước khi cất vào Gara."""
         if not steam_id:
             return None
         sid = str(steam_id).strip()
-        player_info = self.fetch_islepilot(f"/players/{sid}", bypass_cache=True)
+        if not isinstance(player_info, dict) or not player_info.get("species"):
+            player_info = self.fetch_islepilot(f"/players/{sid}")
+        if (not player_info or not isinstance(player_info, dict) or not player_info.get("species")) and sid in DinoRequestHandler._live_players_map:
+            player_info = DinoRequestHandler._live_players_map.get(sid)
         if not player_info or not isinstance(player_info, dict) or not player_info.get("species"):
             return None
 
@@ -6988,7 +7013,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             if step == "start":
                 # Kiểm tra số lượng slot tối đa theo phân cấp người chơi (Cấp 1: 5, Cấp 2: 10, Cấp 3: 15)
                 tier_num, max_slots, tier_name = get_player_garage_tier_and_slots(steam_id)
-                cur_garage = self.fetch_islepilot(f"/players/{steam_id}/garage", bypass_cache=True) or {}
+                cur_garage = self.fetch_islepilot(f"/players/{steam_id}/garage") or {}
                 cur_dinos = cur_garage.get("garage", []) if isinstance(cur_garage, dict) else []
                 deleted_map = load_deleted_dinos()
                 valid_cur = [d for d in cur_dinos if str(d.get("id")) not in deleted_map]
@@ -7000,21 +7025,27 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                         "message": f"Gara của bạn ({tier_name}) đã đạt giới hạn tối đa {max_slots} slot ({len(valid_cur)}/{max_slots})! Vui lòng xóa bớt hoặc rút khủng long ra trước khi cất thêm."
                     }, 400)
                     return
-                player_info = self.fetch_islepilot(f"/players/{steam_id}", bypass_cache=True)
+                player_info = self.fetch_islepilot(f"/players/{steam_id}")
                 is_online = False
                 has_species = False
                 if isinstance(player_info, dict) and "error" not in player_info:
                     is_online = bool(player_info.get("online"))
                     has_species = bool(player_info.get("species"))
 
-                if not is_online:
-                    players_list = self.fetch_islepilot("/players", bypass_cache=True)
-                    p_arr = players_list.get("players", []) if isinstance(players_list, dict) else (players_list if isinstance(players_list, list) else [])
-                    for p in p_arr:
-                        if str(p.get("steamId")) == steam_id:
-                            is_online = True
-                            has_species = bool(p.get("species")) or has_species
-                            break
+                if not is_online or not has_species:
+                    live_p = DinoRequestHandler._live_players_map.get(steam_id)
+                    if not live_p:
+                        players_list = self.fetch_islepilot("/players")
+                        p_arr = players_list.get("players", []) if isinstance(players_list, dict) else (players_list if isinstance(players_list, list) else [])
+                        for p in p_arr:
+                            if str(p.get("steamId")) == steam_id:
+                                live_p = p
+                                break
+                    if isinstance(live_p, dict):
+                        is_online = True
+                        has_species = bool(live_p.get("species")) or has_species
+                        if not isinstance(player_info, dict) or not player_info.get("species"):
+                            player_info = live_p
 
                 if not is_online:
                     self.send_json_response({
@@ -7034,7 +7065,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     }, 400)
                     return
 
-                self.capture_live_player_snapshot(steam_id, custom_nutrients=nutr_payload_in)
+                self.capture_live_player_snapshot(steam_id, custom_nutrients=nutr_payload_in, player_info=player_info)
 
                 self.send_json_response({
                     "success": True,
@@ -7047,7 +7078,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
             # 2. BƯỚC HOÀN TẤT (step == "finalize"): Chụp lại snapshot ngay giây cuối trước khi gọi lệnh park
             tier_num, max_slots, tier_name = get_player_garage_tier_and_slots(steam_id)
-            pre_garage = self.fetch_islepilot(f"/players/{steam_id}/garage", bypass_cache=True) or {}
+            pre_garage = self.fetch_islepilot(f"/players/{steam_id}/garage") or {}
             cur_dinos_fin = pre_garage.get("garage", []) if isinstance(pre_garage, dict) else []
             deleted_map_fin = load_deleted_dinos()
             valid_cur_fin = [d for d in cur_dinos_fin if str(d.get("id")) not in deleted_map_fin]
@@ -7068,7 +7099,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 def bind_snapshot_to_new_garage_item():
                     target_new = None
                     gar_list = []
-                    for wait_s in [0.5, 1.2, 2.0, 3.5, 5.0]:
+                    for wait_s in [1.5, 3.5]:
                         time.sleep(wait_s)
                         try:
                             fresh_garage = self.fetch_islepilot(f"/players/{steam_id}/garage", bypass_cache=True) or {}
@@ -12182,6 +12213,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
             # Kiểm tra xem người chơi có khủng long đang sống không
             p_info = self.fetch_islepilot(f"/players/{sid_str}")
+            if (not isinstance(p_info, dict) or not p_info.get("species")) and sid_str in DinoRequestHandler._live_players_map:
+                p_info = DinoRequestHandler._live_players_map.get(sid_str)
             if not isinstance(p_info, dict) or not p_info.get("species"):
                 self.send_json_response({"ok": False, "error": "Bạn hiện chưa có khủng long đang chơi trong game để điều chỉnh tăng trưởng!"}, 400)
                 return
@@ -12193,9 +12226,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 "frozen": target_frozen
             })
 
-            # Xóa cache
+            # Làm mới cache growth-overrides nhưng giữ lại dữ liệu fallback của player
             if hasattr(DinoRequestHandler, "_islepilot_cache"):
-                DinoRequestHandler._islepilot_cache.pop(f"/players/{sid_str}", None)
                 DinoRequestHandler._islepilot_cache.pop("/growth-overrides", None)
 
             msg = "Đã khóa tăng trưởng khủng long thành công! (Tiến trình lớn đã được đóng băng trong game)" if target_frozen else "Đã mở khóa tăng trưởng thành công! (Khủng long sẽ tiếp tục lớn lên bình thường)"
@@ -12720,17 +12752,36 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 self.send_json_response({"ok": False, "message": "Vui lòng đăng nhập Steam trước khi buff chất dinh dưỡng!"}, 401)
                 return
             
-            sid_str = str(steam_id).strip()
+            sid_str = urllib.parse.unquote(str(steam_id)).split(":", 1)[0].strip()
             
-            # 1. Kiểm tra khủng long đang sống trong game từ IslePilot
-            player_info = self.fetch_islepilot(f"/players/{sid_str}") or {}
+            # 1. Kiểm tra khủng long đang sống trong game (Ưu tiên lấy từ Cache / Live Map để bấm buff liên tiếp không tốn GET API)
+            cache_ep = f"/players/{sid_str}"
+            player_info = {}
+            cached_entry = DinoRequestHandler._islepilot_cache.get(cache_ep)
+            if cached_entry and isinstance(cached_entry[1], dict) and cached_entry[1].get("species"):
+                player_info = dict(cached_entry[1])
+            if not player_info.get("species"):
+                live_p = DinoRequestHandler._live_players_map.get(sid_str)
+                if isinstance(live_p, dict) and live_p.get("species"):
+                    player_info = dict(live_p)
+            if not player_info.get("species"):
+                fetched_p = self.fetch_islepilot(cache_ep)
+                if isinstance(fetched_p, dict) and fetched_p:
+                    player_info = dict(fetched_p)
+
             species = player_info.get("species")
             if not species:
-                self.send_json_response({
-                    "ok": False,
-                    "message": "Không tìm thấy khủng long nào đang hoạt động trên bản đồ! Bạn cần có khủng long đang sống trong game để buff chất."
-                }, 400)
-                return
+                # Nếu IslePilot xác nhận 404 (người chơi không có khủng long trên bản đồ) và không có trong live map
+                if sid_str in DinoRequestHandler._not_found_steam_ids and sid_str not in DinoRequestHandler._live_players_map:
+                    self.send_json_response({
+                        "ok": False,
+                        "message": "Không tìm thấy khủng long nào đang hoạt động trên bản đồ! Bạn cần có khủng long đang sống trong game để buff chất."
+                    }, 400)
+                    return
+                # Dự phòng khi server đông người khiến lệnh GET tạm thời bị nghẽn: lấy loài từ snapshot gần nhất để vẫn gửi lệnh POST buff vào game
+                last_parked = load_garage_dino_snapshot(f"{sid_str}_last_parked") or {}
+                species = last_parked.get("species") or last_parked.get("class") or "Khủng long"
+                player_info["species"] = species
             
             # 2. Xác định loại chất buff / thao tác powerup
             nutrient_type = str(payload.get("nutrient") or payload.get("type") or "all").lower().strip()
@@ -12746,19 +12797,23 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 else:
                     cur_hu = safe_float(player_info.get("hunger"), 0.0)
                 max_hu = safe_float(player_info.get("maxHunger"), 1000.0)
+                if max_hu <= 0:
+                    max_hu = 1000.0
                 target_hu = min(max_hu, cur_hu + (max_hu * (amount_val / 100.0)))
                 res = self.fetch_islepilot("/commands", method="POST", body_data={
                     "action": "setstats",
                     "steamId": sid_str,
                     "hunger": target_hu
                 })
-                if hasattr(DinoRequestHandler, "_islepilot_cache"):
-                    DinoRequestHandler._islepilot_cache.pop(f"/players/{sid_str}", None)
                 if res and (res.get("ok") is True or "commandId" in res):
+                    now_ts = time.time()
                     save_garage_dino_snapshot(f"{sid_str}_last_hunger", {
                         "hunger": target_hu,
-                        "timestamp": time.time()
+                        "timestamp": now_ts
                     })
+                    player_info["hunger"] = target_hu
+                    player_info["maxHunger"] = max_hu
+                    DinoRequestHandler._islepilot_cache[cache_ep] = (now_ts, player_info)
                     self.send_json_response({
                         "ok": True,
                         "success": True,
@@ -12768,7 +12823,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                         "result": res
                     })
                 else:
-                    err_msg = (res.get("error") if isinstance(res, dict) else None) or "Máy chủ IslePilot chưa phản hồi lệnh buff đói."
+                    err_msg = (res.get("error") if isinstance(res, dict) else None) or "Máy chủ IslePilot đang bận, vui lòng bấm lại sau 1 giây."
                     self.send_json_response({"ok": False, "message": f"Buff đói thất bại: {err_msg}"}, 400)
                 return
 
@@ -12782,13 +12837,15 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     "isElder": True,
                     "stacks": 10
                 })
-                if hasattr(DinoRequestHandler, "_islepilot_cache"):
-                    DinoRequestHandler._islepilot_cache.pop(f"/players/{sid_str}", None)
                 if res and (res.get("ok") is True or "commandId" in res):
+                    now_ts = time.time()
                     save_garage_dino_snapshot(f"{sid_str}_last_prime", {
                         "isPrimeElder": True,
-                        "timestamp": time.time()
+                        "timestamp": now_ts
                     })
+                    player_info["isPrimeElder"] = True
+                    player_info["primeEligible"] = True
+                    DinoRequestHandler._islepilot_cache[cache_ep] = (now_ts, player_info)
                     self.send_json_response({
                         "ok": True,
                         "success": True,
@@ -12796,7 +12853,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                         "result": res
                     })
                 else:
-                    err_msg = (res.get("error") if isinstance(res, dict) else None) or "Máy chủ IslePilot chưa phản hồi lệnh kích hoạt Prime."
+                    err_msg = (res.get("error") if isinstance(res, dict) else None) or "Máy chủ IslePilot đang bận, vui lòng bấm lại sau 1 giây."
                     self.send_json_response({"ok": False, "message": f"Kích hoạt Prime thất bại: {err_msg}"}, 400)
                 return
 
@@ -12851,22 +12908,26 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             # Gửi lệnh chuẩn tới IslePilot API
             res = self.fetch_islepilot("/commands", method="POST", body_data=cmd_body)
             
-            # Lưu snapshot dinh dưỡng và xóa cache để cập nhật ngay
-            save_garage_dino_snapshot(f"{sid_str}_last_nutrients", {
-                "nutrients": {
+            if res and (res.get("ok") is True or "commandId" in res):
+                now_ts = time.time()
+                # Chỉ lưu snapshot và cập nhật trực tiếp vào cache khi lệnh POST thành công
+                save_garage_dino_snapshot(f"{sid_str}_last_nutrients", {
+                    "nutrients": {
+                        "carb": cmd_body["carb"],
+                        "protein": cmd_body["protein"],
+                        "lipid": cmd_body["lipid"],
+                        "ingame_carb": new_ingame_c,
+                        "ingame_protein": new_ingame_p,
+                        "ingame_lipid": new_ingame_l
+                    },
+                    "timestamp": now_ts
+                })
+                player_info["nutrition"] = {
                     "carb": cmd_body["carb"],
                     "protein": cmd_body["protein"],
-                    "lipid": cmd_body["lipid"],
-                    "ingame_carb": new_ingame_c,
-                    "ingame_protein": new_ingame_p,
-                    "ingame_lipid": new_ingame_l
-                },
-                "timestamp": time.time()
-            })
-            if hasattr(DinoRequestHandler, "_islepilot_cache"):
-                DinoRequestHandler._islepilot_cache.pop(f"/players/{sid_str}", None)
-            
-            if res and (res.get("ok") is True or "commandId" in res):
+                    "lipid": cmd_body["lipid"]
+                }
+                DinoRequestHandler._islepilot_cache[cache_ep] = (now_ts, player_info)
                 self.send_json_response({
                     "ok": True,
                     "success": True,
@@ -12879,7 +12940,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     "result": res
                 })
             else:
-                err_msg = (res.get("error") if isinstance(res, dict) else None) or "Máy chủ IslePilot chưa phản hồi lệnh buff chất."
+                err_msg = (res.get("error") if isinstance(res, dict) else None) or "Máy chủ IslePilot đang bận, vui lòng bấm lại sau 1 giây."
                 self.send_json_response({"ok": False, "message": f"Buff chất thất bại: {err_msg}"}, 400)
         except Exception as e:
             print(f"[Powerup Buff Error] {e}")
