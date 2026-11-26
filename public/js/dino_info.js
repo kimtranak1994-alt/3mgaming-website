@@ -218,11 +218,11 @@ const DinoInfo = {
       const is_frozen = Boolean(dino.is_growth_frozen || (this.data && this.data.is_growth_frozen) || (dino.growth_state === 'frozen'));
       const posStr = (pos.x !== null && pos.x !== undefined) ? `X: ${pos.x}, Y: ${pos.y}, Z: ${pos.z}` : 'Đang cập nhật...';
 
-      // Evrima Nutrients / Powerups (3 Mục Buff Chất Chuẩn IslePilot - Không giới hạn 100%, giữ 1 chữ số thập phân để thấy rõ tăng/giảm theo game)
+      // Evrima Nutrients / Powerups (3 Mục Buff Chất Chuẩn IslePilot: 0% - 100% theo maxHunger, giữ 1 chữ số thập phân để thấy rõ tăng/giảm theo game)
       const nutrition = dino.nutrition || {};
-      const carbPct = Math.max(0, Math.round((Number(nutrition.carb) || 0) * 10) / 10);
-      const lipidPct = Math.max(0, Math.round((Number(nutrition.lipid) || 0) * 10) / 10);
-      const proteinPct = Math.max(0, Math.round((Number(nutrition.protein) || 0) * 10) / 10);
+      const carbPct = Math.min(100, Math.max(0, Math.round((Number(nutrition.carb) || 0) * 10) / 10));
+      const lipidPct = Math.min(100, Math.max(0, Math.round((Number(nutrition.lipid) || 0) * 10) / 10));
+      const proteinPct = Math.min(100, Math.max(0, Math.round((Number(nutrition.protein) || 0) * 10) / 10));
       const isPerfectDiet = carbPct > 0 && lipidPct > 0 && proteinPct > 0;
 
       // Prime Elder Progression
@@ -877,9 +877,9 @@ const DinoInfo = {
       const curL = Number(this.data && this.data.dino && this.data.dino.nutrition && this.data.dino.nutrition.lipid) || 0;
       const curP = Number(this.data && this.data.dino && this.data.dino.nutrition && this.data.dino.nutrition.protein) || 0;
 
-      const newC = Math.max(0, Math.round((curC + 25) * 10) / 10);
-      const newL = Math.max(0, Math.round((curL + 25) * 10) / 10);
-      const newP = Math.max(0, Math.round((curP + 25) * 10) / 10);
+      const newC = Math.min(100, Math.max(0, Math.round((curC + 25) * 10) / 10));
+      const newL = Math.min(100, Math.max(0, Math.round((curL + 25) * 10) / 10));
+      const newP = Math.min(100, Math.max(0, Math.round((curP + 25) * 10) / 10));
 
       if (carbEl) carbEl.textContent = `${newC}%`;
       if (lipidEl) lipidEl.textContent = `${newL}%`;

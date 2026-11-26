@@ -3388,13 +3388,6 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             wallet = player_info.get("wallet") or {}
 
             if sp:
-                NUTRITION_SCALE = 1.5625
-                raw_nutr = player_info.get("nutrition") or {}
-                live_c = round(max(0.0, safe_float(raw_nutr.get("carb", 0.0)) / NUTRITION_SCALE), 1)
-                live_p = round(max(0.0, safe_float(raw_nutr.get("protein", 0.0)) / NUTRITION_SCALE), 1)
-                live_l = round(max(0.0, safe_float(raw_nutr.get("lipid", 0.0)) / NUTRITION_SCALE), 1)
-                last_nutr = {"carb": live_c, "protein": live_p, "lipid": live_l}
-
                 raw_hp = safe_float(player_info.get("health"), 0.0)
                 max_hp = safe_float(player_info.get("maxHealth"), 0.0)
                 if raw_hp <= 0 and max_hp > 0:
@@ -3404,6 +3397,13 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 raw_hu = safe_float(player_info.get("hunger"), 0.0)
                 max_hu = safe_float(player_info.get("maxHunger"), 0.0)
                 hu_pct = round((raw_hu / max_hu) * 100, 1) if max_hu > 0 else 100.0
+
+                max_nutr = max_hu if max_hu > 0 else 100.0
+                raw_nutr = player_info.get("nutrition") or {}
+                live_c = min(100.0, max(0.0, round((safe_float(raw_nutr.get("carb", 0.0)) / max_nutr) * 100.0, 1)))
+                live_p = min(100.0, max(0.0, round((safe_float(raw_nutr.get("protein", 0.0)) / max_nutr) * 100.0, 1)))
+                live_l = min(100.0, max(0.0, round((safe_float(raw_nutr.get("lipid", 0.0)) / max_nutr) * 100.0, 1)))
+                last_nutr = {"carb": live_c, "protein": live_p, "lipid": live_l}
 
                 raw_th = safe_float(player_info.get("thirst"), 0.0)
                 max_th = safe_float(player_info.get("maxThirst"), 0.0)
@@ -3608,13 +3608,16 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
         hunger = safe_float(player_data.get("hunger"), 0.0)
         max_hunger = safe_float(player_data.get("maxHunger"), 1.0)
+        if max_hunger <= 0:
+            max_hunger = 100.0
+        hu_tol = max(0.05, max_hunger * 0.01)
         # Chỉ giữ đệm tạm 6 giây ngay sau khi bấm nút Buff Đói trong lúc chờ server game gửi heartbeat mới,
         # sau đó giải phóng hoàn toàn để độ đói tự động giảm/tăng theo đúng trạng thái thực trong game
         h_pend = pend.get("hunger")
         if isinstance(h_pend, dict):
             if (now_ts - safe_float(h_pend.get("ts"), 0)) < 6.0:
                 prev_hu = safe_float(h_pend.get("prev_hunger"), -1.0)
-                if abs(hunger - prev_hu) > 0.5:
+                if abs(hunger - prev_hu) > hu_tol:
                     pend.pop("hunger", None)
                 else:
                     hunger = min(max_hunger, safe_float(h_pend.get("target_hunger"), hunger))
@@ -3666,9 +3669,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             "elderB": ["None", "None", "None", "None"]
         }
 
-        # Luôn đọc trực tiếp lượng chất dinh dưỡng thời gian thực từ game (Evrima: 1% in-game = 1.5625 điểm API)
-        # Chỉ giữ đệm tạm 6 giây ngay lúc vừa bấm nút Buff chờ server game đồng bộ heartbeat, sau đó tự do tăng/giảm theo game
-        NUTRITION_SCALE = 1.5625
+        # Trong The Isle Evrima, 100% của mỗi dưỡng chất (Carb S, Protein :, Lipid //) chính bằng dung tích dạ dày hiện tại (maxHunger)
+        max_nutr = max_hunger if max_hunger > 0 else 100.0
+        nutr_tol = max(0.05, max_nutr * 0.01)
         raw_nutr = player_data.get("nutrition") or {}
         raw_c = safe_float(raw_nutr.get("carb", 0.0))
         raw_p = safe_float(raw_nutr.get("protein", 0.0))
@@ -3680,7 +3683,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 prev_c = safe_float(n_pend.get("prev_carb"), -1.0)
                 prev_p = safe_float(n_pend.get("prev_prot"), -1.0)
                 prev_l = safe_float(n_pend.get("prev_lip"), -1.0)
-                if (abs(raw_c - prev_c) > 0.5) or (abs(raw_p - prev_p) > 0.5) or (abs(raw_l - prev_l) > 0.5):
+                if (abs(raw_c - prev_c) > nutr_tol) or (abs(raw_p - prev_p) > nutr_tol) or (abs(raw_l - prev_l) > nutr_tol):
                     pend.pop("nutrition", None)
                 else:
                     raw_c = safe_float(n_pend.get("target_carb"), raw_c)
@@ -3689,9 +3692,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             else:
                 pend.pop("nutrition", None)
 
-        carb_val = max(0.0, round(raw_c / NUTRITION_SCALE, 1))
-        protein_val = max(0.0, round(raw_p / NUTRITION_SCALE, 1))
-        lipid_val = max(0.0, round(raw_l / NUTRITION_SCALE, 1))
+        carb_val = min(100.0, max(0.0, round((raw_c / max_nutr) * 100.0, 1)))
+        protein_val = min(100.0, max(0.0, round((raw_p / max_nutr) * 100.0, 1)))
+        lipid_val = min(100.0, max(0.0, round((raw_l / max_nutr) * 100.0, 1)))
         is_perfect_diet = (carb_val > 0.0 and protein_val > 0.0 and lipid_val > 0.0)
 
         warnings_list = warnings_data.get("warnings") or []
@@ -12901,18 +12904,19 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             # THAO TÁC 1: BUFF ĐÓI (HUNGER)
             if nutrient_type in ["hunger", "doi", "food"]:
                 live_hu = safe_float(player_info.get("hunger"), 0.0)
-                max_hu = safe_float(player_info.get("maxHunger"), 1000.0)
+                max_hu = safe_float(player_info.get("maxHunger"), 100.0)
                 if max_hu <= 0:
-                    max_hu = 1000.0
+                    max_hu = 100.0
+                hu_tol = max(0.05, max_hu * 0.01)
 
                 cur_hu = live_hu
                 h_pend = pend.get("hunger")
                 if isinstance(h_pend, dict) and (now_ts - safe_float(h_pend.get("ts"), 0)) < 6.0:
                     prev_hu = safe_float(h_pend.get("prev_hunger"), -1.0)
-                    if abs(live_hu - prev_hu) <= 0.5:
+                    if abs(live_hu - prev_hu) <= hu_tol:
                         cur_hu = safe_float(h_pend.get("target_hunger"), live_hu)
 
-                target_hu = min(max_hu, cur_hu + (max_hu * (amount_val / 100.0)))
+                target_hu = min(max_hu, round(cur_hu + (max_hu * (amount_val / 100.0)), 2))
                 res = self.fetch_islepilot("/commands", method="POST", body_data={
                     "action": "setstats",
                     "steamId": sid_str,
@@ -12963,10 +12967,13 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     self.send_json_response({"ok": False, "message": f"Kích hoạt Prime thất bại: {err_msg}"}, 400)
                 return
 
-            # THAO TÁC 3: BUFF CHẤT DINH DƯỠNG (A, B, Y hoặc CẢ 3 CHẤT)
-            # Đọc trực tiếp lượng chất thực tế từ game; chỉ nối tiếp trong cửa sổ 6s nếu người chơi bấm liên tiếp trước khi game kịp gửi heartbeat
-            NUTRITION_SCALE = 1.5625  # 1% in-game Evrima tương đương 1.5625 điểm trong IslePilot setnutrition
-            
+            # THAO TÁC 3: BUFF CHẤT DINH DƯỠNG (A, B, Y hoặc CẢ 3 CHẤT) - TĂNG ĐÚNG +25% CỦA maxHunger MỖI LẦN BẤM (GIỐNG HỆT BUFF ĐÓI 25%)
+            # Trong The Isle Evrima, 100% mỗi dưỡng chất (Carb S, Protein :, Lipid //) chính bằng maxHunger hiện tại của khủng long!
+            max_nutr = safe_float(player_info.get("maxHunger"), 100.0)
+            if max_nutr <= 0:
+                max_nutr = 100.0
+            nutr_tol = max(0.05, max_nutr * 0.01)
+
             raw_nutr = player_info.get("nutrition") or {}
             live_raw_c = safe_float(raw_nutr.get("carb", 0.0))
             live_raw_p = safe_float(raw_nutr.get("protein", 0.0))
@@ -12978,41 +12985,41 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 prev_c = safe_float(n_pend.get("prev_carb"), -1.0)
                 prev_p = safe_float(n_pend.get("prev_prot"), -1.0)
                 prev_l = safe_float(n_pend.get("prev_lip"), -1.0)
-                if (abs(live_raw_c - prev_c) <= 0.5) and (abs(live_raw_p - prev_p) <= 0.5) and (abs(live_raw_l - prev_l) <= 0.5):
+                if (abs(live_raw_c - prev_c) <= nutr_tol) and (abs(live_raw_p - prev_p) <= nutr_tol) and (abs(live_raw_l - prev_l) <= nutr_tol):
                     raw_c = safe_float(n_pend.get("target_carb"), live_raw_c)
                     raw_p = safe_float(n_pend.get("target_prot"), live_raw_p)
                     raw_l = safe_float(n_pend.get("target_lip"), live_raw_l)
 
-            # Chuyển đổi lượng chất hiện có trong game sang %
-            curr_ingame_c = raw_c / NUTRITION_SCALE
-            curr_ingame_p = raw_p / NUTRITION_SCALE
-            curr_ingame_l = raw_l / NUTRITION_SCALE
+            # Quy đổi lượng chất hiện tại trong game ra % (0% -> 100% dựa trên maxHunger)
+            curr_ingame_c = min(100.0, max(0.0, (raw_c / max_nutr) * 100.0))
+            curr_ingame_p = min(100.0, max(0.0, (raw_p / max_nutr) * 100.0))
+            curr_ingame_l = min(100.0, max(0.0, (raw_l / max_nutr) * 100.0))
 
-            # Tăng đúng +25% dựa trên lượng chất thực tế trong game
+            # Cộng đúng +25% (tối đa 100%)
             if nutrient_type in ["carb", "s", "carbohydrate", "a"]:
-                new_ingame_c = max(0.0, round(curr_ingame_c + amount_val, 1))
-                new_ingame_p = max(0.0, round(curr_ingame_p, 1))
-                new_ingame_l = max(0.0, round(curr_ingame_l, 1))
+                new_ingame_c = min(100.0, max(0.0, round(curr_ingame_c + amount_val, 1)))
+                new_ingame_p = min(100.0, max(0.0, round(curr_ingame_p, 1)))
+                new_ingame_l = min(100.0, max(0.0, round(curr_ingame_l, 1)))
             elif nutrient_type in ["lipid", "fat", "line", "//", "y"]:
-                new_ingame_c = max(0.0, round(curr_ingame_c, 1))
-                new_ingame_p = max(0.0, round(curr_ingame_p, 1))
-                new_ingame_l = max(0.0, round(curr_ingame_l + amount_val, 1))
+                new_ingame_c = min(100.0, max(0.0, round(curr_ingame_c, 1)))
+                new_ingame_p = min(100.0, max(0.0, round(curr_ingame_p, 1)))
+                new_ingame_l = min(100.0, max(0.0, round(curr_ingame_l + amount_val, 1)))
             elif nutrient_type in ["protein", "dot", ":", "b"]:
-                new_ingame_c = max(0.0, round(curr_ingame_c, 1))
-                new_ingame_p = max(0.0, round(curr_ingame_p + amount_val, 1))
-                new_ingame_l = max(0.0, round(curr_ingame_l, 1))
+                new_ingame_c = min(100.0, max(0.0, round(curr_ingame_c, 1)))
+                new_ingame_p = min(100.0, max(0.0, round(curr_ingame_p + amount_val, 1)))
+                new_ingame_l = min(100.0, max(0.0, round(curr_ingame_l, 1)))
             else:  # "all" hoặc "perfect" hoặc "aby"
-                new_ingame_c = max(0.0, round(curr_ingame_c + amount_val, 1))
-                new_ingame_p = max(0.0, round(curr_ingame_p + amount_val, 1))
-                new_ingame_l = max(0.0, round(curr_ingame_l + amount_val, 1))
+                new_ingame_c = min(100.0, max(0.0, round(curr_ingame_c + amount_val, 1)))
+                new_ingame_p = min(100.0, max(0.0, round(curr_ingame_p + amount_val, 1)))
+                new_ingame_l = min(100.0, max(0.0, round(curr_ingame_l + amount_val, 1)))
 
-            # Quy đổi sang điểm chuẩn gửi IslePilot API
+            # Quy đổi từ % in-game sang điểm thực tế theo maxHunger để gửi lệnh setnutrition
             cmd_body = {
                 "action": "setnutrition",
                 "steamId": sid_str,
-                "carb": round(new_ingame_c * NUTRITION_SCALE, 2),
-                "protein": round(new_ingame_p * NUTRITION_SCALE, 2),
-                "lipid": round(new_ingame_l * NUTRITION_SCALE, 2)
+                "carb": round((new_ingame_c / 100.0) * max_nutr, 2),
+                "protein": round((new_ingame_p / 100.0) * max_nutr, 2),
+                "lipid": round((new_ingame_l / 100.0) * max_nutr, 2)
             }
             
             # Gửi lệnh chuẩn tới IslePilot API
@@ -13033,7 +13040,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 self.send_json_response({
                     "ok": True,
                     "success": True,
-                    "message": f"⚡ Đã buff +{int(amount_val)}% cả 3 chất A-B-Y vào game thành công! (Hiện tại: {new_ingame_c}%)",
+                    "message": f"⚡ Đã buff +{int(amount_val)}% cả 3 chất A-B-Y cho {species} thành công! (Hiện tại: {new_ingame_c}%)",
                     "nutrition": {
                         "carb": new_ingame_c,
                         "protein": new_ingame_p,
