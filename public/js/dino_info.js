@@ -80,6 +80,19 @@ const DinoInfo = {
 
     await this.fetchData(true);
     this.startAutoRefresh();
+
+    if (!this._visibilityBound) {
+      this._visibilityBound = true;
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+          const curTab = document.body.getAttribute('data-current-tab');
+          const isInfoTab = curTab === 'dino-info' || curTab === 'dinoinfo' || window.location.hash === '#dino-info';
+          if (isInfoTab) {
+            this.fetchData();
+          }
+        }
+      });
+    }
   },
 
   async fetchData(forceRender = false) {
@@ -137,12 +150,13 @@ const DinoInfo = {
   startAutoRefresh() {
     if (this.pollTimer) clearInterval(this.pollTimer);
     this.pollTimer = setInterval(() => {
+      if (document.hidden) return; // Không gọi API khi tab trình duyệt đang ẩn
       const curTab = document.body.getAttribute('data-current-tab');
       const isInfoTab = curTab === 'dino-info' || curTab === 'dinoinfo' || window.location.hash === '#dino-info';
       if (isInfoTab) {
         this.fetchData();
       }
-    }, 4000);
+    }, 12000); // Tối ưu chu kỳ 12s tránh thundering herd và rate limit API
   },
 
   copyText(text, label) {
@@ -202,11 +216,11 @@ const DinoInfo = {
       const is_frozen = Boolean(dino.is_growth_frozen || (this.data && this.data.is_growth_frozen) || (dino.growth_state === 'frozen'));
       const posStr = (pos.x !== null && pos.x !== undefined) ? `X: ${pos.x}, Y: ${pos.y}, Z: ${pos.z}` : 'Đang cập nhật...';
 
-      // Evrima Nutrients / Powerups (3 Mục Buff Chất Chuẩn IslePilot)
+      // Evrima Nutrients / Powerups (3 Mục Buff Chất Chuẩn IslePilot - Không giới hạn 100%)
       const nutrition = dino.nutrition || {};
-      const carbPct = Math.min(100, Math.max(0, Math.round(Number(nutrition.carb) || 0)));
-      const lipidPct = Math.min(100, Math.max(0, Math.round(Number(nutrition.lipid) || 0)));
-      const proteinPct = Math.min(100, Math.max(0, Math.round(Number(nutrition.protein) || 0)));
+      const carbPct = Math.max(0, Math.round(Number(nutrition.carb) || 0));
+      const lipidPct = Math.max(0, Math.round(Number(nutrition.lipid) || 0));
+      const proteinPct = Math.max(0, Math.round(Number(nutrition.protein) || 0));
       const isPerfectDiet = carbPct > 0 && lipidPct > 0 && proteinPct > 0;
 
       // Prime Elder Progression
@@ -861,9 +875,9 @@ const DinoInfo = {
       const curL = Number(this.data && this.data.dino && this.data.dino.nutrition && this.data.dino.nutrition.lipid) || 0;
       const curP = Number(this.data && this.data.dino && this.data.dino.nutrition && this.data.dino.nutrition.protein) || 0;
 
-      const newC = Math.min(100, Math.round(curC + 25));
-      const newL = Math.min(100, Math.round(curL + 25));
-      const newP = Math.min(100, Math.round(curP + 25));
+      const newC = Math.max(0, Math.round(curC + 25));
+      const newL = Math.max(0, Math.round(curL + 25));
+      const newP = Math.max(0, Math.round(curP + 25));
 
       if (carbEl) carbEl.textContent = `${newC}%`;
       if (lipidEl) lipidEl.textContent = `${newL}%`;

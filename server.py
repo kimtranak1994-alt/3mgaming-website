@@ -3584,13 +3584,13 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
         raw_nutr = player_data.get("nutrition") or {}
         if snap_nutr and (time.time() - snap_nutr_time) < 300:
-            carb_val = min(100.0, max(0.0, round(safe_float(snap_nutr.get("ingame_carb", safe_float(snap_nutr.get("carb", 0.0)) / NUTRITION_SCALE)), 1)))
-            protein_val = min(100.0, max(0.0, round(safe_float(snap_nutr.get("ingame_protein", safe_float(snap_nutr.get("protein", 0.0)) / NUTRITION_SCALE)), 1)))
-            lipid_val = min(100.0, max(0.0, round(safe_float(snap_nutr.get("ingame_lipid", safe_float(snap_nutr.get("lipid", 0.0)) / NUTRITION_SCALE)), 1)))
+            carb_val = max(0.0, round(safe_float(snap_nutr.get("ingame_carb", safe_float(snap_nutr.get("carb", 0.0)) / NUTRITION_SCALE)), 1))
+            protein_val = max(0.0, round(safe_float(snap_nutr.get("ingame_protein", safe_float(snap_nutr.get("protein", 0.0)) / NUTRITION_SCALE)), 1))
+            lipid_val = max(0.0, round(safe_float(snap_nutr.get("ingame_lipid", safe_float(snap_nutr.get("lipid", 0.0)) / NUTRITION_SCALE)), 1))
         else:
-            carb_val = min(100.0, max(0.0, round(safe_float(raw_nutr.get("carb", 0.0)) / NUTRITION_SCALE, 1)))
-            protein_val = min(100.0, max(0.0, round(safe_float(raw_nutr.get("protein", 0.0)) / NUTRITION_SCALE, 1)))
-            lipid_val = min(100.0, max(0.0, round(safe_float(raw_nutr.get("lipid", 0.0)) / NUTRITION_SCALE, 1)))
+            carb_val = max(0.0, round(safe_float(raw_nutr.get("carb", 0.0)) / NUTRITION_SCALE, 1))
+            protein_val = max(0.0, round(safe_float(raw_nutr.get("protein", 0.0)) / NUTRITION_SCALE, 1))
+            lipid_val = max(0.0, round(safe_float(raw_nutr.get("lipid", 0.0)) / NUTRITION_SCALE, 1))
         is_perfect_diet = (carb_val > 0.0 and protein_val > 0.0 and lipid_val > 0.0)
 
         warnings_list = warnings_data.get("warnings") or []
@@ -6281,9 +6281,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         carb_v = safe_float(last_nutr.get("carb") if last_nutr.get("carb") is not None else (last_nutr.get("a") if last_nutr.get("a") is not None else player_info.get("carb")), 100.0)
         prot_v = safe_float(last_nutr.get("protein") if last_nutr.get("protein") is not None else (last_nutr.get("b") if last_nutr.get("b") is not None else player_info.get("protein")), 100.0)
         lipid_v = safe_float(last_nutr.get("lipid") if last_nutr.get("lipid") is not None else (last_nutr.get("y") if last_nutr.get("y") is not None else player_info.get("lipid")), 100.0)
-        carb_v = max(0.0, min(100.0, carb_v))
-        prot_v = max(0.0, min(100.0, prot_v))
-        lipid_v = max(0.0, min(100.0, lipid_v))
+        carb_v = max(0.0, carb_v)
+        prot_v = max(0.0, prot_v)
+        lipid_v = max(0.0, lipid_v)
         save_garage_dino_snapshot(f"{sid}_last_nutrients", {"nutrients": {"carb": carb_v, "protein": prot_v, "lipid": lipid_v}})
 
         dino_snap = {
@@ -6899,9 +6899,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             payload = json.loads(self.rfile.read(length).decode("utf-8")) if length > 0 else {}
             steam_id = str(payload.get("steam_id") or self.get_active_steam_id()).strip()
             dino_id = str(payload.get("dino_id") or payload.get("id") or "").strip()
-            carb = max(0.0, min(100.0, safe_float(payload.get("carb", payload.get("a", 100)), 100.0)))
-            protein = max(0.0, min(100.0, safe_float(payload.get("protein", payload.get("b", 100)), 100.0)))
-            lipid = max(0.0, min(100.0, safe_float(payload.get("lipid", payload.get("y", 100)), 100.0)))
+            carb = max(0.0, safe_float(payload.get("carb", payload.get("a", 100)), 100.0))
+            protein = max(0.0, safe_float(payload.get("protein", payload.get("b", 100)), 100.0))
+            lipid = max(0.0, safe_float(payload.get("lipid", payload.get("y", 100)), 100.0))
 
             nutr_data = {"carb": carb, "protein": protein, "lipid": lipid}
             if dino_id:
@@ -12874,26 +12874,26 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 curr_ingame_p = safe_float(raw_nutr.get("protein", 0.0)) / NUTRITION_SCALE
                 curr_ingame_l = safe_float(raw_nutr.get("lipid", 0.0)) / NUTRITION_SCALE
             
-            # Tính chỉ số % in-game sau khi cộng +25%
+            # Tính chỉ số % in-game sau khi cộng +25% (không giới hạn 100%, cộng lũy tiến tự do)
             if nutrient_type in ["carb", "s", "carbohydrate", "a"]:
-                new_ingame_c = min(100.0, max(0.0, round(curr_ingame_c + amount_val, 1)))
-                new_ingame_p = min(100.0, max(0.0, round(curr_ingame_p, 1)))
-                new_ingame_l = min(100.0, max(0.0, round(curr_ingame_l, 1)))
+                new_ingame_c = max(0.0, round(curr_ingame_c + amount_val, 1))
+                new_ingame_p = max(0.0, round(curr_ingame_p, 1))
+                new_ingame_l = max(0.0, round(curr_ingame_l, 1))
                 buff_name = f"Dưỡng Chất A (+{int(amount_val)}% -> {int(new_ingame_c)}% in-game)"
             elif nutrient_type in ["lipid", "fat", "line", "//", "y"]:
-                new_ingame_c = min(100.0, max(0.0, round(curr_ingame_c, 1)))
-                new_ingame_p = min(100.0, max(0.0, round(curr_ingame_p, 1)))
-                new_ingame_l = min(100.0, max(0.0, round(curr_ingame_l + amount_val, 1)))
+                new_ingame_c = max(0.0, round(curr_ingame_c, 1))
+                new_ingame_p = max(0.0, round(curr_ingame_p, 1))
+                new_ingame_l = max(0.0, round(curr_ingame_l + amount_val, 1))
                 buff_name = f"Dưỡng Chất Y (+{int(amount_val)}% -> {int(new_ingame_l)}% in-game)"
             elif nutrient_type in ["protein", "dot", ":", "b"]:
-                new_ingame_c = min(100.0, max(0.0, round(curr_ingame_c, 1)))
-                new_ingame_p = min(100.0, max(0.0, round(curr_ingame_p + amount_val, 1)))
-                new_ingame_l = min(100.0, max(0.0, round(curr_ingame_l, 1)))
+                new_ingame_c = max(0.0, round(curr_ingame_c, 1))
+                new_ingame_p = max(0.0, round(curr_ingame_p + amount_val, 1))
+                new_ingame_l = max(0.0, round(curr_ingame_l, 1))
                 buff_name = f"Dưỡng Chất B (+{int(amount_val)}% -> {int(new_ingame_p)}% in-game)"
             else:  # "all" hoặc "perfect" hoặc "aby"
-                new_ingame_c = min(100.0, max(0.0, round(curr_ingame_c + amount_val, 1)))
-                new_ingame_p = min(100.0, max(0.0, round(curr_ingame_p + amount_val, 1)))
-                new_ingame_l = min(100.0, max(0.0, round(curr_ingame_l + amount_val, 1)))
+                new_ingame_c = max(0.0, round(curr_ingame_c + amount_val, 1))
+                new_ingame_p = max(0.0, round(curr_ingame_p + amount_val, 1))
+                new_ingame_l = max(0.0, round(curr_ingame_l + amount_val, 1))
                 buff_name = f"Cả 3 Dưỡng Chất A - B - Y (+{int(amount_val)}% -> {int(new_ingame_c)}% in-game)"
 
             # Quy đổi sang điểm chuẩn gửi IslePilot API
