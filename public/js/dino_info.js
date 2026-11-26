@@ -938,7 +938,11 @@ const DinoInfo = {
       const data = await res.json();
       if (res.ok && data.ok) {
         this.showToast(data.message || `🎉 Đã buff thành công ${label}!`, 'success');
-        setTimeout(() => this.fetchData(false), 1200);
+        if (data.nutrition && this.data && this.data.dino) {
+          this.data.dino.nutrition = data.nutrition;
+          this.renderUI();
+        }
+        setTimeout(() => this.fetchData(false), 2000);
       } else {
         const errMsg = data.message || data.error || 'Thao tác thất bại!';
         this.showToast(errMsg, 'error');

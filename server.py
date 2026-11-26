@@ -572,6 +572,24 @@ def save_garage_dino_snapshot(key, snapshot_data):
             except Exception:
                 pass
 
+def delete_garage_dino_snapshot(key):
+    if not key:
+        return
+    with _file_io_lock:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        primary_file = os.path.join(base_dir, "garage_dino_snapshots.json")
+        backup_file = os.path.join(base_dir, ".persistent_garage_dino_snapshots.json")
+        data = load_garage_dino_snapshots()
+        k_str = str(key)
+        if k_str in data:
+            data.pop(k_str, None)
+            for fpath in [primary_file, backup_file]:
+                try:
+                    with open(fpath, "w", encoding="utf-8") as f:
+                        json.dump(data, f, ensure_ascii=False, indent=2)
+                except Exception:
+                    pass
+
 def get_user_gift_file():
     return os.path.join(os.path.dirname(os.path.abspath(__file__)), "user_gift_dinos.json")
 
@@ -3575,22 +3593,13 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             "elderB": ["None", "None", "None", "None"]
         }
 
-        # Kiểm tra snapshot buff dinh dưỡng gần nhất (trong vòng 300s)
-        # Quy đổi nutrition theo tỉ lệ hiển thị in-game của The Isle Evrima (1.5625 điểm API = 1% in-game)
+        # Luôn đọc trực tiếp lượng chất dinh dưỡng thời gian thực từ game (Evrima: 1% in-game = 1.5625 điểm API)
+        # Không dùng snapshot tĩnh để chỉ số tự do tiêu hóa và giảm dần theo đúng cơ chế game
         NUTRITION_SCALE = 1.5625
-        snap_nutr_entry = load_garage_dino_snapshot(f"{steam_id}_last_nutrients") or {}
-        snap_nutr = snap_nutr_entry.get("nutrients") or {}
-        snap_nutr_time = safe_float(snap_nutr_entry.get("timestamp", 0), 0)
-
         raw_nutr = player_data.get("nutrition") or {}
-        if snap_nutr and (time.time() - snap_nutr_time) < 300:
-            carb_val = max(0.0, round(safe_float(snap_nutr.get("ingame_carb", safe_float(snap_nutr.get("carb", 0.0)) / NUTRITION_SCALE)), 1))
-            protein_val = max(0.0, round(safe_float(snap_nutr.get("ingame_protein", safe_float(snap_nutr.get("protein", 0.0)) / NUTRITION_SCALE)), 1))
-            lipid_val = max(0.0, round(safe_float(snap_nutr.get("ingame_lipid", safe_float(snap_nutr.get("lipid", 0.0)) / NUTRITION_SCALE)), 1))
-        else:
-            carb_val = max(0.0, round(safe_float(raw_nutr.get("carb", 0.0)) / NUTRITION_SCALE, 1))
-            protein_val = max(0.0, round(safe_float(raw_nutr.get("protein", 0.0)) / NUTRITION_SCALE, 1))
-            lipid_val = max(0.0, round(safe_float(raw_nutr.get("lipid", 0.0)) / NUTRITION_SCALE, 1))
+        carb_val = max(0.0, round(safe_float(raw_nutr.get("carb", 0.0)) / NUTRITION_SCALE, 1))
+        protein_val = max(0.0, round(safe_float(raw_nutr.get("protein", 0.0)) / NUTRITION_SCALE, 1))
+        lipid_val = max(0.0, round(safe_float(raw_nutr.get("lipid", 0.0)) / NUTRITION_SCALE, 1))
         is_perfect_diet = (carb_val > 0.0 and protein_val > 0.0 and lipid_val > 0.0)
 
         warnings_list = warnings_data.get("warnings") or []
@@ -12857,24 +12866,27 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     self.send_json_response({"ok": False, "message": f"Kích hoạt Prime thất bại: {err_msg}"}, 400)
                 return
 
-            # THAO TÁC 3: BUFF CHẤT DINH DƯỠNG (A, B, Y hoặc CẢ 3 CHẤT) - TĂNG ĐÚNG +25% IN-GAME MỖI LẦN BẤM
+            # THAO TÁC 3: BUFF CHẤT DINH DƯỠNG (A, B, Y hoặc CẢ 3 CHẤT)
+            # Kiểm tra lượng chất thực tế đang có trong game của người chơi, sau đó tăng đúng +25%
+            # Dữ liệu sẽ tiêu hóa và giảm dần theo đúng cơ chế game, không cố định chất
             NUTRITION_SCALE = 1.5625  # 1% in-game Evrima tương đương 1.5625 điểm trong IslePilot setnutrition
             
-            snap_entry = load_garage_dino_snapshot(f"{sid_str}_last_nutrients") or {}
-            snap_nutr = snap_entry.get("nutrients") or {}
-            snap_time = safe_float(snap_entry.get("timestamp", 0), 0)
+            # Luôn kiểm tra trực tiếp lượng chất của người chơi trong game hiện tại
+            live_p = self.fetch_islepilot(f"/players/{sid_str}", bypass_cache=True)
+            if isinstance(live_p, dict) and live_p.get("species"):
+                player_info = live_p
             
             raw_nutr = player_info.get("nutrition") or {}
-            if snap_nutr and (time.time() - snap_time) < 300:
-                curr_ingame_c = safe_float(snap_nutr.get("ingame_carb"), safe_float(snap_nutr.get("carb", 0.0)) / NUTRITION_SCALE)
-                curr_ingame_p = safe_float(snap_nutr.get("ingame_protein"), safe_float(snap_nutr.get("protein", 0.0)) / NUTRITION_SCALE)
-                curr_ingame_l = safe_float(snap_nutr.get("ingame_lipid"), safe_float(snap_nutr.get("lipid", 0.0)) / NUTRITION_SCALE)
-            else:
-                curr_ingame_c = safe_float(raw_nutr.get("carb", 0.0)) / NUTRITION_SCALE
-                curr_ingame_p = safe_float(raw_nutr.get("protein", 0.0)) / NUTRITION_SCALE
-                curr_ingame_l = safe_float(raw_nutr.get("lipid", 0.0)) / NUTRITION_SCALE
-            
-            # Tính chỉ số % in-game sau khi cộng +25% (không giới hạn 100%, cộng lũy tiến tự do)
+            raw_c = safe_float(raw_nutr.get("carb", 0.0))
+            raw_p = safe_float(raw_nutr.get("protein", 0.0))
+            raw_l = safe_float(raw_nutr.get("lipid", 0.0))
+
+            # Chuyển đổi lượng chất hiện có trong game sang %
+            curr_ingame_c = raw_c / NUTRITION_SCALE
+            curr_ingame_p = raw_p / NUTRITION_SCALE
+            curr_ingame_l = raw_l / NUTRITION_SCALE
+
+            # Tăng đúng +25% dựa trên lượng chất thực tế trong game
             if nutrient_type in ["carb", "s", "carbohydrate", "a"]:
                 new_ingame_c = max(0.0, round(curr_ingame_c + amount_val, 1))
                 new_ingame_p = max(0.0, round(curr_ingame_p, 1))
@@ -12909,29 +12921,17 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             res = self.fetch_islepilot("/commands", method="POST", body_data=cmd_body)
             
             if res and (res.get("ok") is True or "commandId" in res):
-                now_ts = time.time()
-                # Chỉ lưu snapshot và cập nhật trực tiếp vào cache khi lệnh POST thành công
-                save_garage_dino_snapshot(f"{sid_str}_last_nutrients", {
-                    "nutrients": {
-                        "carb": cmd_body["carb"],
-                        "protein": cmd_body["protein"],
-                        "lipid": cmd_body["lipid"],
-                        "ingame_carb": new_ingame_c,
-                        "ingame_protein": new_ingame_p,
-                        "ingame_lipid": new_ingame_l
-                    },
-                    "timestamp": now_ts
-                })
-                player_info["nutrition"] = {
-                    "carb": cmd_body["carb"],
-                    "protein": cmd_body["protein"],
-                    "lipid": cmd_body["lipid"]
-                }
-                DinoRequestHandler._islepilot_cache[cache_ep] = (now_ts, player_info)
+                # Xóa sạch cache và snapshot cũ để hệ thống đọc trực tiếp chỉ số giảm dần theo game
+                delete_garage_dino_snapshot(f"{sid_str}_last_nutrients")
+                if hasattr(DinoRequestHandler, "_islepilot_cache"):
+                    DinoRequestHandler._islepilot_cache.pop(cache_ep, None)
+                if hasattr(DinoRequestHandler, "_live_players_map") and sid_str in DinoRequestHandler._live_players_map:
+                    DinoRequestHandler._live_players_map.pop(sid_str, None)
+
                 self.send_json_response({
                     "ok": True,
                     "success": True,
-                    "message": f"⚡ Đã tăng đúng +{int(amount_val)}% cả 3 chất A-B-Y vào game thành công! (Hiện tại: {int(new_ingame_c)}%)",
+                    "message": f"⚡ Đã kiểm tra lượng chất trong game và buff +{int(amount_val)}% thành công! (Hiện tại: {int(new_ingame_c)}% - chất sẽ tiêu hóa và giảm dần theo game)",
                     "nutrition": {
                         "carb": new_ingame_c,
                         "protein": new_ingame_p,
