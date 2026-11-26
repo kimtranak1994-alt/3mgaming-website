@@ -2872,6 +2872,7 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
     _live_players_ts = 0.0
     _leaderboard_map = {}
     _leaderboard_ts = 0.0
+    _pending_powerup_sync = {}
 
     def _get_cache_ttl(self, clean_key):
         if clean_key.startswith("/players/"):
@@ -2883,9 +2884,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 return 45.0
             if "/wallet" in clean_key:
                 return 30.0
-            return 12.0
+            return 25.0
         elif clean_key == "/players":
-            return 10.0
+            return 3.0
         elif clean_key == "/server":
             return 12.0
         elif clean_key == "/leaderboard":
@@ -3047,6 +3048,25 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                                             if isinstance(p_item, dict) and p_item.get("steamId"):
                                                 p_sid = str(p_item.get("steamId")).strip()
                                                 DinoRequestHandler._not_found_steam_ids.pop(p_sid, None)
+                                                p_cache_key = f"/players/{p_sid}"
+                                                old_p_entry = DinoRequestHandler._islepilot_cache.get(p_cache_key)
+                                                if old_p_entry and isinstance(old_p_entry[1], dict):
+                                                    merged_p = dict(old_p_entry[1])
+                                                    for live_k in [
+                                                        "online", "species", "female", "growth",
+                                                        "health", "maxHealth", "hunger", "maxHunger",
+                                                        "thirst", "maxThirst", "stamina", "maxStamina",
+                                                        "blood", "maxBlood", "oxygen", "maxOxygen",
+                                                        "nutrition", "primeEligible", "isPrimeElder",
+                                                        "position", "lastSeenAt", "totalPlaySec"
+                                                    ]:
+                                                        if live_k in p_item:
+                                                            merged_p[live_k] = p_item[live_k]
+                                                    if isinstance(p_item.get("prime"), dict):
+                                                        old_prime = dict(merged_p.get("prime") or {})
+                                                        old_prime.update(p_item["prime"])
+                                                        merged_p["prime"] = old_prime
+                                                    DinoRequestHandler._islepilot_cache[p_cache_key] = (old_p_entry[0], merged_p)
                                     elif clean_key == "/leaderboard" and isinstance(res_json, dict):
                                         e_list = res_json.get("entries") or []
                                         DinoRequestHandler._leaderboard_map = {
@@ -3368,13 +3388,12 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             wallet = player_info.get("wallet") or {}
 
             if sp:
-                snaps_map = load_garage_dino_snapshots()
-                last_nutr = (
-                    (snaps_map.get(f"{steam_id}_last_nutrients") or {}).get("nutrients")
-                    or (snaps_map.get(f"{steam_id}_{sp}") or {}).get("nutrients")
-                    or (snaps_map.get(f"{steam_id}_last_parked") or {}).get("nutrients")
-                    or {"carb": 100.0, "protein": 100.0, "lipid": 100.0}
-                )
+                NUTRITION_SCALE = 1.5625
+                raw_nutr = player_info.get("nutrition") or {}
+                live_c = round(max(0.0, safe_float(raw_nutr.get("carb", 0.0)) / NUTRITION_SCALE), 1)
+                live_p = round(max(0.0, safe_float(raw_nutr.get("protein", 0.0)) / NUTRITION_SCALE), 1)
+                live_l = round(max(0.0, safe_float(raw_nutr.get("lipid", 0.0)) / NUTRITION_SCALE), 1)
+                last_nutr = {"carb": live_c, "protein": live_p, "lipid": live_l}
 
                 raw_hp = safe_float(player_info.get("health"), 0.0)
                 max_hp = safe_float(player_info.get("maxHealth"), 0.0)
@@ -3483,16 +3502,57 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             })
             return
 
-        # 1. Lấy thông tin người chơi trước (tái sử dụng cache từ /api/player/me nếu vừa gọi)
-        player_data = self.fetch_islepilot(f"/players/{steam_id}") or {}
-        if not isinstance(player_data, dict):
-            player_data = {}
-        if not player_data.get("species") and str(steam_id) in DinoRequestHandler._live_players_map:
-            live_p = DinoRequestHandler._live_players_map.get(str(steam_id))
-            if isinstance(live_p, dict) and live_p.get("species"):
-                merged_p = dict(live_p)
-                merged_p.update({k: v for k, v in player_data.items() if v is not None})
-                player_data = merged_p
+        # 1. Làm mới danh sách /players chung toàn server (tối đa 1 request mỗi 3s cho cả 100 người chơi)
+        # Gói /players chứa sẵn 100% chỉ số thời gian thực (Máu, Đói, Khát, 3 Chất A-B-Y, Tăng trưởng, Tọa độ) của toàn bộ người đang online
+        now_t = time.time()
+        if (now_t - DinoRequestHandler._live_players_ts) >= 3.0:
+            try:
+                self.fetch_islepilot("/players")
+            except Exception:
+                pass
+
+        live_p = DinoRequestHandler._live_players_map.get(str(steam_id))
+        p_cache_key = f"/players/{steam_id}"
+        cached_p_entry = DinoRequestHandler._islepilot_cache.get(p_cache_key)
+
+        if isinstance(live_p, dict) and live_p.get("species"):
+            # Nếu người chơi đang online trong _live_players_map: chỉ gọi /players/{id} khi lần đầu mở trang,
+            # khi đổi loài, khi tăng tiến độ nhiệm vụ Prime, hoặc sau mỗi 60s (tiết kiệm 95% request riêng lẻ!)
+            need_full_profile = True
+            if cached_p_entry and isinstance(cached_p_entry[1], dict) and (now_t - cached_p_entry[0]) < 60.0:
+                c_doc = cached_p_entry[1]
+                c_prime_comp = (c_doc.get("prime") or {}).get("completed")
+                l_prime_comp = (live_p.get("prime") or {}).get("completed")
+                if c_doc.get("species") == live_p.get("species") and c_prime_comp == l_prime_comp and c_doc.get("mutationSlots"):
+                    need_full_profile = False
+                    player_data = dict(c_doc)
+            if need_full_profile:
+                player_data = self.fetch_islepilot(p_cache_key) or {}
+                if not isinstance(player_data, dict):
+                    player_data = {}
+        else:
+            player_data = self.fetch_islepilot(p_cache_key) or {}
+            if not isinstance(player_data, dict):
+                player_data = {}
+
+        # Luôn ghép đè các chỉ số sinh tồn & dinh dưỡng mới nhất (3s) từ _live_players_map
+        if isinstance(live_p, dict) and live_p.get("species"):
+            merged_p = dict(player_data)
+            for live_k in [
+                "online", "species", "female", "growth",
+                "health", "maxHealth", "hunger", "maxHunger",
+                "thirst", "maxThirst", "stamina", "maxStamina",
+                "blood", "maxBlood", "oxygen", "maxOxygen",
+                "nutrition", "primeEligible", "isPrimeElder",
+                "position", "lastSeenAt", "totalPlaySec"
+            ]:
+                if live_k in live_p and live_p[live_k] is not None:
+                    merged_p[live_k] = live_p[live_k]
+            if isinstance(live_p.get("prime"), dict):
+                old_pr = dict(merged_p.get("prime") or {})
+                old_pr.update(live_p["prime"])
+                merged_p["prime"] = old_pr
+            player_data = merged_p
 
         species = player_data.get("species")
         has_active_dino = bool(species)
@@ -3543,12 +3603,23 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             health = max_health
         health_pct = min(100.0, max(0.0, round((health / max_health * 100), 1))) if max_health > 0 else 100.0
 
+        now_ts = time.time()
+        pend = DinoRequestHandler._pending_powerup_sync.get(str(steam_id)) or {}
+
         hunger = safe_float(player_data.get("hunger"), 0.0)
         max_hunger = safe_float(player_data.get("maxHunger"), 1.0)
-        # Kiểm tra snapshot buff đói gần nhất (trong vòng 300s)
-        snap_hunger_entry = load_garage_dino_snapshot(f"{steam_id}_last_hunger") or {}
-        if snap_hunger_entry and (time.time() - safe_float(snap_hunger_entry.get("timestamp", 0), 0)) < 300:
-            hunger = min(max_hunger, safe_float(snap_hunger_entry.get("hunger"), hunger))
+        # Chỉ giữ đệm tạm 6 giây ngay sau khi bấm nút Buff Đói trong lúc chờ server game gửi heartbeat mới,
+        # sau đó giải phóng hoàn toàn để độ đói tự động giảm/tăng theo đúng trạng thái thực trong game
+        h_pend = pend.get("hunger")
+        if isinstance(h_pend, dict):
+            if (now_ts - safe_float(h_pend.get("ts"), 0)) < 6.0:
+                prev_hu = safe_float(h_pend.get("prev_hunger"), -1.0)
+                if abs(hunger - prev_hu) > 0.5:
+                    pend.pop("hunger", None)
+                else:
+                    hunger = min(max_hunger, safe_float(h_pend.get("target_hunger"), hunger))
+            else:
+                pend.pop("hunger", None)
         hunger_pct = min(100.0, max(0.0, round((hunger / max_hunger * 100), 1))) if max_hunger > 0 else 100.0
 
         thirst = safe_float(player_data.get("thirst"), 0.0)
@@ -3560,11 +3631,13 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
         is_prime_elder = bool(player_data.get("isPrimeElder"))
         prime_eligible = bool(player_data.get("primeEligible"))
-        # Kiểm tra snapshot kích hoạt Prime gần nhất (trong vòng 300s)
-        snap_prime_entry = load_garage_dino_snapshot(f"{steam_id}_last_prime") or {}
-        if snap_prime_entry and (time.time() - safe_float(snap_prime_entry.get("timestamp", 0), 0)) < 300:
-            is_prime_elder = True
-            prime_eligible = True
+        p_pend = pend.get("prime")
+        if isinstance(p_pend, dict):
+            if (now_ts - safe_float(p_pend.get("ts"), 0)) < 6.0 and not is_prime_elder:
+                is_prime_elder = True
+                prime_eligible = True
+            else:
+                pend.pop("prime", None)
 
         if is_prime_elder:
             stage = "Prime Elder (Cổ Đại Tối Thượng)"
@@ -3594,12 +3667,31 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
         }
 
         # Luôn đọc trực tiếp lượng chất dinh dưỡng thời gian thực từ game (Evrima: 1% in-game = 1.5625 điểm API)
-        # Không dùng snapshot tĩnh để chỉ số tự do tiêu hóa và giảm dần theo đúng cơ chế game
+        # Chỉ giữ đệm tạm 6 giây ngay lúc vừa bấm nút Buff chờ server game đồng bộ heartbeat, sau đó tự do tăng/giảm theo game
         NUTRITION_SCALE = 1.5625
         raw_nutr = player_data.get("nutrition") or {}
-        carb_val = max(0.0, round(safe_float(raw_nutr.get("carb", 0.0)) / NUTRITION_SCALE, 1))
-        protein_val = max(0.0, round(safe_float(raw_nutr.get("protein", 0.0)) / NUTRITION_SCALE, 1))
-        lipid_val = max(0.0, round(safe_float(raw_nutr.get("lipid", 0.0)) / NUTRITION_SCALE, 1))
+        raw_c = safe_float(raw_nutr.get("carb", 0.0))
+        raw_p = safe_float(raw_nutr.get("protein", 0.0))
+        raw_l = safe_float(raw_nutr.get("lipid", 0.0))
+
+        n_pend = pend.get("nutrition")
+        if isinstance(n_pend, dict):
+            if (now_ts - safe_float(n_pend.get("ts"), 0)) < 6.0:
+                prev_c = safe_float(n_pend.get("prev_carb"), -1.0)
+                prev_p = safe_float(n_pend.get("prev_prot"), -1.0)
+                prev_l = safe_float(n_pend.get("prev_lip"), -1.0)
+                if (abs(raw_c - prev_c) > 0.5) or (abs(raw_p - prev_p) > 0.5) or (abs(raw_l - prev_l) > 0.5):
+                    pend.pop("nutrition", None)
+                else:
+                    raw_c = safe_float(n_pend.get("target_carb"), raw_c)
+                    raw_p = safe_float(n_pend.get("target_prot"), raw_p)
+                    raw_l = safe_float(n_pend.get("target_lip"), raw_l)
+            else:
+                pend.pop("nutrition", None)
+
+        carb_val = max(0.0, round(raw_c / NUTRITION_SCALE, 1))
+        protein_val = max(0.0, round(raw_p / NUTRITION_SCALE, 1))
+        lipid_val = max(0.0, round(raw_l / NUTRITION_SCALE, 1))
         is_perfect_diet = (carb_val > 0.0 and protein_val > 0.0 and lipid_val > 0.0)
 
         warnings_list = warnings_data.get("warnings") or []
@@ -12763,16 +12855,22 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             
             sid_str = urllib.parse.unquote(str(steam_id)).split(":", 1)[0].strip()
             
-            # 1. Kiểm tra khủng long đang sống trong game (Ưu tiên lấy từ Cache / Live Map để bấm buff liên tiếp không tốn GET API)
+            # 1. Làm mới /players nếu đã quá 2s để lấy chỉ số Máu, Đói, 3 Chất A-B-Y thực tế mới nhất từ game
+            if (time.time() - DinoRequestHandler._live_players_ts) >= 2.0:
+                try:
+                    self.fetch_islepilot("/players")
+                except Exception:
+                    pass
+
             cache_ep = f"/players/{sid_str}"
             player_info = {}
-            cached_entry = DinoRequestHandler._islepilot_cache.get(cache_ep)
-            if cached_entry and isinstance(cached_entry[1], dict) and cached_entry[1].get("species"):
-                player_info = dict(cached_entry[1])
+            live_p = DinoRequestHandler._live_players_map.get(sid_str)
+            if isinstance(live_p, dict) and live_p.get("species"):
+                player_info = dict(live_p)
             if not player_info.get("species"):
-                live_p = DinoRequestHandler._live_players_map.get(sid_str)
-                if isinstance(live_p, dict) and live_p.get("species"):
-                    player_info = dict(live_p)
+                cached_entry = DinoRequestHandler._islepilot_cache.get(cache_ep)
+                if cached_entry and isinstance(cached_entry[1], dict) and cached_entry[1].get("species"):
+                    player_info = dict(cached_entry[1])
             if not player_info.get("species"):
                 fetched_p = self.fetch_islepilot(cache_ep)
                 if isinstance(fetched_p, dict) and fetched_p:
@@ -12791,6 +12889,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 last_parked = load_garage_dino_snapshot(f"{sid_str}_last_parked") or {}
                 species = last_parked.get("species") or last_parked.get("class") or "Khủng long"
                 player_info["species"] = species
+
+            now_ts = time.time()
+            pend = DinoRequestHandler._pending_powerup_sync.setdefault(sid_str, {})
             
             # 2. Xác định loại chất buff / thao tác powerup
             nutrient_type = str(payload.get("nutrient") or payload.get("type") or "all").lower().strip()
@@ -12799,15 +12900,18 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
 
             # THAO TÁC 1: BUFF ĐÓI (HUNGER)
             if nutrient_type in ["hunger", "doi", "food"]:
-                snap_entry = load_garage_dino_snapshot(f"{sid_str}_last_hunger") or {}
-                snap_time = safe_float(snap_entry.get("timestamp", 0), 0)
-                if snap_entry and (time.time() - snap_time) < 300:
-                    cur_hu = safe_float(snap_entry.get("hunger"), safe_float(player_info.get("hunger"), 0.0))
-                else:
-                    cur_hu = safe_float(player_info.get("hunger"), 0.0)
+                live_hu = safe_float(player_info.get("hunger"), 0.0)
                 max_hu = safe_float(player_info.get("maxHunger"), 1000.0)
                 if max_hu <= 0:
                     max_hu = 1000.0
+
+                cur_hu = live_hu
+                h_pend = pend.get("hunger")
+                if isinstance(h_pend, dict) and (now_ts - safe_float(h_pend.get("ts"), 0)) < 6.0:
+                    prev_hu = safe_float(h_pend.get("prev_hunger"), -1.0)
+                    if abs(live_hu - prev_hu) <= 0.5:
+                        cur_hu = safe_float(h_pend.get("target_hunger"), live_hu)
+
                 target_hu = min(max_hu, cur_hu + (max_hu * (amount_val / 100.0)))
                 res = self.fetch_islepilot("/commands", method="POST", body_data={
                     "action": "setstats",
@@ -12815,20 +12919,19 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     "hunger": target_hu
                 })
                 if res and (res.get("ok") is True or "commandId" in res):
-                    now_ts = time.time()
-                    save_garage_dino_snapshot(f"{sid_str}_last_hunger", {
-                        "hunger": target_hu,
-                        "timestamp": now_ts
-                    })
-                    player_info["hunger"] = target_hu
-                    player_info["maxHunger"] = max_hu
-                    DinoRequestHandler._islepilot_cache[cache_ep] = (now_ts, player_info)
+                    delete_garage_dino_snapshot(f"{sid_str}_last_hunger")
+                    pend["hunger"] = {
+                        "ts": time.time(),
+                        "prev_hunger": live_hu,
+                        "target_hunger": target_hu
+                    }
                     self.send_json_response({
                         "ok": True,
                         "success": True,
                         "message": f"🍖 Đã buff +{int(amount_val)}% Thức ăn (Đói) cho khủng long {species} thành công! ({round(target_hu, 1)} / {round(max_hu, 1)})",
                         "hunger": target_hu,
                         "max_hunger": max_hu,
+                        "hunger_percent": min(100.0, max(0.0, round((target_hu / max_hu) * 100, 1))),
                         "result": res
                     })
                 else:
@@ -12847,14 +12950,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     "stacks": 10
                 })
                 if res and (res.get("ok") is True or "commandId" in res):
-                    now_ts = time.time()
-                    save_garage_dino_snapshot(f"{sid_str}_last_prime", {
-                        "isPrimeElder": True,
-                        "timestamp": now_ts
-                    })
-                    player_info["isPrimeElder"] = True
-                    player_info["primeEligible"] = True
-                    DinoRequestHandler._islepilot_cache[cache_ep] = (now_ts, player_info)
+                    delete_garage_dino_snapshot(f"{sid_str}_last_prime")
+                    pend["prime"] = {"ts": time.time(), "isPrimeElder": True}
                     self.send_json_response({
                         "ok": True,
                         "success": True,
@@ -12867,19 +12964,24 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 return
 
             # THAO TÁC 3: BUFF CHẤT DINH DƯỠNG (A, B, Y hoặc CẢ 3 CHẤT)
-            # Kiểm tra lượng chất thực tế đang có trong game của người chơi, sau đó tăng đúng +25%
-            # Dữ liệu sẽ tiêu hóa và giảm dần theo đúng cơ chế game, không cố định chất
+            # Đọc trực tiếp lượng chất thực tế từ game; chỉ nối tiếp trong cửa sổ 6s nếu người chơi bấm liên tiếp trước khi game kịp gửi heartbeat
             NUTRITION_SCALE = 1.5625  # 1% in-game Evrima tương đương 1.5625 điểm trong IslePilot setnutrition
             
-            # Luôn kiểm tra trực tiếp lượng chất của người chơi trong game hiện tại
-            live_p = self.fetch_islepilot(f"/players/{sid_str}", bypass_cache=True)
-            if isinstance(live_p, dict) and live_p.get("species"):
-                player_info = live_p
-            
             raw_nutr = player_info.get("nutrition") or {}
-            raw_c = safe_float(raw_nutr.get("carb", 0.0))
-            raw_p = safe_float(raw_nutr.get("protein", 0.0))
-            raw_l = safe_float(raw_nutr.get("lipid", 0.0))
+            live_raw_c = safe_float(raw_nutr.get("carb", 0.0))
+            live_raw_p = safe_float(raw_nutr.get("protein", 0.0))
+            live_raw_l = safe_float(raw_nutr.get("lipid", 0.0))
+
+            raw_c, raw_p, raw_l = live_raw_c, live_raw_p, live_raw_l
+            n_pend = pend.get("nutrition")
+            if isinstance(n_pend, dict) and (now_ts - safe_float(n_pend.get("ts"), 0)) < 6.0:
+                prev_c = safe_float(n_pend.get("prev_carb"), -1.0)
+                prev_p = safe_float(n_pend.get("prev_prot"), -1.0)
+                prev_l = safe_float(n_pend.get("prev_lip"), -1.0)
+                if (abs(live_raw_c - prev_c) <= 0.5) and (abs(live_raw_p - prev_p) <= 0.5) and (abs(live_raw_l - prev_l) <= 0.5):
+                    raw_c = safe_float(n_pend.get("target_carb"), live_raw_c)
+                    raw_p = safe_float(n_pend.get("target_prot"), live_raw_p)
+                    raw_l = safe_float(n_pend.get("target_lip"), live_raw_l)
 
             # Chuyển đổi lượng chất hiện có trong game sang %
             curr_ingame_c = raw_c / NUTRITION_SCALE
@@ -12891,22 +12993,18 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 new_ingame_c = max(0.0, round(curr_ingame_c + amount_val, 1))
                 new_ingame_p = max(0.0, round(curr_ingame_p, 1))
                 new_ingame_l = max(0.0, round(curr_ingame_l, 1))
-                buff_name = f"Dưỡng Chất A (+{int(amount_val)}% -> {int(new_ingame_c)}% in-game)"
             elif nutrient_type in ["lipid", "fat", "line", "//", "y"]:
                 new_ingame_c = max(0.0, round(curr_ingame_c, 1))
                 new_ingame_p = max(0.0, round(curr_ingame_p, 1))
                 new_ingame_l = max(0.0, round(curr_ingame_l + amount_val, 1))
-                buff_name = f"Dưỡng Chất Y (+{int(amount_val)}% -> {int(new_ingame_l)}% in-game)"
             elif nutrient_type in ["protein", "dot", ":", "b"]:
                 new_ingame_c = max(0.0, round(curr_ingame_c, 1))
                 new_ingame_p = max(0.0, round(curr_ingame_p + amount_val, 1))
                 new_ingame_l = max(0.0, round(curr_ingame_l, 1))
-                buff_name = f"Dưỡng Chất B (+{int(amount_val)}% -> {int(new_ingame_p)}% in-game)"
             else:  # "all" hoặc "perfect" hoặc "aby"
                 new_ingame_c = max(0.0, round(curr_ingame_c + amount_val, 1))
                 new_ingame_p = max(0.0, round(curr_ingame_p + amount_val, 1))
                 new_ingame_l = max(0.0, round(curr_ingame_l + amount_val, 1))
-                buff_name = f"Cả 3 Dưỡng Chất A - B - Y (+{int(amount_val)}% -> {int(new_ingame_c)}% in-game)"
 
             # Quy đổi sang điểm chuẩn gửi IslePilot API
             cmd_body = {
@@ -12921,21 +13019,26 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             res = self.fetch_islepilot("/commands", method="POST", body_data=cmd_body)
             
             if res and (res.get("ok") is True or "commandId" in res):
-                # Xóa sạch cache và snapshot cũ để hệ thống đọc trực tiếp chỉ số giảm dần theo game
                 delete_garage_dino_snapshot(f"{sid_str}_last_nutrients")
-                if hasattr(DinoRequestHandler, "_islepilot_cache"):
-                    DinoRequestHandler._islepilot_cache.pop(cache_ep, None)
-                if hasattr(DinoRequestHandler, "_live_players_map") and sid_str in DinoRequestHandler._live_players_map:
-                    DinoRequestHandler._live_players_map.pop(sid_str, None)
+                pend["nutrition"] = {
+                    "ts": time.time(),
+                    "prev_carb": live_raw_c,
+                    "prev_prot": live_raw_p,
+                    "prev_lip": live_raw_l,
+                    "target_carb": cmd_body["carb"],
+                    "target_prot": cmd_body["protein"],
+                    "target_lip": cmd_body["lipid"]
+                }
 
                 self.send_json_response({
                     "ok": True,
                     "success": True,
-                    "message": f"⚡ Đã kiểm tra lượng chất trong game và buff +{int(amount_val)}% thành công! (Hiện tại: {int(new_ingame_c)}% - chất sẽ tiêu hóa và giảm dần theo game)",
+                    "message": f"⚡ Đã buff +{int(amount_val)}% cả 3 chất A-B-Y vào game thành công! (Hiện tại: {new_ingame_c}%)",
                     "nutrition": {
                         "carb": new_ingame_c,
                         "protein": new_ingame_p,
-                        "lipid": new_ingame_l
+                        "lipid": new_ingame_l,
+                        "is_perfect": (new_ingame_c > 0 and new_ingame_p > 0 and new_ingame_l > 0)
                     },
                     "result": res
                 })

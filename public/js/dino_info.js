@@ -83,20 +83,22 @@ const DinoInfo = {
 
     if (!this._visibilityBound) {
       this._visibilityBound = true;
-      document.addEventListener('visibilitychange', () => {
+      const triggerImmediateSync = () => {
         if (!document.hidden) {
           const curTab = document.body.getAttribute('data-current-tab');
           const isInfoTab = curTab === 'dino-info' || curTab === 'dinoinfo' || window.location.hash === '#dino-info';
           if (isInfoTab) {
-            this.fetchData();
+            this.fetchData(true);
           }
         }
-      });
+      };
+      document.addEventListener('visibilitychange', triggerImmediateSync);
+      window.addEventListener('focus', triggerImmediateSync);
     }
   },
 
   async fetchData(forceRender = false) {
-    if (this.isLoading) return;
+    if (this.isLoading || this.isBuffing) return;
     this.isLoading = true;
 
     const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
@@ -150,13 +152,13 @@ const DinoInfo = {
   startAutoRefresh() {
     if (this.pollTimer) clearInterval(this.pollTimer);
     this.pollTimer = setInterval(() => {
-      if (document.hidden) return; // Không gọi API khi tab trình duyệt đang ẩn
+      if (document.hidden) return;
       const curTab = document.body.getAttribute('data-current-tab');
       const isInfoTab = curTab === 'dino-info' || curTab === 'dinoinfo' || window.location.hash === '#dino-info';
       if (isInfoTab) {
         this.fetchData();
       }
-    }, 12000); // Tối ưu chu kỳ 12s tránh thundering herd và rate limit API
+    }, 3500); // Đồng bộ thời gian thực mỗi 3.5s (sử dụng nguồn /players dùng chung toàn server)
   },
 
   copyText(text, label) {
@@ -216,11 +218,11 @@ const DinoInfo = {
       const is_frozen = Boolean(dino.is_growth_frozen || (this.data && this.data.is_growth_frozen) || (dino.growth_state === 'frozen'));
       const posStr = (pos.x !== null && pos.x !== undefined) ? `X: ${pos.x}, Y: ${pos.y}, Z: ${pos.z}` : 'Đang cập nhật...';
 
-      // Evrima Nutrients / Powerups (3 Mục Buff Chất Chuẩn IslePilot - Không giới hạn 100%)
+      // Evrima Nutrients / Powerups (3 Mục Buff Chất Chuẩn IslePilot - Không giới hạn 100%, giữ 1 chữ số thập phân để thấy rõ tăng/giảm theo game)
       const nutrition = dino.nutrition || {};
-      const carbPct = Math.max(0, Math.round(Number(nutrition.carb) || 0));
-      const lipidPct = Math.max(0, Math.round(Number(nutrition.lipid) || 0));
-      const proteinPct = Math.max(0, Math.round(Number(nutrition.protein) || 0));
+      const carbPct = Math.max(0, Math.round((Number(nutrition.carb) || 0) * 10) / 10);
+      const lipidPct = Math.max(0, Math.round((Number(nutrition.lipid) || 0) * 10) / 10);
+      const proteinPct = Math.max(0, Math.round((Number(nutrition.protein) || 0) * 10) / 10);
       const isPerfectDiet = carbPct > 0 && lipidPct > 0 && proteinPct > 0;
 
       // Prime Elder Progression
@@ -875,9 +877,9 @@ const DinoInfo = {
       const curL = Number(this.data && this.data.dino && this.data.dino.nutrition && this.data.dino.nutrition.lipid) || 0;
       const curP = Number(this.data && this.data.dino && this.data.dino.nutrition && this.data.dino.nutrition.protein) || 0;
 
-      const newC = Math.max(0, Math.round(curC + 25));
-      const newL = Math.max(0, Math.round(curL + 25));
-      const newP = Math.max(0, Math.round(curP + 25));
+      const newC = Math.max(0, Math.round((curC + 25) * 10) / 10);
+      const newL = Math.max(0, Math.round((curL + 25) * 10) / 10);
+      const newP = Math.max(0, Math.round((curP + 25) * 10) / 10);
 
       if (carbEl) carbEl.textContent = `${newC}%`;
       if (lipidEl) lipidEl.textContent = `${newL}%`;
@@ -892,7 +894,7 @@ const DinoInfo = {
         this.data.dino.nutrition.carb = newC;
         this.data.dino.nutrition.lipid = newL;
         this.data.dino.nutrition.protein = newP;
-        this.data.dino.nutrition.is_perfect_diet = true;
+        this.data.dino.nutrition.is_perfect = true;
       }
     } else if (type === 'hunger') {
       const hungerEl = document.getElementById('nutr-hunger-val');
@@ -900,8 +902,9 @@ const DinoInfo = {
         const curH = Number(this.data.dino.hunger) || 0;
         const maxH = Number(this.data.dino.max_hunger) || 1000;
         const newH = Math.min(maxH, curH + (maxH * 0.25));
+        const pct = Math.min(100, Math.round((newH / maxH) * 1000) / 10);
         this.data.dino.hunger = newH;
-        const pct = Math.min(100, Math.round((newH / maxH) * 100));
+        this.data.dino.hunger_percent = pct;
         if (hungerEl) hungerEl.textContent = `${pct}%`;
       } else if (hungerEl) {
         hungerEl.textContent = '100%';
@@ -938,11 +941,21 @@ const DinoInfo = {
       const data = await res.json();
       if (res.ok && data.ok) {
         this.showToast(data.message || `🎉 Đã buff thành công ${label}!`, 'success');
-        if (data.nutrition && this.data && this.data.dino) {
-          this.data.dino.nutrition = data.nutrition;
+        if (this.data && this.data.dino) {
+          if (data.nutrition) {
+            this.data.dino.nutrition = data.nutrition;
+          }
+          if (data.hunger !== undefined) {
+            this.data.dino.hunger = data.hunger;
+            if (data.max_hunger) this.data.dino.max_hunger = data.max_hunger;
+            if (data.hunger_percent !== undefined) {
+              this.data.dino.hunger_percent = data.hunger_percent;
+            }
+          }
           this.renderUI();
+          this._lastRenderSig = JSON.stringify(this.data);
         }
-        setTimeout(() => this.fetchData(false), 2000);
+        setTimeout(() => this.fetchData(false), 3500);
       } else {
         const errMsg = data.message || data.error || 'Thao tác thất bại!';
         this.showToast(errMsg, 'error');
