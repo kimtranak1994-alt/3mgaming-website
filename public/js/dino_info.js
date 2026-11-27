@@ -474,21 +474,16 @@ const DinoInfo = {
           </div>
         </div>
 
-        <!-- HỆ THỐNG BUFF DINH DƯỠNG & TIỆN ÍCH (POWERUPS EVRIMA CHUẨN ISLEPILOT) -->
-        <div id="dino-powerups-card" class="card" style="padding: 24px; margin-bottom: 24px; background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.4);">
+        <!-- HỆ THỐNG BUFF DINH DƯỠNG & TIỆN ÍCH (POWERUPS EVRIMA) -->
+        <div class="card" style="padding: 22px 24px; margin-bottom: 24px; background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.4);">
           
           <!-- HEADER -->
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 12px;">
-            <div style="display: flex; align-items: center; gap: 12px;">
-              <span style="font-size: 1.8rem; background: rgba(16, 185, 129, 0.15); padding: 8px 12px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.3);">⚡</span>
-              <div>
-                <h3 style="font-size: 1.3rem; font-weight: 900; color: #fff; margin: 0; display: flex; align-items: center; gap: 8px;">
-                  Hệ Thống Buff Dinh Dưỡng A - B - Y & Sinh Tồn (Powerups)
-                </h3>
-                <p style="margin: 3px 0 0; font-size: 0.82rem; color: #94a3b8;">
-                  Tích hợp đồng bộ chuẩn IslePilot (3mGaming) — Bấm buff trực tiếp vào game không cần chờ, chỉ số tự do tiêu hóa theo thời gian thực
-                </p>
-              </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 1.6rem;">⚡</span>
+              <h3 style="font-size: 1.25rem; font-weight: 900; color: #fff; margin: 0;">
+                Hệ Thống Buff Chất Dinh Dưỡng & Sinh Tồn (Powerups)
+              </h3>
             </div>
             <div>
               <span id="nutr-diet-badge" style="${isPerfectDiet 
@@ -499,113 +494,56 @@ const DinoInfo = {
             </div>
           </div>
 
-          <!-- 4 NUTRITION & VITALS CARDS (VỚI NÚT BUFF RIÊNG CHO TỪNG CHẤT A, B, Y, ĐÓI) -->
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin-bottom: 20px;">
-            <!-- CARD 1: CHẤT A (CARB) -->
-            <div style="background: rgba(2, 6, 23, 0.75); padding: 14px 16px; border-radius: 12px; border: 1px solid rgba(56, 189, 248, 0.25); display: flex; flex-direction: column; justify-content: space-between; gap: 10px;">
-              <div style="display: flex; align-items: center; justify-content: space-between;">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                  <span style="font-size: 1.5rem;">🥖</span>
-                  <div>
-                    <div style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Chất A (Carb · S)</div>
-                    <div style="font-size: 1.25rem; font-weight: 900; color: #38bdf8; font-family: monospace;" id="nutr-carb-val">${carbPct}%</div>
-                  </div>
-                </div>
-              </div>
-              <div style="display: flex; gap: 8px;">
-                <button id="btn-powerup-carb" onclick="DinoInfo.buffNutrient('carb', 25)" class="btn-sm" style="flex: 1; padding: 8px 10px; font-size: 0.82rem; font-weight: 800; background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; color: #38bdf8; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
-                  <span class="btn-text">+25% Chất A</span>
-                </button>
-                <button id="btn-powerup-carb-full" onclick="DinoInfo.buffNutrient('carb', 100)" class="btn-sm" style="padding: 8px 12px; font-size: 0.82rem; font-weight: 800; background: rgba(56, 189, 248, 0.25); border: 1px solid #38bdf8; color: #fff; border-radius: 8px; cursor: pointer; transition: all 0.2s;" title="Nạp đầy 100% Chất A">
-                  <span class="btn-text">100%</span>
-                </button>
+          <!-- COMPACT NUTRITION & VITALS STATUS BAR -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; background: rgba(2, 6, 23, 0.6); padding: 14px 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 1.4rem;">🥖</span>
+              <div>
+                <div style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Chất A (Carb · S)</div>
+                <div style="font-size: 1.15rem; font-weight: 900; color: #38bdf8; font-family: monospace;" id="nutr-carb-val">${carbPct}%</div>
               </div>
             </div>
 
-            <!-- CARD 2: CHẤT Y (LIPID) -->
-            <div style="background: rgba(2, 6, 23, 0.75); padding: 14px 16px; border-radius: 12px; border: 1px solid rgba(52, 211, 153, 0.25); display: flex; flex-direction: column; justify-content: space-between; gap: 10px;">
-              <div style="display: flex; align-items: center; justify-content: space-between;">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                  <span style="font-size: 1.5rem;">🥑</span>
-                  <div>
-                    <div style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Chất Y (Lipid · //)</div>
-                    <div style="font-size: 1.25rem; font-weight: 900; color: #34d399; font-family: monospace;" id="nutr-lipid-val">${lipidPct}%</div>
-                  </div>
-                </div>
-              </div>
-              <div style="display: flex; gap: 8px;">
-                <button id="btn-powerup-lipid" onclick="DinoInfo.buffNutrient('lipid', 25)" class="btn-sm" style="flex: 1; padding: 8px 10px; font-size: 0.82rem; font-weight: 800; background: rgba(52, 211, 153, 0.15); border: 1px solid #34d399; color: #34d399; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
-                  <span class="btn-text">+25% Chất Y</span>
-                </button>
-                <button id="btn-powerup-lipid-full" onclick="DinoInfo.buffNutrient('lipid', 100)" class="btn-sm" style="padding: 8px 12px; font-size: 0.82rem; font-weight: 800; background: rgba(52, 211, 153, 0.25); border: 1px solid #34d399; color: #fff; border-radius: 8px; cursor: pointer; transition: all 0.2s;" title="Nạp đầy 100% Chất Y">
-                  <span class="btn-text">100%</span>
-                </button>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 1.4rem;">🥑</span>
+              <div>
+                <div style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Chất Y (Lipid · //)</div>
+                <div style="font-size: 1.15rem; font-weight: 900; color: #34d399; font-family: monospace;" id="nutr-lipid-val">${lipidPct}%</div>
               </div>
             </div>
 
-            <!-- CARD 3: CHẤT B (PROTEIN) -->
-            <div style="background: rgba(2, 6, 23, 0.75); padding: 14px 16px; border-radius: 12px; border: 1px solid rgba(251, 146, 60, 0.25); display: flex; flex-direction: column; justify-content: space-between; gap: 10px;">
-              <div style="display: flex; align-items: center; justify-content: space-between;">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                  <span style="font-size: 1.5rem;">🥩</span>
-                  <div>
-                    <div style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Chất B (Protein · :)</div>
-                    <div style="font-size: 1.25rem; font-weight: 900; color: #fb923c; font-family: monospace;" id="nutr-protein-val">${proteinPct}%</div>
-                  </div>
-                </div>
-              </div>
-              <div style="display: flex; gap: 8px;">
-                <button id="btn-powerup-protein" onclick="DinoInfo.buffNutrient('protein', 25)" class="btn-sm" style="flex: 1; padding: 8px 10px; font-size: 0.82rem; font-weight: 800; background: rgba(251, 146, 60, 0.15); border: 1px solid #fb923c; color: #fb923c; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
-                  <span class="btn-text">+25% Chất B</span>
-                </button>
-                <button id="btn-powerup-protein-full" onclick="DinoInfo.buffNutrient('protein', 100)" class="btn-sm" style="padding: 8px 12px; font-size: 0.82rem; font-weight: 800; background: rgba(251, 146, 60, 0.25); border: 1px solid #fb923c; color: #fff; border-radius: 8px; cursor: pointer; transition: all 0.2s;" title="Nạp đầy 100% Chất B">
-                  <span class="btn-text">100%</span>
-                </button>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 1.4rem;">🥩</span>
+              <div>
+                <div style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Chất B (Protein · :)</div>
+                <div style="font-size: 1.15rem; font-weight: 900; color: #fb923c; font-family: monospace;" id="nutr-protein-val">${proteinPct}%</div>
               </div>
             </div>
 
-            <!-- CARD 4: ĐỘ ĐÓI (HUNGER & THIRST) -->
-            <div style="background: rgba(2, 6, 23, 0.75); padding: 14px 16px; border-radius: 12px; border: 1px solid rgba(245, 158, 11, 0.25); display: flex; flex-direction: column; justify-content: space-between; gap: 10px;">
-              <div style="display: flex; align-items: center; justify-content: space-between;">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                  <span style="font-size: 1.5rem;">🍖</span>
-                  <div>
-                    <div style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Độ Đói (Hunger)</div>
-                    <div style="font-size: 1.25rem; font-weight: 900; color: #f59e0b; font-family: monospace;" id="nutr-hunger-val">${hungerPct}%</div>
-                  </div>
-                </div>
-              </div>
-              <div style="display: flex; gap: 8px;">
-                <button id="btn-powerup-hunger" onclick="DinoInfo.buffNutrient('hunger', 25)" class="btn-sm" style="flex: 1; padding: 8px 10px; font-size: 0.82rem; font-weight: 800; background: rgba(245, 158, 11, 0.15); border: 1px solid #f59e0b; color: #fbbf24; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
-                  <span class="btn-text">+25% Đói</span>
-                </button>
-                <button id="btn-powerup-hunger-full" onclick="DinoInfo.buffNutrient('hunger', 100)" class="btn-sm" style="padding: 8px 12px; font-size: 0.82rem; font-weight: 800; background: rgba(245, 158, 11, 0.25); border: 1px solid #f59e0b; color: #fff; border-radius: 8px; cursor: pointer; transition: all 0.2s;" title="Nạp đầy 100% Thức ăn & Nước uống">
-                  <span class="btn-text">100%</span>
-                </button>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 1.4rem;">🍖</span>
+              <div>
+                <div style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Độ Đói (Hunger)</div>
+                <div style="font-size: 1.15rem; font-weight: 900; color: #f59e0b; font-family: monospace;" id="nutr-hunger-val">${hungerPct}%</div>
               </div>
             </div>
           </div>
 
-          <!-- HÀNG NÚT POWERUPS CHÍNH (QUICK ACTIONS CHUẨN ISLEPILOT) -->
-          <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 18px;">
-            <!-- NÚT 1: BUFF 3 CHẤT A-B-Y +25% -->
-            <button id="btn-powerup-aby" onclick="DinoInfo.buffNutrient('all', 25)" class="btn-primary" style="flex: 1.2; min-width: 220px; padding: 13px 20px; font-weight: 900; font-size: 0.95rem; background: linear-gradient(135deg, #059669, #10b981); border: 1px solid #34d399; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35); transition: all 0.2s;">
-              <span>✨</span> <span class="btn-text">Buff 3 Chất A-B-Y +25%</span>
+          <!-- 3 ACTION BUTTONS (BUFF TRỰC TIẾP TỨC THÌ) -->
+          <div style="display: flex; gap: 14px; flex-wrap: wrap; align-items: center;">
+            <!-- NÚT 1: BUFF 3 CHẤT A-B-Y 25% -->
+            <button id="btn-powerup-aby" onclick="DinoInfo.buffNutrient('all', 25)" class="btn-primary" style="flex: 1.2; min-width: 220px; padding: 13px 22px; font-weight: 900; font-size: 0.95rem; background: linear-gradient(135deg, #059669, #10b981); border: 1px solid #34d399; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35); transition: all 0.2s;">
+              <span>✨</span> <span class="btn-text">Buff 3 Chất A-B-Y 25%</span>
             </button>
 
-            <!-- NÚT 2: NẠP ĐẦY 100% CẢ 3 CHẤT (PERFECT DIET 3/3) CHUẨN ISLEPILOT -->
-            <button id="btn-powerup-diet-full" onclick="DinoInfo.buffNutrient('all', 100)" class="btn-primary" style="flex: 1.2; min-width: 220px; padding: 13px 20px; font-weight: 900; font-size: 0.95rem; background: linear-gradient(135deg, #0284c7, #0ea5e9); border: 1px solid #38bdf8; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(14, 165, 233, 0.35); transition: all 0.2s;">
-              <span>🌟</span> <span class="btn-text">Nạp Đầy 100% A-B-Y</span>
+            <!-- NÚT 2: BUFF ĐÓI 25% -->
+            <button id="btn-powerup-hunger" onclick="DinoInfo.buffNutrient('hunger', 25)" class="btn-secondary" style="flex: 1; min-width: 180px; padding: 13px 22px; font-weight: 800; font-size: 0.95rem; background: rgba(245, 158, 11, 0.15); border: 1px solid #f59e0b; color: #fbbf24; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
+              <span>🍖</span> <span class="btn-text">Buff Đói 25%</span>
             </button>
 
-            <!-- NÚT 3: HỒI PHỤC ĐẦY MÁU (HEAL HEALTH) CHUẨN ISLEPILOT CARE -->
-            <button id="btn-powerup-heal" onclick="DinoInfo.buffNutrient('heal')" class="btn-secondary" style="flex: 1; min-width: 170px; padding: 13px 18px; font-weight: 800; font-size: 0.95rem; background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #f87171; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
-              <span>💖</span> <span class="btn-text">Hồi Máu 100%</span>
-            </button>
-
-            <!-- NÚT 4: ĐẠT PRIME ELDER -->
-            <button id="btn-powerup-prime" onclick="DinoInfo.buffNutrient('prime')" class="btn-primary" style="flex: 1; min-width: 180px; padding: 13px 20px; font-weight: 900; font-size: 0.95rem; background: linear-gradient(135deg, #8b5cf6, #6366f1); border: 1px solid #a78bfa; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35); transition: all 0.2s;">
-              <span>👑</span> <span class="btn-text">Đạt Prime Elder</span>
+            <!-- NÚT 3: ĐẠT PRIME -->
+            <button id="btn-powerup-prime" onclick="DinoInfo.buffNutrient('prime')" class="btn-primary" style="flex: 1; min-width: 180px; padding: 13px 22px; font-weight: 900; font-size: 0.95rem; background: linear-gradient(135deg, #8b5cf6, #6366f1); border: 1px solid #a78bfa; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35); transition: all 0.2s;">
+              <span>👑</span> <span class="btn-text">Đạt Prime</span>
             </button>
           </div>
         </div>
@@ -897,27 +835,23 @@ const DinoInfo = {
     });
   },
 
-  getButtonElement(type, amount = 25) {
-    if (type === 'carb' || type === 'a') return amount >= 100 ? document.getElementById('btn-powerup-carb-full') : document.getElementById('btn-powerup-carb');
-    if (type === 'lipid' || type === 'y') return amount >= 100 ? document.getElementById('btn-powerup-lipid-full') : document.getElementById('btn-powerup-lipid');
-    if (type === 'protein' || type === 'b') return amount >= 100 ? document.getElementById('btn-powerup-protein-full') : document.getElementById('btn-powerup-protein');
-    if (type === 'all' || type === 'aby' || type === 'diet') return amount >= 100 ? document.getElementById('btn-powerup-diet-full') : document.getElementById('btn-powerup-aby');
-    if (type === 'hunger' || type === 'doi' || type === 'food') return amount >= 100 ? document.getElementById('btn-powerup-hunger-full') : document.getElementById('btn-powerup-hunger');
-    if (type === 'heal' || type === 'mau') return document.getElementById('btn-powerup-heal');
+  getButtonElement(type) {
+    if (type === 'all' || type === 'aby') return document.getElementById('btn-powerup-aby');
+    if (type === 'hunger' || type === 'doi') return document.getElementById('btn-powerup-hunger');
     if (type === 'prime') return document.getElementById('btn-powerup-prime');
     return null;
   },
 
-  getButtonDefaultHtml(type, amount = 25) {
-    if (type === 'carb' || type === 'a') return amount >= 100 ? '<span class="btn-text">100%</span>' : '<span class="btn-text">+25% Chất A</span>';
-    if (type === 'lipid' || type === 'y') return amount >= 100 ? '<span class="btn-text">100%</span>' : '<span class="btn-text">+25% Chất Y</span>';
-    if (type === 'protein' || type === 'b') return amount >= 100 ? '<span class="btn-text">100%</span>' : '<span class="btn-text">+25% Chất B</span>';
-    if (type === 'all' || type === 'aby' || type === 'diet') {
-      return amount >= 100 ? `<span>🌟</span> <span class="btn-text">Nạp Đầy 100% A-B-Y</span>` : `<span>✨</span> <span class="btn-text">Buff 3 Chất A-B-Y +25%</span>`;
+  getButtonDefaultHtml(type) {
+    if (type === 'all' || type === 'aby') {
+      return `<span>✨</span> <span class="btn-text">Buff 3 Chất A-B-Y 25%</span>`;
     }
-    if (type === 'hunger' || type === 'doi' || type === 'food') return amount >= 100 ? '<span class="btn-text">100%</span>' : '<span class="btn-text">+25% Đói</span>';
-    if (type === 'heal' || type === 'mau') return `<span>💖</span> <span class="btn-text">Hồi Máu 100%</span>`;
-    if (type === 'prime') return `<span>👑</span> <span class="btn-text">Đạt Prime Elder</span>`;
+    if (type === 'hunger' || type === 'doi') {
+      return `<span>🍖</span> <span class="btn-text">Buff Đói 25%</span>`;
+    }
+    if (type === 'prime') {
+      return `<span>👑</span> <span class="btn-text">Đạt Prime</span>`;
+    }
     return '';
   },
 
@@ -926,57 +860,30 @@ const DinoInfo = {
     this.isBuffing = true;
 
     const labelMap = {
-      carb: amount >= 100 ? 'Nạp Đầy 100% Chất A (Carb)' : 'Dưỡng Chất A (+25%)',
-      lipid: amount >= 100 ? 'Nạp Đầy 100% Chất Y (Lipid)' : 'Dưỡng Chất Y (+25%)',
-      protein: amount >= 100 ? 'Nạp Đầy 100% Chất B (Protein)' : 'Dưỡng Chất B (+25%)',
-      all: amount >= 100 ? 'Nạp Đầy 100% Cả 3 Chất A-B-Y (Perfect Diet)' : 'Cả 3 Dưỡng Chất A-B-Y (+25%)',
-      hunger: amount >= 100 ? 'Nạp Đầy 100% Thức Ăn & Nước Uống' : 'Thức Ăn Đói (+25%)',
-      heal: 'Hồi Phục Đầy 100% Sinh Lực & Cầm Máu',
-      prime: 'Kích Hoạt Trạng Thái Prime Elder'
+      all: `3 Dưỡng Chất A-B-Y (25%)`,
+      hunger: `Thức Ăn Đói (+25%)`,
+      prime: 'Trạng Thái Prime Elder'
     };
     const label = labelMap[type] || 'Powerup';
 
-    const carbEl = document.getElementById('nutr-carb-val');
-    const lipidEl = document.getElementById('nutr-lipid-val');
-    const proteinEl = document.getElementById('nutr-protein-val');
-    const hungerEl = document.getElementById('nutr-hunger-val');
-    const dietBadge = document.getElementById('nutr-diet-badge');
+    // 1. CẬP NHẬT GIAO DIỆN TỨC THÌ (OPTIMISTIC UI UPDATE - CỘNG THÊM 25%)
+    if (type === 'all') {
+      const carbEl = document.getElementById('nutr-carb-val');
+      const lipidEl = document.getElementById('nutr-lipid-val');
+      const proteinEl = document.getElementById('nutr-protein-val');
+      const dietBadge = document.getElementById('nutr-diet-badge');
 
-    let curC = Number(this.data && this.data.dino && this.data.dino.nutrition && this.data.dino.nutrition.carb) || 0;
-    let curL = Number(this.data && this.data.dino && this.data.dino.nutrition && this.data.dino.nutrition.lipid) || 0;
-    let curP = Number(this.data && this.data.dino && this.data.dino.nutrition && this.data.dino.nutrition.protein) || 0;
+      const curC = Number(this.data && this.data.dino && this.data.dino.nutrition && this.data.dino.nutrition.carb) || 0;
+      const curL = Number(this.data && this.data.dino && this.data.dino.nutrition && this.data.dino.nutrition.lipid) || 0;
+      const curP = Number(this.data && this.data.dino && this.data.dino.nutrition && this.data.dino.nutrition.protein) || 0;
 
-    // 1. CẬP NHẬT GIAO DIỆN TỨC THÌ (OPTIMISTIC UI UPDATE)
-    if (type === 'carb' || type === 'a') {
-      const newC = amount >= 100 ? 100 : Math.min(100, Math.max(0, Math.round((curC + amount) * 10) / 10));
-      if (carbEl) carbEl.textContent = `${newC}%`;
-      if (this.data && this.data.dino) {
-        if (!this.data.dino.nutrition) this.data.dino.nutrition = {};
-        this.data.dino.nutrition.carb = newC;
-      }
-    } else if (type === 'lipid' || type === 'y') {
-      const newL = amount >= 100 ? 100 : Math.min(100, Math.max(0, Math.round((curL + amount) * 10) / 10));
-      if (lipidEl) lipidEl.textContent = `${newL}%`;
-      if (this.data && this.data.dino) {
-        if (!this.data.dino.nutrition) this.data.dino.nutrition = {};
-        this.data.dino.nutrition.lipid = newL;
-      }
-    } else if (type === 'protein' || type === 'b') {
-      const newP = amount >= 100 ? 100 : Math.min(100, Math.max(0, Math.round((curP + amount) * 10) / 10));
-      if (proteinEl) proteinEl.textContent = `${newP}%`;
-      if (this.data && this.data.dino) {
-        if (!this.data.dino.nutrition) this.data.dino.nutrition = {};
-        this.data.dino.nutrition.protein = newP;
-      }
-    } else if (type === 'all' || type === 'aby' || type === 'diet') {
-      const newC = amount >= 100 ? 100 : Math.min(100, Math.max(0, Math.round((curC + amount) * 10) / 10));
-      const newL = amount >= 100 ? 100 : Math.min(100, Math.max(0, Math.round((curL + amount) * 10) / 10));
-      const newP = amount >= 100 ? 100 : Math.min(100, Math.max(0, Math.round((curP + amount) * 10) / 10));
+      const newC = Math.min(100, Math.max(0, Math.round((curC + 25) * 10) / 10));
+      const newL = Math.min(100, Math.max(0, Math.round((curL + 25) * 10) / 10));
+      const newP = Math.min(100, Math.max(0, Math.round((curP + 25) * 10) / 10));
 
       if (carbEl) carbEl.textContent = `${newC}%`;
       if (lipidEl) lipidEl.textContent = `${newL}%`;
       if (proteinEl) proteinEl.textContent = `${newP}%`;
-
       if (dietBadge) {
         dietBadge.style = 'background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; font-size: 0.82rem; font-weight: 800; padding: 6px 14px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px;';
         dietBadge.innerHTML = '<span>🌟</span> Chế Độ Ăn Hoàn Hảo (Perfect Diet 3/3)';
@@ -989,29 +896,18 @@ const DinoInfo = {
         this.data.dino.nutrition.protein = newP;
         this.data.dino.nutrition.is_perfect = true;
       }
-    } else if (type === 'hunger' || type === 'doi' || type === 'food') {
+    } else if (type === 'hunger') {
+      const hungerEl = document.getElementById('nutr-hunger-val');
       if (this.data && this.data.dino) {
         const curH = Number(this.data.dino.hunger) || 0;
         const maxH = Number(this.data.dino.max_hunger) || 1000;
-        const newH = amount >= 100 ? maxH : Math.min(maxH, curH + (maxH * (amount / 100)));
+        const newH = Math.min(maxH, curH + (maxH * 0.25));
         const pct = Math.min(100, Math.round((newH / maxH) * 1000) / 10);
         this.data.dino.hunger = newH;
         this.data.dino.hunger_percent = pct;
         if (hungerEl) hungerEl.textContent = `${pct}%`;
       } else if (hungerEl) {
         hungerEl.textContent = '100%';
-      }
-    }
-        this.data.dino.hunger = newH;
-        this.data.dino.hunger_percent = pct;
-        if (hungerEl) hungerEl.textContent = `${pct}%`;
-      } else if (hungerEl) {
-        hungerEl.textContent = '100%';
-      }
-    } else if (type === 'heal' || type === 'mau') {
-      if (this.data && this.data.dino) {
-        this.data.dino.health = this.data.dino.max_health || 1000;
-        this.data.dino.health_percent = 100;
       }
     } else if (type === 'prime') {
       if (this.data && this.data.dino) {
@@ -1020,7 +916,7 @@ const DinoInfo = {
       }
     }
 
-    const btn = this.getButtonElement(type, amount);
+    const btn = this.getButtonElement(type);
     if (btn) {
       btn.style.opacity = '0.75';
       const textSpan = btn.querySelector('.btn-text');
@@ -1038,8 +934,7 @@ const DinoInfo = {
         body: JSON.stringify({
           steam_id: steamId,
           nutrient: type,
-          amount: amount,
-          mode: amount >= 100 ? 'fill' : 'add'
+          amount: amount
         })
       });
 
@@ -1072,7 +967,7 @@ const DinoInfo = {
       this.isBuffing = false;
       if (btn) {
         btn.style.opacity = '1';
-        btn.innerHTML = this.getButtonDefaultHtml(type, amount);
+        btn.innerHTML = this.getButtonDefaultHtml(type);
       }
     }
   }

@@ -39,7 +39,7 @@ const App = {
 
   switchTab(tabId) {
     const validTabs = [
-      'home', 'bxh', 'dino-info', 'dinoinfo', 'powerups', 'powerup', 'damage', 'garage', 'starter', 'nhandino', 'claim-dino',
+      'home', 'bxh', 'dino-info', 'dinoinfo', 'damage', 'garage', 'starter', 'nhandino', 'claim-dino',
       'skinshop', 'skins', 'skineditor', 'referral', 'quests',
       'map', 'guide', 'rules', 'donate', 'admin'
     ];
@@ -62,15 +62,12 @@ const App = {
 
     // Cập nhật nút điều hướng active
     document.querySelectorAll('.nav-btn').forEach(btn => {
-      const btnTab = btn.getAttribute('data-tab');
-      const isAct = (btnTab === tabId) || ((tabId === 'powerups' || tabId === 'powerup') && (btnTab === 'powerups' || btnTab === 'dino-info'));
-      btn.classList.toggle('active', Boolean(isAct));
+      btn.classList.toggle('active', btn.getAttribute('data-tab') === tabId);
     });
 
     // Ẩn/hiện các view
-    const activeViewId = (tabId === 'powerups' || tabId === 'powerup' || tabId === 'dinoinfo') ? 'view-dino-info' : `view-${tabId}`;
     document.querySelectorAll('.view-section').forEach(view => {
-      view.classList.toggle('active', view.id === activeViewId);
+      view.classList.toggle('active', view.id === `view-${tabId}`);
     });
 
     // Kích hoạt load chuyên biệt cho từng tab
@@ -78,17 +75,10 @@ const App = {
       if (window.DamageChecker && typeof window.DamageChecker.render === 'function') {
         window.DamageChecker.render();
       }
-    } else if (tabId === 'dino-info' || tabId === 'dinoinfo' || tabId === 'powerups' || tabId === 'powerup') {
+    } else if (tabId === 'dino-info' || tabId === 'dinoinfo') {
       if (window.DinoInfo && typeof window.DinoInfo.render === 'function') {
         window.DinoInfo.render();
       }
-      if (tabId === 'powerups' || tabId === 'powerup') {
-        setTimeout(() => {
-          const el = document.getElementById('dino-powerups-card');
-          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 180);
-      }
-    }
     } else if (tabId === 'garage') {
       Garage.render();
     } else if (tabId === 'starter') {

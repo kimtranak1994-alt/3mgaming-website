@@ -1654,11 +1654,6 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             self.send_header("Location", "/#garage")
             self.end_headers()
             return
-        elif clean_path in ["/powerups", "/powerup", "/care"]:
-            self.send_response(302)
-            self.send_header("Location", "/#powerups")
-            self.end_headers()
-            return
 
         # Serve static public files
 
