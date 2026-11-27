@@ -62,6 +62,7 @@
         <li class="nav-item-player" id="nav-item-nhandino"><a href="#nhandino" class="nav-btn" data-tab="nhandino" style="color: #38bdf8; font-weight: 600;"><span class="nav-icon">🦖</span> <span class="nav-text">Nhận Dino</span> <span class="badge-new-gift" style="background: linear-gradient(135deg, #0284c7, #0369a1); color: #fff; font-size: 0.65rem; padding: 1px 5px; border-radius: 999px; font-weight: 800; text-transform: uppercase; margin-left: auto;">24H</span></a></li>
         <li id="nav-item-bxh"><a href="#bxh" class="nav-btn" data-tab="bxh"><span class="nav-icon">🏆</span> <span class="nav-text">Bảng xếp hạng</span></a></li>
         <li class="nav-item-player" id="nav-item-dino-info"><a href="#dino-info" class="nav-btn" data-tab="dino-info"><span class="nav-icon">🦕</span> <span class="nav-text">Info Dino</span></a></li>
+        <li class="nav-item-player" id="nav-item-powerups"><a href="#powerups" class="nav-btn" data-tab="powerups" style="color: #34d399; font-weight: 600;"><span class="nav-icon">⚡</span> <span class="nav-text">Buff Chất ABY</span> <span class="badge-new-gift" style="background: linear-gradient(135deg, #059669, #10b981); color: #fff; font-size: 0.65rem; padding: 1px 5px; border-radius: 999px; font-weight: 800; text-transform: uppercase; margin-left: auto;">POWER</span></a></li>
         <li class="nav-item-player"><a href="#garage" class="nav-btn" data-tab="garage"><span class="nav-icon">🦖</span> <span class="nav-text">Gara Dino</span></a></li>
         <li class="nav-item-player"><a href="#skinshop" class="nav-btn" data-tab="skinshop"><span class="nav-icon">🎨</span> <span class="nav-text">Shop skin</span></a></li>
         <li class="nav-item-player"><a href="#skins" class="nav-btn" data-tab="skins"><span class="nav-icon">🗃️</span> <span class="nav-text">Garage skin</span></a></li>
@@ -885,7 +886,25 @@
 
               </div>
 
-              <!-- Ô 2: Lưu bản nháp -->
+              <!-- Ô 2: Nhập mã Skin JSON (Mã hóa Base64) -->
+              <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                  <label style="font-size: 0.75rem; color: #38bdf8; font-weight: 700; display: flex; align-items: center; gap: 4px;">
+                    <span>📦</span> Nhập mã Skin JSON (Base64 Encoded):
+                  </label>
+                  <button type="button" style="background: none; border: none; color: #38bdf8; font-size: 0.72rem; cursor: pointer; text-decoration: underline; padding: 0;" onclick="SkinEditor.pasteBase64Code()">
+                    📋 Dán từ clipboard
+                  </button>
+                </div>
+                <div style="display: flex; gap: 6px;">
+                  <input type="text" id="skineditor-base64-import-input" placeholder="Dán chuỗi Base64 Skin JSON vào đây (eyJzc...)..." class="map-coord-input" style="flex: 1; font-size: 0.8rem; font-family: monospace; border-color: rgba(56, 189, 248, 0.4);">
+                  <button type="button" class="btn-secondary" style="padding: 6px 12px; font-size: 0.8rem; font-weight: 700; white-space: nowrap; background: rgba(56, 189, 248, 0.15); border-color: #38bdf8; color: #38bdf8;" onclick="SkinEditor.importFromBase64Input()">
+                    Nhập Base64
+                  </button>
+                </div>
+              </div>
+
+              <!-- Ô 3: Lưu bản nháp -->
 
               <div>
 
@@ -1105,17 +1124,23 @@
 
             </button>
 
-            <div style="display: flex; justify-content: center; gap: 12px;">
+            <div style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;">
 
               <button type="button" class="btn-secondary" style="font-size: 0.78rem; padding: 6px 12px;" onclick="SkinEditor.copySkinJson()">
 
-                📋 Sao chép mã JSON
+                📋 Sao chép JSON
+
+              </button>
+
+              <button type="button" class="btn-secondary" style="font-size: 0.78rem; padding: 6px 12px; background: rgba(56, 189, 248, 0.15); border-color: #38bdf8; color: #38bdf8;" onclick="SkinEditor.copySkinBase64()">
+
+                📦 Sao chép Base64
 
               </button>
 
               <button type="button" class="btn-secondary" style="font-size: 0.78rem; padding: 6px 12px;" onclick="SkinEditor.downloadSkinFile()">
 
-                📥 Tải xuống tệp skin (.json)
+                📥 Tải tệp (.json)
 
               </button>
 

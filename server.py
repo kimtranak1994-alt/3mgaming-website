@@ -1654,6 +1654,11 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             self.send_header("Location", "/#garage")
             self.end_headers()
             return
+        elif clean_path in ["/powerups", "/powerup", "/care"]:
+            self.send_response(302)
+            self.send_header("Location", "/#powerups")
+            self.end_headers()
+            return
 
         # Serve static public files
 
@@ -3409,6 +3414,12 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 max_th = safe_float(player_info.get("maxThirst"), 0.0)
                 th_pct = round((raw_th / max_th) * 100, 1) if max_th > 0 else 100.0
 
+                max_hu_scale = max_hu if max_hu > 0 else 1000.0
+                raw_nutr = player_info.get("nutrition") or {}
+                carb_val = max(0.0, round((safe_float(raw_nutr.get("carb", 0.0)) / max_hu_scale) * 100.0, 1))
+                protein_val = max(0.0, round((safe_float(raw_nutr.get("protein", 0.0)) / max_hu_scale) * 100.0, 1))
+                lipid_val = max(0.0, round((safe_float(raw_nutr.get("lipid", 0.0)) / max_hu_scale) * 100.0, 1))
+
                 mut_slots = player_info.get("mutationSlots") or {
                     "active": ["None", "None", "None", "None"],
                     "parent": ["None", "None", "None", "None"],
@@ -3445,9 +3456,14 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     "position": player_info.get("position") or {},
                     "wallet": wallet,
                     "nutrients": {
-                        "carb": round(safe_float(last_nutr.get("carb"), 100.0)),
-                        "protein": round(safe_float(last_nutr.get("protein"), 100.0)),
-                        "lipid": round(safe_float(last_nutr.get("lipid"), 100.0))
+                        "carb": carb_val,
+                        "protein": protein_val,
+                        "lipid": lipid_val
+                    },
+                    "nutrition": {
+                        "carb": carb_val,
+                        "protein": protein_val,
+                        "lipid": lipid_val
                     },
                     "source": "active"
                 })
@@ -12896,17 +12912,21 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             now_ts = time.time()
             pend = DinoRequestHandler._pending_powerup_sync.setdefault(sid_str, {})
             
-            # 2. Xác định loại chất buff / thao tác powerup
+            # 2. Xác định loại chất buff / thao tác powerup (Chuẩn hệ thống Powerups & Care của IslePilot)
             nutrient_type = str(payload.get("nutrient") or payload.get("type") or "all").lower().strip()
             amount_val = safe_float(payload.get("amount"), 25.0)
             amount_val = max(1.0, min(100.0, amount_val))
+            is_fill = (amount_val >= 100 or payload.get("mode") == "fill" or payload.get("fill") is True)
 
-            # THAO TÁC 1: BUFF ĐÓI (HUNGER)
+            # THAO TÁC 1: BUFF ĐÓI (HUNGER & THIRST)
             if nutrient_type in ["hunger", "doi", "food"]:
                 live_hu = safe_float(player_info.get("hunger"), 0.0)
                 max_hu = safe_float(player_info.get("maxHunger"), 100.0)
                 if max_hu <= 0:
-                    max_hu = 100.0
+                    max_hu = 1000.0
+                max_th = safe_float(player_info.get("maxThirst"), 1000.0)
+                if max_th <= 0:
+                    max_th = 1000.0
                 hu_tol = max(0.05, max_hu * 0.01)
 
                 cur_hu = live_hu
@@ -12916,11 +12936,12 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     if abs(live_hu - prev_hu) <= hu_tol:
                         cur_hu = safe_float(h_pend.get("target_hunger"), live_hu)
 
-                target_hu = min(max_hu, round(cur_hu + (max_hu * (amount_val / 100.0)), 2))
+                target_hu = max_hu if is_fill else min(max_hu, round(cur_hu + (max_hu * (amount_val / 100.0)), 2))
                 res = self.fetch_islepilot("/commands", method="POST", body_data={
                     "action": "setstats",
                     "steamId": sid_str,
-                    "hunger": target_hu
+                    "hunger": target_hu,
+                    "thirst": max_th
                 })
                 if res and (res.get("ok") is True or "commandId" in res):
                     delete_garage_dino_snapshot(f"{sid_str}_last_hunger")
@@ -12929,10 +12950,16 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                         "prev_hunger": live_hu,
                         "target_hunger": target_hu
                     }
+                    if hasattr(DinoRequestHandler, "_live_players_map") and sid_str in DinoRequestHandler._live_players_map:
+                        lp = DinoRequestHandler._live_players_map.get(sid_str)
+                        if isinstance(lp, dict):
+                            lp["hunger"] = target_hu
+                            lp["thirst"] = max_th
+                    fill_txt = "Nạp đầy 100%" if is_fill else f"+{int(amount_val)}%"
                     self.send_json_response({
                         "ok": True,
                         "success": True,
-                        "message": f"🍖 Đã buff +{int(amount_val)}% Thức ăn (Đói) cho khủng long {species} thành công! ({round(target_hu, 1)} / {round(max_hu, 1)})",
+                        "message": f"🍖 Đã {fill_txt} Thức ăn (Đói) & Nước uống cho {species} thành công! ({round(target_hu, 1)} / {round(max_hu, 1)})",
                         "hunger": target_hu,
                         "max_hunger": max_hu,
                         "hunger_percent": min(100.0, max(0.0, round((target_hu / max_hu) * 100, 1))),
@@ -12941,6 +12968,29 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 else:
                     err_msg = (res.get("error") if isinstance(res, dict) else None) or "Máy chủ IslePilot đang bận, vui lòng bấm lại sau 1 giây."
                     self.send_json_response({"ok": False, "message": f"Buff đói thất bại: {err_msg}"}, 400)
+                return
+
+            # THAO TÁC 1B: HỒI PHỤC SINH LỰC (HEAL HEALTH - CHUẨN ISLEPILOT CARE)
+            elif nutrient_type in ["heal", "health", "mau"]:
+                max_hp = safe_float(player_info.get("maxHealth"), 1000.0)
+                if max_hp <= 0:
+                    max_hp = 1000.0
+                res = self.fetch_islepilot("/commands", method="POST", body_data={
+                    "action": "setstats",
+                    "steamId": sid_str,
+                    "health": max_hp,
+                    "bleed": 0.0
+                })
+                if res and (res.get("ok") is True or "commandId" in res):
+                    self.send_json_response({
+                        "ok": True,
+                        "success": True,
+                        "message": f"💖 Đã hồi phục đầy 100% Máu và cầm máu thành công cho {species}!",
+                        "result": res
+                    })
+                else:
+                    err_msg = (res.get("error") if isinstance(res, dict) else None) or "Máy chủ IslePilot đang bận, vui lòng bấm lại sau 1 giây."
+                    self.send_json_response({"ok": False, "message": f"Hồi máu thất bại: {err_msg}"}, 400)
                 return
 
             # THAO TÁC 2: KÍCH HOẠT ĐẠT PRIME (PRIME ELDER)
@@ -12967,11 +13017,10 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     self.send_json_response({"ok": False, "message": f"Kích hoạt Prime thất bại: {err_msg}"}, 400)
                 return
 
-            # THAO TÁC 3: BUFF CHẤT DINH DƯỠNG (A, B, Y hoặc CẢ 3 CHẤT) - TĂNG ĐÚNG +25% CỦA maxHunger MỖI LẦN BẤM (GIỐNG HỆT BUFF ĐÓI 25%)
-            # Trong The Isle Evrima, 100% mỗi dưỡng chất (Carb S, Protein :, Lipid //) chính bằng maxHunger hiện tại của khủng long!
-            max_nutr = safe_float(player_info.get("maxHunger"), 100.0)
-            if max_nutr <= 0:
-                max_nutr = 100.0
+            # THAO TÁC 3: BUFF CHẤT DINH DƯỠNG (A, B, Y HOẶC CẢ 3 CHẤT CHUẨN ISLEPILOT POWERUPS)
+            max_nutr = safe_float(player_info.get("maxHunger") or player_info.get("max_hunger"), 100.0)
+            if max_nutr <= 0.0:
+                max_nutr = 1000.0
             nutr_tol = max(0.05, max_nutr * 0.01)
 
             raw_nutr = player_info.get("nutrition") or {}
@@ -12990,36 +13039,48 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     raw_p = safe_float(n_pend.get("target_prot"), live_raw_p)
                     raw_l = safe_float(n_pend.get("target_lip"), live_raw_l)
 
-            # Quy đổi lượng chất hiện tại trong game ra % (0% -> 100% dựa trên maxHunger)
+            # Chuyển đổi lượng chất hiện có trong game sang % (0% -> 100% dựa trên maxHunger)
             curr_ingame_c = min(100.0, max(0.0, (raw_c / max_nutr) * 100.0))
             curr_ingame_p = min(100.0, max(0.0, (raw_p / max_nutr) * 100.0))
             curr_ingame_l = min(100.0, max(0.0, (raw_l / max_nutr) * 100.0))
 
-            # Cộng đúng +25% (tối đa 100%)
+            # Xử lý theo từng chất hoặc cả 3 chất
             if nutrient_type in ["carb", "s", "carbohydrate", "a"]:
-                new_ingame_c = min(100.0, max(0.0, round(curr_ingame_c + amount_val, 1)))
+                new_ingame_c = 100.0 if is_fill else min(100.0, max(0.0, round(curr_ingame_c + amount_val, 1)))
                 new_ingame_p = min(100.0, max(0.0, round(curr_ingame_p, 1)))
                 new_ingame_l = min(100.0, max(0.0, round(curr_ingame_l, 1)))
+                action_lbl = "Nạp Đầy 100%" if is_fill else f"+{int(amount_val)}%"
+                buff_name = f"Dưỡng Chất A (Carb · S) {action_lbl} (Hiện tại: {new_ingame_c}% in-game)"
             elif nutrient_type in ["lipid", "fat", "line", "//", "y"]:
                 new_ingame_c = min(100.0, max(0.0, round(curr_ingame_c, 1)))
                 new_ingame_p = min(100.0, max(0.0, round(curr_ingame_p, 1)))
-                new_ingame_l = min(100.0, max(0.0, round(curr_ingame_l + amount_val, 1)))
+                new_ingame_l = 100.0 if is_fill else min(100.0, max(0.0, round(curr_ingame_l + amount_val, 1)))
+                action_lbl = "Nạp Đầy 100%" if is_fill else f"+{int(amount_val)}%"
+                buff_name = f"Dưỡng Chất Y (Lipid · //) {action_lbl} (Hiện tại: {new_ingame_l}% in-game)"
             elif nutrient_type in ["protein", "dot", ":", "b"]:
                 new_ingame_c = min(100.0, max(0.0, round(curr_ingame_c, 1)))
-                new_ingame_p = min(100.0, max(0.0, round(curr_ingame_p + amount_val, 1)))
+                new_ingame_p = 100.0 if is_fill else min(100.0, max(0.0, round(curr_ingame_p + amount_val, 1)))
                 new_ingame_l = min(100.0, max(0.0, round(curr_ingame_l, 1)))
-            else:  # "all" hoặc "perfect" hoặc "aby"
-                new_ingame_c = min(100.0, max(0.0, round(curr_ingame_c + amount_val, 1)))
-                new_ingame_p = min(100.0, max(0.0, round(curr_ingame_p + amount_val, 1)))
-                new_ingame_l = min(100.0, max(0.0, round(curr_ingame_l + amount_val, 1)))
+                action_lbl = "Nạp Đầy 100%" if is_fill else f"+{int(amount_val)}%"
+                buff_name = f"Dưỡng Chất B (Protein · :) {action_lbl} (Hiện tại: {new_ingame_p}% in-game)"
+            else:  # "all" hoặc "perfect" hoặc "aby" hoặc "diet"
+                new_ingame_c = 100.0 if is_fill else min(100.0, max(0.0, round(curr_ingame_c + amount_val, 1)))
+                new_ingame_p = 100.0 if is_fill else min(100.0, max(0.0, round(curr_ingame_p + amount_val, 1)))
+                new_ingame_l = 100.0 if is_fill else min(100.0, max(0.0, round(curr_ingame_l + amount_val, 1)))
+                action_lbl = "Nạp Đầy 100% Perfect Diet" if is_fill else f"+{int(amount_val)}%"
+                buff_name = f"Cả 3 Dưỡng Chất A - B - Y {action_lbl} (Hiện tại: {new_ingame_c}% in-game)"
 
             # Quy đổi từ % in-game sang điểm thực tế theo maxHunger để gửi lệnh setnutrition
+            target_raw_c = round((new_ingame_c / 100.0) * max_nutr, 2)
+            target_raw_p = round((new_ingame_p / 100.0) * max_nutr, 2)
+            target_raw_l = round((new_ingame_l / 100.0) * max_nutr, 2)
+
             cmd_body = {
                 "action": "setnutrition",
                 "steamId": sid_str,
-                "carb": round((new_ingame_c / 100.0) * max_nutr, 2),
-                "protein": round((new_ingame_p / 100.0) * max_nutr, 2),
-                "lipid": round((new_ingame_l / 100.0) * max_nutr, 2)
+                "carb": target_raw_c,
+                "protein": target_raw_p,
+                "lipid": target_raw_l
             }
             
             # Gửi lệnh chuẩn tới IslePilot API
@@ -13032,15 +13093,21 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     "prev_carb": live_raw_c,
                     "prev_prot": live_raw_p,
                     "prev_lip": live_raw_l,
-                    "target_carb": cmd_body["carb"],
-                    "target_prot": cmd_body["protein"],
-                    "target_lip": cmd_body["lipid"]
+                    "target_carb": target_raw_c,
+                    "target_prot": target_raw_p,
+                    "target_lip": target_raw_l
                 }
+                if hasattr(DinoRequestHandler, "_islepilot_cache"):
+                    DinoRequestHandler._islepilot_cache.pop(cache_ep, None)
+                if hasattr(DinoRequestHandler, "_live_players_map") and sid_str in DinoRequestHandler._live_players_map:
+                    lp = DinoRequestHandler._live_players_map.get(sid_str)
+                    if isinstance(lp, dict):
+                        lp["nutrition"] = {"carb": target_raw_c, "protein": target_raw_p, "lipid": target_raw_l}
 
                 self.send_json_response({
                     "ok": True,
                     "success": True,
-                    "message": f"⚡ Đã buff +{int(amount_val)}% cả 3 chất A-B-Y cho {species} thành công! (Hiện tại: {new_ingame_c}%)",
+                    "message": f"⚡ Đã buff {buff_name} cho {species} thành công!",
                     "nutrition": {
                         "carb": new_ingame_c,
                         "protein": new_ingame_p,

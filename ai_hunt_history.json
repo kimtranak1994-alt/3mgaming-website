@@ -1,5 +1,60 @@
 [
   {
+    "season_id": "Mùa 11 (Ngày 26/11)",
+    "season_date": "2026-11-26",
+    "settled_at": "2026-11-27T00:00:02.742219+07:00",
+    "winner_steam_id": "76561198749916921",
+    "winner_name": "Anh Bảy Cỏa",
+    "species": "Herrerasaurus",
+    "kills": 8,
+    "prey_breakdown": {
+      "Deer": 2,
+      "Dryosaurus": 2,
+      "Omniraptor": 2,
+      "Beipiaosaurus": 1,
+      "Bullfrog": 1
+    },
+    "reward_xu": 1000,
+    "total_participants": 2,
+    "total_ai_kills": 10,
+    "auto_settled": true
+  },
+  {
+    "season_id": "Mùa 10 (Ngày 23/11)",
+    "season_date": "2026-11-23",
+    "settled_at": "2026-11-26T18:56:07.053804+07:00",
+    "winner_steam_id": "76561199351804121",
+    "winner_name": "DreamVenko",
+    "species": "Tyrannosaurus",
+    "kills": 1,
+    "prey_breakdown": {
+      "Deer": 1
+    },
+    "reward_xu": 1000,
+    "total_participants": 1,
+    "total_ai_kills": 1,
+    "auto_settled": true
+  },
+  {
+    "season_id": "Mùa 9 (Ngày 22/11)",
+    "season_date": "2026-11-22",
+    "settled_at": "2026-11-23T00:00:05.685127+07:00",
+    "winner_steam_id": "76561198611036308",
+    "winner_name": "Prince_smoke",
+    "species": "Carnotaurus",
+    "kills": 7,
+    "prey_breakdown": {
+      "Boar": 3,
+      "Dryosaurus": 1,
+      "Deer": 2,
+      "Goat": 1
+    },
+    "reward_xu": 1000,
+    "total_participants": 10,
+    "total_ai_kills": 33,
+    "auto_settled": true
+  },
+  {
     "season_id": "Mùa 8 (Ngày 20/11)",
     "season_date": "2026-11-20",
     "settled_at": "2026-11-22T22:08:07.742965+07:00",

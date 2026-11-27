@@ -3540,15 +3540,188 @@ const SkinEditor = {
 
   },
 
+  importFromBase64Input() {
+    const input = document.getElementById('skineditor-base64-import-input');
+    if (!input || !input.value.trim()) {
+      App.showToast("⚠️ Vui lòng dán chuỗi Base64 Skin JSON vào ô nhập!");
+      return;
+    }
+    this.applyBase64Skin(input.value.trim());
+  },
 
+  async pasteBase64Code() {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text && text.trim()) {
+        const input = document.getElementById('skineditor-base64-import-input');
+        if (input) input.value = text.trim();
+        this.applyBase64Skin(text.trim());
+      } else {
+        const code = prompt("Nhập mã Skin JSON đã mã hóa Base64:");
+        if (code && code.trim()) {
+          const input = document.getElementById('skineditor-base64-import-input');
+          if (input) input.value = code.trim();
+          this.applyBase64Skin(code.trim());
+        }
+      }
+    } catch (e) {
+      const code = prompt("Nhập mã Skin JSON đã mã hóa Base64:");
+      if (code && code.trim()) {
+        const input = document.getElementById('skineditor-base64-import-input');
+        if (input) input.value = code.trim();
+        this.applyBase64Skin(code.trim());
+      }
+    }
+  },
+
+  applyBase64Skin(rawStr) {
+    if (!rawStr) return;
+    rawStr = rawStr.trim();
+    if ((rawStr.startsWith('"') && rawStr.endsWith('"')) || (rawStr.startsWith("'") && rawStr.endsWith("'"))) {
+      rawStr = rawStr.slice(1, -1).trim();
+    }
+    if (rawStr.startsWith('data:')) {
+      const commaIdx = rawStr.indexOf(',');
+      if (commaIdx !== -1) rawStr = rawStr.slice(commaIdx + 1).trim();
+    }
+
+    let parsedObj = null;
+
+    // 1. Thử parse trực tiếp nếu là JSON thuần
+    if (rawStr.startsWith('{') && rawStr.endsWith('}')) {
+      try {
+        parsedObj = JSON.parse(rawStr);
+      } catch (e) {}
+    }
+
+    // 2. Thử giải mã Base64
+    if (!parsedObj) {
+      let decodedStr = '';
+      try {
+        decodedStr = decodeURIComponent(escape(atob(rawStr)));
+      } catch (e1) {
+        try {
+          decodedStr = atob(rawStr);
+        } catch (e2) {
+          App.showToast("⚠️ Chuỗi Base64 không hợp lệ! Vui lòng kiểm tra lại mã.");
+          return;
+        }
+      }
+
+      decodedStr = decodedStr.trim();
+
+      // Kiểm tra xem sau khi giải mã có phải là JSON
+      if (decodedStr.startsWith('{') && decodedStr.endsWith('}')) {
+        try {
+          parsedObj = JSON.parse(decodedStr);
+        } catch (e3) {
+          App.showToast("⚠️ Nội dung giải mã Base64 không đúng định dạng JSON!");
+          return;
+        }
+      } else if (/^([A-Za-z]+?)(\d{3,})((?:[0-9A-Fa-f]{8})+)$/.test(decodedStr)) {
+        // Chuỗi giải mã ra mã game Evrima trực tiếp
+        this.applyImportedCode(decodedStr);
+        return;
+      } else {
+        App.showToast("⚠️ Nội dung giải mã Base64 không phải là Skin JSON hợp lệ!");
+        return;
+      }
+    }
+
+    if (!parsedObj || typeof parsedObj !== 'object') {
+      App.showToast("⚠️ Cấu trúc Skin JSON không hợp lệ!");
+      return;
+    }
+
+    // 3. Nạp dữ liệu Skin từ parsedObj
+    let targetSpecies = parsedObj.species;
+    let targetPalette = parsedObj.palette || parsedObj.colors || {};
+
+    // Nếu JSON có chứa mã game 'code' hoặc 'skin' nhưng thiếu palette chi tiết
+    if (Object.keys(targetPalette).length === 0 && (parsedObj.code || parsedObj.skin)) {
+      const gameParsed = this.parseGameSkinCode(parsedObj.code || parsedObj.skin);
+      if (gameParsed) {
+        if (!targetSpecies) targetSpecies = gameParsed.species;
+        targetPalette = gameParsed.palette || {};
+        if (parsedObj.pattern === undefined) parsedObj.pattern = gameParsed.pattern;
+        if (parsedObj.variation === undefined) parsedObj.variation = gameParsed.variation;
+        if (parsedObj.theme === undefined) parsedObj.theme = gameParsed.theme;
+      }
+    }
+
+    if (targetSpecies) {
+      this.species = targetSpecies;
+      const selectSp = document.getElementById('skineditor-select-species');
+      if (selectSp) selectSp.value = targetSpecies;
+      const badgeSp = document.getElementById('skineditor-badge-species');
+      if (badgeSp) badgeSp.textContent = targetSpecies;
+    }
+
+    if (parsedObj.pattern !== undefined && !isNaN(parseInt(parsedObj.pattern, 10))) {
+      this.pattern = parseInt(parsedObj.pattern, 10);
+      const inPat = document.getElementById('skineditor-input-pattern');
+      if (inPat) inPat.value = this.pattern;
+    }
+    if (parsedObj.variation !== undefined && !isNaN(parseInt(parsedObj.variation, 10))) {
+      this.variation = parseInt(parsedObj.variation, 10);
+      const inVar = document.getElementById('skineditor-input-variation');
+      if (inVar) inVar.value = this.variation;
+    }
+    if (parsedObj.theme !== undefined && !isNaN(parseInt(parsedObj.theme, 10))) {
+      this.theme = parseInt(parsedObj.theme, 10);
+      const inThm = document.getElementById('skineditor-input-theme');
+      if (inThm) inThm.value = this.theme;
+    }
+
+    if (parsedObj.sex || parsedObj.gender) {
+      const s = String(parsedObj.sex || parsedObj.gender).toLowerCase();
+      this.setSex(s.includes('female') || s.includes('cái') ? 'female' : 'male');
+    }
+
+    if (parsedObj.renderMode) {
+      this.setRenderMode(parsedObj.renderMode);
+    }
+
+    if (Object.keys(targetPalette).length > 0) {
+      this.palette = { ...this.palette, ...targetPalette };
+      if (this.palette.male_display && !this.palette.display) {
+        this.palette.display = this.palette.male_display;
+      }
+    }
+
+    this.renderZones();
+    this.updatePreview();
+    this.loadThreeModel(this.species);
+
+    if (!this.isAutoRotating) {
+      this.toggleAutoRotate(true);
+    }
+
+    const skinTitle = parsedObj.name ? ` "${parsedObj.name}"` : '';
+    App.showToast(`🎉 Đã nạp thành công Skin JSON Base64${skinTitle} cho loài: ${this.species}!`);
+  },
 
   applyImportedCode(code) {
 
-    const parsed = this.parseGameSkinCode(code);
+    let parsed = this.parseGameSkinCode(code);
+
+    if (!parsed) {
+      // Tự động kiểm tra nếu người chơi dán nhầm chuỗi Base64 vào ô nhập game code
+      try {
+        let b64 = code.trim();
+        if (b64.startsWith('data:')) b64 = b64.slice(b64.indexOf(',') + 1);
+        const decoded = decodeURIComponent(escape(atob(b64))).trim();
+        if (decoded.startsWith('{') && decoded.endsWith('}')) {
+          this.applyBase64Skin(b64);
+          return;
+        }
+        parsed = this.parseGameSkinCode(decoded);
+      } catch (ex) {}
+    }
 
     if (!parsed) {
 
-      App.showToast("⚠️ Mã Skin không đúng định dạng Evrima!");
+      App.showToast("⚠️ Mã Skin không đúng định dạng Evrima hoặc Base64!");
 
       return;
 
@@ -3694,6 +3867,30 @@ const SkinEditor = {
 
     });
 
+  },
+
+  copySkinBase64() {
+    const payload = {
+      species: this.species,
+      sex: this.sex,
+      variation: this.variation,
+      pattern: this.pattern,
+      theme: this.theme,
+      code: this.generateGameCode(),
+      palette: this.palette,
+      renderMode: this.renderMode
+    };
+    try {
+      const jsonStr = JSON.stringify(payload, null, 2);
+      const b64 = btoa(unescape(encodeURIComponent(jsonStr)));
+      navigator.clipboard.writeText(b64).then(() => {
+        App.showToast("📦 Đã sao chép mã Skin JSON (Base64) vào bộ nhớ tạm!");
+      }).catch(() => {
+        prompt("Mã Skin JSON (Base64):", b64);
+      });
+    } catch (e) {
+      App.showToast("⚠️ Lỗi mã hóa Base64: " + e.message);
+    }
   },
 
 
