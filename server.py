@@ -3763,7 +3763,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             "warnings": {
                 "count": active_warning_count,
                 "list": warnings_list
-            }
+            },
+            "powerup_cooldowns": DinoRequestHandler._get_all_powerup_cooldowns(steam_id)
         })
 
 
@@ -4741,6 +4742,60 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                     json.dump(data, f)
             except Exception:
                 pass
+
+    POWERUP_COOLDOWN_SECONDS = 600  # 10 phút đếm ngược (600 giây) mỗi lần buff
+
+    @classmethod
+    def _get_powerup_cooldown_remaining(cls, steam_id, category):
+        steam_id = str(steam_id).strip()
+        if not steam_id or not category:
+            return 0
+        now = time.time()
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        fpath = os.path.join(base_dir, "powerup_cooldowns.json")
+        if os.path.exists(fpath):
+            try:
+                with open(fpath, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    user_cds = data.get(steam_id, {})
+                    last_ts = float(user_cds.get(category, 0))
+                    elapsed = now - last_ts
+                    if elapsed < cls.POWERUP_COOLDOWN_SECONDS:
+                        return int(math.ceil(cls.POWERUP_COOLDOWN_SECONDS - elapsed))
+            except Exception:
+                pass
+        return 0
+
+    @classmethod
+    def _set_powerup_cooldown(cls, steam_id, category):
+        steam_id = str(steam_id).strip()
+        if not steam_id or not category:
+            return
+        now = time.time()
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        fpath = os.path.join(base_dir, "powerup_cooldowns.json")
+        try:
+            data = {}
+            if os.path.exists(fpath):
+                try:
+                    with open(fpath, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                except Exception:
+                    data = {}
+            if steam_id not in data or not isinstance(data[steam_id], dict):
+                data[steam_id] = {}
+            data[steam_id][category] = now
+            with open(fpath, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            print(f"[Powerup Cooldown Save Error] {e}")
+
+    @classmethod
+    def _get_all_powerup_cooldowns(cls, steam_id):
+        return {
+            "aby": cls._get_powerup_cooldown_remaining(steam_id, "aby"),
+            "hunger": cls._get_powerup_cooldown_remaining(steam_id, "hunger")
+        }
 
     def _translate_pilot_error(self, err_msg):
         err_str = str(err_msg).lower()
@@ -12869,6 +12924,35 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             
             sid_str = urllib.parse.unquote(str(steam_id)).split(":", 1)[0].strip()
             
+            # Kiểm tra cơ chế đếm ngược 10 phút (600 giây) trước khi tốn tài nguyên gọi API
+            nutrient_type = str(payload.get("nutrient") or payload.get("type") or "all").lower().strip()
+            cd_category = None
+            cd_name = ""
+            if nutrient_type in ["hunger", "doi", "food"]:
+                cd_category = "hunger"
+                cd_name = "Thức ăn (Đói 25%)"
+            elif nutrient_type in ["prime", "prime_elder", "elder", "heal", "health", "mau"]:
+                cd_category = None
+            else:
+                cd_category = "aby"
+                cd_name = "3 Dưỡng Chất A-B-Y (25%)"
+
+            if cd_category:
+                rem_cd = DinoRequestHandler._get_powerup_cooldown_remaining(sid_str, cd_category)
+                if rem_cd > 0:
+                    m = rem_cd // 60
+                    s = rem_cd % 60
+                    time_txt = f"{m:02d}:{s:02d}"
+                    self.send_json_response({
+                        "ok": False,
+                        "cooldown": True,
+                        "cooldown_remaining": rem_cd,
+                        "category": cd_category,
+                        "powerup_cooldowns": DinoRequestHandler._get_all_powerup_cooldowns(sid_str),
+                        "message": f"⏳ Đang trong thời gian đếm ngược 10 phút ({time_txt})! Vui lòng chờ trước khi tiếp tục buff {cd_name}."
+                    }, 429)
+                    return
+
             # 1. Làm mới /players nếu đã quá 2s để lấy chỉ số Máu, Đói, 3 Chất A-B-Y thực tế mới nhất từ game
             if (time.time() - DinoRequestHandler._live_players_ts) >= 2.0:
                 try:
@@ -12940,6 +13024,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                 })
                 if res and (res.get("ok") is True or "commandId" in res):
                     delete_garage_dino_snapshot(f"{sid_str}_last_hunger")
+                    DinoRequestHandler._set_powerup_cooldown(sid_str, "hunger")
+                    all_cds = DinoRequestHandler._get_all_powerup_cooldowns(sid_str)
                     pend["hunger"] = {
                         "ts": time.time(),
                         "prev_hunger": live_hu,
@@ -12958,6 +13044,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                         "hunger": target_hu,
                         "max_hunger": max_hu,
                         "hunger_percent": min(100.0, max(0.0, round((target_hu / max_hu) * 100, 1))),
+                        "cooldown_remaining": DinoRequestHandler.POWERUP_COOLDOWN_SECONDS,
+                        "category": "hunger",
+                        "powerup_cooldowns": all_cds,
                         "result": res
                     })
                 else:
@@ -13083,6 +13172,8 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
             
             if res and (res.get("ok") is True or "commandId" in res):
                 delete_garage_dino_snapshot(f"{sid_str}_last_nutrients")
+                DinoRequestHandler._set_powerup_cooldown(sid_str, "aby")
+                all_cds = DinoRequestHandler._get_all_powerup_cooldowns(sid_str)
                 pend["nutrition"] = {
                     "ts": time.time(),
                     "prev_carb": live_raw_c,
@@ -13109,6 +13200,9 @@ class DinoRequestHandler(SimpleHTTPRequestHandler):
                         "lipid": new_ingame_l,
                         "is_perfect": (new_ingame_c > 0 and new_ingame_p > 0 and new_ingame_l > 0)
                     },
+                    "cooldown_remaining": DinoRequestHandler.POWERUP_COOLDOWN_SECONDS,
+                    "category": "aby",
+                    "powerup_cooldowns": all_cds,
                     "result": res
                 })
             else:

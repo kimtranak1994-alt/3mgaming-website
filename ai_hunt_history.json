@@ -1,5 +1,24 @@
 [
   {
+    "season_id": "Mùa 12 (Ngày 27/11)",
+    "season_date": "2026-11-27",
+    "settled_at": "2026-11-28T00:00:03.075551+07:00",
+    "winner_steam_id": "76561198749916921",
+    "winner_name": "Anh Bảy Cỏa",
+    "species": "Herrerasaurus",
+    "kills": 28,
+    "prey_breakdown": {
+      "Omniraptor": 6,
+      "Dryosaurus": 2,
+      "Boar": 1,
+      "Compsognathus": 19
+    },
+    "reward_xu": 1000,
+    "total_participants": 2,
+    "total_ai_kills": 36,
+    "auto_settled": true
+  },
+  {
     "season_id": "Mùa 11 (Ngày 26/11)",
     "season_date": "2026-11-26",
     "settled_at": "2026-11-27T00:00:02.742219+07:00",

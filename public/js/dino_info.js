@@ -8,6 +8,8 @@ const DinoInfo = {
   pollTimer: null,
   isLoading: false,
   _lastRenderSig: null,
+  cooldowns: { aby: 0, hunger: 0 },
+  _cdTimer: null,
 
   PRIME_QUESTS_VI: {
     1: { en: "Visit a Sanctuary as a juvenile", vi: "Ghé thăm Thánh Địa (Sanctuary) khi còn là con non" },
@@ -67,6 +69,7 @@ const DinoInfo = {
     const container = document.getElementById('view-dino-info');
     if (!container) return;
 
+    this.syncCooldowns();
     if (!this.data) {
       container.innerHTML = `
         <div style="text-align: center; padding: 70px 20px;">
@@ -118,6 +121,7 @@ const DinoInfo = {
         );
 
         this.data = newData;
+        this.syncCooldowns(newData.powerup_cooldowns);
         if (forceRender || isSpinnerShowing || newSig !== this._lastRenderSig) {
           this.renderUI();
           this._lastRenderSig = newSig;
@@ -224,6 +228,10 @@ const DinoInfo = {
       const lipidPct = Math.min(100, Math.max(0, Math.round((Number(nutrition.lipid) || 0) * 10) / 10));
       const proteinPct = Math.min(100, Math.max(0, Math.round((Number(nutrition.protein) || 0) * 10) / 10));
       const isPerfectDiet = carbPct > 0 && lipidPct > 0 && proteinPct > 0;
+
+      // Cooldown 10 phút (600s) cho Buff 3 Chất A-B-Y và Buff Đói 25%
+      const cdAby = Math.max(0, parseInt(this.cooldowns && this.cooldowns.aby) || 0);
+      const cdHunger = Math.max(0, parseInt(this.cooldowns && this.cooldowns.hunger) || 0);
 
       // Prime Elder Progression
       const prime = dino.prime || {};
@@ -529,16 +537,16 @@ const DinoInfo = {
             </div>
           </div>
 
-          <!-- 3 ACTION BUTTONS (BUFF TRỰC TIẾP TỨC THÌ) -->
+          <!-- 3 ACTION BUTTONS (BUFF TRỰC TIẾP TỨC THÌ - CƠ CHẾ ĐẾM NGƯỢC 10 PHÚT) -->
           <div style="display: flex; gap: 14px; flex-wrap: wrap; align-items: center;">
             <!-- NÚT 1: BUFF 3 CHẤT A-B-Y 25% -->
-            <button id="btn-powerup-aby" onclick="DinoInfo.buffNutrient('all', 25)" class="btn-primary" style="flex: 1.2; min-width: 220px; padding: 13px 22px; font-weight: 900; font-size: 0.95rem; background: linear-gradient(135deg, #059669, #10b981); border: 1px solid #34d399; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35); transition: all 0.2s;">
-              <span>✨</span> <span class="btn-text">Buff 3 Chất A-B-Y 25%</span>
+            <button id="btn-powerup-aby" onclick="DinoInfo.buffNutrient('all', 25)" class="btn-primary" ${cdAby > 0 ? 'disabled' : ''} style="flex: 1.2; min-width: 220px; padding: 13px 22px; font-weight: 900; font-size: 0.95rem; background: ${cdAby > 0 ? 'rgba(75, 85, 99, 0.45)' : 'linear-gradient(135deg, #059669, #10b981)'}; border: 1px solid ${cdAby > 0 ? '#6b7280' : '#34d399'}; border-radius: 10px; cursor: ${cdAby > 0 ? 'not-allowed' : 'pointer'}; opacity: ${cdAby > 0 ? '0.75' : '1'}; display: inline-flex; align-items: center; justify-content: center; gap: 8px; box-shadow: ${cdAby > 0 ? 'none' : '0 4px 15px rgba(16, 185, 129, 0.35)'}; transition: all 0.2s;">
+              <span>${cdAby > 0 ? '⏳' : '✨'}</span> <span class="btn-text">${cdAby > 0 ? `Buff 3 Chất A-B-Y 25% (${this.formatTime(cdAby)})` : 'Buff 3 Chất A-B-Y 25%'}</span>
             </button>
 
             <!-- NÚT 2: BUFF ĐÓI 25% -->
-            <button id="btn-powerup-hunger" onclick="DinoInfo.buffNutrient('hunger', 25)" class="btn-secondary" style="flex: 1; min-width: 180px; padding: 13px 22px; font-weight: 800; font-size: 0.95rem; background: rgba(245, 158, 11, 0.15); border: 1px solid #f59e0b; color: #fbbf24; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
-              <span>🍖</span> <span class="btn-text">Buff Đói 25%</span>
+            <button id="btn-powerup-hunger" onclick="DinoInfo.buffNutrient('hunger', 25)" class="btn-secondary" ${cdHunger > 0 ? 'disabled' : ''} style="flex: 1; min-width: 180px; padding: 13px 22px; font-weight: 800; font-size: 0.95rem; background: ${cdHunger > 0 ? 'rgba(75, 85, 99, 0.3)' : 'rgba(245, 158, 11, 0.15)'}; border: 1px solid ${cdHunger > 0 ? '#6b7280' : '#f59e0b'}; color: ${cdHunger > 0 ? '#9ca3af' : '#fbbf24'}; border-radius: 10px; cursor: ${cdHunger > 0 ? 'not-allowed' : 'pointer'}; opacity: ${cdHunger > 0 ? '0.75' : '1'}; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
+              <span>${cdHunger > 0 ? '⏳' : '🍖'}</span> <span class="btn-text">${cdHunger > 0 ? `Buff Đói 25% (${this.formatTime(cdHunger)})` : 'Buff Đói 25%'}</span>
             </button>
 
             <!-- NÚT 3: ĐẠT PRIME -->
@@ -826,13 +834,105 @@ const DinoInfo = {
 
   isBuffing: false,
 
-  checkAllCooldowns() {
-    // Đã hủy bỏ thời gian chờ 300s, dọn sạch dữ liệu cooldown cũ trong localStorage
-    ['all', 'hunger', 'prime', 'carb', 'lipid', 'protein'].forEach(type => {
-      try {
-        localStorage.removeItem('dino_cd_' + type);
-      } catch (e) {}
-    });
+  formatTime(seconds) {
+    const sec = Math.max(0, Math.floor(seconds || 0));
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+  },
+
+  syncCooldowns(serverCds) {
+    if (!this.cooldowns) this.cooldowns = { aby: 0, hunger: 0 };
+    const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
+    const steamId = (user && (user.steamId || user.steam_id)) || (this.data && this.data.steam_id) || '';
+    const now = Date.now();
+
+    if (serverCds && typeof serverCds === 'object') {
+      if (serverCds.aby !== undefined) {
+        this.cooldowns.aby = Math.max(0, parseInt(serverCds.aby) || 0);
+        localStorage.setItem(`powerup_cd_end_aby_${steamId}`, now + (this.cooldowns.aby * 1000));
+      }
+      if (serverCds.hunger !== undefined) {
+        this.cooldowns.hunger = Math.max(0, parseInt(serverCds.hunger) || 0);
+        localStorage.setItem(`powerup_cd_end_hunger_${steamId}`, now + (this.cooldowns.hunger * 1000));
+      }
+    } else {
+      const localAbyEnd = parseInt(localStorage.getItem(`powerup_cd_end_aby_${steamId}`)) || 0;
+      if (localAbyEnd > now) {
+        this.cooldowns.aby = Math.ceil((localAbyEnd - now) / 1000);
+      }
+      const localHungerEnd = parseInt(localStorage.getItem(`powerup_cd_end_hunger_${steamId}`)) || 0;
+      if (localHungerEnd > now) {
+        this.cooldowns.hunger = Math.ceil((localHungerEnd - now) / 1000);
+      }
+    }
+
+    this.updateCooldownButtons();
+    this.startCooldownTimer();
+  },
+
+  startCooldownTimer() {
+    if (this._cdTimer) return;
+    this._cdTimer = setInterval(() => {
+      let changed = false;
+      if (this.cooldowns && this.cooldowns.aby > 0) {
+        this.cooldowns.aby--;
+        changed = true;
+      }
+      if (this.cooldowns && this.cooldowns.hunger > 0) {
+        this.cooldowns.hunger--;
+        changed = true;
+      }
+      if (changed || (this.cooldowns && (this.cooldowns.aby === 0 || this.cooldowns.hunger === 0))) {
+        this.updateCooldownButtons();
+      }
+    }, 1000);
+  },
+
+  updateCooldownButtons() {
+    const btnAby = document.getElementById('btn-powerup-aby');
+    if (btnAby && !this.isBuffing) {
+      const cd = (this.cooldowns && this.cooldowns.aby) || 0;
+      if (cd > 0) {
+        btnAby.disabled = true;
+        btnAby.style.cursor = 'not-allowed';
+        btnAby.style.opacity = '0.75';
+        btnAby.style.background = 'rgba(75, 85, 99, 0.45)';
+        btnAby.style.borderColor = '#6b7280';
+        btnAby.style.boxShadow = 'none';
+        btnAby.innerHTML = `<span>⏳</span> <span class="btn-text">Buff 3 Chất A-B-Y 25% (${this.formatTime(cd)})</span>`;
+      } else {
+        btnAby.disabled = false;
+        btnAby.style.cursor = 'pointer';
+        btnAby.style.opacity = '1';
+        btnAby.style.background = 'linear-gradient(135deg, #059669, #10b981)';
+        btnAby.style.borderColor = '#34d399';
+        btnAby.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.35)';
+        btnAby.innerHTML = `<span>✨</span> <span class="btn-text">Buff 3 Chất A-B-Y 25%</span>`;
+      }
+    }
+
+    const btnHunger = document.getElementById('btn-powerup-hunger');
+    if (btnHunger && !this.isBuffing) {
+      const cd = (this.cooldowns && this.cooldowns.hunger) || 0;
+      if (cd > 0) {
+        btnHunger.disabled = true;
+        btnHunger.style.cursor = 'not-allowed';
+        btnHunger.style.opacity = '0.75';
+        btnHunger.style.background = 'rgba(75, 85, 99, 0.3)';
+        btnHunger.style.borderColor = '#6b7280';
+        btnHunger.style.color = '#9ca3af';
+        btnHunger.innerHTML = `<span>⏳</span> <span class="btn-text">Buff Đói 25% (${this.formatTime(cd)})</span>`;
+      } else {
+        btnHunger.disabled = false;
+        btnHunger.style.cursor = 'pointer';
+        btnHunger.style.opacity = '1';
+        btnHunger.style.background = 'rgba(245, 158, 11, 0.15)';
+        btnHunger.style.borderColor = '#f59e0b';
+        btnHunger.style.color = '#fbbf24';
+        btnHunger.innerHTML = `<span>🍖</span> <span class="btn-text">Buff Đói 25%</span>`;
+      }
+    }
   },
 
   getButtonElement(type) {
@@ -844,9 +944,17 @@ const DinoInfo = {
 
   getButtonDefaultHtml(type) {
     if (type === 'all' || type === 'aby') {
+      const cd = (this.cooldowns && this.cooldowns.aby) || 0;
+      if (cd > 0) {
+        return `<span>⏳</span> <span class="btn-text">Buff 3 Chất A-B-Y 25% (${this.formatTime(cd)})</span>`;
+      }
       return `<span>✨</span> <span class="btn-text">Buff 3 Chất A-B-Y 25%</span>`;
     }
     if (type === 'hunger' || type === 'doi') {
+      const cd = (this.cooldowns && this.cooldowns.hunger) || 0;
+      if (cd > 0) {
+        return `<span>⏳</span> <span class="btn-text">Buff Đói 25% (${this.formatTime(cd)})</span>`;
+      }
       return `<span>🍖</span> <span class="btn-text">Buff Đói 25%</span>`;
     }
     if (type === 'prime') {
@@ -857,6 +965,15 @@ const DinoInfo = {
 
   async buffNutrient(type, amount = 25) {
     if (this.isBuffing) return;
+
+    // Kiểm tra thời gian đếm ngược 10 phút (600s)
+    const cat = (type === 'hunger' || type === 'doi') ? 'hunger' : (type === 'all' || type === 'aby' ? 'aby' : null);
+    if (cat && this.cooldowns && this.cooldowns[cat] > 0) {
+      const waitStr = this.formatTime(this.cooldowns[cat]);
+      this.showToast(`⏳ Vui lòng chờ đếm ngược 10 phút (${waitStr}) trước khi tiếp tục buff!`, 'error');
+      return;
+    }
+
     this.isBuffing = true;
 
     const labelMap = {
@@ -923,7 +1040,7 @@ const DinoInfo = {
       if (textSpan) textSpan.textContent = 'Đang buff...';
     }
 
-    // 2. GỬI LỆNH API THỰC THI ĐẾN MÁY CHỦ (KHÔNG CHỜ 300S, BUFF TỰ DO)
+    // 2. GỬI LỆNH API THỰC THI ĐẾN MÁY CHỦ
     try {
       const user = JSON.parse(localStorage.getItem('steam_user') || 'null');
       const steamId = (user && (user.steamId || user.steam_id)) || (this.data && this.data.steam_id) || '';
@@ -940,6 +1057,12 @@ const DinoInfo = {
 
       const data = await res.json();
       if (res.ok && data.ok) {
+        if (cat) {
+          const cdVal = data.cooldown_remaining || 600;
+          this.cooldowns[cat] = cdVal;
+          localStorage.setItem(`powerup_cd_end_${cat}_${steamId}`, Date.now() + (cdVal * 1000));
+          this.updateCooldownButtons();
+        }
         this.showToast(data.message || `🎉 Đã buff thành công ${label}!`, 'success');
         if (this.data && this.data.dino) {
           if (data.nutrition) {
@@ -957,6 +1080,12 @@ const DinoInfo = {
         }
         setTimeout(() => this.fetchData(false), 3500);
       } else {
+        if (data.cooldown && data.category) {
+          const cdVal = data.cooldown_remaining || 600;
+          this.cooldowns[data.category] = cdVal;
+          localStorage.setItem(`powerup_cd_end_${data.category}_${steamId}`, Date.now() + (cdVal * 1000));
+          this.updateCooldownButtons();
+        }
         const errMsg = data.message || data.error || 'Thao tác thất bại!';
         this.showToast(errMsg, 'error');
       }
@@ -965,10 +1094,7 @@ const DinoInfo = {
       this.showToast('Lỗi kết nối khi gửi lệnh thao tác!', 'error');
     } finally {
       this.isBuffing = false;
-      if (btn) {
-        btn.style.opacity = '1';
-        btn.innerHTML = this.getButtonDefaultHtml(type);
-      }
+      this.updateCooldownButtons();
     }
   }
 };
