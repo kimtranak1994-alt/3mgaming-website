@@ -608,7 +608,7 @@ const DinoInfo = {
           </div>
         </div>
       `;
-      this.checkAllCooldowns();
+      this.updateCooldownButtons();
     } catch (err) {
       console.error("[DinoInfo] Lỗi renderUI:", err);
       container.innerHTML = `
@@ -833,6 +833,10 @@ const DinoInfo = {
   },
 
   isBuffing: false,
+
+  checkAllCooldowns() {
+    this.updateCooldownButtons();
+  },
 
   formatTime(seconds) {
     const sec = Math.max(0, Math.floor(seconds || 0));
